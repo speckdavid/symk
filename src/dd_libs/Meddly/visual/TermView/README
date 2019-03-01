@@ -1,0 +1,19 @@
+
+$Id$
+
+Terminal-based visualization tool for MEDDLY.  Requires curses.
+
+Building the tool:
+-------------------
+
+0.  $ ./autogen.sh
+  Required only if you obtained the source via svn.
+  This will create the configure script and Makefiles.
+  Run this the first time, and whenever the soruce code changes
+  in its file or directory layout.
+
+1.  $ ./configure
+  Setup the build files
+
+2.  $ make
+

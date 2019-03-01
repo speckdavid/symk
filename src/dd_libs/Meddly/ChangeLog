@@ -1,0 +1,14 @@
+
+$Id$
+
+30-March-2009	Junaid Babar <junaid@cs.iastate.edu>
+
+	* Moving MDD library to sourceforge.net (previously known as MddLib and
+		stored on the svn server at pyrite@cs.iastate.edu).
+
+	* bootstrap renamed to autogen.sh.
+	* autogen.sh runs libtoolize before automake.
+	* autogen.sh does not run configure as the last step.
+	* configure.ac created using autoscan on include/, src/ and examples/.
+
+	* Replaced #if checks with #ifdef checks (src/defines.h).

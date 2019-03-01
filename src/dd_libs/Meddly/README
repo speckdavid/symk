@@ -1,0 +1,98 @@
+
+$Id$
+
+To create a branch or a tag: copy the entire "trunk" subdirectory to
+an appropriately-named subdirectory at the same level.
+
+Subdirectories:
+---------------
+
+docs/         Generated docs from source code, for users (include files only)
+docs-devel/   Generated docs from source code, for developers (all source files)
+examples/     Stand-alone applications that use the library
+src/          Library source code
+tests/        Test applications used by "make check"
+visual/       Visualization utilities that work with the library.
+
+Building the library:
+---------------------
+
+You will need g++, autoconf, automake and libtool.
+
+0. If you obtained the library via svn:
+   $ ./autogen.sh
+   This will create the configure script and Makefiles.
+   Run this the first time, and whenever the source code has changes in
+   its file or directory layout.
+
+1. $ ./configure
+   This will setup the build files.
+   Can be used to set various compile options; 
+   see "Configuration Options" below.
+   An alternate would be:
+   $ ./configure --prefix=/other/install/location
+   (See "make install" further down for reasons).
+
+2. $ make
+   Build the library.
+   Library will be in src/. Applications in src/ and examples/. This may be
+   sufficient for most users.
+
+3. $ make install
+   Library in lib/, include files in include/.  This can be changed
+   in step (1) by selecting an alternate location, for example using
+    --prefix=/usr/local
+   will install libraries in /usr/local/lib and headers in /usr/local/include.
+   If you reconfigure, make sure you run "make clean" before running "make".
+
+4. $ make uninstall
+   Removes the files installed in bin/ and lib/.
+
+5. $ make clean
+   Removes the results of compilation from src/ and examples/.
+
+Build the documentation:
+------------------------
+
+0. Need to have doxygen installed.
+
+1. $ cd docs
+
+2. If you see docs/html/index.html and docs/refman.pdf, your docs have
+   already been built and you can ignore the rest of the steps. Otherwise:
+   $ make
+   This will create the folders docs/html and docs/latex.
+   docs/html: HTML documentation. See index.html.
+   docs/latex: Tex-based documentation. See refman.tex.
+     If you have latex installed:
+     a. $ cd latex
+     b. $ make
+        This will create refman.dvi.
+     c. $ make pdf
+        This will create refman.pdf (using ps2pdf).
+
+3. $ make clean
+   Removes docs/ and html/.
+
+4. Technical documentation can be generated the same way, in docs-devel/
+
+Configuration Options
+---------------------
+Several environment variables may be set before running configure.
+For example, to build an optimized version of the library:
+
+$ ./configure CXXFLAGS="-O3"
+
+To build a debuggable version of the library:
+
+$ ./configure CPPFLAGS="-DDEVELOPMENT_CODE" CXXFLAGS="-ggdb"
+
+To set the location of the gmp library, by hand 
+(only necessary if ./configure fails to find it):
+
+$ ./configure CPPFLAGS="-I/path/to/gmp/header" LDFLAGS="-L/path/to/gmp/lib"
+
+To disable gmp support in Meddly:
+
+$ ./configure --without-gmp
+

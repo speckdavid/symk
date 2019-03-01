@@ -1,0 +1,105 @@
+Initalization Started
+T simple
+Record: F 1 "forest name" 1 4 [0, 0, 0, 0]
+
+
+Record:	a 1 1 1
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 1end of the line, illanc is 1 about to be added to processData
+processData has a length of: 3
+Record:	a 1 2 1
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 2Char is:  there is a space, illanc is 2 about to be added to processData
+Char is: 1end of the line, illanc is 1 about to be added to processData
+processData has a length of: 3
+Record:	a 1 1 1
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 1end of the line, illanc is 1 about to be added to processData
+processData has a length of: 3
+Record:	a 1 2 1
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 2Char is:  there is a space, illanc is 2 about to be added to processData
+Char is: 1end of the line, illanc is 1 about to be added to processData
+processData has a length of: 3
+Record:	a 1 2 -1
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 2Char is:  there is a space, illanc is 2 about to be added to processData
+Char is: -Char is: 1end of the line, illanc is -1 about to be added to processData
+processData has a length of: 3
+Record:	a 1 3 1
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 3Char is:  there is a space, illanc is 3 about to be added to processData
+Char is: 1end of the line, illanc is 1 about to be added to processData
+processData has a length of: 3
+Record:	a 1 1 1
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 1end of the line, illanc is 1 about to be added to processData
+processData has a length of: 3
+Record:	a 1 2 1
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 2Char is:  there is a space, illanc is 2 about to be added to processData
+Char is: 1end of the line, illanc is 1 about to be added to processData
+processData has a length of: 3
+Record:	a 1 3 1
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 3Char is:  there is a space, illanc is 3 about to be added to processData
+Char is: 1end of the line, illanc is 1 about to be added to processData
+processData has a length of: 3
+Record:	a 1 3 -1
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 3Char is:  there is a space, illanc is 3 about to be added to processData
+Char is: -Char is: 1end of the line, illanc is -1 about to be added to processData
+processData has a length of: 3
+Record:	a 1 4 1
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 4Char is:  there is a space, illanc is 4 about to be added to processData
+Char is: 1end of the line, illanc is 1 about to be added to processData
+processData has a length of: 3
+Record:	a 1 1 1
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 1end of the line, illanc is 1 about to be added to processData
+processData has a length of: 3
+Record:	a 1 2 1
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 2Char is:  there is a space, illanc is 2 about to be added to processData
+Char is: 1end of the line, illanc is 1 about to be added to processData
+processData has a length of: 3
+Record:	a 1 3 1
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 3Char is:  there is a space, illanc is 3 about to be added to processData
+Char is: 1end of the line, illanc is 1 about to be added to processData
+processData has a length of: 3
+Record:	a 1 4 1
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 4Char is:  there is a space, illanc is 4 about to be added to processData
+Char is: 1end of the line, illanc is 1 about to be added to processData
+processData has a length of: 3
+Record:	a 1 4 -1
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 4Char is:  there is a space, illanc is 4 about to be added to processData
+Char is: -Char is: 1end of the line, illanc is -1 about to be added to processData
+processData has a length of: 3
+Record:	a 1 1 1
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 1end of the line, illanc is 1 about to be added to processData
+processData has a length of: 3
+Record:	a 1 2 1
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 2Char is:  there is a space, illanc is 2 about to be added to processData
+Char is: 1end of the line, illanc is 1 about to be added to processData
+processData has a length of: 3
+Record:	a 1 2 1
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 2Char is:  there is a space, illanc is 2 about to be added to processData
+Char is: 1end of the line, illanc is 1 about to be added to processData
+processData has a length of: 3
+Record:	a 1 3 1
+Char is: 1Char is:  there is a space, illanc is 1 about to be added to processData
+Char is: 3Char is:  there is a space, illanc is 3 about to be added to processData
+Char is: 1end of the line, illanc is 1 about to be added to processData
+processData has a length of: 3

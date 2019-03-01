@@ -1,0 +1,23 @@
+
+The CacBDD package is a package written in ANSI C++ for the manipulation of 
+ordered binary decision diagrams. 
+
+It is easy to use it by typing: make.
+
+The file "main.cpp" gives a toy demo for how to use this package. 
+
+CacBDD has been successfully built on the following configurations: 
+
+    PC runing Ubuntu (64bit) with gcc
+    PC runing Windows 7(64bit) with Visual C++ 2010
+
+
+Send feedback to:
+
+Guanfeng Lv
+University of Beijing Technology, School of Comp.Sci and Tech.
+lgfcube@gmail.com
+
+Kaile Su 
+Griffith University, IIIS.
+kailepku@gmail.com

@@ -1,0 +1,13 @@
+
+# $Id$
+
+(Incomplete)
+
+Explanation of files:
+
+meddly.h          simple interface
+meddly_expert.h   expert interface
+
+Usage:
+meddly.h must be included before meddly_expert.h.
+

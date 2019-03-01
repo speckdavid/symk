@@ -1,0 +1,152 @@
+% $Id$
+
+\documentclass[12pt]{article}
+
+\usepackage{fullpage}
+\usepackage{color}
+
+\newcommand{\TBD}[1]{{\color{blue}{\bf TBD:} #1}}
+
+
+\begin{document}
+
+\section{C-style interface to the MDD Library}
+
+\subsection{Forest Operations}
+
+\subsubsection{int create\_forest()}
+
+Initializes the mdd\_forest.
+If the forest is already initialized, do nothing.
+Return 0 on success, nonzero on failure.
+
+\TBD{
+For now assume there is only one forest.
+If we want to allow multiple forests in the future,
+then we will return a handle here and all other operations will
+also pass the forest handle.
+}
+
+\subsubsection{void destroy\_forest()}
+
+Releases the mdd\_forest's resources and discards it.
+Does nothing if the forest is not yet initialized or already destroyed.
+
+\subsection{MDD Node Operations}
+
+Note: All of these should cleanly return an appropriate error if the 
+forest has not been initialized.
+
+\subsubsection{mdd\_node create\_node(int level, int size)}
+
+\begin{itemize}
+\item
+Creates and returns a new mdd\_node of specifed size and level. 
+\item
+This node does not yet exist in the unique table (unreduced) and 
+its down pointers can therefore be modified.
+\item
+Incoming count to this node is 1 and compute table count is 0.
+\item
+Returns 0 on error.
+\end{itemize}
+
+\subsubsection{const mdd\_node* get\_down\_ptrs\_read\_only(mdd\_node a\_node)}
+
+\begin{itemize}
+\item
+Returns the down pointers for the specified mdd\_node.
+\item
+These down pointers cannot be modified.
+\item
+Returns NULL on error.
+\end{itemize}
+
+\subsubsection{mdd\_node* get\_down\_ptrs(mdd\_node a\_node)}
+
+\begin{itemize}
+\item
+Returns the down pointers for the specified mdd\_node.
+\item
+These down pointers can be modified.
+\item
+Returns NULL on error.
+\end{itemize}
+
+\TBD{
+Q: Can this function be called once the node has been reduced? If it can, won't the user's ability to modify the down pointers violate the property that a reduced node should not be modified?
+
+No, if the node is already reduced, NULL should be returned.
+}
+
+\subsubsection{int reduce(mdd\_node *a\_node)}
+
+\begin{itemize}
+\item
+Checks if a\_node is already reduced. If so, returns 0 for success.
+\item
+Otherwise, checks if a duplicate of a\_node exists in the unique table. If it does exist:
+\begin{itemize}
+\item
+a\_node is unlinked and set to point to the duplicate node; the duplicate
+node's incoming count is incremented.
+\item
+Otherwise (no duplicate found), a\_node is added to the unique table.
+\end{itemize}
+In both cases, return 0 on success.
+\end{itemize}
+
+\TBD{
+Q: How do we know if a node is already reduced (other than by searching the
+unique table for a duplicate)? Is there a flag that is checked?
+
+Recall that a node includes a pointer (integer) for use in the uniqueness
+table; this can be set to bogus values for temporary (unreduced) nodes and
+deleted nodes.
+}
+
+\subsubsection{int unlink\_node(mdd\_node a\_node)}
+
+\begin{itemize}
+\item
+If incoming count is already 0, return nonzero.
+\item
+Otherwise, decrement incoming count for a\_node. If incoming count is now
+zero, recycle node.
+\item
+Returns 0 for sucess.
+\end{itemize}
+
+\subsubsection{int link\_node(mdd\_node a\_node)}
+
+\begin{itemize}
+\item
+Increment incoming link count for a\_node.
+\item
+Returns 0 for sucess.
+\end{itemize}
+
+\subsubsection{int show\_node(FILE *output\_stream, mdd\_node a\_node)}
+
+Prints a representation of a\_node on output\_stream.
+
+\noindent
+Sample: node: 7  level: 3  in: 5   down: [...]
+
+\subsubsection{int show\_all\_nodes(FILE *output\_stream)}
+
+Prints a representation of all active mdd\_nodes on output\_stream. Ordering: First by node level and then then by node number.
+
+\subsection{Garbage Collection}
+
+\subsubsection{int invoke\_gc()}
+
+Forces garbage collection (instead of waiting for the garbage collector to act on it own).
+
+\subsection{Statistics}
+
+\subsubsection{int report(FILE *output\_stream)}
+
+Prints statistics collected during program execution on the output\_stream.
+
+\end{document}
