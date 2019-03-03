@@ -5,14 +5,18 @@
 #include "sym_variables.h"
 #include <vector>
 
+class StateRegistry;
+
 namespace symbolic {
 class UnidirectionalSearch;
 
 class SymSolution {
 protected:
+  static std::unique_ptr<StateRegistry> state_registry;
   UnidirectionalSearch *exp_fw, *exp_bw;
   std::map<std::pair<int, int>, Bdd> cuts;
   std::map<std::pair<int, int>, Bdd> already_stored_cuts;
+  int working_h;
 
   void extract_multiply_paths(const Bdd &c, int h, bool fw,
                               std::vector<OperatorID> path) const;
@@ -24,6 +28,9 @@ protected:
   Bdd bdd_for_zero_reconstruction(const Bdd &c, int h, bool fw) const;
 
   void save_plan(std::vector<OperatorID> &path, bool fw) const;
+
+  std::pair<int, Bdd>
+  get_resulting_state(const std::vector<OperatorID> &partial_plan) const;
 
 public:
   SymSolution() : exp_fw(nullptr), exp_bw(nullptr) {}

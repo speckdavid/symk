@@ -1,8 +1,9 @@
 import subprocess
+plan_num = 384
 
-for i in range(1,31):
+for i in range(1,plan_num+1):
     file1 = open('found_plans/sas_plan.' + str(i)).read().splitlines()
-    for j in range(i+1, 31):
+    for j in range(i+1, plan_num+1):
         not_same = False
         file2 = open('found_plans/sas_plan.' + str(j)).read().splitlines()
         if len(file1) == len(file2):
@@ -14,5 +15,5 @@ for i in range(1,31):
                 print(str(i) + " and " + str(j) + "are the same!!!")
                 exit()
              
-cmd = ["VAL/validate", "benchmarks/ged-opt14-strips/domain.pddl", "benchmarks/ged-opt14-strips/d-1-3.pddl"] + ["found_plans/sas_plan." + str(x) for x in range(1,31)]
+cmd = ["VAL/validate", "benchmarks/gripper/domain.pddl", "benchmarks/gripper/prob01.pddl"] + ["found_plans/sas_plan." + str(x) for x in range(1,plan_num+1)]
 print(' '.join(cmd))

@@ -20,7 +20,7 @@
 using namespace std;
 
 int main(int argc, const char **argv) {
-    int h2_mutex_time = 300; // 5 minutes to compute mutexes by default
+    int h2_mutex_time = 0; // 300; // 5 minutes to compute mutexes by default
     bool include_augmented_preconditions = false;
     bool expensive_statistics = false;
     bool disable_bw_h2 = false;

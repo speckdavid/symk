@@ -12,6 +12,8 @@ using namespace std;
 namespace symbolic
 {
 
+std::unique_ptr<StateRegistry> SymSolution::state_registry = nullptr;
+
 void SymSolution::merge(const SymSolution &other)
 {
   std::vector<std::pair<int, int>> del;
@@ -28,15 +30,35 @@ void SymSolution::merge(const SymSolution &other)
   }
 }
 
-void SymSolution::save_plan(std::vector<OperatorID> &path,
-                            bool fw) const
+void SymSolution::save_plan(std::vector<OperatorID> &path, bool fw) const
 {
   auto cur_search = fw ? exp_fw : exp_bw;
   cur_search->getStateSpaceShared()->save_plan(path, fw);
 }
 
+std::pair<int, Bdd> SymSolution::get_resulting_state(
+    const std::vector<OperatorID> &partial_plan) const
+{
+  int cost = 0;
+  GlobalState cur = state_registry->get_initial_state();
+  for (auto &op : partial_plan)
+  {
+    cur = state_registry->get_successor_state(
+        cur, state_registry->get_task_proxy().get_operators()[op]);
+    cost += state_registry->get_task_proxy().get_operators()[op].get_cost();
+  }
+  Bdd state = exp_fw->getStateSpaceShared()->getVars()->getStateBDD(cur);
+  return std::pair<int, Bdd>(cost, state);
+}
+
 void SymSolution::getPlan(vector<OperatorID> &path)
 {
+  if (!state_registry)
+  {
+    state_registry = std::unique_ptr<StateRegistry>(
+        new StateRegistry(TaskProxy(*tasks::g_root_task)));
+  }
+
   auto existing_search = exp_fw ? exp_fw : exp_bw; // Only for output
   existing_search->getStateSpaceShared()->reset_plans();
 
@@ -44,6 +66,7 @@ void SymSolution::getPlan(vector<OperatorID> &path)
             << "..." << std::flush;
   for (auto &entry : cuts)
   {
+    working_h = entry.first.second;
     if (exp_fw)
     {
       extract_multiply_paths(entry.second, entry.first.first, true, path);
@@ -99,7 +122,18 @@ void SymSolution::extract_multiply_paths(const Bdd &c, int h, bool fw,
           new_path.push_back(*(tr.getOpsIds().begin()));
           if (h == 0 && newSteps0 == 0)
           {
-            save_plan(new_path, fw);
+            if (!fw || (fw && !exp_bw))
+            {
+              save_plan(new_path, fw);
+            }
+            else
+            {
+              // bidirectional case => simulate plan
+              std::reverse(new_path.begin(), new_path.end());
+              auto res = get_resulting_state(new_path);
+              Bdd state = res.second;
+              extract_multiply_paths(state, working_h, false, new_path);
+            }
           }
           else
           {
@@ -147,7 +181,18 @@ void SymSolution::extract_multiply_paths(const Bdd &c, int h, bool fw,
           new_path.push_back(*(tr.getOpsIds().begin()));
           if (newH == 0 && cur_closed->get_zero_cut(newH, intersection) == 0)
           {
-            save_plan(new_path, fw);
+            if (!fw || (fw && !exp_bw))
+            {
+              save_plan(new_path, fw);
+            }
+            else
+            {
+              // bidirectional case => simulate plan
+              std::reverse(new_path.begin(), new_path.end());
+              auto res = get_resulting_state(new_path);
+              Bdd state = res.second;
+              extract_multiply_paths(state, working_h, false, new_path);
+            }
           }
           else
           {
