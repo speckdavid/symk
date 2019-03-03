@@ -9,35 +9,34 @@
 #ifndef TASKS_PLAN_FORBID_REFORMULATED_TASK_H
 #define TASKS_PLAN_FORBID_REFORMULATED_TASK_H
 
+#include "../task_utils/plan_graph.h"
 #include "delegating_task.h"
 
 #include <vector>
 
 namespace extra_tasks {
+
 class PlanForbidReformulatedTask : public tasks::DelegatingTask {
-  const std::vector<int> forbidding_plan;
+  plan_graph::PlanGraph plan_graph;
   //	std::vector<int> reformulated_operator_indexes;
-  int operators_on_plan;
+  int operators_in_plan_plan;
   std::vector<int> initial_state_values;
-  std::vector<bool> on_plan;
-  std::vector<int> plan_operators_indexes;
-  std::vector<std::vector<int>> plan_operators_indexes_by_parent_operator;
+  // Every entry maps to the parent op
+  std::vector<int> index_op_type0_modified;
+  std::vector<int> index_op_type1_modified;
+  std::vector<int> index_op_type2_modified;
+  std::vector<int> index_op_type3_modified;
+  // Stores for every op id which type it is
+  std::vector<int> index_to_op_type;
+  int num_op_type3;
 
-  bool is_operator_on_plan(int op_no) const;
-  int get_num_operator_appearances_on_plan(int op_no) const;
-  int get_plan_index_ordered(int op_no, int appearance_index) const;
-
-  //	int get_plan_op_index(int index) const;
-  int get_parent_op_index(int index) const;
-  int get_op_type(int index) const;
-
+  int get_parent_index(int index) const;
   int get_possible_var_index() const;
-  int get_following_var_index(int op_index) const;
+  int get_following_var_index(int state) const;
 
-  //	int get_num_non_plan_operators() const;
- public:
+public:
   PlanForbidReformulatedTask(const std::shared_ptr<AbstractTask> parent,
-                             std::vector<int> &&plan);
+                             const std::vector<Plan> &plans);
   virtual ~PlanForbidReformulatedTask() override = default;
 
   virtual int get_num_variables() const override;
@@ -71,9 +70,9 @@ class PlanForbidReformulatedTask : public tasks::DelegatingTask {
   virtual FactPair get_goal_fact(int index) const override;
 
   virtual std::vector<int> get_initial_state_values() const override;
-  virtual void convert_state_values_from_parent(
-      std::vector<int> &values) const override;
+  virtual void
+  convert_state_values_from_parent(std::vector<int> &values) const override;
 };
-}  // namespace extra_tasks
+} // namespace extra_tasks
 
 #endif

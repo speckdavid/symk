@@ -785,6 +785,7 @@ fast_downward_plugin(
         symbolic/sym_controller
         symbolic/bidirectional_search
         symbolic/uniform_cost_search
+        task_utils/plan_graph
         search_engines/symbolic_search
 )
 

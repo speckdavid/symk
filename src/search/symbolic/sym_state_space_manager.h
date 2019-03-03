@@ -19,7 +19,7 @@
 namespace options {
 class OptionParser;
 class Options;
-}  // namespace options
+} // namespace options
 
 namespace symbolic {
 class SymVariables;
@@ -30,7 +30,7 @@ class TransitionRelation;
  *
  */
 class SymParamsMgr {
- public:
+public:
   int num_plans;
   // Parameters to generate the TRs
   int max_tr_size, max_tr_time;
@@ -62,7 +62,7 @@ class SymStateSpaceManager {
                       const std::vector<TransitionRelation> &trs,
                       std::vector<Bdd> &res, int i, int k) const;
 
- protected:
+protected:
   mutable std::shared_ptr<PlanManager> plan_mgr;
   TaskProxy relevant_task;
 
@@ -72,12 +72,12 @@ class SymStateSpaceManager {
   // If the variable is fully/partially/not considered in the abstraction
   std::set<int> relevant_vars;
 
-  Bdd initialState;  // initial state
-  Bdd goal;  // bdd representing the true (i.e. not simplified) goal-state
+  Bdd initialState; // initial state
+  Bdd goal; // bdd representing the true (i.e. not simplified) goal-state
 
-  std::map<int, std::vector<TransitionRelation>> transitions;  // TRs
-  int min_transition_cost;  // minimum cost of non-zero cost transitions
-  bool hasTR0;              // If there is transitions with cost 0
+  std::map<int, std::vector<TransitionRelation>> transitions; // TRs
+  int min_transition_cost; // minimum cost of non-zero cost transitions
+  bool hasTR0;             // If there is transitions with cost 0
 
   // BDD representation of valid states (wrt mutex) for fw and bw search
   std::vector<Bdd> notMutexBDDsFw, notMutexBDDsBw;
@@ -95,7 +95,7 @@ class SymStateSpaceManager {
   void init_transitions(
       const std::map<int, std::vector<TransitionRelation>> &(indTRs));
 
- public:
+public:
   SymStateSpaceManager(SymVariables *v, const SymParamsMgr &params,
                        std::shared_ptr<PlanManager> plan_mgr,
                        const std::set<int> &relevant_vars_ = std::set<int>());
@@ -115,6 +115,10 @@ class SymStateSpaceManager {
   int get_num_plans() const { return plan_mgr->get_num_of_genertated_plans(); }
   bool found_enough_plans() const {
     return get_target_num_plans() <= get_num_plans();
+  }
+  void reset_plans() { plan_mgr->set_num_previously_generated_plans(0); }
+  const std::vector<std::vector<OperatorID>> &get_found_plans() {
+    return plan_mgr->get_found_plans();
   }
 
   bool isAbstracted() const { return !isOriginal(); }
@@ -155,7 +159,7 @@ class SymStateSpaceManager {
       return bdd.Or(bdd2, maxNodes);
     };
     merge(vars, bucket, mergeBDDs, maxTime, maxNodes);
-    removeZero(bucket);  // Be sure that we do not contain only the zero BDD
+    removeZero(bucket); // Be sure that we do not contain only the zero BDD
 
     return bucket.size() <= 1;
   }
@@ -165,7 +169,7 @@ class SymStateSpaceManager {
       return bdd.And(bdd2, maxNodes);
     };
     merge(vars, bucket, mergeBDDs, maxTime, maxNodes);
-    removeZero(bucket);  // Be sure that we do not contain only the zero BDD
+    removeZero(bucket); // Be sure that we do not contain only the zero BDD
 
     return bucket.size() <= 1;
   }
@@ -180,7 +184,8 @@ class SymStateSpaceManager {
 
   int getAbsoluteMinTransitionCost() const {
     assert(!transitions.empty());
-    if (hasTR0) return 0;
+    if (hasTR0)
+      return 0;
     return min_transition_cost;
   }
 
@@ -223,8 +228,8 @@ class SymStateSpaceManager {
   }
 
   // For plan solution reconstruction. Only avaialble in original state space
-  virtual const std::map<int, std::vector<TransitionRelation>>
-      &getIndividualTRs() const {
+  virtual const std::map<int, std::vector<TransitionRelation>> &
+  getIndividualTRs() const {
     std::cerr << "Error: trying to get individual TRs from an invalid state "
                  "space type"
               << std::endl;
@@ -232,5 +237,5 @@ class SymStateSpaceManager {
   }
 };
 
-}  // namespace symbolic
+} // namespace symbolic
 #endif

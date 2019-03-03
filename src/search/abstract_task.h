@@ -12,27 +12,33 @@
 #include <utility>
 #include <vector>
 
-namespace options {
+namespace options
+{
 class Options;
 }
 
-struct FactPair {
+struct FactPair
+{
     int var;
     int value;
 
     FactPair(int var, int value)
-        : var(var), value(value) {
+        : var(var), value(value)
+    {
     }
 
-    bool operator<(const FactPair &other) const {
+    bool operator<(const FactPair &other) const
+    {
         return var < other.var || (var == other.var && value < other.value);
     }
 
-    bool operator==(const FactPair &other) const {
+    bool operator==(const FactPair &other) const
+    {
         return var == other.var && value == other.value;
     }
 
-    bool operator!=(const FactPair &other) const {
+    bool operator!=(const FactPair &other) const
+    {
         return var != other.var || value != other.value;
     }
 
@@ -46,16 +52,18 @@ struct FactPair {
 
 std::ostream &operator<<(std::ostream &os, const FactPair &fact_pair);
 
-namespace utils {
-inline void feed(HashState &hash_state, const FactPair &fact) {
+namespace utils
+{
+inline void feed(HashState &hash_state, const FactPair &fact)
+{
     feed(hash_state, fact.var);
     feed(hash_state, fact.value);
 }
-}
+} // namespace utils
 
-
-class AbstractTask : public subscriber::SubscriberService<AbstractTask> {
-public:
+class AbstractTask : public subscriber::SubscriberService<AbstractTask>
+{
+  public:
     AbstractTask() = default;
     virtual ~AbstractTask() override = default;
     virtual int get_num_variables() const = 0;
@@ -109,6 +117,10 @@ public:
     virtual void convert_state_values(
         std::vector<int> &values,
         const AbstractTask *ancestor_task) const = 0;
+
+    virtual void dump() const;
+    virtual void dump_variables() const;
+    virtual void dump_operators(bool axioms = false) const;
 };
 
 #endif

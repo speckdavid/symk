@@ -10,10 +10,8 @@ using namespace std;
 
 namespace symbolic {
 SymController::SymController(const Options &opts)
-    : vars(make_shared<SymVariables>(opts)),
-      mgrParams(opts),
-      searchParams(opts),
-      lower_bound(0) {
+    : vars(make_shared<SymVariables>(opts)), mgrParams(opts),
+      searchParams(opts), lower_bound(0) {
   mgrParams.print_options();
   searchParams.print_options();
   vars->init();
@@ -28,26 +26,27 @@ void SymController::add_options_to_parser(OptionParser &parser, int maxStepTime,
 void SymController::new_solution(const SymSolution &sol) {
   if (!solution.solved() || sol.getCost() < solution.getCost()) {
     solution = sol;
-    std::cout << "BOUND: " << lower_bound << " < " << getUpperBound()
+    std::cout << "BOUND: " << lower_bound << " <= " << (int)getUpperBound()
               << ", total time: " << utils::g_timer << std::endl;
   } else if (sol.getCost() == solution.getCost()) {
     solution.merge(sol);
-    std::cout << "BOUND: " << lower_bound << " < " << getUpperBound()
+    std::cout << "BOUND: " << lower_bound << " <= " << (int)getUpperBound()
               << ", total time: " << utils::g_timer << std::endl;
   }
 }
 
 void SymController::setLowerBound(int lower) {
   // Never set a lower bound greater than the current upper bound
-  if (solution.solved()) {
-    lower = min(lower, solution.getCost());
-  }
+  /*if (solution.solved())
+  {
+    lower = min((double)lower, solution.getCost());
+  }*/
 
   if (lower > lower_bound) {
     lower_bound = lower;
 
-    std::cout << "BOUND: " << lower_bound << " < " << getUpperBound()
+    std::cout << "BOUND: " << lower_bound << " <= " << (int)getUpperBound()
               << ", total time: " << utils::g_timer << std::endl;
   }
 }
-}  // namespace symbolic
+} // namespace symbolic
