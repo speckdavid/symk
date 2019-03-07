@@ -64,7 +64,9 @@ namespace symbolic {
         relevant_task(*tasks::g_root_task),
         state_registry(nullptr),
         sym_vars(nullptr)
-        {}
+        {
+            plan_mgr.set_plan_filename("found_plans/sas_plan");
+        }
 
     Bdd SymSolutionRegistry::states_on_path(const Plan& plan) {
         GlobalState cur = state_registry->get_initial_state();
