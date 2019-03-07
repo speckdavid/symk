@@ -6,14 +6,12 @@
 
 struct FactPair;
 
-class MutexGroup
-{
+class MutexGroup {
   bool detected_fw;
-  bool exactly_one;
+  bool exactly_one; 
 
   std::vector<FactPair> facts;
-
-public:
+ public:
   MutexGroup(std::istream &in);
 
   void dump() const;
@@ -22,32 +20,24 @@ public:
 
   bool hasPair(int var, int val) const;
 
-  bool is_exactly_one() const
-  {
-    return exactly_one;
-  }
-
-  inline const std::vector<FactPair> &getFacts() const
-  {
+  inline const std::vector<FactPair> & getFacts() const{
     return facts;
   }
 
-  inline bool detectedFW() const
-  {
+  inline bool detectedFW() const{
     return detected_fw;
   }
 
   //If the mutex was detected bw is used to prune fw search and vice versa
-  inline bool pruneFW() const
-  {
+  inline bool pruneFW() const{
     return !detected_fw;
   }
 
-  inline bool isExactlyOne() const
-  {
+
+  inline bool isExactlyOne() const{
     return exactly_one;
   }
-  friend std::ostream &operator<<(std::ostream &os, const MutexGroup &mg);
+  friend std::ostream & operator<<(std::ostream &os, const MutexGroup & mg);
 };
 
 #endif

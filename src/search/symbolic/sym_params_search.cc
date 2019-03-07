@@ -29,6 +29,7 @@ SymParamsSearch::SymParamsSearch(const Options &opts) :
     ratioAllotedNodes(opts.get<double>("ratio_alloted_nodes")),
     ratioAfterRelax(opts.get<double>("ratio_after_relax")),
     non_stop(opts.get<bool>("non_stop")),
+    top_k(opts.get<bool>("top_k")),
     debug(opts.get<bool>("debug")) {
 }
 
@@ -104,6 +105,10 @@ void SymParamsSearch::add_options_to_parser(OptionParser &parser, int maxStepTim
 
     parser.add_option<bool>("non_stop",
                             "Removes initial state from closed to avoid backward search to stop.",
+                            "false");
+
+    parser.add_option<bool>("top_k",
+                            "Non-stop search with plan extraction.",
                             "false");
 
     parser.add_option<bool>("debug",

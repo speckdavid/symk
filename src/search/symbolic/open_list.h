@@ -36,6 +36,8 @@ public:
     int minNextG(const Frontier & frontier, int min_action_cost) const;
     void pop (Frontier & frontier);
 
+    bool contains_any_state(const Bdd& bdd) const;
+
     friend std::ostream & operator<<(std::ostream &os, const OpenList & open);
 };
 }

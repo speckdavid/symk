@@ -38,6 +38,7 @@ public:
     double ratioAfterRelax;
 
     bool non_stop;
+    bool top_k;
 
     bool debug;
 

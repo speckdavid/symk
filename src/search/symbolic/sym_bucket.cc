@@ -54,4 +54,15 @@ bool extract_states(Bucket &list,
     removeZero(list);
     return somethingPruned;
 }
+
+bool bucket_contains_any_state(const Bucket &bucket, const Bdd &bdd) {
+    for (const Bdd &bucket_bdd : bucket) {
+        Bdd intersection = bucket_bdd * bdd;
+        if (!intersection.IsZero()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 }

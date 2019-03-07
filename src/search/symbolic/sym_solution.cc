@@ -1,243 +1,38 @@
 #include "sym_solution.h"
 
+#include <vector>       // std::vector
 #include "../state_registry.h"
-#include "closed_list.h"
 #include "debug_macros.h"
-#include <vector>
 
 #include "unidirectional_search.h"
 
+
 using namespace std;
 
-namespace symbolic
-{
-
-std::unique_ptr<StateRegistry> SymSolution::state_registry = nullptr;
-
-void SymSolution::merge(const SymSolution &other)
-{
-  std::vector<std::pair<int, int>> del;
-  for (const auto &entry : other.get_cuts())
-  {
-    if (cuts.count(entry.first))
-    {
-      cuts[entry.first] += entry.second;
-    }
-    else
-    {
-      cuts[entry.first] = entry.second;
-    }
-  }
-}
-
-void SymSolution::save_plan(std::vector<OperatorID> &path, bool fw) const
-{
-  auto cur_search = fw ? exp_fw : exp_bw;
-  cur_search->getStateSpaceShared()->save_plan(path, fw);
-}
-
-std::pair<int, Bdd> SymSolution::get_resulting_state(
-    const std::vector<OperatorID> &partial_plan) const
-{
-  int cost = 0;
-  GlobalState cur = state_registry->get_initial_state();
-  for (auto &op : partial_plan)
-  {
-    cur = state_registry->get_successor_state(
-        cur, state_registry->get_task_proxy().get_operators()[op]);
-    cost += state_registry->get_task_proxy().get_operators()[op].get_cost();
-  }
-  Bdd state = exp_fw->getStateSpaceShared()->getVars()->getStateBDD(cur);
-  return std::pair<int, Bdd>(cost, state);
-}
-
-void SymSolution::getPlan(vector<OperatorID> &path)
-{
-  if (!state_registry)
-  {
-    state_registry = std::unique_ptr<StateRegistry>(
-        new StateRegistry(TaskProxy(*tasks::g_root_task)));
-  }
-
-  auto existing_search = exp_fw ? exp_fw : exp_bw; // Only for output
-  existing_search->getStateSpaceShared()->reset_plans();
-
-  std::cout << "Plan reconstruction [" << cuts.size() << "]"
-            << "..." << std::flush;
-  for (auto &entry : cuts)
-  {
-    working_h = entry.first.second;
-    if (exp_fw)
-    {
-      extract_multiply_paths(entry.second, entry.first.first, true, path);
-    }
-    else
-    {
-      extract_multiply_paths(entry.second, entry.first.second, false, path);
-    }
-  }
-  std::cout << " => #Plans: "
-            << existing_search->getStateSpaceShared()->get_num_plans() << "!"
-            << std::endl;
-}
-
-void SymSolution::extract_multiply_paths(const Bdd &c, int h, bool fw,
-                                         vector<OperatorID> path) const
-{
-  auto cur_search = fw ? exp_fw : exp_bw;
-  auto cur_closed = cur_search->getClosedShared();
-  const map<int, vector<TransitionRelation>> &trs =
-      cur_search->getStateSpaceShared()->getIndividualTRs();
-  Bdd cut = c;
-
-  // First we need to resolve 0-cost actions...
-  cut = bdd_for_zero_reconstruction(cut, h, fw);
-  size_t steps0 = cur_closed->get_zero_cut(h, cut);
-  bool found_zero = false;
-
-  if (steps0 > 0)
-  {
-    for (const TransitionRelation &tr : trs.at(0))
-    {
-      Bdd succ;
-      if (fw)
-      {
-        succ = tr.preimage(cut);
-      }
-      else
-      {
-        succ = tr.image(cut);
-      }
-      if (succ.IsZero())
-      {
-        continue;
-      }
-      for (size_t newSteps0 = 0; newSteps0 < steps0; newSteps0++)
-      {
-        Bdd intersection = succ * cur_closed->get_zero_closed_at(h, newSteps0);
-        if (!intersection.IsZero())
-        {
-          found_zero = true;
-          vector<OperatorID> new_path = path;
-          new_path.push_back(*(tr.getOpsIds().begin()));
-          if (h == 0 && newSteps0 == 0)
-          {
-            if (!fw || (fw && !exp_bw))
-            {
-              save_plan(new_path, fw);
-            }
-            else
-            {
-              // bidirectional case => simulate plan
-              std::reverse(new_path.begin(), new_path.end());
-              auto res = get_resulting_state(new_path);
-              Bdd state = res.second;
-              extract_multiply_paths(state, working_h, false, new_path);
-            }
-          }
-          else
-          {
-            extract_multiply_paths(intersection, h, fw, new_path);
-          }
-          if (cur_search->getStateSpaceShared()->found_enough_plans())
-          {
-            return;
-          }
+namespace symbolic {
+    void SymSolution::getPlan(vector <OperatorID> &path) const {
+        assert (path.empty()); //This code should be modified to allow appending things to paths
+        DEBUG_MSG(cout << "Extract path forward: " << g << endl; );
+        if (exp_fw) {
+            exp_fw->getPlan(cut, g, path);   
         }
-      }
-    }
-  }
-  if (steps0 == 0 || !found_zero)
-  {
-    // Perform cost reconstruction
-    for (auto key : trs)
-    {
-      if (key.first == 0)
-      {
-        continue;
-      }
-      int newH = h - key.first;
-      if (newH < 0)
-      {
-        continue;
-      }
-      for (TransitionRelation &tr : key.second)
-      {
-        Bdd succ;
-        if (fw)
-        {
-          succ = tr.preimage(cut);
-        }
-        else
-        {
-          succ = tr.image(cut);
-        }
-
-        Bdd intersection =
-            succ * cur_search->getClosedShared()->get_closed_at(newH);
-        if (!intersection.IsZero())
-        {
-          vector<OperatorID> new_path = path;
-          new_path.push_back(*(tr.getOpsIds().begin()));
-          if (newH == 0 && cur_closed->get_zero_cut(newH, intersection) == 0)
-          {
-            if (!fw || (fw && !exp_bw))
-            {
-              save_plan(new_path, fw);
+        DEBUG_MSG(cout << "Extract path backward: " << h << endl; );
+        if (exp_bw) {
+            Bdd newCut;
+            if (!path.empty()) {
+            TaskProxy task_proxy(*tasks::g_root_task);
+            State s = task_proxy.get_initial_state();
+            //Get state
+            for (auto op_id : path) {
+                OperatorProxy op = task_proxy.get_operators()[op_id];
+                s= s.get_successor(op);
             }
-            else
-            {
-              // bidirectional case => simulate plan
-              std::reverse(new_path.begin(), new_path.end());
-              auto res = get_resulting_state(new_path);
-              Bdd state = res.second;
-              extract_multiply_paths(state, working_h, false, new_path);
+            newCut = exp_bw->getStateSpace()->getVars()->getStateBDD(s.get_values());
+            } else {
+                newCut = cut;
             }
-          }
-          else
-          {
-            extract_multiply_paths(intersection, newH, fw, new_path);
-          }
-          if (cur_search->getStateSpaceShared()->found_enough_plans())
-          {
-            return;
-          }
-        }
-      }
+        
+            exp_bw->getPlan(newCut, h, path);
+        } 
     }
-  }
 }
-
-Bdd SymSolution::bdd_for_zero_reconstruction(const Bdd &c, int h,
-                                             bool fw) const
-{
-  auto cur_search = fw ? exp_fw : exp_bw;
-  auto cur_closed = cur_search->getClosedShared();
-
-  // Contains 0 buckets
-  if (cur_closed->get_num_zero_closed_layers(h))
-  {
-    size_t steps0 = cur_closed->get_zero_cut(h, c);
-    if (steps0 < cur_closed->get_num_zero_closed_layers(h))
-    {
-      return c * cur_closed->get_zero_closed_at(h, steps0);
-    }
-  }
-
-  // There exist no 0-cost buckets or we haven't found it => search it
-  return c;
-}
-
-bool SymSolution::all_plans_found() const
-{
-  auto cur = exp_fw ? exp_fw : exp_bw;
-  return cur->getStateSpaceShared()->found_enough_plans();
-}
-
-const std::vector<std::vector<OperatorID>> &SymSolution::get_found_plans()
-{
-  auto cur = exp_fw ? exp_fw : exp_bw;
-  return cur->getStateSpaceShared()->get_found_plans();
-}
-
-} // namespace symbolic

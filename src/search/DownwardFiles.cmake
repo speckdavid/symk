@@ -552,7 +552,6 @@ fast_downward_plugin(
         tasks/domain_abstracted_task_factory
         tasks/modified_goals_task
         tasks/modified_operator_costs_task
-        tasks/plan_forbid_reformulated_task
     DEPENDS TASK_PROPERTIES
     DEPENDENCY_ONLY
 )
@@ -778,6 +777,8 @@ fast_downward_plugin(
         symbolic/sym_estimate
         symbolic/sym_search
         symbolic/sym_solution
+        symbolic/sym_solution_registry
+        symbolic/sym_plan_reconstruction
         symbolic/unidirectional_search
         symbolic/frontier
         symbolic/open_list
@@ -785,7 +786,6 @@ fast_downward_plugin(
         symbolic/sym_controller
         symbolic/bidirectional_search
         symbolic/uniform_cost_search
-        task_utils/plan_graph
         search_engines/symbolic_search
 )
 

@@ -148,6 +148,7 @@ double InfluenceGraph::compute_function(const std::vector <int> &order) const {
 
 
 InfluenceGraph::InfluenceGraph(int num) {
+    // TODO(speckd): we need to randomize the seed here
     rng = std::make_shared<utils::RandomNumberGenerator>(0);
     influence_graph.resize(num);
     for (auto &i : influence_graph) {

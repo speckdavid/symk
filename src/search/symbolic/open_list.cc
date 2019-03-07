@@ -44,6 +44,15 @@ int OpenList::minG() const
     return open.empty() ? std::numeric_limits<int>::max() : open.begin()->first;
 }
 
+bool OpenList::contains_any_state(const Bdd& bdd) const {
+    for (auto& key : open) {
+        if (bucket_contains_any_state(key.second, bdd)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 std::ostream &operator<<(std::ostream &os, const OpenList &exp)
 {
     os << " open{";
