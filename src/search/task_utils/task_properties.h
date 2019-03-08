@@ -65,6 +65,7 @@ extern bool has_conditional_effects(TaskProxy task);
   Runtime: O(n), where n is the number of operators.
 */
 extern void verify_no_conditional_effects(TaskProxy task);
+extern void verify_no_zero_operator_cost(TaskProxy task_proxy);
 
 extern std::vector<int> get_operator_costs(const TaskProxy &task_proxy);
 extern double get_average_operator_cost(TaskProxy task_proxy);

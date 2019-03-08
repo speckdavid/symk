@@ -58,6 +58,17 @@ void verify_no_conditional_effects(TaskProxy task) {
     }
 }
 
+void verify_no_zero_operator_cost(TaskProxy task_proxy) {
+    for (OperatorProxy op : task_proxy.get_operators()) {
+        if (op.get_cost() == 0) {
+            cerr << "This configuration does not support zero operation cost "
+                << "(operator " << op.get_name() << ")!" << endl
+                << "Terminating." << endl;
+            utils::exit_with(ExitCode::SEARCH_UNSUPPORTED);
+        }
+    }
+}
+
 vector<int> get_operator_costs(const TaskProxy &task_proxy) {
     vector<int> costs;
     OperatorsProxy operators = task_proxy.get_operators();

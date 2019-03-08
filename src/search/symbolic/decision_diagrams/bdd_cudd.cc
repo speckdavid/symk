@@ -42,7 +42,8 @@ Bdd::Bdd(cudd::BDD bdd) { this->bdd = bdd; }
 
 cudd::BDD Bdd::get_lib_bdd() const { return bdd; }
 
-void Bdd::set_lib_bdd(cudd::BDD bdd) {
+void Bdd::set_lib_bdd(cudd::BDD bdd)
+{
   this->bdd = bdd;
 }
 
@@ -204,12 +205,17 @@ Bdd Bdd::RelationProductPrev(const Bdd &relation, const Bdd &cube,
   return tmp.AndAbstract(relation, cube, max_nodes);
 }
 
-void Bdd::toDot(const std::string &file_name) const
+void Bdd::toDot(const std::string &file_name, std::vector<std::string>& var_names) const
 {
+  std::vector<char *> names(var_names.size());
+  for (size_t i = 0; i < var_names.size(); ++i) {
+    names[i] = &var_names[i].front();
+  }
+
   FILE *outfile = fopen(file_name.c_str(), "w");
   DdNode **ddnodearray = (DdNode **)malloc(sizeof(bdd.Add().getNode()));
-  ddnodearray[0] = bdd.getNode(); // bdd.Add().getNode();
-  Cudd_DumpDot(manager->getManager(), 1, ddnodearray, NULL, NULL,
+  ddnodearray[0] = bdd.Add().getNode();
+  Cudd_DumpDot(manager->getManager(), 1, ddnodearray, names.data(), NULL,
                outfile); // dump the function to .dot file
   free(ddnodearray);
   fclose(outfile);

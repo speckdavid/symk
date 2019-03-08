@@ -23,8 +23,8 @@ protected:
   static std::unique_ptr<cudd::Cudd> manager;
 
 public:
-  static void add_options_to_parser(options::OptionParser &/*parser*/) {}
-  static void parse_options(const options::Options &/*opts*/) {}
+  static void add_options_to_parser(options::OptionParser & /*parser*/) {}
+  static void parse_options(const options::Options & /*opts*/) {}
 
   Bdd();
   Bdd(const Bdd &bdd);
@@ -84,7 +84,7 @@ public:
                           const std::vector<Bdd> &succ_vars,
                           int max_nodes = 0) const;
 
-  void toDot(const std::string &file_name) const;
+  void toDot(const std::string &file_name, std::vector<std::string>& var_names) const;
 };
 } // namespace symbolic
 

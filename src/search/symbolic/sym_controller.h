@@ -1,85 +1,72 @@
 #ifndef SYMBOLIC_SYM_CONTROLLER_H
 #define SYMBOLIC_SYM_CONTROLLER_H
 
-//Shared class for SymEngine and smas_heuristic
+// Shared class for SymEngine and smas_heuristic
 
-#include "sym_state_space_manager.h"
 #include "sym_enums.h"
 #include "sym_params_search.h"
 #include "sym_solution.h"
 #include "sym_solution_registry.h"
+#include "sym_state_space_manager.h"
 
-#include <vector>
-#include <memory>
 #include <limits>
+#include <memory>
+#include <vector>
 
 namespace options {
 class OptionParser;
 class Options;
-}
+} // namespace options
 
 namespace symbolic {
 class SymSolution;
 class SymVariables;
 class SymPH;
 
-
 class SymController {
 protected:
-    std::shared_ptr<SymVariables> vars; //The symbolic variables are declared here
+  std::shared_ptr<SymVariables> vars; // The symbolic variables are declared
+                                      // here
 
-    SymParamsMgr mgrParams; //Parameters for SymStateSpaceManager configuration.
-    SymParamsSearch searchParams; //Parameters to search the original state space
+  SymParamsMgr mgrParams; // Parameters for SymStateSpaceManager configuration.
+  SymParamsSearch searchParams; // Parameters to search the original state space
 
-    int lower_bound;
-    SymSolution solution;
-    SymSolutionRegistry solution_registry;
+  int lower_bound;
+  SymSolution solution;
+  SymSolutionRegistry solution_registry;
 
 public:
-    SymController(const options::Options &opts);
-    virtual ~SymController() {}
+  SymController(const options::Options &opts);
+  virtual ~SymController() {}
 
-    virtual void new_solution(const SymSolution & sol);
-    void setLowerBound(int lower, bool hard = false);
+  virtual void new_solution(const SymSolution &sol);
+  void setLowerBound(int lower, bool hard = false);
 
-    int getUpperBound() const {
-        if (searchParams.top_k && !solution_registry.found_all_plans()) 
-        {
-            return std::numeric_limits<int>::max();
-        }
-        if(solution.solved()) {
-            return solution.getCost();
-        } 
-        return std::numeric_limits<int>::max();
+  int getUpperBound() const {
+    if (searchParams.top_k && !solution_registry.found_all_plans()) {
+      return std::numeric_limits<int>::max();
     }
-    int getLowerBound() const {
-	return lower_bound; 
+    if (solution.solved()) {
+      return solution.getCost();
     }
-    
-    bool solved() const {
-	return getLowerBound() >= getUpperBound(); 
-    }
-    
-    const SymSolution * get_solution () const {
-	return &solution;
-    }
+    return std::numeric_limits<int>::max();
+  }
+  int getLowerBound() const { return lower_bound; }
 
-    inline SymVariables *getVars() {
-        return vars.get();
-    }
+  bool solved() const { return getLowerBound() >= getUpperBound(); }
 
-    inline const SymParamsMgr &getMgrParams() const {
-        return mgrParams;
-    }
+  const SymSolution *get_solution() const { return &solution; }
 
-    inline const SymParamsSearch &getSearchParams() const {
-        return searchParams;
-    }
+  inline SymVariables *getVars() { return vars.get(); }
 
-    Bdd get_states_on_goal_paths() const;
+  inline const SymParamsMgr &getMgrParams() const { return mgrParams; }
 
-    static void add_options_to_parser(options::OptionParser &parser,
-                                      int maxStepTime, int maxStepNodes);
+  inline const SymParamsSearch &getSearchParams() const { return searchParams; }
+
+  Bdd get_states_on_goal_paths() const;
+
+  static void add_options_to_parser(options::OptionParser &parser,
+                                    int maxStepTime, int maxStepNodes);
 };
-}
+} // namespace symbolic
 #endif
