@@ -295,7 +295,7 @@ SymSolution ClosedList::checkCut(UnidirectionalSearch *search,
 std::vector<SymSolution> ClosedList::getAllCuts(UnidirectionalSearch *search,
                                                 const Bdd &states, int g,
                                                 bool fw,
-                                                int lower_bound) const {
+                                                int /*lower_bound*/) const {
   std::vector<SymSolution> result;
   Bdd cut_candidate = states * closedTotal;
   if (cut_candidate.IsZero()) {
@@ -304,9 +304,9 @@ std::vector<SymSolution> ClosedList::getAllCuts(UnidirectionalSearch *search,
     for (const auto &closedH : closed) {
       int h = closedH.first;
 
-      if (g + h < lower_bound) {
+      /*if (g + h < lower_bound) {
         continue;
-      }
+      }*/
 
       // cout << "Check cut of g=" << g << " with h=" << h << endl;
       Bdd cut = closedH.second * cut_candidate;
