@@ -5,11 +5,13 @@
 #include "sym_solution_registry.h"
 #include "unidirectional_search.h"
 
-namespace symbolic {
+namespace symbolic
+{
 
 class ClosedList;
 
-class PlanReconstructor {
+class PlanReconstructor
+{
 protected:
   UnidirectionalSearch *uni_search_fw;
   UnidirectionalSearch *uni_search_bw;
@@ -17,14 +19,15 @@ protected:
   std::shared_ptr<StateRegistry> state_registry;
   std::map<int, std::vector<TransitionRelation>> trs;
   std::vector<Plan> found_plans;
-  std::vector<Plan> closed_plans;
+  std::unordered_set<size_t> hashes_found_plans;
   size_t desired_num_plans;
 
-  bool different(const Plan &plan1, const Plan &plan2) const;
+  size_t get_hash_value(const Plan &plan) const;
 
   void add_plan(const Plan &plan);
 
-  bool found_enough_plans() const {
+  bool found_enough_plans() const
+  {
     return found_plans.size() >= desired_num_plans;
   }
 

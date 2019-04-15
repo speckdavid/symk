@@ -5,34 +5,25 @@
 namespace symbolic
 {
 
-bool PlanReconstructor::different(const Plan &plan1, const Plan &plan2) const
+// Hashes a vecor of ints which is a plan (https://stackoverflow.com/questions/20511347/a-good-hash-function-for-a-vector)
+size_t PlanReconstructor::get_hash_value(const Plan &plan) const
 {
-  if (plan1.size() != plan2.size())
+  std::size_t seed = plan.size();
+  for (auto &op : plan)
   {
-    return true;
+    seed ^= op.get_index() + 0x9e3779b9 + (seed << 6) + (seed >> 2);
   }
-
-  for (size_t op_id = 0; op_id < plan1.size(); op_id++)
-  {
-    if (plan1.at(op_id) != plan2.at(op_id))
-    {
-      return true;
-    }
-  }
-  return false;
+  return seed;
 }
 
 void PlanReconstructor::add_plan(const Plan &plan)
 {
-  for (size_t i = 0; i < closed_plans.size(); i++)
+  size_t plan_seed = get_hash_value(plan);
+  if (hashes_found_plans.count(plan_seed) == 0)
   {
-    if (!different(plan, closed_plans.at(i)))
-    {
-      return;
-    }
+    found_plans.push_back(plan);
+    hashes_found_plans.insert(plan_seed);
   }
-  found_plans.push_back(plan);
-  closed_plans.push_back(plan);
 }
 
 Bdd PlanReconstructor::get_resulting_state(const Plan &plan) const
@@ -82,7 +73,9 @@ void PlanReconstructor::extract_all_plans(SymCut &sym_cut, bool fw,
       if (fw && uni_search_bw)
       {
         extract_all_plans(sym_cut, false, uni_search_bw->getClosedShared(), plan);
-      } else {
+      }
+      else
+      {
         Bdd cut = closed->get_closed_at(0) * sym_cut.get_cut();
         if (!cut.IsZero())
         {
