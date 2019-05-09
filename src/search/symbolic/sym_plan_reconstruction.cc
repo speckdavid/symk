@@ -54,34 +54,123 @@ Bdd PlanReconstructor::bdd_for_zero_reconstruction(
   return cut;
 }
 
-void PlanReconstructor::extract_all_plans(SymCut &sym_cut, bool fw,
-                                          std::shared_ptr<ClosedList> closed,
-                                          Plan plan)
+void PlanReconstructor::extract_all_plans(SymCut &sym_cut, bool fw, Plan plan)
 {
-  // Resolve zero actions
-  bool zero_action_found = reconstruct_zero_action(sym_cut, fw, closed, plan);
-
-  // Resolve cost actions
-  if (!zero_action_found)
+  if (found_enough_plans())
   {
-    bool cost_action_found = reconstruct_cost_action(sym_cut, fw, closed, plan);
+    return;
+  }
 
-    // No action found => empty plan ?
-    if (!cost_action_found)
+  if (!task_has_zero_costs())
+  {
+    extract_all_cost_plans(sym_cut, fw, plan);
+  }
+  else
+  {
+    extract_all_zero_plans(sym_cut, fw, plan);
+  }
+}
+
+void PlanReconstructor::extract_all_cost_plans(SymCut &sym_cut, bool fw, Plan &plan)
+{
+  // std::cout << sym_cut << std::endl;
+  if (sym_cut.get_g() == 0 && sym_cut.get_h() == 0)
+  {
+    add_plan(plan);
+    return;
+  }
+
+  // Resolve cost action
+  if (fw)
+  {
+    if (sym_cut.get_g() > 0)
     {
-      // Possible that only bw search occured we need to start it manually :^)
-      if (fw && uni_search_bw)
+      reconstruct_cost_action(sym_cut, true, uni_search_fw->getClosedShared(), plan);
+    }
+    else
+    {
+      SymCut new_cut(0, sym_cut.get_h(), get_resulting_state(plan));
+      reconstruct_cost_action(new_cut, false, uni_search_bw->getClosedShared(), plan);
+    }
+  }
+  else
+  {
+    reconstruct_cost_action(sym_cut, false, uni_search_bw->getClosedShared(), plan);
+  }
+}
+
+void PlanReconstructor::extract_all_zero_plans(SymCut &sym_cut, bool fw, Plan &plan)
+{
+
+  /*std::cout << sym_cut << std::endl;
+  std::cout << "Found plans: " << found_plans.size() << std::endl;
+  for (auto &op : plan)
+  {
+    std::cout << state_registry->get_task_proxy().get_operators()[op].get_name() << " " << std::endl;
+  }
+  std::cout << std::endl;*/
+
+  // Only zero costs left!
+  if (sym_cut.get_g() == 0 && sym_cut.get_h() == 0)
+  {
+    // Check wether we are really in a initial or goal state
+    Bdd intersection;
+    if (fw && !uni_search_bw)
+    {
+      intersection = sym_cut.get_cut() * uni_search_fw->getClosedShared()->get_start_states();
+      if (!intersection.IsZero())
       {
-        extract_all_plans(sym_cut, false, uni_search_bw->getClosedShared(), plan);
+        add_plan(plan);
+        if (found_enough_plans())
+        {
+          return;
+        }
+      }
+      reconstruct_zero_action(sym_cut, true, uni_search_fw->getClosedShared(), plan);
+    }
+    else if (fw && uni_search_bw)
+    {
+      intersection = sym_cut.get_cut() * uni_search_fw->getClosedShared()->get_start_states();
+      if (!intersection.IsZero())
+      {
+        reconstruct_zero_action(sym_cut, false, uni_search_bw->getClosedShared(), plan);
+      }
+      reconstruct_zero_action(sym_cut, true, uni_search_fw->getClosedShared(), plan);
+    }
+    else
+    { // bw
+      intersection = sym_cut.get_cut() * uni_search_bw->getClosedShared()->get_start_states();
+      if (!intersection.IsZero())
+      {
+        add_plan(plan);
+        if (found_enough_plans())
+        {
+          return;
+        }
+      }
+      reconstruct_zero_action(sym_cut, false, uni_search_bw->getClosedShared(), plan);
+    }
+  }
+  else
+  {
+    // Some cost left!
+    if (fw)
+    {
+      if (sym_cut.get_g() > 0)
+      {
+        reconstruct_cost_action(sym_cut, true, uni_search_fw->getClosedShared(), plan);
       }
       else
       {
-        Bdd cut = closed->get_closed_at(0) * sym_cut.get_cut();
-        if (!cut.IsZero())
-        {
-          add_plan(plan);
-        }
+        SymCut new_cut(0, sym_cut.get_h(), get_resulting_state(plan));
+        reconstruct_cost_action(new_cut, false, uni_search_bw->getClosedShared(), plan);
       }
+      reconstruct_zero_action(sym_cut, true, uni_search_fw->getClosedShared(), plan);
+    }
+    else
+    {
+      reconstruct_cost_action(sym_cut, false, uni_search_bw->getClosedShared(), plan);
+      reconstruct_zero_action(sym_cut, false, uni_search_bw->getClosedShared(), plan);
     }
   }
 }
@@ -92,13 +181,11 @@ bool PlanReconstructor::reconstruct_zero_action(
 {
   int cur_cost = fw ? sym_cut.get_g() : sym_cut.get_h();
   Bdd cut = sym_cut.get_cut();
-  cut = bdd_for_zero_reconstruction(cut, cur_cost, closed);
-  size_t steps0 = closed->get_zero_cut(cur_cost, cut);
 
   bool some_action_found = false;
-  if (steps0 > 0)
+  Bdd succ;
+  for (size_t newSteps0 = 0; newSteps0 < closed->get_num_zero_closed_layers(cur_cost); newSteps0++)
   {
-    Bdd succ;
     for (const TransitionRelation &tr : trs.at(0))
     {
       succ = fw ? tr.preimage(cut) : tr.image(cut);
@@ -107,47 +194,26 @@ bool PlanReconstructor::reconstruct_zero_action(
         continue;
       }
 
-      for (size_t newSteps0 = 0; newSteps0 < steps0; newSteps0++)
+      Bdd intersection =
+          succ * closed->get_zero_closed_at(cur_cost, newSteps0);
+      if (!intersection.IsZero())
       {
-        Bdd intersection =
-            succ * closed->get_zero_closed_at(cur_cost, newSteps0);
-        if (!intersection.IsZero())
+        Plan new_plan = plan;
+        some_action_found = true;
+        if (fw)
         {
-          Plan new_plan = plan;
+          new_plan.insert(new_plan.begin(), *(tr.getOpsIds().begin()));
+        }
+        else
+        {
           new_plan.push_back(*(tr.getOpsIds().begin()));
-          some_action_found = true;
-          if (cur_cost == 0 && newSteps0 == 0)
-          {
-            if (fw)
-            {
-              std::reverse(new_plan.begin(), new_plan.end());
-            }
+        }
+        SymCut new_cut(sym_cut.get_g(), sym_cut.get_h(), intersection);
+        extract_all_plans(new_cut, fw, new_plan);
 
-            // If bidir search we need to start backward recosntruction
-            // First simulate the plan to get the correct state then
-            // reconstruct from their...
-            if (fw && uni_search_bw)
-            {
-              Bdd final_state = get_resulting_state(new_plan);
-              SymCut new_cut(0, sym_cut.get_h(), final_state);
-              extract_all_plans(new_cut, false,
-                                uni_search_bw->getClosedShared(), new_plan);
-            }
-            else
-            {
-              add_plan(new_plan);
-            }
-          }
-          else
-          {
-            SymCut new_cut(sym_cut.get_g(), sym_cut.get_h(), intersection);
-            extract_all_plans(new_cut, fw, closed, new_plan);
-          }
-
-          if (found_enough_plans())
-          {
-            return true;
-          }
+        if (found_enough_plans())
+        {
+          return true;
         }
       }
     }
@@ -179,45 +245,21 @@ bool PlanReconstructor::reconstruct_cost_action(
         continue;
       }
       Plan new_plan = plan;
-      new_plan.push_back(*(tr.getOpsIds().begin()));
       some_action_found = true;
-      if (new_cost == 0 && closed->get_zero_cut(new_cost, intersection) == 0)
+      SymCut new_cut(0, 0, intersection);
+      if (fw)
       {
-        if (fw)
-        {
-          std::reverse(new_plan.begin(), new_plan.end());
-        }
-
-        // If bidir search we need to start backward recosntruction
-        // First simulate the plan to get the correct state then
-        // reconstruct from their...
-        if (fw && uni_search_bw)
-        {
-          Bdd final_state = get_resulting_state(new_plan);
-          SymCut new_cut(0, sym_cut.get_h(), final_state);
-          extract_all_plans(new_cut, false, uni_search_bw->getClosedShared(),
-                            new_plan);
-        }
-        else
-        {
-          add_plan(new_plan);
-        }
+        new_plan.insert(new_plan.begin(), *(tr.getOpsIds().begin()));
+        new_cut.set_g(new_cost);
+        new_cut.set_h(sym_cut.get_h());
       }
       else
       {
-        SymCut new_cut(0, 0, intersection);
-        if (fw)
-        {
-          new_cut.set_g(new_cost);
-          new_cut.set_h(sym_cut.get_h());
-        }
-        else
-        {
-          new_cut.set_g(sym_cut.get_g());
-          new_cut.set_h(new_cost);
-        }
-        extract_all_plans(new_cut, fw, closed, new_plan);
+        new_plan.push_back(*(tr.getOpsIds().begin()));
+        new_cut.set_g(sym_cut.get_g());
+        new_cut.set_h(new_cost);
       }
+      extract_all_plans(new_cut, fw, new_plan);
 
       if (found_enough_plans())
       {
@@ -248,17 +290,26 @@ void PlanReconstructor::reconstruct_plans(const SymCut &cut,
   found_plans.clear();
   Plan plan;
   SymCut modifiable_cut = cut;
+
+  if (uni_search_fw && !uni_search_bw)
+  {
+    modifiable_cut.set_h(0);
+  }
+  if (!uni_search_fw && uni_search_bw)
+  {
+    modifiable_cut.set_g(0);
+  }
+
   if (uni_search_fw)
   {
-    extract_all_plans(modifiable_cut, true, uni_search_fw->getClosedShared(),
-                      plan);
+    extract_all_plans(modifiable_cut, true, plan);
   }
   else
   {
-    extract_all_plans(modifiable_cut, false, uni_search_bw->getClosedShared(),
-                      plan);
+    extract_all_plans(modifiable_cut, false, plan);
   }
   plans = found_plans;
+  // std::cout << "DONE" << std::endl;
 }
 
 } // namespace symbolic

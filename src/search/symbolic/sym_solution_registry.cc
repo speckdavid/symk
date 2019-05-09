@@ -53,7 +53,7 @@ bool SymCut::operator!=(const SymCut &other) const
 SymSolutionRegistry::SymSolutionRegistry(int target_num_plans)
     : plan_reconstructor(nullptr), target_num_plans(target_num_plans),
       relevant_task(*tasks::g_root_task), state_registry(nullptr),
-      sym_vars(nullptr)
+      sym_vars(nullptr), plan_cost_bound(-1)
 {
     plan_mgr.set_plan_filename("found_plans/sas_plan");
 }
@@ -119,6 +119,12 @@ void SymSolutionRegistry::construct_cheaper_solutions(int bound)
     while (sym_cuts.size() > 0 && sym_cuts.at(0).get_f() < bound &&
            !found_all_plans())
     {
+        // Ignore all cuts with costs smaller than the bound we already reconstructed
+        if (sym_cuts.at(0).get_f() < plan_cost_bound)
+        {
+            sym_cuts.erase(sym_cuts.begin());
+            continue;
+        }
         std::vector<Plan> new_plans;
         plan_reconstructor->reconstruct_plans(sym_cuts[0], missing_plans(),
                                               new_plans);
@@ -133,5 +139,6 @@ void SymSolutionRegistry::construct_cheaper_solutions(int bound)
         }
         sym_cuts.erase(sym_cuts.begin());
     }
+    plan_cost_bound = bound;
 }
 } // namespace symbolic

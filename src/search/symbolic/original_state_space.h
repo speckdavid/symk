@@ -7,7 +7,7 @@
 namespace symbolic {
 class OriginalStateSpace : public SymStateSpaceManager {
 
-  void create_single_trs_sequential();
+  void create_single_trs_sequential(bool zero_transform);
   void create_single_trs_parallel();
   void
   create_single_trs_parallel_recursive(std::vector<TransitionRelation> &trs,
@@ -17,7 +17,7 @@ class OriginalStateSpace : public SymStateSpaceManager {
                   bool genMutexBDDByFluent, bool fw);
 
 public:
-  OriginalStateSpace(SymVariables *v, const SymParamsMgr &params);
+  OriginalStateSpace(SymVariables *v, const SymParamsMgr &params, bool zero_transform = false);
 
   // Individual TRs: Useful for shrink and plan construction
   std::map<int, std::vector<TransitionRelation>> indTRs;

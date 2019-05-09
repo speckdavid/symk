@@ -1640,9 +1640,9 @@ cuddRehash(
 	nodelist = ALLOC(DdNodePtr, slots);
 	MMoutOfMemory = saveHandler;
 	if (nodelist == NULL) {
-	    (void) fprintf(unique->err,
+	    /*(void) fprintf(unique->err,
 			   "Unable to resize subtable %d for lack of memory\n",
-			   i);
+			   i);*/
 	    /* Prevent frequent resizing attempts. */
 	    (void) cuddGarbageCollect(unique,1);
 	    if (unique->stash != NULL) {

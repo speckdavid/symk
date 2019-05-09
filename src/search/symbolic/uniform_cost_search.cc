@@ -107,7 +107,8 @@ void UniformCostSearch::prepareBucket() {
     DEBUG_MSG(cout << "POP: bucketReady: " << frontier.bucketReady() << endl;);
 
     // TODO: here we should use  and totalClosed to
-    if (p.top_k) {
+    if (lastStepCost && p.top_k)
+    {
       Bdd closed_states =
           !engine->get_states_on_goal_paths() * closed->getClosed();
       if (!open_list.contains_any_state(!closed_states)) {
@@ -139,9 +140,15 @@ void UniformCostSearch::prepareBucket() {
       if (perfectHeuristic && perfectHeuristic->exhausted()) {
         frontier.filter(perfectHeuristic->notClosed());
       }
-      mgr->filterMutex(frontier.bucket(), fw, initialization());
-      removeZero(frontier.bucket());
     }
+    else
+    {
+      // std::cout << "pruning cost ... " << frontier.g() << std::endl;
+      frontier.filter(closed->get_closed_at(frontier.g()));
+    }
+    // TODO (speckd): useful and helpful for top-k?
+    mgr->filterMutex(frontier.bucket(), fw, initialization());
+    removeZero(frontier.bucket());
 
     // Close and move to reopen
 

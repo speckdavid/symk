@@ -14,13 +14,12 @@ SymController::SymController(const Options &opts)
     : vars(make_shared<SymVariables>(opts)), mgrParams(opts),
       searchParams(opts), lower_bound(0),
       solution_registry(mgrParams.num_plans) {
-    task_properties::verify_no_axioms(
-        TaskProxy(*tasks::g_root_task));
-    if (searchParams.top_k)
-    {
-        task_properties::verify_no_zero_operator_cost(
-            TaskProxy(*tasks::g_root_task));
-  }
+
+  task_properties::verify_no_axioms(TaskProxy(*tasks::g_root_task));
+  /*if (searchParams.top_k)
+  {
+    task_properties::verify_no_zero_operator_cost(TaskProxy(*tasks::g_root_task));
+  }*/
 
   mgrParams.print_options();
   searchParams.print_options();

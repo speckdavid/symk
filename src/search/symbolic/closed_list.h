@@ -68,6 +68,13 @@ public:
 
   inline std::map<int, Bdd> getClosedList() const { return closed; }
 
+  Bdd get_start_states() const {
+    if (get_num_zero_closed_layers(0) == 0) {
+      return get_closed_at(0);
+    }
+    return get_zero_closed_at(0,0);
+  }
+
   inline Bdd get_closed_at(int h) const {
     if (!closed.count(h)) {
       return mgr->zeroBDD();
@@ -80,7 +87,10 @@ public:
   }
 
   inline size_t get_num_zero_closed_layers(int h) const {
-    return zeroCostClosed.count(h);
+    if (zeroCostClosed.count(h) == 0) {
+      return 0;
+    }
+    return zeroCostClosed.at(h).size();
   }
 
   inline size_t get_zero_cut(int h, const Bdd &bdd) const {
@@ -110,6 +120,16 @@ public:
 
   virtual bool exhausted() const override {
     return fNotClosed == std::numeric_limits<int>::max();
+  }
+
+  void dump() const {
+    for (auto pair : zeroCostClosed) {
+      std::cout << "Closed at cost " << pair.first << ":" << std::endl;
+      int i = 0;
+      for (auto bdd : pair.second) {
+        std::cout << "   Layer " << i++ << ": " << bdd.nodeCount() << "Node" << std::endl;
+      }
+    }
   }
 };
 } // namespace symbolic

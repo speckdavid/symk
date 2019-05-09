@@ -70,6 +70,7 @@ extern void verify_no_zero_operator_cost(TaskProxy task_proxy);
 extern std::vector<int> get_operator_costs(const TaskProxy &task_proxy);
 extern double get_average_operator_cost(TaskProxy task_proxy);
 extern int get_min_operator_cost(TaskProxy task_proxy);
+extern int get_max_operator_cost(TaskProxy task_proxy);
 
 /*
   Return the number of facts of the task.

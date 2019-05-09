@@ -2894,9 +2894,9 @@ void
 Cudd_OutOfMem(
   size_t size /**< size of the allocation that failed */)
 {
-    (void) fflush(stdout);
-    (void) fprintf(stderr, "\nCUDD: unable to allocate %" PRIszt " bytes\n",
-                   size);
+    //(void) fflush(stdout);
+    //(void) fprintf(stderr, "\nCUDD: unable to allocate %" PRIszt " bytes\n",
+    //               size);
 
 } /* end of Cudd_OutOfMem */
 

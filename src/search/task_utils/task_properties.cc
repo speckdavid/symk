@@ -95,7 +95,19 @@ int get_min_operator_cost(TaskProxy task_proxy) {
     return min_cost;
 }
 
-int get_num_facts(const TaskProxy &task_proxy) {
+int get_max_operator_cost(TaskProxy task_proxy)
+{
+    int max_cost = 0;
+    for (OperatorProxy op : task_proxy.get_operators())
+    {
+        max_cost = max(max_cost, op.get_cost());
+        // std::cout << op.get_name() << ": " << op.get_cost() << std::endl;
+    }
+    return max_cost;
+}
+
+int get_num_facts(const TaskProxy &task_proxy)
+{
     int num_facts = 0;
     for (VariableProxy var : task_proxy.get_variables())
         num_facts += var.get_domain_size();

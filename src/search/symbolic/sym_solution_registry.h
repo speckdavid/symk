@@ -54,6 +54,7 @@ protected:
   std::shared_ptr<StateRegistry> state_registry;
   std::shared_ptr<SymVariables> sym_vars;
   Bdd states_on_goal_paths;
+  int plan_cost_bound;
 
   int missing_plans() const { return target_num_plans - found_plans.size(); }
 

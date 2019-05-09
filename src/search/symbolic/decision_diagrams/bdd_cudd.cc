@@ -26,6 +26,7 @@ void Bdd::initalize_manager(unsigned int numVars, unsigned int numVarsZ,
   manager->setHandler(exceptionError);
   manager->setTimeoutHandler(exceptionError);
   manager->setNodesExceededHandler(exceptionError);
+  manager->InstallOutOfMemoryHandler(Cudd_OutOfMemSilent);
 }
 
 void Bdd::unset_time_limit() { manager->UnsetTimeLimit(); }

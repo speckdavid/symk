@@ -31,6 +31,11 @@ protected:
     return found_plans.size() >= desired_num_plans;
   }
 
+  bool task_has_zero_costs() const
+  {
+    return trs.count(0) > 0;
+  }
+
   bool bw_reconstruction_necessary() const;
 
   Bdd get_resulting_state(const Plan &plan) const;
@@ -47,8 +52,10 @@ protected:
   // BID: After reconstruction of the forward part we reverse the plan and
   // call extract_all_plans in bw direction which completes the plan
   // After completing a plan we store it in found plans!
-  void extract_all_plans(SymCut &sym_cut, bool fw,
-                         std::shared_ptr<ClosedList> closed, Plan plan);
+  void extract_all_plans(SymCut &sym_cut, bool fw, Plan plan);
+
+  void extract_all_cost_plans(SymCut &sym_cut, bool fw, Plan &plan);
+  void extract_all_zero_plans(SymCut &sym_cut, bool fw, Plan &plan);
 
   // Return wether a zero cost reconstruction step was necessary
   bool reconstruct_zero_action(SymCut &sym_cut, bool fw,
