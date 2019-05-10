@@ -55,9 +55,14 @@ public:
   Bdd getFullyCostClosed() const
   {
     Bdd res = mgr->zeroBDD();
-    for (size_t i = 0; i < closed.size() - 1; ++i)
+    size_t i = 0;
+    for (const auto& pair : closed)
     {
-      res += closed.at(i);
+      if (i == closed.size() - 1) {
+        break;
+      }
+      res += pair.second;
+      i++;
       // std::cout << "Closed entry: " << i << std::endl;
     }
     return res;
