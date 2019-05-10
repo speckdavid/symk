@@ -49,7 +49,9 @@ int main(int argc, const char **argv)
             result = setrlimit(RLIMIT_STACK, &rl);
             if (result != 0)
             {
-                fprintf(stderr, "setrlimit returned result = %d\n", result);
+                std::cerr << "setrlimit returned result = "<< result << std::endl;
+            } else {
+                std::cout << "setrlimit (stack size) to "<< kStackSize / 1024 / 1024 << "MB" << std::endl;
             }
         }
     }
