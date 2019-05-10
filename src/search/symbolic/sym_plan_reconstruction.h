@@ -18,9 +18,14 @@ protected:
   std::shared_ptr<SymVariables> sym_vars;
   std::shared_ptr<StateRegistry> state_registry;
   std::map<int, std::vector<TransitionRelation>> trs;
-  std::vector<Plan> found_plans;
   std::unordered_set<size_t> hashes_found_plans;
-  size_t desired_num_plans;
+
+  Bdd states_on_goal_path;
+  size_t num_found_plans;
+  size_t num_desired_plans;
+  PlanManager plan_mgr;
+
+  Bdd states_on_path(const Plan &plan);
 
   size_t get_hash_value(const Plan &plan) const;
 
@@ -28,7 +33,7 @@ protected:
 
   bool found_enough_plans() const
   {
-    return found_plans.size() >= desired_num_plans;
+    return num_found_plans >= num_desired_plans;
   }
 
   bool task_has_zero_costs() const
@@ -72,8 +77,8 @@ public:
                     std::shared_ptr<StateRegistry> state_registry);
 
   // Resets found plans and desired_num_plans which are helper functions
-  void reconstruct_plans(const SymCut &cut, size_t desired_num_plans,
-                         std::vector<Plan> &plans);
+  // Returns all states on the new plans
+  int reconstruct_plans(const SymCut &cut, size_t num_desired_plans, Bdd& goal_path_states);
 };
 
 } // namespace symbolic

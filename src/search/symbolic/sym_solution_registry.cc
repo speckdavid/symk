@@ -51,24 +51,10 @@ bool SymCut::operator!=(const SymCut &other) const
 }
 
 SymSolutionRegistry::SymSolutionRegistry(int target_num_plans)
-    : plan_reconstructor(nullptr), target_num_plans(target_num_plans),
+    : plan_reconstructor(nullptr), num_target_plans(target_num_plans),
       relevant_task(*tasks::g_root_task), state_registry(nullptr),
       sym_vars(nullptr), plan_cost_bound(-1)
 {
-    plan_mgr.set_plan_filename("found_plans/sas_plan");
-}
-
-Bdd SymSolutionRegistry::states_on_path(const Plan &plan)
-{
-    GlobalState cur = state_registry->get_initial_state();
-    Bdd res = sym_vars->getStateBDD(cur);
-    for (auto &op : plan)
-    {
-        cur = state_registry->get_successor_state(
-            cur, relevant_task.get_operators()[op]);
-        res += sym_vars->getStateBDD(cur);
-    }
-    return res;
 }
 
 void SymSolutionRegistry::register_solution(const SymSolution &solution)
@@ -125,18 +111,9 @@ void SymSolutionRegistry::construct_cheaper_solutions(int bound)
             sym_cuts.erase(sym_cuts.begin());
             continue;
         }
-        std::vector<Plan> new_plans;
-        plan_reconstructor->reconstruct_plans(sym_cuts[0], missing_plans(),
-                                              new_plans);
-        found_plans.insert(found_plans.end(), new_plans.begin(), new_plans.end());
-        for (auto &plan : new_plans)
-        {
-            plan_mgr.save_plan(plan, relevant_task, false, true);
-            if (!found_all_plans())
-            {
-                states_on_goal_paths += states_on_path(plan);
-            }
-        }
+        Bdd goal_path_states;
+        num_found_plans += plan_reconstructor->reconstruct_plans(sym_cuts[0], missing_plans(), goal_path_states);
+        states_on_goal_paths += goal_path_states;
         sym_cuts.erase(sym_cuts.begin());
     }
     plan_cost_bound = bound;

@@ -5,6 +5,19 @@
 namespace symbolic
 {
 
+Bdd PlanReconstructor::states_on_path(const Plan &plan)
+{
+  GlobalState cur = state_registry->get_initial_state();
+  Bdd res = sym_vars->getStateBDD(cur);
+  for (auto &op : plan)
+  {
+    cur = state_registry->get_successor_state(
+        cur, state_registry->get_task_proxy().get_operators()[op]);
+    res += sym_vars->getStateBDD(cur);
+  }
+  return res;
+}
+
 // Hashes a vecor of ints which is a plan (https://stackoverflow.com/questions/20511347/a-good-hash-function-for-a-vector)
 size_t PlanReconstructor::get_hash_value(const Plan &plan) const
 {
@@ -21,8 +34,11 @@ void PlanReconstructor::add_plan(const Plan &plan)
   size_t plan_seed = get_hash_value(plan);
   if (hashes_found_plans.count(plan_seed) == 0)
   {
-    found_plans.push_back(plan);
+    num_found_plans += 1;
     hashes_found_plans.insert(plan_seed);
+    plan_mgr.save_plan(plan, state_registry->get_task_proxy(), false, true);
+    states_on_goal_path += states_on_path(plan);
+    // std::cout << "ADD PLAN --------------" << std::endl;
   }
 }
 
@@ -102,19 +118,20 @@ void PlanReconstructor::extract_all_cost_plans(SymCut &sym_cut, bool fw, Plan &p
 void PlanReconstructor::extract_all_zero_plans(SymCut &sym_cut, bool fw, Plan &plan)
 {
 
-  /*std::cout << sym_cut << std::endl;
-  std::cout << "Found plans: " << found_plans.size() << std::endl;
-  for (auto &op : plan)
-  {
-    std::cout << state_registry->get_task_proxy().get_operators()[op].get_name() << " " << std::endl;
-  }
-  std::cout << std::endl;*/
+  //std::cout << sym_cut << std::endl;
+  //std::cout << plan.size() << std::endl;
+  //std::cout << "Found plans: " << found_plans.size() << std::endl;
+  //for (auto &op : plan)
+  //{
+  //  std::cout << state_registry->get_task_proxy().get_operators()[op].get_name() << " " << std::endl;
+  //}
+  //std::cout << std::endl;
 
+  Bdd intersection;
   // Only zero costs left!
   if (sym_cut.get_g() == 0 && sym_cut.get_h() == 0)
   {
     // Check wether we are really in a initial or goal state
-    Bdd intersection;
     if (fw && !uni_search_bw)
     {
       intersection = sym_cut.get_cut() * uni_search_fw->getClosedShared()->get_start_states();
@@ -133,7 +150,18 @@ void PlanReconstructor::extract_all_zero_plans(SymCut &sym_cut, bool fw, Plan &p
       intersection = sym_cut.get_cut() * uni_search_fw->getClosedShared()->get_start_states();
       if (!intersection.IsZero())
       {
-        reconstruct_zero_action(sym_cut, false, uni_search_bw->getClosedShared(), plan);
+        SymCut new_cut(0, sym_cut.get_h(), get_resulting_state(plan));
+
+        intersection = new_cut.get_cut() * uni_search_bw->getClosedShared()->get_start_states();
+        if (!intersection.IsZero())
+        {
+          add_plan(plan);
+          if (found_enough_plans())
+          {
+            return;
+          }
+        }
+        reconstruct_zero_action(new_cut, false, uni_search_bw->getClosedShared(), plan);
       }
       reconstruct_zero_action(sym_cut, true, uni_search_fw->getClosedShared(), plan);
     }
@@ -162,8 +190,13 @@ void PlanReconstructor::extract_all_zero_plans(SymCut &sym_cut, bool fw, Plan &p
       }
       else
       {
-        SymCut new_cut(0, sym_cut.get_h(), get_resulting_state(plan));
-        reconstruct_cost_action(new_cut, false, uni_search_bw->getClosedShared(), plan);
+        intersection = sym_cut.get_cut() * uni_search_fw->getClosedShared()->get_start_states();
+        if (!intersection.IsZero())
+        {
+          SymCut new_cut(0, sym_cut.get_h(), get_resulting_state(plan));
+          reconstruct_cost_action(new_cut, false, uni_search_bw->getClosedShared(), plan);
+          reconstruct_zero_action(new_cut, false, uni_search_bw->getClosedShared(), plan);
+        }
       }
       reconstruct_zero_action(sym_cut, true, uni_search_fw->getClosedShared(), plan);
     }
@@ -280,14 +313,15 @@ PlanReconstructor::PlanReconstructor(
   auto cur_search = uni_search_fw ? uni_search_fw : uni_search_bw;
   auto cur_closed = cur_search->getClosedShared();
   trs = cur_search->getStateSpaceShared()->getIndividualTRs();
+  plan_mgr.set_plan_filename("found_plans/sas_plan");
 }
 
-void PlanReconstructor::reconstruct_plans(const SymCut &cut,
-                                          size_t desired_num_plans,
-                                          std::vector<Plan> &plans)
+int PlanReconstructor::reconstruct_plans(const SymCut &cut,
+                                         size_t num_desired_plans, Bdd &goal_path_states)
 {
-  this->desired_num_plans = desired_num_plans;
-  found_plans.clear();
+  this->num_desired_plans = num_desired_plans;
+  num_found_plans = 0;
+  states_on_goal_path = sym_vars->zeroBDD();
   Plan plan;
   SymCut modifiable_cut = cut;
 
@@ -308,8 +342,8 @@ void PlanReconstructor::reconstruct_plans(const SymCut &cut,
   {
     extract_all_plans(modifiable_cut, false, plan);
   }
-  plans = found_plans;
-  // std::cout << "DONE" << std::endl;
+  goal_path_states = states_on_goal_path;
+  return num_found_plans;
 }
 
 } // namespace symbolic

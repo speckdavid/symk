@@ -7,10 +7,12 @@
 #include "sym_solution.h"
 #include "sym_variables.h"
 
-namespace symbolic {
+namespace symbolic
+{
 class PlanReconstructor;
 
-class SymCut {
+class SymCut
+{
 protected:
   int g;
   int h;
@@ -35,35 +37,35 @@ public:
   bool operator==(const SymCut &other) const;
   bool operator!=(const SymCut &other) const;
 
-  friend std::ostream &operator<<(std::ostream &os, const SymCut &sym_cut) {
+  friend std::ostream &operator<<(std::ostream &os, const SymCut &sym_cut)
+  {
     return os << "symcut{g=" << sym_cut.get_g() << ", h=" << sym_cut.get_h()
               << ", f=" << sym_cut.get_f()
               << ", nodes=" << sym_cut.get_cut().nodeCount() << "}";
   }
 };
 
-class SymSolutionRegistry {
+class SymSolutionRegistry
+{
 protected:
   std::shared_ptr<PlanReconstructor> plan_reconstructor;
-  int target_num_plans;
-  std::vector<Plan> found_plans;
+  int num_target_plans;
+  int num_found_plans;
   std::vector<SymCut> sym_cuts; // always sorted in ascending order!!!
 
-  PlanManager plan_mgr;
   TaskProxy relevant_task;
   std::shared_ptr<StateRegistry> state_registry;
   std::shared_ptr<SymVariables> sym_vars;
   Bdd states_on_goal_paths;
   int plan_cost_bound;
 
-  int missing_plans() const { return target_num_plans - found_plans.size(); }
-
-  Bdd states_on_path(const Plan &plan);
+  int missing_plans() const { return num_target_plans - num_found_plans; }
 
 public:
   SymSolutionRegistry(int target_num_plans);
 
-  void init(std::shared_ptr<SymVariables> sym_vars) {
+  void init(std::shared_ptr<SymVariables> sym_vars)
+  {
     this->sym_vars = sym_vars;
     state_registry = std::make_shared<StateRegistry>(relevant_task),
     states_on_goal_paths = sym_vars->zeroBDD();
@@ -74,7 +76,7 @@ public:
 
   bool found_all_plans() const { return missing_plans() <= 0; }
 
-  size_t num_found_plans() const { return found_plans.size(); }
+  int get_num_found_plans() const { return num_found_plans; }
 
   Bdd get_states_on_goal_paths() const { return states_on_goal_paths; }
 };

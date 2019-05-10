@@ -8,14 +8,16 @@
 #include <set>
 #include <vector>
 
-namespace symbolic {
+namespace symbolic
+{
 
 class SymStateSpaceManager;
 class SymSolution;
 class UnidirectionalSearch;
 class SymSearch;
 
-class ClosedList : public OppositeFrontier {
+class ClosedList : public OppositeFrontier
+{
 private:
   UnidirectionalSearch *my_search;
   SymStateSpaceManager *mgr; // Symbolic manager to perform bdd operations
@@ -32,8 +34,8 @@ private:
   int hNotClosed,
       fNotClosed; // Bounds on h and g for those states not in closed
   std::map<int, Bdd>
-      closedUpTo; // Disjunction of BDDs in closed  (auxiliar useful to take the
-                  // maximum between several BDDs)
+      closedUpTo;         // Disjunction of BDDs in closed  (auxiliar useful to take the
+                          // maximum between several BDDs)
   std::set<int> h_values; // Set of h_values of the heuristic
 
   void newHValue(int h_value);
@@ -49,6 +51,17 @@ public:
   void setFNotClosed(int f);
 
   const std::set<int> &getHValues();
+
+  Bdd getFullyCostClosed() const
+  {
+    Bdd res = mgr->zeroBDD();
+    for (size_t i = 0; i < closed.size() - 1; ++i)
+    {
+      res += closed.at(i);
+      // std::cout << "Closed entry: " << i << std::endl;
+    }
+    return res;
+  }
 
   // Check if any of the states is closed.
   // In case positive, return a solution pair <f_value, S>
@@ -68,37 +81,48 @@ public:
 
   inline std::map<int, Bdd> getClosedList() const { return closed; }
 
-  Bdd get_start_states() const {
-    if (get_num_zero_closed_layers(0) == 0) {
+  Bdd get_start_states() const
+  {
+    if (get_num_zero_closed_layers(0) == 0)
+    {
       return get_closed_at(0);
     }
-    return get_zero_closed_at(0,0);
+    return get_zero_closed_at(0, 0);
   }
 
-  inline Bdd get_closed_at(int h) const {
-    if (!closed.count(h)) {
+  inline Bdd get_closed_at(int h) const
+  {
+    if (!closed.count(h))
+    {
       return mgr->zeroBDD();
     }
     return closed.at(h);
   }
 
-  inline Bdd get_zero_closed_at(int h, int layer) const {
+  inline Bdd get_zero_closed_at(int h, int layer) const
+  {
     return zeroCostClosed.at(h).at(layer);
   }
 
-  inline size_t get_num_zero_closed_layers(int h) const {
-    if (zeroCostClosed.count(h) == 0) {
+  inline size_t get_num_zero_closed_layers(int h) const
+  {
+    if (zeroCostClosed.count(h) == 0)
+    {
       return 0;
     }
     return zeroCostClosed.at(h).size();
   }
 
-  inline size_t get_zero_cut(int h, const Bdd &bdd) const {
+  inline size_t get_zero_cut(int h, const Bdd &bdd) const
+  {
     size_t i = 0;
-    if (get_num_zero_closed_layers(h)) {
-      for (; i < zeroCostClosed.at(h).size(); i++) {
+    if (get_num_zero_closed_layers(h))
+    {
+      for (; i < zeroCostClosed.at(h).size(); i++)
+      {
         Bdd intersection = zeroCostClosed.at(h).at(i) * bdd;
-        if (!intersection.IsZero()) {
+        if (!intersection.IsZero())
+        {
           break;
         }
       }
@@ -106,27 +130,33 @@ public:
     return i;
   }
 
-  inline int getHNotClosed() const {
+  inline int getHNotClosed() const
+  {
     return 10000000;
     return hNotClosed;
   }
 
-  inline int getFNotClosed() const {
+  inline int getFNotClosed() const
+  {
     return 100000000;
     return fNotClosed;
   }
 
   void statistics() const;
 
-  virtual bool exhausted() const override {
+  virtual bool exhausted() const override
+  {
     return fNotClosed == std::numeric_limits<int>::max();
   }
 
-  void dump() const {
-    for (auto pair : zeroCostClosed) {
+  void dump() const
+  {
+    for (auto pair : zeroCostClosed)
+    {
       std::cout << "Closed at cost " << pair.first << ":" << std::endl;
       int i = 0;
-      for (auto bdd : pair.second) {
+      for (auto bdd : pair.second)
+      {
         std::cout << "   Layer " << i++ << ": " << bdd.nodeCount() << "Node" << std::endl;
       }
     }

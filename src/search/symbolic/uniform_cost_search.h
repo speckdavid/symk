@@ -13,7 +13,8 @@
 #include <memory>
 #include <vector>
 
-namespace symbolic {
+namespace symbolic
+{
 /*
  * This class allows to perform a BDD search.  It is designed to
  * mantain the current state in the search.  We consider four
@@ -31,7 +32,8 @@ namespace symbolic {
 class SymController;
 class ClosedList;
 
-class UniformCostSearch : public UnidirectionalSearch {
+class UniformCostSearch : public UnidirectionalSearch
+{
   UnidirectionalSearch *parent; // Parent of the search
 
   // Current state of the search:
@@ -49,9 +51,12 @@ class UniformCostSearch : public UnidirectionalSearch {
   bool lastStepCost; // If the last step was a cost step (to know if we are in
                      // estimationDisjCost or Zero)
 
+  int last_g_cost;
+
   SymExpStatistics stats;
 
-  virtual bool initialization() const {
+  virtual bool initialization() const
+  {
     return frontier.g() == 0 && lastStepCost;
   }
 
@@ -79,7 +84,8 @@ public:
   UniformCostSearch &operator=(UniformCostSearch &&) = default;
   virtual ~UniformCostSearch() = default;
 
-  virtual bool finished() const {
+  virtual bool finished() const
+  {
     assert(!open_list.empty() || !frontier.empty() ||
            closed->getHNotClosed() == std::numeric_limits<int>::max());
     return open_list.empty() && frontier.empty();
@@ -96,15 +102,18 @@ public:
 
   virtual bool isSearchableWithNodes(int maxNodes) const;
 
-  virtual int getF() const override {
+  virtual int getF() const override
+  {
     return open_list.minNextG(frontier, mgr->getAbsoluteMinTransitionCost());
   }
 
-  virtual int getG() const override {
+  virtual int getG() const override
+  {
     return frontier.empty() ? open_list.minG() : frontier.g();
   }
 
-  int getHNotClosed() const {
+  int getHNotClosed() const
+  {
     return open_list.minNextG(frontier, mgr->getAbsoluteMinTransitionCost());
   }
 
@@ -127,7 +136,8 @@ public:
 
   // void write(const std::string & file) const;
 
-  void filterMutex(Bucket &bucket) {
+  void filterMutex(Bucket &bucket)
+  {
     mgr->filterMutex(bucket, fw, initialization());
   }
 
