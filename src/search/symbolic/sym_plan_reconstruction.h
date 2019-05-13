@@ -18,13 +18,14 @@ protected:
   std::shared_ptr<SymVariables> sym_vars;
   std::shared_ptr<StateRegistry> state_registry;
   std::map<int, std::vector<TransitionRelation>> trs;
-  std::unordered_set<size_t> hashes_found_plans;
+  std::unordered_map<size_t, std::vector<Plan>> hashes_found_plans;
 
   Bdd states_on_goal_path;
   size_t num_found_plans;
   size_t num_desired_plans;
   PlanManager plan_mgr;
 
+  size_t different(const std::vector<Plan> &plans, const Plan &plan) const;
   Bdd states_on_path(const Plan &plan);
 
   size_t get_hash_value(const Plan &plan) const;

@@ -18,6 +18,25 @@ Bdd PlanReconstructor::states_on_path(const Plan &plan)
   return res;
 }
 
+
+size_t PlanReconstructor::different(const std::vector<Plan> &plans, const Plan &plan) const {
+  for (auto& cur :plans) {
+    if (cur.size() == plan.size()) {
+      bool same = true;
+      for (size_t i = 0; i < cur.size(); ++i) {
+        if (cur.at(i) != plan.at(i)) {
+          same = false;
+          break;
+	}
+      }
+      if (same) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 // Hashes a vecor of ints which is a plan (https://stackoverflow.com/questions/20511347/a-good-hash-function-for-a-vector)
 size_t PlanReconstructor::get_hash_value(const Plan &plan) const
 {
@@ -35,10 +54,18 @@ void PlanReconstructor::add_plan(const Plan &plan)
   if (hashes_found_plans.count(plan_seed) == 0)
   {
     num_found_plans += 1;
-    hashes_found_plans.insert(plan_seed);
+    hashes_found_plans[plan_seed] = std::vector<Plan>();
+    hashes_found_plans[plan_seed].push_back(plan);
     plan_mgr.save_plan(plan, state_registry->get_task_proxy(), false, true);
     states_on_goal_path += states_on_path(plan);
     // std::cout << "ADD PLAN --------------" << std::endl;
+  } else {
+    if (different(hashes_found_plans[plan_seed], plan)) {
+      num_found_plans += 1;
+      hashes_found_plans[plan_seed].push_back(plan);
+      plan_mgr.save_plan(plan, state_registry->get_task_proxy(), false, true);
+      states_on_goal_path += states_on_path(plan);
+    }
   }
 }
 
