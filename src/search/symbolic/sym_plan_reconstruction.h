@@ -26,7 +26,7 @@ protected:
   PlanManager plan_mgr;
 
   size_t different(const std::vector<Plan> &plans, const Plan &plan) const;
-  Bdd states_on_path(const Plan &plan);
+  bool states_on_path(const Plan &plan, Bdd &states); // also returns if a zero_loop is detected
 
   size_t get_hash_value(const Plan &plan) const;
 
@@ -79,7 +79,7 @@ public:
 
   // Resets found plans and desired_num_plans which are helper functions
   // Returns all states on the new plans
-  int reconstruct_plans(const SymCut &cut, size_t num_desired_plans, Bdd& goal_path_states);
+  int reconstruct_plans(const SymCut &cut, size_t num_desired_plans, Bdd &goal_path_states);
 };
 
 } // namespace symbolic
