@@ -97,25 +97,32 @@ void SymSolutionRegistry::register_solution(const SymSolution &solution)
 
 void SymSolutionRegistry::construct_cheaper_solutions(int bound)
 {
-    /*std::cout << "\nReconstruction bound: " << bound << std::endl;
+  /*std::cout << "\nReconstruction bound: " << bound << std::endl;
   for (auto& cut : sym_cuts) {
       std::cout << cut << std::endl;
   }*/
 
+    bool bound_used = false;
     while (sym_cuts.size() > 0 && sym_cuts.at(0).get_f() < bound &&
            !found_all_plans())
     {
+        //std::cout << "Reconsturcting!" << plan_cost_bound << std::endl;
         // Ignore all cuts with costs smaller than the bound we already reconstructed
         if (sym_cuts.at(0).get_f() < plan_cost_bound)
         {
             sym_cuts.erase(sym_cuts.begin());
-            continue;
+        } else {
+            Bdd goal_path_states;
+            num_found_plans += plan_reconstructor->reconstruct_plans(sym_cuts[0], missing_plans(), goal_path_states);
+            states_on_goal_paths += goal_path_states;
+            sym_cuts.erase(sym_cuts.begin());
+            bound_used = true;
         }
-        Bdd goal_path_states;
-        num_found_plans += plan_reconstructor->reconstruct_plans(sym_cuts[0], missing_plans(), goal_path_states);
-        states_on_goal_paths += goal_path_states;
-        sym_cuts.erase(sym_cuts.begin());
     }
-    plan_cost_bound = bound;
+
+    if (bound_used) {
+        plan_cost_bound = bound;
+    }
+
 }
 } // namespace symbolic
