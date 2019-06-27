@@ -5,31 +5,57 @@
 namespace symbolic
 {
 
-Bdd PlanReconstructor::states_on_path(const Plan &plan)
+bool PlanReconstructor::states_on_path(const Plan &plan, Bdd &states)
 {
   GlobalState cur = state_registry->get_initial_state();
-  Bdd res = sym_vars->getStateBDD(cur);
+  states = sym_vars->getStateBDD(cur);
+  Bdd zero_reachable = states;
+  bool zero_loop = false;
   for (auto &op : plan)
   {
     cur = state_registry->get_successor_state(
         cur, state_registry->get_task_proxy().get_operators()[op]);
-    res += sym_vars->getStateBDD(cur);
+    Bdd new_state = sym_vars->getStateBDD(cur);
+    states += new_state;
+
+    // Check for a zero loop!
+    if (task_has_zero_costs() && !zero_loop)
+    {
+      if (state_registry->get_task_proxy().get_operators()[op].get_cost() != 0)
+      {
+        zero_reachable = new_state;
+      }
+      else
+      {
+        Bdd intersection = zero_reachable * new_state;
+        if (!intersection.IsZero())
+        {
+          zero_loop = true;
+        }
+        zero_reachable += new_state;
+      }
+    }
   }
-  return res;
+  return zero_loop;
 }
 
-
-size_t PlanReconstructor::different(const std::vector<Plan> &plans, const Plan &plan) const {
-  for (auto& cur :plans) {
-    if (cur.size() == plan.size()) {
+size_t PlanReconstructor::different(const std::vector<Plan> &plans, const Plan &plan) const
+{
+  for (auto &cur : plans)
+  {
+    if (cur.size() == plan.size())
+    {
       bool same = true;
-      for (size_t i = 0; i < cur.size(); ++i) {
-        if (cur.at(i) != plan.at(i)) {
+      for (size_t i = 0; i < cur.size(); ++i)
+      {
+        if (cur.at(i) != plan.at(i))
+        {
           same = false;
           break;
-	}
+        }
       }
-      if (same) {
+      if (same)
+      {
         return false;
       }
     }
@@ -51,20 +77,75 @@ size_t PlanReconstructor::get_hash_value(const Plan &plan) const
 void PlanReconstructor::add_plan(const Plan &plan)
 {
   size_t plan_seed = get_hash_value(plan);
+  Bdd new_goal_path_states;
+  bool zero_loop_plan = false;
   if (hashes_found_plans.count(plan_seed) == 0)
   {
     num_found_plans += 1;
     hashes_found_plans[plan_seed] = std::vector<Plan>();
     hashes_found_plans[plan_seed].push_back(plan);
     plan_mgr.save_plan(plan, state_registry->get_task_proxy(), false, true);
-    states_on_goal_path += states_on_path(plan);
+    zero_loop_plan = states_on_path(plan, new_goal_path_states);
+    states_on_goal_path += new_goal_path_states;
     // std::cout << "ADD PLAN --------------" << std::endl;
-  } else {
-    if (different(hashes_found_plans[plan_seed], plan)) {
+  }
+  else
+  {
+    if (different(hashes_found_plans[plan_seed], plan))
+    {
       num_found_plans += 1;
       hashes_found_plans[plan_seed].push_back(plan);
       plan_mgr.save_plan(plan, state_registry->get_task_proxy(), false, true);
-      states_on_goal_path += states_on_path(plan);
+      zero_loop_plan = states_on_path(plan, new_goal_path_states);
+      states_on_goal_path += new_goal_path_states;
+    }
+  }
+
+  // Detected a zero loop => we can generate all remaining plans
+  if (zero_loop_plan)
+  {
+    std::pair<int, int> zero_cost_op_seq(-1, -1);
+    int last_zero_op_state = 0;
+    std::vector<GlobalState> states;
+    states.push_back(state_registry->get_initial_state());
+    for (size_t op_i = 0; op_i < plan.size(); ++op_i)
+    {
+      GlobalState succ = state_registry->get_successor_state(
+          states.back(), state_registry->get_task_proxy().get_operators()[plan[op_i]]);
+
+      for (size_t state_i = last_zero_op_state; state_i < states.size(); ++state_i)
+      {
+        if (states[state_i].get_id() == succ.get_id())
+        {
+          zero_cost_op_seq.first = state_i;
+          zero_cost_op_seq.second = op_i;
+          break;
+        }
+      }
+      if (state_registry->get_task_proxy().get_operators()[op_i].get_cost() != 0)
+      {
+        last_zero_op_state = states.size() - 1;
+      }
+
+      if (zero_cost_op_seq.first != -1)
+      {
+        break;
+      }
+      states.push_back(succ);
+    }
+
+    if (zero_cost_op_seq.first == -1)
+    {
+      std::cerr << "Zero loop goes wrong!" << std::endl;
+      exit(0);
+    }
+    Plan cur_plan = plan;
+    std::cout << "\nZero loop!" << std::endl;
+    while (!found_enough_plans())
+    {
+      cur_plan.insert(cur_plan.begin() + zero_cost_op_seq.first, plan.begin() + zero_cost_op_seq.first, plan.begin() + zero_cost_op_seq.second + 1);
+      plan_mgr.save_plan(cur_plan, state_registry->get_task_proxy(), false, true);
+      num_found_plans += 1;
     }
   }
 }
