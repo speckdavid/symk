@@ -18,7 +18,7 @@ void SymSolution::getPlan(vector<OperatorID> &path) const {
   }
   DEBUG_MSG(cout << "Extract path backward: " << h << endl;);
   if (exp_bw) {
-    Bdd newCut;
+    BDD newCut;
     if (!path.empty()) {
       TaskProxy task_proxy(*tasks::g_root_task);
       State s = task_proxy.get_initial_state();

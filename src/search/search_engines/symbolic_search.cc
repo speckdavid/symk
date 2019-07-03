@@ -123,14 +123,12 @@ static shared_ptr<SearchEngine> _parse_bidirectional_ucs(OptionParser &parser)
     SymVariables::add_options_to_parser(parser);
     SymParamsSearch::add_options_to_parser(parser, 30e3, 10e7);
     SymParamsMgr::add_options_to_parser(parser);
-    Bdd::add_options_to_parser(parser);
 
     Options opts = parser.parse();
 
     shared_ptr<symbolic_search::SymbolicSearch> engine = nullptr;
     if (!parser.dry_run())
     {
-        Bdd::parse_options(opts);
         engine =
             make_shared<symbolic_search::SymbolicBidirectionalUniformCostSearch>(
                 opts);
@@ -147,14 +145,12 @@ static shared_ptr<SearchEngine> _parse_forward_ucs(OptionParser &parser)
     SymVariables::add_options_to_parser(parser);
     SymParamsSearch::add_options_to_parser(parser, 30e3, 10e7);
     SymParamsMgr::add_options_to_parser(parser);
-    Bdd::add_options_to_parser(parser);
 
     Options opts = parser.parse();
 
     shared_ptr<symbolic_search::SymbolicSearch> engine = nullptr;
     if (!parser.dry_run())
     {
-        Bdd::parse_options(opts);
         engine =
             make_shared<symbolic_search::SymbolicUniformCostSearch>(opts, true);
     }
@@ -170,14 +166,12 @@ static shared_ptr<SearchEngine> _parse_backward_ucs(OptionParser &parser)
     SymVariables::add_options_to_parser(parser);
     SymParamsSearch::add_options_to_parser(parser, 30e3, 10e7);
     SymParamsMgr::add_options_to_parser(parser);
-    Bdd::add_options_to_parser(parser);
 
     Options opts = parser.parse();
 
     shared_ptr<symbolic_search::SymbolicSearch> engine = nullptr;
     if (!parser.dry_run())
     {
-        Bdd::parse_options(opts);
         engine =
             make_shared<symbolic_search::SymbolicUniformCostSearch>(opts, false);
     }

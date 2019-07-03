@@ -22,18 +22,18 @@ private:
   UnidirectionalSearch *my_search;
   SymStateSpaceManager *mgr; // Symbolic manager to perform bdd operations
 
-  std::map<int, Bdd> closed; // Mapping from cost to set of states
+  std::map<int, BDD> closed; // Mapping from cost to set of states
 
   // Auxiliar BDDs for the number of 0-cost action steps
   // ALERT: The information here might be wrong
   // It is just used to extract path more quickly, but the information
   // here is an (admissible) estimation and this should be taken into account
-  std::map<int, std::vector<Bdd>> zeroCostClosed;
-  Bdd closedTotal; // All closed states.
+  std::map<int, std::vector<BDD>> zeroCostClosed;
+  BDD closedTotal; // All closed states.
 
   int hNotClosed,
       fNotClosed; // Bounds on h and g for those states not in closed
-  std::map<int, Bdd>
+  std::map<int, BDD>
       closedUpTo;         // Disjunction of BDDs in closed  (auxiliar useful to take the
                           // maximum between several BDDs)
   std::set<int> h_values; // Set of h_values of the heuristic
@@ -46,15 +46,15 @@ public:
   void init(SymStateSpaceManager *manager, UnidirectionalSearch *search,
             const ClosedList &other);
 
-  void insert(int h, const Bdd &S);
+  void insert(int h, const BDD &S);
   void setHNotClosed(int h);
   void setFNotClosed(int f);
 
   const std::set<int> &getHValues();
 
-  Bdd getFullyCostClosed() const
+  BDD getFullyCostClosed() const
   {
-    Bdd res = mgr->zeroBDD();
+    BDD res = mgr->zeroBDD();
     size_t i = 0;
     for (const auto& pair : closed)
     {
@@ -70,23 +70,23 @@ public:
 
   // Check if any of the states is closed.
   // In case positive, return a solution pair <f_value, S>
-  virtual SymSolution checkCut(UnidirectionalSearch *search, const Bdd &states,
+  virtual SymSolution checkCut(UnidirectionalSearch *search, const BDD &states,
                                int g, bool fw) const override;
 
   virtual std::vector<SymSolution> getAllCuts(UnidirectionalSearch *search,
-                                              const Bdd &states, int g, bool fw,
+                                              const BDD &states, int g, bool fw,
                                               int lower_bound) const override;
 
-  void extract_path(const Bdd &cut, int h, bool fw,
+  void extract_path(const BDD &cut, int h, bool fw,
                     std::vector<OperatorID> &path) const;
 
-  inline Bdd getClosed() const { return closedTotal; }
+  inline BDD getClosed() const { return closedTotal; }
 
-  virtual Bdd notClosed() const override { return !closedTotal; }
+  virtual BDD notClosed() const override { return !closedTotal; }
 
-  inline std::map<int, Bdd> getClosedList() const { return closed; }
+  inline std::map<int, BDD> getClosedList() const { return closed; }
 
-  Bdd get_start_states() const
+  BDD get_start_states() const
   {
     if (get_num_zero_closed_layers(0) == 0)
     {
@@ -95,7 +95,7 @@ public:
     return get_zero_closed_at(0, 0);
   }
 
-  inline Bdd get_closed_at(int h) const
+  inline BDD get_closed_at(int h) const
   {
     if (!closed.count(h))
     {
@@ -104,7 +104,7 @@ public:
     return closed.at(h);
   }
 
-  inline Bdd get_zero_closed_at(int h, int layer) const
+  inline BDD get_zero_closed_at(int h, int layer) const
   {
     return zeroCostClosed.at(h).at(layer);
   }
@@ -118,14 +118,14 @@ public:
     return zeroCostClosed.at(h).size();
   }
 
-  inline size_t get_zero_cut(int h, const Bdd &bdd) const
+  inline size_t get_zero_cut(int h, const BDD &bdd) const
   {
     size_t i = 0;
     if (get_num_zero_closed_layers(h))
     {
       for (; i < zeroCostClosed.at(h).size(); i++)
       {
-        Bdd intersection = zeroCostClosed.at(h).at(i) * bdd;
+        BDD intersection = zeroCostClosed.at(h).at(i) * bdd;
         if (!intersection.IsZero())
         {
           break;

@@ -13,7 +13,7 @@ namespace symbolic {
 
 Frontier::Frontier() : mgr(nullptr), g_value(0) {}
 
-void Frontier::init(SymStateSpaceManager *mgr_, const Bdd &bdd) {
+void Frontier::init(SymStateSpaceManager *mgr_, const BDD &bdd) {
   mgr = mgr_;
   Sfilter.push_back(bdd);
   g_value = 0;

@@ -63,7 +63,7 @@ public:
 
   inline const SymParamsSearch &getSearchParams() const { return searchParams; }
 
-  Bdd get_states_on_goal_paths() const;
+  BDD get_states_on_goal_paths() const;
 
   static void add_options_to_parser(options::OptionParser &parser,
                                     int maxStepTime, int maxStepNodes);

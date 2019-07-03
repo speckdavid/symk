@@ -30,24 +30,12 @@ OriginalStateSpace::OriginalStateSpace(SymVariables *v,
 
   init_mutex(tasks::g_root_task->get_mutex_groups());
 
-// Check wether we compute this in parallel
-#ifdef DDLIBSYLVAN
-  if (Bdd::is_parallel_search())
-  {
-    create_single_trs_parallel();
-  }
-  else
-  {
-    create_single_trs_sequential();
-  }
-#else
-  create_single_trs_sequential(zero_transform);
-#endif
+  create_single_trs(zero_transform);
 
   init_transitions(indTRs);
 }
 
-void OriginalStateSpace::create_single_trs_sequential(bool zero_transform)
+void OriginalStateSpace::create_single_trs(bool zero_transform)
 {
   for (int i = 0; i < tasks::g_root_task->get_num_operators(); i++)
   {
@@ -74,46 +62,6 @@ void OriginalStateSpace::create_single_trs_sequential(bool zero_transform)
          << indTRs[cost].back().nodeCount() << endl;
     auto names = vars->get_fd_variable_names();
     indTRs[cost].back().getBDD().toDot(tasks::g_root_task->get_operator_name(i, false) + ".dot", names);*/
-  }
-}
-
-void OriginalStateSpace::create_single_trs_parallel()
-{
-  // First we reserve the space sequencially
-  for (int i = 0; i < tasks::g_root_task->get_num_operators(); i++)
-  {
-    int cost = tasks::g_root_task->get_operator_cost(i, false);
-    // cout << "Creating TR of op " << i << " of cost " << cost << endl;
-    DEBUG_MSG(cout << "Init TR of op " << i << " of cost " << cost << endl;);
-    indTRs[cost].push_back(TransitionRelation(vars, OperatorID(i), cost));
-  }
-  // Now we build the trs by costs!
-  for (const auto &pair : indTRs)
-  {
-    int cost = pair.first;
-    create_single_trs_parallel_recursive(indTRs[cost], 0, indTRs[cost].size());
-  }
-}
-
-void OriginalStateSpace::create_single_trs_parallel_recursive(
-    std::vector<TransitionRelation> &trs, int i, int k)
-{
-  if (k == 1)
-  {
-    trs.at(i).init();
-    if (p.mutex_type == MutexType::MUTEX_EDELETION)
-    {
-      trs.at(i).edeletion(notMutexBDDsByFluentFw, notMutexBDDsByFluentBw,
-                          exactlyOneBDDsByFluent);
-    }
-  }
-  else
-  {
-#ifdef DDLIBSYLVAN
-    LACE_ME
-#endif
-    create_single_trs_parallel_recursive(trs, i, k / 2);
-    create_single_trs_parallel_recursive(trs, i + (k / 2), k - (k / 2));
   }
 }
 
@@ -153,10 +101,10 @@ void OriginalStateSpace::init_mutex(const std::vector<MutexGroup> &mutex_groups,
   DEBUG_MSG(cout << "Init mutex BDDs " << (fw ? "fw" : "bw") << ": "
                  << genMutexBDD << " " << genMutexBDDByFluent << endl;);
 
-  vector<vector<Bdd>> &notMutexBDDsByFluent =
+  vector<vector<BDD>> &notMutexBDDsByFluent =
       (fw ? notMutexBDDsByFluentFw : notMutexBDDsByFluentBw);
 
-  vector<Bdd> &notMutexBDDs = (fw ? notMutexBDDsFw : notMutexBDDsBw);
+  vector<BDD> &notMutexBDDs = (fw ? notMutexBDDsFw : notMutexBDDsBw);
 
   // BDD validStates = vars->oneBDD();
   int num_mutex = 0;
@@ -179,9 +127,9 @@ void OriginalStateSpace::init_mutex(const std::vector<MutexGroup> &mutex_groups,
   }
 
   // Initialize mBDDByVar and invariant_bdds_by_fluent
-  vector<Bdd> mBDDByVar;
+  vector<BDD> mBDDByVar;
   mBDDByVar.reserve(tasks::g_root_task->get_num_variables());
-  vector<vector<Bdd>> invariant_bdds_by_fluent(
+  vector<vector<BDD>> invariant_bdds_by_fluent(
       tasks::g_root_task->get_num_variables());
   for (size_t i = 0; i < invariant_bdds_by_fluent.size(); i++)
   {
@@ -202,7 +150,7 @@ void OriginalStateSpace::init_mutex(const std::vector<MutexGroup> &mutex_groups,
     DEBUG_MSG(cout << mg << endl;);
     if (mg.isExactlyOne())
     {
-      Bdd bddInvariant = zeroBDD();
+      BDD bddInvariant = zeroBDD();
       int var = numeric_limits<int>::max();
       int val = 0;
       bool exactlyOneRelevant = true;
@@ -238,14 +186,14 @@ void OriginalStateSpace::init_mutex(const std::vector<MutexGroup> &mutex_groups,
     {
       int var1 = invariant_group[i].var;
       int val1 = invariant_group[i].value;
-      Bdd f1 = vars->preBDD(var1, val1);
+      BDD f1 = vars->preBDD(var1, val1);
 
       for (size_t j = i + 1; j < invariant_group.size(); ++j)
       {
         int var2 = invariant_group[j].var;
         int val2 = invariant_group[j].value;
-        Bdd f2 = vars->preBDD(var2, val2);
-        Bdd mBDD = !(f1 * f2);
+        BDD f2 = vars->preBDD(var2, val2);
+        BDD mBDD = !(f1 * f2);
         if (genMutexBDD)
         {
           num_mutex++;
@@ -273,7 +221,7 @@ void OriginalStateSpace::init_mutex(const std::vector<MutexGroup> &mutex_groups,
       {
         notMutexBDDs.push_back(mBDDByVar[var]);
       }
-      for (const Bdd &bdd_inv : invariant_bdds_by_fluent[var])
+      for (const BDD &bdd_inv : invariant_bdds_by_fluent[var])
       {
         if (!bdd_inv.IsOne())
         {

@@ -16,6 +16,13 @@ using namespace std;
 using options::Options;
 
 namespace symbolic {
+void
+exceptionError(string /*message*/) {
+    //cout << message << endl;
+    throw BDDError();
+}
+
+
 SymVariables::SymVariables(const Options &opts)
     : cudd_init_nodes(16000000L), cudd_init_cache_size(16000000L),
       cudd_init_available_memory(0L),
@@ -66,13 +73,19 @@ void SymVariables::init(const vector<int> &v_order) {
   cout << "Initialize Symbolic Manager(" << _numBDDVars << ", "
        << cudd_init_nodes / _numBDDVars << ", " << cudd_init_cache_size << ", "
        << cudd_init_available_memory << ")" << endl;
-  Bdd::initalize_manager(_numBDDVars, 0, cudd_init_nodes / _numBDDVars,
-                         cudd_init_cache_size, cudd_init_available_memory);
+  manager = unique_ptr<Cudd> (new Cudd(_numBDDVars, 0,
+                                          cudd_init_nodes / _numBDDVars,
+                                          cudd_init_cache_size,
+                                          cudd_init_available_memory));
+
+  manager->setHandler(exceptionError);
+  manager->setTimeoutHandler(exceptionError);
+  manager->setNodesExceededHandler(exceptionError);
 
   cout << "Generating binary variables" << endl;
   // Generate binary_variables
   for (int i = 0; i < _numBDDVars; i++) {
-    variables.push_back(Bdd::BddVar(i));
+    variables.push_back(manager->bddVar(i));
   }
 
   DEBUG_MSG(cout << "Generating predicate BDDs: " << num_fd_vars << endl;);
@@ -102,25 +115,25 @@ void SymVariables::init(const vector<int> &v_order) {
   cout << "Symbolic Variables... Done." << endl;
 }
 
-Bdd SymVariables::getStateBDD(const std::vector<int> &state) const {
-  Bdd res = oneBDD();
+BDD SymVariables::getStateBDD(const std::vector<int> &state) const {
+  BDD res = oneBDD();
   for (int i = var_order.size() - 1; i >= 0; i--) {
     res = res * preconditionBDDs[var_order[i]][state[var_order[i]]];
   }
   return res;
 }
 
-Bdd SymVariables::getStateBDD(const GlobalState &state) const {
-  Bdd res = oneBDD();
+BDD SymVariables::getStateBDD(const GlobalState &state) const {
+  BDD res = oneBDD();
   for (int i = var_order.size() - 1; i >= 0; i--) {
     res = res * preconditionBDDs[var_order[i]][state[var_order[i]]];
   }
   return res;
 }
 
-Bdd SymVariables::getPartialStateBDD(
+BDD SymVariables::getPartialStateBDD(
     const vector<pair<int, int>> &state) const {
-  Bdd res = validBDD;
+  BDD res = validBDD;
   for (int i = state.size() - 1; i >= 0; i--) {
     // if(find(var_order.begin(), var_order.end(),
     //               state[i].first) != var_order.end()) {
@@ -130,9 +143,9 @@ Bdd SymVariables::getPartialStateBDD(
   return res;
 }
 
-Bdd SymVariables::generateBDDVar(const std::vector<int> &_bddVars,
+BDD SymVariables::generateBDDVar(const std::vector<int> &_bddVars,
                                  int value) const {
-  Bdd res = oneBDD();
+  BDD res = oneBDD();
   for (int v : _bddVars) {
     if (value % 2) { // Check if the binary variable is asserted or negated
       res = res * variables[v];
@@ -144,18 +157,18 @@ Bdd SymVariables::generateBDDVar(const std::vector<int> &_bddVars,
   return res;
 }
 
-Bdd SymVariables::createBiimplicationBDD(const std::vector<int> &vars,
+BDD SymVariables::createBiimplicationBDD(const std::vector<int> &vars,
                                          const std::vector<int> &vars2) const {
-  Bdd res = oneBDD();
+  BDD res = oneBDD();
   for (size_t i = 0; i < vars.size(); i++) {
     res *= variables[vars[i]].Xnor(variables[vars2[i]]);
   }
   return res;
 }
 
-vector<Bdd> SymVariables::getBDDVars(const vector<int> &vars,
+vector<BDD> SymVariables::getBDDVars(const vector<int> &vars,
                                      const vector<vector<int>> &v_index) const {
-  vector<Bdd> res;
+  vector<BDD> res;
   for (int v : vars) {
     for (int bddv : v_index[v]) {
       res.push_back(variables[bddv]);
@@ -164,17 +177,17 @@ vector<Bdd> SymVariables::getBDDVars(const vector<int> &vars,
   return res;
 }
 
-Bdd SymVariables::getCube(int var, const vector<vector<int>> &v_index) const {
-  Bdd res = oneBDD();
+BDD SymVariables::getCube(int var, const vector<vector<int>> &v_index) const {
+  BDD res = oneBDD();
   for (int bddv : v_index[var]) {
     res *= variables[bddv];
   }
   return res;
 }
 
-Bdd SymVariables::getCube(const set<int> &vars,
+BDD SymVariables::getCube(const set<int> &vars,
                           const vector<vector<int>> &v_index) const {
-  Bdd res = oneBDD();
+  BDD res = oneBDD();
   for (int v : vars) {
     for (int bddv : v_index[v]) {
       res *= variables[bddv];

@@ -11,13 +11,13 @@ class UnidirectionalSearch;
 class SymSolution {
   UnidirectionalSearch *exp_fw, *exp_bw;
   int g, h;
-  Bdd cut;
+  BDD cut;
 
 public:
   SymSolution() : g(-1), h(-1) {} // No solution yet
 
   SymSolution(UnidirectionalSearch *e_fw, UnidirectionalSearch *e_bw, int g_val,
-              int h_val, Bdd S)
+              int h_val, BDD S)
       : exp_fw(e_fw), exp_bw(e_bw), g(g_val), h(h_val), cut(S) {}
 
   void getPlan(std::vector<OperatorID> &path) const;
@@ -30,7 +30,7 @@ public:
 
   inline int get_h() const { return h; }
 
-  inline Bdd get_cut() const { return cut; }
+  inline BDD get_cut() const { return cut; }
 
   inline UnidirectionalSearch *get_fw_search() const { return exp_fw; }
 

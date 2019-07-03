@@ -97,7 +97,7 @@ public:
             std::shared_ptr<ClosedList> closed_opposite =
                 nullptr); // Init forward or backward search
 
-  virtual void getPlan(const Bdd &cut, int g,
+  virtual void getPlan(const BDD &cut, int g,
                        std::vector<OperatorID> &path) const override;
 
   virtual bool isSearchableWithNodes(int maxNodes) const;
@@ -117,9 +117,9 @@ public:
     return open_list.minNextG(frontier, mgr->getAbsoluteMinTransitionCost());
   }
 
-  Bdd getClosedTotal();
+  BDD getClosedTotal();
 
-  Bdd notClosed();
+  BDD notClosed();
 
   void desactivate();
 
@@ -131,7 +131,7 @@ public:
 
   // Returns the nodes that have been expanded by the algorithm (closed without
   // the current frontier)
-  Bdd getExpanded() const;
+  BDD getExpanded() const;
   void getNotExpanded(Bucket &res) const;
 
   // void write(const std::string & file) const;

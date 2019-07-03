@@ -27,9 +27,9 @@ void ClosedList::init(SymStateSpaceManager *manager,
   mgr = manager;
   my_search = search;
   set<int>().swap(h_values);
-  map<int, Bdd>().swap(closedUpTo);
-  map<int, vector<Bdd>>().swap(zeroCostClosed);
-  map<int, Bdd>().swap(closed);
+  map<int, BDD>().swap(closedUpTo);
+  map<int, vector<BDD>>().swap(zeroCostClosed);
+  map<int, BDD>().swap(closed);
   closedTotal = mgr->zeroBDD();
   hNotClosed = 0;
   fNotClosed = 0;
@@ -41,9 +41,9 @@ void ClosedList::init(SymStateSpaceManager *manager,
   mgr = manager;
   my_search = search;
   set<int>().swap(h_values);
-  map<int, Bdd>().swap(closedUpTo);
-  map<int, vector<Bdd>>().swap(zeroCostClosed);
-  map<int, Bdd>().swap(closed);
+  map<int, BDD>().swap(closedUpTo);
+  map<int, vector<BDD>>().swap(zeroCostClosed);
+  map<int, BDD>().swap(closed);
   closedTotal = mgr->zeroBDD();
   hNotClosed = 0;
   fNotClosed = 0;
@@ -55,7 +55,7 @@ void ClosedList::init(SymStateSpaceManager *manager,
 
 void ClosedList::newHValue(int h_value) { h_values.insert(h_value); }
 
-void ClosedList::insert(int h, const Bdd &S)
+void ClosedList::insert(int h, const BDD &S)
 {
   DEBUG_MSG(cout << "Inserting on closed "
                  << "g=" << h << ": " << S.nodeCount() << " nodes and "
@@ -109,7 +109,7 @@ void ClosedList::setFNotClosed(int f)
   }
 }
 
-void ClosedList::extract_path(const Bdd &c, int h, bool fw,
+void ClosedList::extract_path(const BDD &c, int h, bool fw,
                               vector<OperatorID> &path) const
 {
   if (!mgr)
@@ -121,7 +121,7 @@ void ClosedList::extract_path(const Bdd &c, int h, bool fw,
                                 << c.first << " ";
             cout << endl;);
   const map<int, vector<TransitionRelation>> &trs = mgr->getIndividualTRs();
-  Bdd cut = c;
+  BDD cut = c;
   size_t steps0 = 0;
   if (zeroCostClosed.count(h))
   {
@@ -149,7 +149,7 @@ void ClosedList::extract_path(const Bdd &c, int h, bool fw,
       {
         if (foundZeroCost)
           break;
-        Bdd succ;
+        BDD succ;
         if (fw)
         {
           succ = tr.preimage(cut);
@@ -165,7 +165,7 @@ void ClosedList::extract_path(const Bdd &c, int h, bool fw,
 
         for (size_t newSteps0 = 0; newSteps0 < steps0; newSteps0++)
         {
-          Bdd intersection = succ * zeroCostClosed.at(h)[newSteps0];
+          BDD intersection = succ * zeroCostClosed.at(h)[newSteps0];
           if (!intersection.IsZero())
           {
             steps0 = newSteps0;
@@ -203,7 +203,7 @@ void ClosedList::extract_path(const Bdd &c, int h, bool fw,
         {
           if (foundZeroCost)
             break;
-          Bdd succ;
+          BDD succ;
           if (fw)
           {
             succ = tr.preimage(cut);
@@ -219,7 +219,7 @@ void ClosedList::extract_path(const Bdd &c, int h, bool fw,
 
           for (size_t newSteps0 = 0; newSteps0 < steps0; newSteps0++)
           {
-            Bdd intersection = succ * zeroCostClosed.at(h)[newSteps0];
+            BDD intersection = succ * zeroCostClosed.at(h)[newSteps0];
             if (!intersection.IsZero())
             {
               steps0 = newSteps0;
@@ -263,7 +263,7 @@ void ClosedList::extract_path(const Bdd &c, int h, bool fw,
           // DEBUG_MSG(cout << "Check " << tr.getOps().size() << " " <<
           // (*(tr.getOps().begin()))->get_name() << " of cost " << key.first <<
           // " in h=" << newH << endl;);
-          Bdd succ;
+          BDD succ;
           if (fw)
           {
             succ = tr.preimage(cut);
@@ -272,7 +272,7 @@ void ClosedList::extract_path(const Bdd &c, int h, bool fw,
           {
             succ = tr.image(cut);
           }
-          Bdd intersection = succ * closed.at(newH);
+          BDD intersection = succ * closed.at(newH);
           /*DEBUG_MSG(cout << "Image computed: "; succ.print(0,1);
             cout << "closed at newh: "; closed.at(newH).print(0,1);
             cout << "Intersection: "; intersection.print(0,1););*/
@@ -318,9 +318,9 @@ void ClosedList::extract_path(const Bdd &c, int h, bool fw,
 }
 
 SymSolution ClosedList::checkCut(UnidirectionalSearch *search,
-                                 const Bdd &states, int g, bool fw) const
+                                 const BDD &states, int g, bool fw) const
 {
-  Bdd cut_candidate = states * closedTotal;
+  BDD cut_candidate = states * closedTotal;
   if (cut_candidate.IsZero())
   {
     return SymSolution(); // No solution yet :(
@@ -331,7 +331,7 @@ SymSolution ClosedList::checkCut(UnidirectionalSearch *search,
     int h = closedH.first;
 
     // cout << "Check cut of g=" << g << " with h=" << h << endl;
-    Bdd cut = closedH.second * cut_candidate;
+    BDD cut = closedH.second * cut_candidate;
     if (!cut.IsZero())
     {
       if (fw) // Solution reconstruction will fail
@@ -346,12 +346,12 @@ SymSolution ClosedList::checkCut(UnidirectionalSearch *search,
 }
 
 std::vector<SymSolution> ClosedList::getAllCuts(UnidirectionalSearch *search,
-                                                const Bdd &states, int g,
+                                                const BDD &states, int g,
                                                 bool fw,
                                                 int lower_bound) const
 {
   std::vector<SymSolution> result;
-  Bdd cut_candidate = states * closedTotal;
+  BDD cut_candidate = states * closedTotal;
   if (cut_candidate.IsZero())
   {
     result.emplace_back();
@@ -368,7 +368,7 @@ std::vector<SymSolution> ClosedList::getAllCuts(UnidirectionalSearch *search,
       }
 
       // cout << "Check cut of g=" << g << " with h=" << h << endl;
-      Bdd cut = closedH.second * cut_candidate;
+      BDD cut = closedH.second * cut_candidate;
       if (!cut.IsZero())
       {
         if (fw)

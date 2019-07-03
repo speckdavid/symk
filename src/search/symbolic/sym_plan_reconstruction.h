@@ -20,13 +20,13 @@ protected:
   std::map<int, std::vector<TransitionRelation>> trs;
   std::unordered_map<size_t, std::vector<Plan>> hashes_found_plans;
 
-  Bdd states_on_goal_path;
+  BDD states_on_goal_path;
   size_t num_found_plans;
   size_t num_desired_plans;
   PlanManager plan_mgr;
 
   size_t different(const std::vector<Plan> &plans, const Plan &plan) const;
-  bool states_on_path(const Plan &plan, Bdd &states); // also returns if a zero_loop is detected
+  bool states_on_path(const Plan &plan, BDD &states); // also returns if a zero_loop is detected
 
   size_t get_hash_value(const Plan &plan) const;
 
@@ -44,13 +44,13 @@ protected:
 
   bool bw_reconstruction_necessary() const;
 
-  Bdd get_resulting_state(const Plan &plan) const;
+  BDD get_resulting_state(const Plan &plan) const;
 
-  // Returns zero Bdd if we dont need zero reconstruction. otherwise it returns
+  // Returns zero BDD if we dont need zero reconstruction. otherwise it returns
   // the correct cutted bdd!
   // First we need to check if it is contained in any 0 bucket or if the
   // pre/succcessor is contained in any bucket
-  Bdd bdd_for_zero_reconstruction(const Bdd &cut, int cost,
+  BDD bdd_for_zero_reconstruction(const BDD &cut, int cost,
                                   std::shared_ptr<ClosedList> closed) const;
 
   // Extracts all plans by a DFS, we copy the current plan suffix by every
@@ -79,7 +79,7 @@ public:
 
   // Resets found plans and desired_num_plans which are helper functions
   // Returns all states on the new plans
-  int reconstruct_plans(const SymCut &cut, size_t num_desired_plans, Bdd &goal_path_states);
+  int reconstruct_plans(const SymCut &cut, size_t num_desired_plans, BDD &goal_path_states);
 };
 
 } // namespace symbolic

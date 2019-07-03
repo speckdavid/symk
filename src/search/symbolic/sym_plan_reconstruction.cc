@@ -5,17 +5,17 @@
 namespace symbolic
 {
 
-bool PlanReconstructor::states_on_path(const Plan &plan, Bdd &states)
+bool PlanReconstructor::states_on_path(const Plan &plan, BDD &states)
 {
   GlobalState cur = state_registry->get_initial_state();
   states = sym_vars->getStateBDD(cur);
-  Bdd zero_reachable = states;
+  BDD zero_reachable = states;
   bool zero_loop = false;
   for (auto &op : plan)
   {
     cur = state_registry->get_successor_state(
         cur, state_registry->get_task_proxy().get_operators()[op]);
-    Bdd new_state = sym_vars->getStateBDD(cur);
+    BDD new_state = sym_vars->getStateBDD(cur);
     states += new_state;
 
     // Check for a zero loop!
@@ -27,7 +27,7 @@ bool PlanReconstructor::states_on_path(const Plan &plan, Bdd &states)
       }
       else
       {
-        Bdd intersection = zero_reachable * new_state;
+        BDD intersection = zero_reachable * new_state;
         if (!intersection.IsZero())
         {
           zero_loop = true;
@@ -77,7 +77,7 @@ size_t PlanReconstructor::get_hash_value(const Plan &plan) const
 void PlanReconstructor::add_plan(const Plan &plan)
 {
   size_t plan_seed = get_hash_value(plan);
-  Bdd new_goal_path_states;
+  BDD new_goal_path_states;
   bool zero_loop_plan = false;
   if (hashes_found_plans.count(plan_seed) == 0)
   {
@@ -150,7 +150,7 @@ void PlanReconstructor::add_plan(const Plan &plan)
   }
 }
 
-Bdd PlanReconstructor::get_resulting_state(const Plan &plan) const
+BDD PlanReconstructor::get_resulting_state(const Plan &plan) const
 {
   GlobalState cur = state_registry->get_initial_state();
   for (auto &op : plan)
@@ -161,8 +161,8 @@ Bdd PlanReconstructor::get_resulting_state(const Plan &plan) const
   return sym_vars->getStateBDD(cur);
 }
 
-Bdd PlanReconstructor::bdd_for_zero_reconstruction(
-    const Bdd &cut, int cost, std::shared_ptr<ClosedList> closed) const
+BDD PlanReconstructor::bdd_for_zero_reconstruction(
+    const BDD &cut, int cost, std::shared_ptr<ClosedList> closed) const
 {
   // Contains 0 buckets
   if (closed->get_num_zero_closed_layers(cost))
@@ -235,7 +235,7 @@ void PlanReconstructor::extract_all_zero_plans(SymCut &sym_cut, bool fw, Plan &p
   //}
   //std::cout << std::endl;
 
-  Bdd intersection;
+  BDD intersection;
   // Only zero costs left!
   if (sym_cut.get_g() == 0 && sym_cut.get_h() == 0)
   {
@@ -321,10 +321,10 @@ bool PlanReconstructor::reconstruct_zero_action(
     const Plan &plan)
 {
   int cur_cost = fw ? sym_cut.get_g() : sym_cut.get_h();
-  Bdd cut = sym_cut.get_cut();
+  BDD cut = sym_cut.get_cut();
 
   bool some_action_found = false;
-  Bdd succ;
+  BDD succ;
   for (size_t newSteps0 = 0; newSteps0 < closed->get_num_zero_closed_layers(cur_cost); newSteps0++)
   {
     for (const TransitionRelation &tr : trs.at(0))
@@ -335,7 +335,7 @@ bool PlanReconstructor::reconstruct_zero_action(
         continue;
       }
 
-      Bdd intersection =
+      BDD intersection =
           succ * closed->get_zero_closed_at(cur_cost, newSteps0);
       if (!intersection.IsZero())
       {
@@ -378,9 +378,9 @@ bool PlanReconstructor::reconstruct_cost_action(
     }
     for (TransitionRelation &tr : key.second)
     {
-      Bdd succ =
+      BDD succ =
           fw ? tr.preimage(sym_cut.get_cut()) : tr.image(sym_cut.get_cut());
-      Bdd intersection = succ * closed->get_closed_at(new_cost);
+      BDD intersection = succ * closed->get_closed_at(new_cost);
       if (intersection.IsZero())
       {
         continue;
@@ -425,7 +425,7 @@ PlanReconstructor::PlanReconstructor(
 }
 
 int PlanReconstructor::reconstruct_plans(const SymCut &cut,
-                                         size_t num_desired_plans, Bdd &goal_path_states)
+                                         size_t num_desired_plans, BDD &goal_path_states)
 {
   this->num_desired_plans = num_desired_plans;
   num_found_plans = 0;

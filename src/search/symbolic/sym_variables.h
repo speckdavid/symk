@@ -24,6 +24,14 @@ class OptionParser;
 
 namespace symbolic {
 
+/*
+ * BDD-Variables for a symbolic exploration.
+ * This information is global for every class using symbolic search.
+ * The only decision fixed here is the variable ordering, which is assumed to be always fixed.
+ */
+struct BDDError {};
+extern void exceptionError(std::string message);
+
 class SymVariables {
   // Var order used by the algorithm.
   // const VariableOrderType variable_ordering;
@@ -33,24 +41,26 @@ class SymVariables {
   const long cudd_init_available_memory; // Maximum available memory (bytes)
   const bool gamer_ordering;
 
+   std::unique_ptr<Cudd> manager; //manager associated with this symbolic search
+
   int numBDDVars; // Number of binary variables (just one set, the total number
                   // is numBDDVars*3
-  std::vector<Bdd> variables; // BDD variables
+  std::vector<BDD> variables; // BDD variables
 
   // The variable order must be complete.
   std::vector<int> var_order; // Variable(FD) order in the BDD
   std::vector<std::vector<int>> bdd_index_pre, bdd_index_eff,
       bdd_index_abs; // vars(BDD) for each var(FD)
 
-  std::vector<std::vector<Bdd>>
+  std::vector<std::vector<BDD>>
       preconditionBDDs; // BDDs associated with the precondition of a predicate
-  std::vector<std::vector<Bdd>>
+  std::vector<std::vector<BDD>>
       effectBDDs; // BDDs associated with the effect of a predicate
-  std::vector<Bdd>
+  std::vector<BDD>
       biimpBDDs; // BDDs associated with the biimplication of one variable(FD)
-  std::vector<Bdd>
+  std::vector<BDD>
       validValues; // BDD that represents the valid values of all the variables
-  Bdd validBDD;    // BDD that represents the valid values of all the variables
+  BDD validBDD;    // BDD that represents the valid values of all the variables
 
   // Vector to store the binary description of an state
   // Avoid allocating memory during heuristic evaluation
@@ -62,11 +72,11 @@ public:
   SymVariables(const options::Options &opts);
   void init();
 
-  // State getStateFrom(const Bdd & bdd) const;
-  Bdd getStateBDD(const std::vector<int> &state) const;
-  Bdd getStateBDD(const GlobalState &state) const;
+  // State getStateFrom(const BDD & bdd) const;
+  BDD getStateBDD(const std::vector<int> &state) const;
+  BDD getStateBDD(const GlobalState &state) const;
 
-  Bdd getPartialStateBDD(const std::vector<std::pair<int, int>> &state) const;
+  BDD getPartialStateBDD(const std::vector<std::pair<int, int>> &state) const;
 
   inline const std::vector<int> &vars_index_pre(int variable) const {
     return bdd_index_pre[variable];
@@ -78,64 +88,64 @@ public:
     return bdd_index_abs[variable];
   }
 
-  inline const Bdd &preBDD(int variable, int value) const {
+  inline const BDD &preBDD(int variable, int value) const {
     return preconditionBDDs[variable][value];
   }
 
-  inline const Bdd &effBDD(int variable, int value) const {
+  inline const BDD &effBDD(int variable, int value) const {
     return effectBDDs[variable][value];
   }
 
-  inline Bdd getCubePre(int var) const { return getCube(var, bdd_index_pre); }
-  inline Bdd getCubePre(const std::set<int> &vars) const {
+  inline BDD getCubePre(int var) const { return getCube(var, bdd_index_pre); }
+  inline BDD getCubePre(const std::set<int> &vars) const {
     return getCube(vars, bdd_index_pre);
   }
 
-  inline Bdd getCubeEff(int var) const { return getCube(var, bdd_index_eff); }
-  inline Bdd getCubeEff(const std::set<int> &vars) const {
+  inline BDD getCubeEff(int var) const { return getCube(var, bdd_index_eff); }
+  inline BDD getCubeEff(const std::set<int> &vars) const {
     return getCube(vars, bdd_index_eff);
   }
 
-  inline Bdd getCubeAbs(int var) const { return getCube(var, bdd_index_abs); }
-  inline Bdd getCubeAbs(const std::set<int> &vars) const {
+  inline BDD getCubeAbs(int var) const { return getCube(var, bdd_index_abs); }
+  inline BDD getCubeAbs(const std::set<int> &vars) const {
     return getCube(vars, bdd_index_abs);
   }
 
-  inline const Bdd &biimp(int variable) const { return biimpBDDs[variable]; }
+  inline const BDD &biimp(int variable) const { return biimpBDDs[variable]; }
 
-  inline std::vector<Bdd> getBDDVarsPre() const {
+  inline std::vector<BDD> getBDDVarsPre() const {
     return getBDDVars(var_order, bdd_index_pre);
   }
-  inline std::vector<Bdd> getBDDVarsEff() const {
+  inline std::vector<BDD> getBDDVarsEff() const {
     return getBDDVars(var_order, bdd_index_eff);
   }
-  inline std::vector<Bdd> getBDDVarsAbs() const {
+  inline std::vector<BDD> getBDDVarsAbs() const {
     return getBDDVars(var_order, bdd_index_abs);
   }
-  inline std::vector<Bdd> getBDDVarsPre(const std::vector<int> &vars) const {
+  inline std::vector<BDD> getBDDVarsPre(const std::vector<int> &vars) const {
     return getBDDVars(vars, bdd_index_pre);
   }
-  inline std::vector<Bdd> getBDDVarsEff(const std::vector<int> &vars) const {
+  inline std::vector<BDD> getBDDVarsEff(const std::vector<int> &vars) const {
     return getBDDVars(vars, bdd_index_eff);
   }
-  inline std::vector<Bdd> getBDDVarsAbs(const std::vector<int> &vars) const {
+  inline std::vector<BDD> getBDDVarsAbs(const std::vector<int> &vars) const {
     return getBDDVars(vars, bdd_index_abs);
   }
 
-  inline Bdd zeroBDD() const { return Bdd::BddZero(); }
+  inline BDD zeroBDD() const { return manager->bddZero();; }
 
-  inline Bdd oneBDD() const { return Bdd::BddOne(); }
+  inline BDD oneBDD() const { return manager->bddOne();; }
 
-  inline Bdd validStates() const { return validBDD; }
+  inline BDD validStates() const { return validBDD; }
 
-  inline Bdd bddVar(int index) const { return variables[index]; }
+  inline BDD bddVar(int index) const { return variables[index]; }
 
   inline void setTimeLimit(int maxTime) {
-    Bdd::set_time_limit(maxTime);
-    Bdd::reset_start_time();
+        manager->SetTimeLimit(maxTime);
+        manager->ResetStartTime();
   }
 
-  inline void unsetTimeLimit() { Bdd::unset_time_limit(); }
+  inline void unsetTimeLimit() { manager->UnsetTimeLimit(); }
 
   template <class T> int *getBinaryDescription(const T &state) {
     int pos = 0;
@@ -168,21 +178,21 @@ public:
 private:
   // Auxiliar function helping to create precondition and effect BDDs
   // Generates value for bddVars.
-  Bdd generateBDDVar(const std::vector<int> &_bddVars, int value) const;
-  Bdd getCube(int var, const std::vector<std::vector<int>> &v_index) const;
-  Bdd getCube(const std::set<int> &vars,
+  BDD generateBDDVar(const std::vector<int> &_bddVars, int value) const;
+  BDD getCube(int var, const std::vector<std::vector<int>> &v_index) const;
+  BDD getCube(const std::set<int> &vars,
               const std::vector<std::vector<int>> &v_index) const;
-  Bdd createBiimplicationBDD(const std::vector<int> &vars,
+  BDD createBiimplicationBDD(const std::vector<int> &vars,
                              const std::vector<int> &vars2) const;
-  std::vector<Bdd>
+  std::vector<BDD>
   getBDDVars(const std::vector<int> &vars,
              const std::vector<std::vector<int>> &v_index) const;
 
-  inline Bdd createPreconditionBDD(int variable, int value) const {
+  inline BDD createPreconditionBDD(int variable, int value) const {
     return generateBDDVar(bdd_index_pre[variable], value);
   }
 
-  inline Bdd createEffectBDD(int variable, int value) const {
+  inline BDD createEffectBDD(int variable, int value) const {
     return generateBDDVar(bdd_index_eff[variable], value);
   }
 

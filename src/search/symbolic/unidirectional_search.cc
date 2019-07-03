@@ -6,14 +6,14 @@ using namespace std;
 
 namespace symbolic {
 
-OppositeFrontierFixed::OppositeFrontierFixed(Bdd bdd,
+OppositeFrontierFixed::OppositeFrontierFixed(BDD bdd,
                                              const SymStateSpaceManager &mgr)
     : goal(bdd), hNotGoal(mgr.getAbsoluteMinTransitionCost()) {}
 
 SymSolution OppositeFrontierFixed::checkCut(UnidirectionalSearch *search,
-                                            const Bdd &states, int g,
+                                            const BDD &states, int g,
                                             bool fw) const {
-  Bdd cut = states * goal;
+  BDD cut = states * goal;
   if (cut.IsZero()) {
     return SymSolution(); // No solution yet :(
   }
@@ -26,10 +26,10 @@ SymSolution OppositeFrontierFixed::checkCut(UnidirectionalSearch *search,
 
 std::vector<SymSolution>
 OppositeFrontierFixed::getAllCuts(UnidirectionalSearch *search,
-                                  const Bdd &states, int g, bool fw,
+                                  const BDD &states, int g, bool fw,
                                   int /*lower_bound*/) const {
   std::vector<SymSolution> result;
-  Bdd cut = states * goal;
+  BDD cut = states * goal;
   if (cut.IsZero()) {
     result.emplace_back(); // No solution yet :(
   } else {

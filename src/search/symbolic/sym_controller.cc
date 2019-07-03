@@ -80,7 +80,7 @@ void SymController::setLowerBound(int lower, bool hard)
   }
 }
 
-Bdd SymController::get_states_on_goal_paths() const
+BDD SymController::get_states_on_goal_paths() const
 {
   if (searchParams.top_k)
   {

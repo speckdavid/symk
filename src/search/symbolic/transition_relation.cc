@@ -33,8 +33,8 @@ void TransitionRelation::init() {
   std::string op_name = op.get_name();
   std::remove(op_name.begin(), op_name.end(), ' ');
 
-  map<int, Bdd> effect_conditions;
-  map<int, Bdd> effects;
+  map<int, BDD> effect_conditions;
+  map<int, BDD> effects;
 
   // Get effects and the remaining conditions.
   for (auto const &eff : op.get_effects()) {
@@ -44,8 +44,8 @@ void TransitionRelation::init() {
       effVars.push_back(var);
     }
 
-    Bdd condition = sV->oneBDD();
-    Bdd ppBDD = sV->effBDD(var, eff_fact.value);
+    BDD condition = sV->oneBDD();
+    BDD ppBDD = sV->effBDD(var, eff_fact.value);
     if (effect_conditions.count(var)) {
       condition = effect_conditions.at(var);
     } else {
@@ -65,7 +65,7 @@ void TransitionRelation::init() {
   int counter = 0;
   for (auto it = effects.rbegin(); it != effects.rend(); ++it) {
     int var = it->first;
-    Bdd effectBDD = it->second;
+    BDD effectBDD = it->second;
     // If some possibility is not covered by the conditions of the
     // conditional effect, then in those cases the value of the value
     // is preserved with a biimplication
@@ -113,27 +113,48 @@ void TransitionRelation::init() {
   tBDD.toDot(op_name + ".dot");*/
 }
 
-Bdd TransitionRelation::image(const Bdd &from) const {
-  Bdd from_copy = from;
-  return from_copy.RelationProductNext(tBDD, existsVars, swapVarsSp, swapVarsS);
+BDD TransitionRelation::image(const BDD &from) const {
+    BDD aux = from;
+    BDD tmp = tBDD.AndAbstract(aux, existsVars);
+    BDD res = tmp.SwapVariables(swapVarsS, swapVarsSp);
+    return res;
 }
 
-Bdd TransitionRelation::image(const Bdd &from, int maxNodes) const {
-  Bdd from_copy = from;
-  return from_copy.RelationProductNext(tBDD, existsVars, swapVarsSp, swapVarsS,
-                                       maxNodes);
+BDD TransitionRelation::image(const BDD &from, int maxNodes) const {
+    utils::Timer t;
+    DEBUG_MSG(cout << "Image cost " << cost << " from " << from.nodeCount() << " with " << tBDD.nodeCount();
+              );
+    BDD aux = from;
+    BDD tmp = tBDD.AndAbstract(aux, existsVars, maxNodes);
+    DEBUG_MSG(cout << " tmp " << tmp.nodeCount() << " in " << t();
+              );
+    BDD res = tmp.SwapVariables(swapVarsS, swapVarsSp);
+    DEBUG_MSG(cout << " res " << res.nodeCount() << " took " << t();
+              );
+    DEBUG_MSG(cout << endl;
+              );
+
+    return res;
 }
 
-Bdd TransitionRelation::preimage(const Bdd &from) const {
-  Bdd from_copy = from;
-  return from_copy.RelationProductPrev(tBDD, existsBwVars, swapVarsS,
-                                       swapVarsSp);
+BDD TransitionRelation::preimage(const BDD &from) const {
+    BDD tmp = from.SwapVariables(swapVarsS, swapVarsSp);
+    BDD res = tBDD.AndAbstract(tmp, existsBwVars);
+    return res;
 }
 
-Bdd TransitionRelation::preimage(const Bdd &from, int maxNodes) const {
-  Bdd from_copy = from;
-  return from_copy.RelationProductPrev(tBDD, existsBwVars, swapVarsS,
-                                       swapVarsSp, maxNodes);
+BDD TransitionRelation::preimage(const BDD &from, int maxNodes) const {
+    utils::Timer t;
+    BDD tmp = from.SwapVariables(swapVarsS, swapVarsSp);
+    DEBUG_MSG(cout << " tmp " << tmp.nodeCount() << " in " << t() << flush;
+              );
+    BDD res = tBDD.AndAbstract(tmp, existsBwVars, maxNodes);
+    DEBUG_MSG(cout << "res " << res.nodeCount() << " took " << t();
+              );
+    DEBUG_MSG(cout << endl;
+              );
+
+    return res;
 }
 
 void TransitionRelation::merge(const TransitionRelation &t2, int maxNodes) {
@@ -150,8 +171,8 @@ void TransitionRelation::merge(const TransitionRelation &t2, int maxNodes) {
   set_union(effVars.begin(), effVars.end(), t2.effVars.begin(),
             t2.effVars.end(), back_inserter(newEffVars));
 
-  Bdd newTBDD = tBDD;
-  Bdd newTBDD2 = t2.tBDD;
+  BDD newTBDD = tBDD;
+  BDD newTBDD2 = t2.tBDD;
 
   //    cout << "Eff vars" << endl;
   vector<int>::const_iterator var1 = effVars.begin();
@@ -197,9 +218,9 @@ void TransitionRelation::merge(const TransitionRelation &t2, int maxNodes) {
 
 // For each op, include relevant mutexes
 void TransitionRelation::edeletion(
-    const std::vector<std::vector<Bdd>> &notMutexBDDsByFluentFw,
-    const std::vector<std::vector<Bdd>> &notMutexBDDsByFluentBw,
-    const std::vector<std::vector<Bdd>> &exactlyOneBDDsByFluent) {
+    const std::vector<std::vector<BDD>> &notMutexBDDsByFluentFw,
+    const std::vector<std::vector<BDD>> &notMutexBDDsByFluentBw,
+    const std::vector<std::vector<BDD>> &exactlyOneBDDsByFluent) {
   assert(ops_ids.size() == 1);
   assert(notMutexBDDsByFluentFw.size() ==
          tasks::g_root_task->get_num_variables());

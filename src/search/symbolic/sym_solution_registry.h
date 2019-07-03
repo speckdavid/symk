@@ -16,20 +16,20 @@ class SymCut
 protected:
   int g;
   int h;
-  Bdd cut;
+  BDD cut;
 
 public:
-  SymCut(int g, int h, Bdd cut);
+  SymCut(int g, int h, BDD cut);
 
   int get_g() const;
   int get_h() const;
   int get_f() const;
-  Bdd get_cut() const;
+  BDD get_cut() const;
   void merge(const SymCut &other);
 
   void set_g(int g);
   void set_h(int h);
-  void set_cut(Bdd cut);
+  void set_cut(BDD cut);
 
   // Here we only compare g and h values!!!
   bool operator<(const SymCut &other) const;
@@ -56,7 +56,7 @@ protected:
   TaskProxy relevant_task;
   std::shared_ptr<StateRegistry> state_registry;
   std::shared_ptr<SymVariables> sym_vars;
-  Bdd states_on_goal_paths;
+  BDD states_on_goal_paths;
   int plan_cost_bound;
 
   int missing_plans() const { return num_target_plans - num_found_plans; }
@@ -78,7 +78,7 @@ public:
 
   int get_num_found_plans() const { return num_found_plans; }
 
-  Bdd get_states_on_goal_paths() const { return states_on_goal_paths; }
+  BDD get_states_on_goal_paths() const { return states_on_goal_paths; }
 };
 } // namespace symbolic
 

@@ -22,11 +22,11 @@ class OriginalStateSpace;
 class TransitionRelation {
   SymVariables *sV; // To call basic BDD creation methods
   int cost;         // transition cost
-  Bdd tBDD;         // bdd for making the relprod
+  BDD tBDD;         // bdd for making the relprod
 
   std::vector<int> effVars;     // FD Index of eff variables. Must be sorted!!
-  Bdd existsVars, existsBwVars; // Cube with variables to existentialize
-  std::vector<Bdd> swapVarsS,
+  BDD existsVars, existsBwVars; // Cube with variables to existentialize
+  std::vector<BDD> swapVarsS,
       swapVarsSp; // Swap variables s to sp and viceversa
 
   std::set<OperatorID> ops_ids; // List of operators represented by the TR
@@ -39,14 +39,14 @@ public:
   // Copy constructor
   TransitionRelation(const TransitionRelation &) = default;
 
-  Bdd image(const Bdd &from) const;
-  Bdd preimage(const Bdd &from) const;
-  Bdd image(const Bdd &from, int maxNodes) const;
-  Bdd preimage(const Bdd &from, int maxNodes) const;
+  BDD image(const BDD &from) const;
+  BDD preimage(const BDD &from) const;
+  BDD image(const BDD &from, int maxNodes) const;
+  BDD preimage(const BDD &from, int maxNodes) const;
 
-  void edeletion(const std::vector<std::vector<Bdd>> &notMutexBDDsByFluentFw,
-                 const std::vector<std::vector<Bdd>> &notMutexBDDsByFluentBw,
-                 const std::vector<std::vector<Bdd>> &exactlyOneBDDsByFluent);
+  void edeletion(const std::vector<std::vector<BDD>> &notMutexBDDsByFluentFw,
+                 const std::vector<std::vector<BDD>> &notMutexBDDsByFluentBw,
+                 const std::vector<std::vector<BDD>> &exactlyOneBDDsByFluent);
 
   void merge(const TransitionRelation &t2, int maxNodes);
 
@@ -58,7 +58,7 @@ public:
 
   const std::set<OperatorID> &getOpsIds() const { return ops_ids; }
 
-  const Bdd &getBDD() const { return tBDD; }
+  const BDD &getBDD() const { return tBDD; }
 
   friend std::ostream &operator<<(std::ostream &os,
                                   const TransitionRelation &tr);

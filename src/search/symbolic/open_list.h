@@ -24,7 +24,7 @@ public:
   }
 
   void insert(const Bucket &bucket, int g);
-  void insert(const Bdd &bdd, int g);
+  void insert(const BDD &bdd, int g);
 
   void extract_states(int f, int g, Bucket &res);
   void extract_states_directly(int g, Bucket &res);
@@ -34,7 +34,7 @@ public:
   int minNextG(const Frontier &frontier, int min_action_cost) const;
   void pop(Frontier &frontier);
 
-  bool contains_any_state(const Bdd &bdd) const;
+  bool contains_any_state(const BDD &bdd) const;
 
   friend std::ostream &operator<<(std::ostream &os, const OpenList &open);
 };

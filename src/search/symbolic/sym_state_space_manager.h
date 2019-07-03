@@ -48,18 +48,18 @@ public:
 };
 
 class SymStateSpaceManager {
-  void zero_preimage(const Bdd &bdd, std::vector<Bdd> &res, int maxNodes) const;
-  void cost_preimage(const Bdd &bdd, std::map<int, std::vector<Bdd>> &res,
+  void zero_preimage(const BDD &bdd, std::vector<BDD> &res, int maxNodes) const;
+  void cost_preimage(const BDD &bdd, std::map<int, std::vector<BDD>> &res,
                      int maxNodes) const;
-  void zero_image(const Bdd &bdd, std::vector<Bdd> &res, int maxNodes) const;
-  void cost_image(const Bdd &bdd, std::map<int, std::vector<Bdd>> &res,
+  void zero_image(const BDD &bdd, std::vector<BDD> &res, int maxNodes) const;
+  void cost_image(const BDD &bdd, std::map<int, std::vector<BDD>> &res,
                   int maxNodes) const;
-  void preimage_parallel(const Bdd &bdd, int nodeLimit,
+  void preimage_parallel(const BDD &bdd, int nodeLimit,
                          const std::vector<TransitionRelation> &trs,
-                         std::vector<Bdd> &res, int i, int k) const;
-  void image_parallel(const Bdd &bdd, int nodeLimit,
+                         std::vector<BDD> &res, int i, int k) const;
+  void image_parallel(const BDD &bdd, int nodeLimit,
                       const std::vector<TransitionRelation> &trs,
-                      std::vector<Bdd> &res, int i, int k) const;
+                      std::vector<BDD> &res, int i, int k) const;
 
 protected:
   SymVariables *vars;
@@ -68,23 +68,23 @@ protected:
   // If the variable is fully/partially/not considered in the abstraction
   std::set<int> relevant_vars;
 
-  Bdd initialState; // initial state
-  Bdd goal; // bdd representing the true (i.e. not simplified) goal-state
+  BDD initialState; // initial state
+  BDD goal; // bdd representing the true (i.e. not simplified) goal-state
 
   std::map<int, std::vector<TransitionRelation>> transitions; // TRs
   int min_transition_cost; // minimum cost of non-zero cost transitions
   bool hasTR0;             // If there is transitions with cost 0
 
   // BDD representation of valid states (wrt mutex) for fw and bw search
-  std::vector<Bdd> notMutexBDDsFw, notMutexBDDsBw;
+  std::vector<BDD> notMutexBDDsFw, notMutexBDDsBw;
 
   // Dead ends for fw and bw searches. They are always removed in
   // filter_mutex (it does not matter which mutex_type we are using).
-  std::vector<Bdd> notDeadEndFw, notDeadEndBw;
+  std::vector<BDD> notDeadEndFw, notDeadEndBw;
 
-  Bdd getRelVarsCubePre() const { return vars->getCubePre(relevant_vars); }
+  BDD getRelVarsCubePre() const { return vars->getCubePre(relevant_vars); }
 
-  Bdd getRelVarsCubeEff() const { return vars->getCubeEff(relevant_vars); }
+  BDD getRelVarsCubeEff() const { return vars->getCubeEff(relevant_vars); }
 
   virtual std::string tag() const = 0;
 
@@ -114,24 +114,24 @@ public:
 
   const SymParamsMgr getParams() const { return p; }
 
-  const Bdd &getGoal() { return goal; }
+  const BDD &getGoal() { return goal; }
 
-  const Bdd &getInitialState() { return initialState; }
+  const BDD &getInitialState() { return initialState; }
 
-  Bdd getBDD(int variable, int value) const {
+  BDD getBDD(int variable, int value) const {
     return vars->preBDD(variable, value);
   }
 
-  Bdd zeroBDD() const { return vars->zeroBDD(); }
+  BDD zeroBDD() const { return vars->zeroBDD(); }
 
-  Bdd oneBDD() const { return vars->oneBDD(); }
+  BDD oneBDD() const { return vars->oneBDD(); }
 
-  const std::vector<Bdd> &getNotMutexBDDs(bool fw) const {
+  const std::vector<BDD> &getNotMutexBDDs(bool fw) const {
     return fw ? notMutexBDDsFw : notMutexBDDsBw;
   }
 
   bool mergeBucket(Bucket &bucket, int maxTime, int maxNodes) const {
-    auto mergeBDDs = [](Bdd bdd, Bdd bdd2, int maxNodes) {
+    auto mergeBDDs = [](BDD bdd, BDD bdd2, int maxNodes) {
       return bdd.Or(bdd2, maxNodes);
     };
     merge(vars, bucket, mergeBDDs, maxTime, maxNodes);
@@ -141,7 +141,7 @@ public:
   }
 
   bool mergeBucketAnd(Bucket &bucket, int maxTime, int maxNodes) const {
-    auto mergeBDDs = [](Bdd bdd, Bdd bdd2, int maxNodes) {
+    auto mergeBDDs = [](BDD bdd, BDD bdd2, int maxNodes) {
       return bdd.And(bdd2, maxNodes);
     };
     merge(vars, bucket, mergeBDDs, maxTime, maxNodes);
@@ -170,7 +170,7 @@ public:
     return hasTR0;
   }
 
-  void zero_image(bool fw, const Bdd &bdd, std::vector<Bdd> &res,
+  void zero_image(bool fw, const BDD &bdd, std::vector<BDD> &res,
                   int maxNodes) {
     if (fw)
       zero_image(bdd, res, maxNodes);
@@ -178,7 +178,7 @@ public:
       zero_preimage(bdd, res, maxNodes);
   }
 
-  void cost_image(bool fw, const Bdd &bdd, std::map<int, std::vector<Bdd>> &res,
+  void cost_image(bool fw, const BDD &bdd, std::map<int, std::vector<BDD>> &res,
                   int maxNodes) {
     if (fw) {
       cost_image(bdd, res, maxNodes);
@@ -187,9 +187,9 @@ public:
     }
   }
 
-  Bdd filter_mutex(const Bdd &bdd, bool fw, int maxNodes, bool initialization);
+  BDD filter_mutex(const BDD &bdd, bool fw, int maxNodes, bool initialization);
 
-  int filterMutexBucket(std::vector<Bdd> &bucket, bool fw, bool initialization,
+  int filterMutexBucket(std::vector<BDD> &bucket, bool fw, bool initialization,
                         int maxTime, int maxNodes);
 
   void setTimeLimit(int maxTime) { vars->setTimeLimit(maxTime); }

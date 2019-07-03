@@ -40,13 +40,13 @@ public:
 class OppositeFrontier {
 public:
   virtual ~OppositeFrontier() {}
-  virtual SymSolution checkCut(UnidirectionalSearch *search, const Bdd &states,
+  virtual SymSolution checkCut(UnidirectionalSearch *search, const BDD &states,
                                int g, bool fw) const = 0;
   virtual std::vector<SymSolution> getAllCuts(UnidirectionalSearch *search,
-                                              const Bdd &states, int g, bool fw,
+                                              const BDD &states, int g, bool fw,
                                               int lower_bound) const = 0;
 
-  virtual Bdd notClosed() const = 0;
+  virtual BDD notClosed() const = 0;
 
   // Returns true only if all not closed states are guaranteed to be dead ends
   virtual bool exhausted() const = 0;
@@ -55,18 +55,18 @@ public:
 };
 
 class OppositeFrontierFixed : public OppositeFrontier {
-  Bdd goal;
+  BDD goal;
   int hNotGoal;
 
 public:
-  OppositeFrontierFixed(Bdd g, const SymStateSpaceManager &mgr);
-  virtual SymSolution checkCut(UnidirectionalSearch *search, const Bdd &states,
+  OppositeFrontierFixed(BDD g, const SymStateSpaceManager &mgr);
+  virtual SymSolution checkCut(UnidirectionalSearch *search, const BDD &states,
                                int g, bool fw) const override;
   virtual std::vector<SymSolution> getAllCuts(UnidirectionalSearch *search,
-                                              const Bdd &states, int g, bool fw,
+                                              const BDD &states, int g, bool fw,
                                               int lower_bound) const override;
 
-  virtual Bdd notClosed() const override { return !goal; }
+  virtual BDD notClosed() const override { return !goal; }
 
   virtual bool exhausted() const override { return false; }
 
@@ -90,7 +90,7 @@ public:
 
   void statistics() const;
 
-  virtual void getPlan(const Bdd &cut, int g,
+  virtual void getPlan(const BDD &cut, int g,
                        std::vector<OperatorID> &path) const = 0;
 
   virtual int getG() const = 0;

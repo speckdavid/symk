@@ -38,7 +38,7 @@ bool UniformCostSearch::init(std::shared_ptr<SymStateSpaceManager> manager,
   DEBUG_MSG(cout << "Init exploration: " << dirname(forward)
                  << *this /* << " with mgr: " << manager */ << endl;);
 
-  Bdd init_bdd = fw ? mgr->getInitialState() : mgr->getGoal();
+  BDD init_bdd = fw ? mgr->getInitialState() : mgr->getGoal();
   DEBUG_MSG(cout << "Init frontier: " << endl;);
 
   frontier.init(manager.get(), init_bdd);
@@ -87,7 +87,7 @@ void UniformCostSearch::checkCutOriginal(Bucket &bucket, int g_val)
     return;
   }
 
-  for (Bdd &bucketBDD : bucket)
+  for (BDD &bucketBDD : bucket)
   {
     if (!p.top_k)
     {
@@ -129,7 +129,7 @@ void UniformCostSearch::prepareBucket()
     // TODO: here we should use  and totalClosed to
     if (getG() > last_g_cost && p.top_k)
     {
-      Bdd closed_states =
+      BDD closed_states =
           !engine->get_states_on_goal_paths() * closed->getFullyCostClosed();
       if (!open_list.contains_any_state(!closed_states))
       {
@@ -184,7 +184,7 @@ void UniformCostSearch::prepareBucket()
       DEBUG_MSG(cout << "Insert g=" << frontier.g()
                      << " states into closed: " << nodeCount(frontier.bucket())
                      << " (" << frontier.bucket().size() << " bdds)" << endl;);
-      for (const Bdd &states : frontier.bucket())
+      for (const BDD &states : frontier.bucket())
       {
         DEBUG_MSG(cout << "Closing: " << states.nodeCount() << endl;);
 
@@ -468,9 +468,9 @@ void UniformCostSearch::violated(TruncatedReason reason,
   }
 }
 
-Bdd UniformCostSearch::getClosedTotal() { return closed->getClosed(); }
+BDD UniformCostSearch::getClosedTotal() { return closed->getClosed(); }
 
-Bdd UniformCostSearch::notClosed() { return closed->notClosed(); }
+BDD UniformCostSearch::notClosed() { return closed->notClosed(); }
 
 std::ostream &operator<<(std::ostream &os, const TruncatedReason &reason)
 {
@@ -492,7 +492,7 @@ std::ostream &operator<<(std::ostream &os, const TruncatedReason &reason)
   }
 }
 
-void UniformCostSearch::getPlan(const Bdd &cut, int g,
+void UniformCostSearch::getPlan(const BDD &cut, int g,
                                 std::vector<OperatorID> &path) const
 {
 

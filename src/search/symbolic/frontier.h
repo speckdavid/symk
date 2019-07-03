@@ -56,7 +56,7 @@ class Frontier { // Current states extracted from the open list
 public:
   Frontier();
 
-  void init(SymStateSpaceManager *mgr, const Bdd &bdd);
+  void init(SymStateSpaceManager *mgr, const BDD &bdd);
   void set(int g, Bucket &open);
 
   Result prepare(int maxTime, int maxNodes, bool fw, bool initialization);
@@ -86,9 +86,9 @@ public:
     return Sfilter;
   }
 
-  void filter(const Bdd &bdd) {
+  void filter(const BDD &bdd) {
     assert(Smerge.empty() && Szero.empty() && S.empty());
-    for (Bdd &b : Sfilter) {
+    for (BDD &b : Sfilter) {
       b *= !bdd;
     }
   }

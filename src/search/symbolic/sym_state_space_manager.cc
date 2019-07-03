@@ -49,12 +49,12 @@ void SymStateSpaceManager::dumpMutexBDDs(bool fw) const {
   }
 }
 
-void SymStateSpaceManager::zero_preimage(const Bdd &bdd, vector<Bdd> &res,
+void SymStateSpaceManager::zero_preimage(const BDD &bdd, vector<BDD> &res,
                                          int nodeLimit) const {
 #ifdef DDLIBSYLVAN
-  if (Bdd::is_parallel_search()) {
+  if (BDD::is_parallel_search()) {
     // Reserve the space
-    vector<Bdd> cur_res(transitions.at(0).size(), Bdd::BddOne());
+    vector<BDD> cur_res(transitions.at(0).size(), BDD::BDDOne());
     // Compute in parallel
     preimage_parallel(bdd, nodeLimit, transitions.at(0), cur_res, 0,
                       transitions.at(0).size());
@@ -72,12 +72,12 @@ void SymStateSpaceManager::zero_preimage(const Bdd &bdd, vector<Bdd> &res,
 #endif
 }
 
-void SymStateSpaceManager::zero_image(const Bdd &bdd, vector<Bdd> &res,
+void SymStateSpaceManager::zero_image(const BDD &bdd, vector<BDD> &res,
                                       int nodeLimit) const {
 #ifdef DDLIBSYLVAN
-  if (Bdd::is_parallel_search()) {
+  if (BDD::is_parallel_search()) {
     // Reserve the space
-    vector<Bdd> cur_res(transitions.at(0).size(), Bdd::BddOne());
+    vector<BDD> cur_res(transitions.at(0).size(), BDD::BDDOne());
     // Compute in parallel
     image_parallel(bdd, nodeLimit, transitions.at(0), cur_res, 0,
                    transitions.at(0).size());
@@ -95,16 +95,16 @@ void SymStateSpaceManager::zero_image(const Bdd &bdd, vector<Bdd> &res,
 #endif
 }
 
-void SymStateSpaceManager::cost_preimage(const Bdd &bdd,
-                                         map<int, vector<Bdd>> &res,
+void SymStateSpaceManager::cost_preimage(const BDD &bdd,
+                                         map<int, vector<BDD>> &res,
                                          int nodeLimit) const {
 
 #ifdef DDLIBSYLVAN
-  if (Bdd::is_parallel_search()) {
+  if (BDD::is_parallel_search()) {
     for (auto trs : transitions) {
       int cost = trs.first;
       // Reserve the space
-      vector<Bdd> cur_res(transitions.at(cost).size(), Bdd::BddOne());
+      vector<BDD> cur_res(transitions.at(cost).size(), BDD::BDDOne());
       // Compute in parallel
       preimage_parallel(bdd, nodeLimit, transitions.at(cost), cur_res, 0,
                         transitions.at(cost).size());
@@ -118,7 +118,7 @@ void SymStateSpaceManager::cost_preimage(const Bdd &bdd,
       if (cost == 0)
         continue;
       for (size_t i = 0; i < trs.second.size(); i++) {
-        Bdd result = trs.second[i].preimage(bdd, nodeLimit);
+        BDD result = trs.second[i].preimage(bdd, nodeLimit);
         res[cost].push_back(result);
       }
     }
@@ -129,22 +129,22 @@ void SymStateSpaceManager::cost_preimage(const Bdd &bdd,
     if (cost == 0)
       continue;
     for (size_t i = 0; i < trs.second.size(); i++) {
-      Bdd result = trs.second[i].preimage(bdd, nodeLimit);
+      BDD result = trs.second[i].preimage(bdd, nodeLimit);
       res[cost].push_back(result);
     }
   }
 #endif
 }
 
-void SymStateSpaceManager::cost_image(const Bdd &bdd,
-                                      map<int, vector<Bdd>> &res,
+void SymStateSpaceManager::cost_image(const BDD &bdd,
+                                      map<int, vector<BDD>> &res,
                                       int nodeLimit) const {
 #ifdef DDLIBSYLVAN
-  if (Bdd::is_parallel_search()) {
+  if (BDD::is_parallel_search()) {
     for (auto trs : transitions) {
       int cost = trs.first;
       // Reserve the space
-      vector<Bdd> cur_res(transitions.at(cost).size(), Bdd::BddOne());
+      vector<BDD> cur_res(transitions.at(cost).size(), BDD::BDDOne());
       // Compute in parallel
       image_parallel(bdd, nodeLimit, transitions.at(cost), cur_res, 0,
                      transitions.at(cost).size());
@@ -158,7 +158,7 @@ void SymStateSpaceManager::cost_image(const Bdd &bdd,
       if (cost == 0)
         continue;
       for (size_t i = 0; i < trs.second.size(); i++) {
-        Bdd result = trs.second[i].image(bdd, nodeLimit);
+        BDD result = trs.second[i].image(bdd, nodeLimit);
         res[cost].push_back(result);
       }
     }
@@ -169,7 +169,7 @@ void SymStateSpaceManager::cost_image(const Bdd &bdd,
     if (cost == 0)
       continue;
     for (size_t i = 0; i < trs.second.size(); i++) {
-      Bdd result = trs.second[i].image(bdd, nodeLimit);
+      BDD result = trs.second[i].image(bdd, nodeLimit);
       res[cost].push_back(result);
     }
   }
@@ -177,8 +177,8 @@ void SymStateSpaceManager::cost_image(const Bdd &bdd,
 }
 
 void SymStateSpaceManager::preimage_parallel(
-    const Bdd &bdd, int nodeLimit, const std::vector<TransitionRelation> &trs,
-    std::vector<Bdd> &res, int i, int k) const {
+    const BDD &bdd, int nodeLimit, const std::vector<TransitionRelation> &trs,
+    std::vector<BDD> &res, int i, int k) const {
 #ifdef DDLIBSYLVAN
   LACE_ME
 #endif
@@ -191,8 +191,8 @@ void SymStateSpaceManager::preimage_parallel(
 }
 
 void SymStateSpaceManager::image_parallel(
-    const Bdd &bdd, int nodeLimit, const std::vector<TransitionRelation> &trs,
-    std::vector<Bdd> &res, int i, int k) const {
+    const BDD &bdd, int nodeLimit, const std::vector<TransitionRelation> &trs,
+    std::vector<BDD> &res, int i, int k) const {
 #ifdef DDLIBSYLVAN
   LACE_ME
 #endif
@@ -204,12 +204,12 @@ void SymStateSpaceManager::image_parallel(
   }
 }
 
-Bdd SymStateSpaceManager::filter_mutex(const Bdd &bdd, bool fw, int nodeLimit,
+BDD SymStateSpaceManager::filter_mutex(const BDD &bdd, bool fw, int nodeLimit,
                                        bool initialization) {
-  Bdd res = bdd;
-  const vector<Bdd> &notDeadEndBDDs =
+  BDD res = bdd;
+  const vector<BDD> &notDeadEndBDDs =
       ((fw || isAbstracted()) ? notDeadEndFw : notDeadEndBw);
-  for (const Bdd &notDeadEnd : notDeadEndBDDs) {
+  for (const BDD &notDeadEnd : notDeadEndBDDs) {
     DEBUG_MSG(cout << "Filter: " << res.nodeCount() << " and dead end "
                    << notDeadEnd.nodeCount() << flush;);
     assert(!(notDeadEnd.IsZero()));
@@ -217,14 +217,14 @@ Bdd SymStateSpaceManager::filter_mutex(const Bdd &bdd, bool fw, int nodeLimit,
     DEBUG_MSG(cout << ": " << res.nodeCount() << endl;);
   }
 
-  const vector<Bdd> &notMutexBDDs = (fw ? notMutexBDDsFw : notMutexBDDsBw);
+  const vector<BDD> &notMutexBDDs = (fw ? notMutexBDDsFw : notMutexBDDsBw);
 
   switch (p.mutex_type) {
   case MutexType::MUTEX_NOT:
     break;
   case MutexType::MUTEX_EDELETION:
     if (initialization) {
-      for (const Bdd &notMutexBDD : notMutexBDDs) {
+      for (const BDD &notMutexBDD : notMutexBDDs) {
         DEBUG_MSG(cout << res.nodeCount() << " and " << notMutexBDD.nodeCount()
                        << flush;);
         res = res.And(notMutexBDD, nodeLimit);
@@ -233,7 +233,7 @@ Bdd SymStateSpaceManager::filter_mutex(const Bdd &bdd, bool fw, int nodeLimit,
     }
     break;
   case MutexType::MUTEX_AND:
-    for (const Bdd &notMutexBDD : notMutexBDDs) {
+    for (const BDD &notMutexBDD : notMutexBDDs) {
       DEBUG_MSG(cout << "Filter: " << res.nodeCount() << " and "
                      << notMutexBDD.nodeCount() << flush;);
       res = res.And(notMutexBDD, nodeLimit);
@@ -241,26 +241,26 @@ Bdd SymStateSpaceManager::filter_mutex(const Bdd &bdd, bool fw, int nodeLimit,
     }
     break;
     /*case MutexType::MUTEX_RESTRICT:
-        for (const Bdd &notMutexBDD : notMutexBDDs)
+        for (const BDD &notMutexBDD : notMutexBDDs)
             res = res.Restrict(notMutexBDD);
         break;
     case MutexType::MUTEX_NPAND:
-        for (const Bdd &notMutexBDD : notMutexBDDs)
+        for (const BDD &notMutexBDD : notMutexBDDs)
             res = res.NPAnd(notMutexBDD);
         break;
     case MutexType::MUTEX_CONSTRAIN:
-        for (const Bdd &notMutexBDD : notMutexBDDs)
+        for (const BDD &notMutexBDD : notMutexBDDs)
             res = res.Constrain(notMutexBDD);
         break;
     case MutexType::MUTEX_LICOMP:
-        for (const Bdd &notMutexBDD : notMutexBDDs)
+        for (const BDD &notMutexBDD : notMutexBDDs)
             res = res.LICompaction(notMutexBDD);
         break;*/
   }
   return res;
 }
 
-int SymStateSpaceManager::filterMutexBucket(vector<Bdd> &bucket, bool fw,
+int SymStateSpaceManager::filterMutexBucket(vector<BDD> &bucket, bool fw,
                                             bool initialization, int maxTime,
                                             int maxNodes) {
   int numFiltered = 0;

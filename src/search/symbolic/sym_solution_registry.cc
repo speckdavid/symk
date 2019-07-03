@@ -4,7 +4,7 @@
 
 namespace symbolic
 {
-SymCut::SymCut(int g, int h, Bdd cut) : g(g), h(h), cut(cut) {}
+SymCut::SymCut(int g, int h, BDD cut) : g(g), h(h), cut(cut) {}
 
 int SymCut::get_g() const { return g; }
 
@@ -12,7 +12,7 @@ int SymCut::get_h() const { return h; }
 
 int SymCut::get_f() const { return g + h; }
 
-Bdd SymCut::get_cut() const { return cut; }
+BDD SymCut::get_cut() const { return cut; }
 
 void SymCut::merge(const SymCut &other)
 {
@@ -24,7 +24,7 @@ void SymCut::set_g(int g) { this->g = g; }
 
 void SymCut::set_h(int h) { this->h = h; }
 
-void SymCut::set_cut(Bdd cut) { this->cut = cut; }
+void SymCut::set_cut(BDD cut) { this->cut = cut; }
 
 bool SymCut::operator<(const SymCut &other) const
 {
@@ -113,7 +113,7 @@ void SymSolutionRegistry::construct_cheaper_solutions(int bound)
         {
             sym_cuts.erase(sym_cuts.begin());
         } else {
-            Bdd goal_path_states;
+            BDD goal_path_states;
             num_found_plans += plan_reconstructor->reconstruct_plans(sym_cuts[0], missing_plans(), goal_path_states);
             states_on_goal_paths += goal_path_states;
 	    min_plan_bound = std::min(min_plan_bound, sym_cuts.at(0).get_f());
