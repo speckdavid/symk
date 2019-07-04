@@ -31,8 +31,6 @@ private:
   std::map<int, std::vector<BDD>> zeroCostClosed;
   BDD closedTotal; // All closed states.
 
-  int hNotClosed,
-      fNotClosed; // Bounds on h and g for those states not in closed
   std::map<int, BDD>
       closedUpTo;         // Disjunction of BDDs in closed  (auxiliar useful to take the
                           // maximum between several BDDs)
@@ -47,8 +45,6 @@ public:
             const ClosedList &other);
 
   void insert(int h, const BDD &S);
-  void setHNotClosed(int h);
-  void setFNotClosed(int f);
 
   const std::set<int> &getHValues();
 
@@ -135,24 +131,7 @@ public:
     return i;
   }
 
-  inline int getHNotClosed() const
-  {
-    return 10000000;
-    return hNotClosed;
-  }
-
-  inline int getFNotClosed() const
-  {
-    return 100000000;
-    return fNotClosed;
-  }
-
   void statistics() const;
-
-  virtual bool exhausted() const override
-  {
-    return fNotClosed == std::numeric_limits<int>::max();
-  }
 
   void dump() const
   {

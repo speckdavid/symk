@@ -54,12 +54,6 @@ class SymStateSpaceManager {
   void zero_image(const BDD &bdd, std::vector<BDD> &res, int maxNodes) const;
   void cost_image(const BDD &bdd, std::map<int, std::vector<BDD>> &res,
                   int maxNodes) const;
-  void preimage_parallel(const BDD &bdd, int nodeLimit,
-                         const std::vector<TransitionRelation> &trs,
-                         std::vector<BDD> &res, int i, int k) const;
-  void image_parallel(const BDD &bdd, int nodeLimit,
-                      const std::vector<TransitionRelation> &trs,
-                      std::vector<BDD> &res, int i, int k) const;
 
 protected:
   SymVariables *vars;
@@ -96,13 +90,6 @@ public:
                        const std::set<int> &relevant_vars_ = std::set<int>());
 
   virtual ~SymStateSpaceManager() {}
-
-  bool isAbstracted() const { return !isOriginal(); }
-
-  bool isOriginal() const {
-    return static_cast<int>(relevant_vars.size()) ==
-           tasks::g_root_task->get_num_variables();
-  }
 
   void filterMutex(Bucket &bucket, bool fw, bool initialization);
   void mergeBucket(Bucket &bucket) const;

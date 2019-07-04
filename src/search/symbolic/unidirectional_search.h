@@ -48,10 +48,6 @@ public:
 
   virtual BDD notClosed() const = 0;
 
-  // Returns true only if all not closed states are guaranteed to be dead ends
-  virtual bool exhausted() const = 0;
-
-  virtual int getHNotClosed() const = 0;
 };
 
 class OppositeFrontierFixed : public OppositeFrontier {
@@ -68,9 +64,6 @@ public:
 
   virtual BDD notClosed() const override { return !goal; }
 
-  virtual bool exhausted() const override { return false; }
-
-  virtual int getHNotClosed() const { return hNotGoal; }
 };
 
 class UnidirectionalSearch : public SymSearch {

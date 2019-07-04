@@ -47,9 +47,8 @@ void BidirectionalSearch::statistics() const {
 bool BidirectionalSearch::stepImage(int maxTime, int maxNodes) {
   bool res = selectBestDirection()->stepImage(maxTime, maxNodes);
 
-  if (isOriginal()) {
-    engine->setLowerBound(getF());
-  }
+  engine->setLowerBound(getF());
+  engine->setMinG(fw->getG() + bw->getG());
 
   return res;
 }

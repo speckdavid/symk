@@ -43,10 +43,6 @@ public:
     return mgr;
   }
 
-  bool isAbstracted() const { return mgr->isAbstracted(); }
-
-  bool isOriginal() const { return mgr->isOriginal(); }
-
   bool isSearchable() const {
     return isSearchableWithNodes(p.getMaxStepNodes());
   }

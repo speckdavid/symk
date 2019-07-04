@@ -31,8 +31,6 @@ void ClosedList::init(SymStateSpaceManager *manager,
   map<int, vector<BDD>>().swap(zeroCostClosed);
   map<int, BDD>().swap(closed);
   closedTotal = mgr->zeroBDD();
-  hNotClosed = 0;
-  fNotClosed = 0;
 }
 
 void ClosedList::init(SymStateSpaceManager *manager,
@@ -45,8 +43,6 @@ void ClosedList::init(SymStateSpaceManager *manager,
   map<int, vector<BDD>>().swap(zeroCostClosed);
   map<int, BDD>().swap(closed);
   closedTotal = mgr->zeroBDD();
-  hNotClosed = 0;
-  fNotClosed = 0;
 
   closedTotal = other.closedTotal;
   closed[0] = closedTotal;
@@ -91,31 +87,12 @@ void ClosedList::insert(int h, const BDD &S)
   }
 }
 
-void ClosedList::setHNotClosed(int newHNotClosed)
-{
-  if (newHNotClosed > hNotClosed)
-  {
-    hNotClosed = newHNotClosed;
-    newHValue(newHNotClosed); // Add newHNotClosed to list of h values (and
-                              // those of parents)
-  }
-}
-
-void ClosedList::setFNotClosed(int f)
-{
-  if (f > fNotClosed)
-  {
-    fNotClosed = f;
-  }
-}
-
 void ClosedList::extract_path(const BDD &c, int h, bool fw,
                               vector<OperatorID> &path) const
 {
   if (!mgr)
     return;
-  DEBUG_MSG(cout << "Sym closed extract path h=" << h
-                 << " notClosed: " << hNotClosed << endl;
+  DEBUG_MSG(cout << "Sym closed extract path h=" << h << endl;
             cout << "Closed: "; for (auto &c
                                      : closed) cout
                                 << c.first << " ";
@@ -362,7 +339,10 @@ std::vector<SymSolution> ClosedList::getAllCuts(UnidirectionalSearch *search,
     {
       int h = closedH.first;
 
-      if (g + h < lower_bound - 1)
+      /* Here we also need to consider higher costs due to the architecture
+       of symBD. Otherwise their occur problems in 
+       */
+      if (g + h < lower_bound)
       {
         continue;
       }

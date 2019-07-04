@@ -32,6 +32,7 @@ protected:
   SymParamsSearch searchParams; // Parameters to search the original state space
 
   int lower_bound;
+  int min_g;
   SymSolution solution;
   SymSolutionRegistry solution_registry;
 
@@ -41,6 +42,7 @@ public:
 
   virtual void new_solution(const SymSolution &sol);
   void setLowerBound(int lower, bool hard = false);
+  void setMinG(int g) { min_g = std::max(g, min_g); }
 
   int getUpperBound() const {
     if (searchParams.top_k && !solution_registry.found_all_plans()) {
@@ -52,6 +54,8 @@ public:
     return std::numeric_limits<int>::max();
   }
   int getLowerBound() const { return lower_bound; }
+  
+  int getMinG() const { return min_g; }
 
   bool solved() const { return getLowerBound() >= getUpperBound(); }
 
