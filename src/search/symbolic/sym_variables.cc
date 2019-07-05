@@ -1,16 +1,15 @@
 #include "sym_variables.h"
 
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <string>
-
 #include "../global_state.h"
 #include "../options/option_parser.h"
 #include "../options/options.h"
 #include "../tasks/root_task.h"
-#include "debug_macros.h"
 #include "opt_order.h"
+
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
 
 using namespace std;
 using options::Options;
@@ -88,7 +87,6 @@ void SymVariables::init(const vector<int> &v_order) {
     variables.push_back(manager->bddVar(i));
   }
 
-  DEBUG_MSG(cout << "Generating predicate BDDs: " << num_fd_vars << endl;);
   preconditionBDDs.resize(num_fd_vars);
   effectBDDs.resize(num_fd_vars);
   biimpBDDs.resize(num_fd_vars);

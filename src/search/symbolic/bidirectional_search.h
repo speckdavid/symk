@@ -22,9 +22,6 @@ namespace symbolic {
 
         virtual bool stepImage(int maxTime, int maxNodes) override;
 
-        // Prints useful statistics at the end of the search
-        virtual void statistics() const override;
-
         virtual int getF() const override {
             return std::max<int>(std::max<int>(fw->getF(), bw->getF()),
                     fw->getG() + bw->getG() +

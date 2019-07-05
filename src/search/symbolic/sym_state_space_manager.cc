@@ -1,11 +1,6 @@
 #include "sym_state_space_manager.h"
 
-#include "debug_macros.h"
 #include "sym_enums.h"
-#include <algorithm>
-#include <limits>
-#include <queue>
-
 #include "../abstract_task.h"
 #include "../mutex_group.h"
 #include "../options/option_parser.h"
@@ -14,6 +9,10 @@
 #include "../task_utils/task_properties.h"
 #include "../utils/timer.h"
 #include "sym_utils.h"
+
+#include <algorithm>
+#include <limits>
+#include <queue>
 
 using namespace std;
 
@@ -97,11 +96,8 @@ namespace symbolic {
         BDD res = bdd;
         const vector<BDD> &notDeadEndBDDs = fw ? notDeadEndFw : notDeadEndBw;
         for (const BDD &notDeadEnd : notDeadEndBDDs) {
-            DEBUG_MSG(cout << "Filter: " << res.nodeCount() << " and dead end "
-                    << notDeadEnd.nodeCount() << flush;);
             assert(!(notDeadEnd.IsZero()));
             res = res.And(notDeadEnd, nodeLimit);
-            DEBUG_MSG(cout << ": " << res.nodeCount() << endl;);
         }
 
         const vector<BDD> &notMutexBDDs = (fw ? notMutexBDDsFw : notMutexBDDsBw);
@@ -112,19 +108,13 @@ namespace symbolic {
             case MutexType::MUTEX_EDELETION:
                 if (initialization) {
                     for (const BDD &notMutexBDD : notMutexBDDs) {
-                        DEBUG_MSG(cout << res.nodeCount() << " and " << notMutexBDD.nodeCount()
-                                << flush;);
                         res = res.And(notMutexBDD, nodeLimit);
-                        DEBUG_MSG(cout << ": " << res.nodeCount() << endl;);
                     }
                 }
                 break;
             case MutexType::MUTEX_AND:
                 for (const BDD &notMutexBDD : notMutexBDDs) {
-                    DEBUG_MSG(cout << "Filter: " << res.nodeCount() << " and "
-                            << notMutexBDD.nodeCount() << flush;);
                     res = res.And(notMutexBDD, nodeLimit);
-                    DEBUG_MSG(cout << ": " << res.nodeCount() << endl;);
                 }
                 break;
         }
@@ -138,17 +128,10 @@ namespace symbolic {
         setTimeLimit(maxTime);
         try {
             for (size_t i = 0; i < bucket.size(); ++i) {
-                DEBUG_MSG(cout << "Filter spurious " << (fw ? "fw" : "bw") << ": "
-                        << *this << " from: " << bucket[i].nodeCount()
-                        << " maxTime: " << maxTime
-                        << " and maxNodes: " << maxNodes;);
-
                 bucket[i] = filter_mutex(bucket[i], fw, maxNodes, initialization);
-                DEBUG_MSG(cout << " => " << bucket[i].nodeCount() << endl;);
                 numFiltered++;
             }
         } catch (BDDError e) {
-            DEBUG_MSG(cout << " truncated." << endl;);
         }
         unsetTimeLimit();
 

@@ -769,7 +769,7 @@ fast_downward_plugin(
         symbolic/sym_params_search
         symbolic/sym_estimate
         symbolic/sym_search
-        symbolic/sym_solution
+        symbolic/sym_solution_cut
         symbolic/sym_solution_registry
         symbolic/sym_plan_reconstruction
         symbolic/unidirectional_search

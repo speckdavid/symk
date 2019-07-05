@@ -73,8 +73,6 @@ class UniformCostSearch : public UnidirectionalSearch
 
   void computeEstimation(bool prepare);
 
-  // void debug_pop();
-
   //////////////////////////////////////////////////////////////////////////////
 public:
   UniformCostSearch(SymController *eng, const SymParamsSearch &params);
@@ -97,9 +95,6 @@ public:
             std::shared_ptr<ClosedList> closed_opposite =
                 nullptr); // Init forward or backward search
 
-  virtual void getPlan(const BDD &cut, int g,
-                       std::vector<OperatorID> &path) const override;
-
   virtual bool isSearchableWithNodes(int maxNodes) const;
 
   virtual int getF() const override
@@ -110,11 +105,6 @@ public:
   virtual int getG() const override
   {
     return frontier.empty() ? open_list.minG() : frontier.g();
-  }
-
-  int getHNotClosed() const
-  {
-    return open_list.minNextG(frontier, mgr->getAbsoluteMinTransitionCost());
   }
 
   BDD getClosedTotal();

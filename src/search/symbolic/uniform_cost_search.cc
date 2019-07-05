@@ -3,15 +3,14 @@
 #include "closed_list.h"
 #include "frontier.h"
 #include "sym_controller.h"
-#include "sym_solution.h"
+#include "sym_solution_cut.h"
 #include "sym_utils.h"
+#include "../utils/timer.h"
+
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
-
-#include "../utils/timer.h"
-#include "debug_macros.h"
 
 using namespace std;
 using utils::g_timer;
@@ -34,19 +33,12 @@ namespace symbolic {
         last_g_cost = 0;
         assert(mgr);
 
-        DEBUG_MSG(cout << "Init exploration: " << dirname(forward)
-                << *this /* << " with mgr: " << manager */ << endl;);
-
         BDD init_bdd = fw ? mgr->getInitialState() : mgr->getGoal();
-        DEBUG_MSG(cout << "Init frontier: " << endl;);
-
         frontier.init(manager.get(), init_bdd);
-        DEBUG_MSG(cout << "Init closed: " << endl;);
 
         closed->init(mgr.get(), this);
         closed->insert(0, init_bdd);
 
-        DEBUG_MSG(cout << "Init perfect heuristic: " << endl;);
         if (closed_opposite) {
             perfectHeuristic = closed_opposite;
         } else {
@@ -68,36 +60,32 @@ namespace symbolic {
     }
 
     void UniformCostSearch::checkCutOriginal(Bucket &bucket, int g_val) {
-        // If it is the original space, maybe we have found a solution, set upper
-        // bound
         if (p.get_non_stop()) {
             return;
         }
 
         for (BDD &bucketBDD : bucket) {
-            auto all_sols = perfectHeuristic->getAllCuts(this, bucketBDD, g_val, fw,
+            auto all_sols = perfectHeuristic->getAllCuts(bucketBDD, g_val, fw,
                     engine->getMinG());
             for (auto &sol : all_sols) {
-                if (sol.solved()) {
-                    // cout << "Solution found with cost " << sol.getCost() << " total
-                    // time: " << g_timer << endl; Solution found :)
-                    engine->new_solution(sol);
-                }
+                engine->new_solution(sol);
             }
         }
     }
 
     void UniformCostSearch::prepareBucket() {
         if (!frontier.bucketReady()) {
-            DEBUG_MSG(cout << "POP: bucketReady: " << frontier.bucketReady() << endl;);
 
             // TODO: here we should use  and totalClosed to
-            if (getG() > last_g_cost && p.top_k) {
-                BDD closed_states =
-                        !engine->get_states_on_goal_paths() * closed->getFullyCostClosed();
-                if (!open_list.contains_any_state(!closed_states)) {
+            if (getG() > last_g_cost) {
+                // We check if the fully closed states
+                // Here last_g_cost corresponds to the current g-value of the 
+                // search dir. Thus we consider all smaller
+                BDD no_goal_path_states = !engine->get_states_on_goal_paths();
+                no_goal_path_states *= closed->getPartialClosed(last_g_cost - 1);
+                if (!open_list.contains_any_state(!no_goal_path_states)) {
                     std::cout << "FIXPOINT found!" << std::endl;
-                    engine->setLowerBound(getF(), true);
+                    engine->setLowerBound(std::numeric_limits<int>::max());
                     return; // Search finished
                 }
             }
@@ -112,10 +100,8 @@ namespace symbolic {
             assert(!frontier.empty() || frontier.g() == numeric_limits<int>::max());
             checkCutOriginal(frontier.bucket(), frontier.g());
 
-            // std::cout << "pruning cost ... " << frontier.g() << std::endl;
             frontier.filter(closed->get_closed_at(frontier.g()));
 
-            // TODO (speckd): useful and helpful for top-k?
             mgr->filterMutex(frontier.bucket(), fw, initialization());
             removeZero(frontier.bucket());
 
@@ -123,12 +109,7 @@ namespace symbolic {
 
             if (!lastStepCost || frontier.g() != 0) {
                 // Avoid closing init twice
-                DEBUG_MSG(cout << "Insert g=" << frontier.g()
-                        << " states into closed: " << nodeCount(frontier.bucket())
-                        << " (" << frontier.bucket().size() << " bdds)" << endl;);
                 for (const BDD &states : frontier.bucket()) {
-                    DEBUG_MSG(cout << "Closing: " << states.nodeCount() << endl;);
-
                     closed->insert(frontier.g(), states);
                 }
             }
@@ -140,8 +121,6 @@ namespace symbolic {
         }
 
         if (engine->solved()) {
-            DEBUG_MSG(cout << "SOLVED!!!: " << engine->getLowerBound()
-                    << " >= " << engine->getUpperBound() << endl;);
             return; // If it has been solved, return
         }
 
@@ -157,40 +136,25 @@ namespace symbolic {
     }
 
     bool UniformCostSearch::stepImage(int maxTime, int maxNodes) {
-        if (p.debug) {
-            cout << ">> Step: " << *mgr << (fw ? " fw " : " bw ")
-                    << ", g=" << frontier.g() << " frontierNodes: " << frontier.nodes()
-                    << " [" << frontier.buckets() << "]"
-                    << " total time: " << g_timer << endl;
-        }
-
-#ifdef DEBUG_GST
-        gst_plan.checkUcs(this);
-#endif
-
-        DEBUG_MSG(cout << "Step " << dirname(fw) << " g: " << frontier.g() << endl;);
         Timer sTime;
-        DEBUG_MSG(cout << "preparing bucket.."
-                << " total time: " << g_timer << endl;);
         Result prepare_res =
                 frontier.prepare(maxTime, maxNodes, fw, initialization());
         if (!prepare_res.ok) {
             violated(prepare_res.truncated_reason, prepare_res.time_spent, maxTime,
                     maxNodes);
-            cout << "    >> Truncated while preparing bucket" << endl;
+
             if (sTime() * 1000.0 > p.maxStepTime) {
                 double ratio = (double) p.maxStepTime / ((double) sTime() * 1000.0);
                 p.maxStepNodes *= ratio;
-                DEBUG_MSG(cout << "MAX STEP NODES CHANGED TO: " << p.maxStepNodes
-                        << " after truncating with " << sTime() << " seconds"
-                        << endl;);
             }
             stats.step_time += sTime();
             return false;
         }
-        DEBUG_MSG(cout << "... bucket prepared. " << endl;);
-        if (engine->solved())
+
+        if (engine->solved()) {
             return true; // Skip image if we are done
+        }
+
 
         int stepNodes = frontier.nodes();
         ResultExpansion res_expansion = frontier.expand(maxTime, maxNodes, fw);
@@ -238,8 +202,7 @@ namespace symbolic {
         if (sTime() * 1000.0 > p.maxStepTime) {
             double ratio = (double) p.maxStepTime / ((double) sTime() * 1000.0);
             p.maxStepNodes = stepNodes * ratio;
-            DEBUG_MSG(cout << "MAX STEP NODES CHANGED TO: " << p.maxStepNodes
-                    << " after taking " << sTime() << " seconds" << endl;);
+
         } else if (!res_expansion.ok) {
             // In case maxAllotedNodes were exceeded we reduce the maximum
             // frontier size by 3/4.  TODO: make this a parameter
@@ -257,7 +220,6 @@ namespace symbolic {
     void UniformCostSearch::computeEstimation(bool prepare) {
         if (prepare) {
             prepareBucket(/*p.max_pop_time, p.max_pop_nodes, true*/);
-            DEBUG_MSG(cout << " bucket prepared for compute estimation" << endl;);
         }
 
         if (frontier.expansionReady()) {
@@ -274,7 +236,6 @@ namespace symbolic {
                 estimationCost.nextStep(frontier.nodes());
             }
         }
-        DEBUG_MSG(cout << "estimation computed" << endl;);
     }
 
     long UniformCostSearch::nextStepTime() const {
@@ -325,13 +286,10 @@ namespace symbolic {
         return os;
     }
 
-    void UniformCostSearch::violated(TruncatedReason reason,
+    void UniformCostSearch::violated(TruncatedReason /*reason*/,
             double ellapsed_seconds, int maxTime,
             int maxNodes) {
-        // DEBUG_MSG(
-        cout << "Truncated in " << reason << ", took " << ellapsed_seconds << " s,"
-                << " maxtime: " << maxTime << " maxNodes: " << maxNodes << endl;
-        //);
+
         int time = 1 + ellapsed_seconds * 1000;
 
         if (mgr->hasTransitions0() &&
@@ -365,15 +323,6 @@ namespace symbolic {
             default:
                 cerr << "UniformCostSearch truncated by unkown reason" << endl;
                 utils::exit_with(utils::ExitCode::SEARCH_UNSUPPORTED);
-        }
-    }
-
-    void UniformCostSearch::getPlan(const BDD &cut, int g,
-            std::vector<OperatorID> &path) const {
-
-        closed->extract_path(cut, g, fw, path);
-        if (fw) {
-            std::reverse(path.begin(), path.end());
         }
     }
 } // namespace symbolic

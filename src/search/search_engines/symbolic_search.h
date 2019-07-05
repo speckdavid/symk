@@ -17,7 +17,6 @@ namespace symbolic
 {
 class SymStateSpaceManager;
 class SymSearch;
-class SymSolution;
 
 } // namespace symbolic
 
@@ -38,7 +37,7 @@ class SymbolicSearch : public SearchEngine, public symbolic::SymController
     SymbolicSearch(const options::Options &opts);
     virtual ~SymbolicSearch() = default;
 
-    virtual void new_solution(const symbolic::SymSolution &sol) override;
+    virtual void new_solution(const symbolic::SymSolutionCut &sol) override;
 };
 
 class SymbolicBidirectionalUniformCostSearch : public SymbolicSearch

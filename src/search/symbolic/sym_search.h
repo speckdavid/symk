@@ -61,8 +61,6 @@ public:
   virtual long nextStepNodes() const = 0;
   virtual long nextStepNodesResult() const = 0;
 
-  virtual void statistics() const = 0;
-
   virtual bool isSearchableWithNodes(int maxNodes) const = 0;
 };
 } // namespace symbolic

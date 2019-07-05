@@ -3,7 +3,7 @@
 #include "../task_proxy.h"
 #include "../task_utils/causal_graph.h"
 #include "../tasks/root_task.h"
-#include "debug_macros.h"
+
 #include <ostream>
 
 using namespace std;
@@ -41,7 +41,6 @@ void InfluenceGraph::compute_gamer_ordering(std::vector<int> &var_order) {
 void InfluenceGraph::get_ordering(vector<int> &ordering) const {
   double value_optimization_function =
       optimize_variable_ordering_gamer(ordering, 50000);
-  DEBUG_MSG(cout << "Value: " << value_optimization_function << endl;);
 
   for (int counter = 0; counter < 20; counter++) {
     vector<int> new_order;
@@ -51,7 +50,6 @@ void InfluenceGraph::get_ordering(vector<int> &ordering) const {
     if (new_value < value_optimization_function) {
       value_optimization_function = new_value;
       ordering.swap(new_order);
-      DEBUG_MSG(cout << "New value: " << value_optimization_function << endl;);
     }
   }
 }

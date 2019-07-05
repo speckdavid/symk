@@ -4,6 +4,7 @@
 #include "sym_variables.h"
 
 #include "../task_proxy.h"
+
 #include <set>
 #include <vector>
 

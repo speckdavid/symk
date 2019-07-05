@@ -63,7 +63,10 @@ size_t PlanReconstructor::different(const std::vector<Plan> &plans, const Plan &
   return true;
 }
 
-// Hashes a vecor of ints which is a plan (https://stackoverflow.com/questions/20511347/a-good-hash-function-for-a-vector)
+// Hashes a vector of ints (= a plan)
+// According to the following link this is the has function used by boost
+// for hashing vector<int>. Experience: really good function
+// https://stackoverflow.com/questions/20511347/a-good-hash-function-for-a-vector
 size_t PlanReconstructor::get_hash_value(const Plan &plan) const
 {
   std::size_t seed = plan.size();
@@ -178,7 +181,7 @@ BDD PlanReconstructor::bdd_for_zero_reconstruction(
   return cut;
 }
 
-void PlanReconstructor::extract_all_plans(SymCut &sym_cut, bool fw, Plan plan)
+void PlanReconstructor::extract_all_plans(SymSolutionCut &sym_cut, bool fw, Plan plan)
 {
   if (found_enough_plans())
   {
@@ -195,7 +198,7 @@ void PlanReconstructor::extract_all_plans(SymCut &sym_cut, bool fw, Plan plan)
   }
 }
 
-void PlanReconstructor::extract_all_cost_plans(SymCut &sym_cut, bool fw, Plan &plan)
+void PlanReconstructor::extract_all_cost_plans(SymSolutionCut &sym_cut, bool fw, Plan &plan)
 {
   // std::cout << sym_cut << std::endl;
   if (sym_cut.get_g() == 0 && sym_cut.get_h() == 0)
@@ -213,7 +216,7 @@ void PlanReconstructor::extract_all_cost_plans(SymCut &sym_cut, bool fw, Plan &p
     }
     else
     {
-      SymCut new_cut(0, sym_cut.get_h(), get_resulting_state(plan));
+      SymSolutionCut new_cut(0, sym_cut.get_h(), get_resulting_state(plan));
       reconstruct_cost_action(new_cut, false, uni_search_bw->getClosedShared(), plan);
     }
   }
@@ -223,7 +226,7 @@ void PlanReconstructor::extract_all_cost_plans(SymCut &sym_cut, bool fw, Plan &p
   }
 }
 
-void PlanReconstructor::extract_all_zero_plans(SymCut &sym_cut, bool fw, Plan &plan)
+void PlanReconstructor::extract_all_zero_plans(SymSolutionCut &sym_cut, bool fw, Plan &plan)
 {
 
   //std::cout << sym_cut << std::endl;
@@ -258,7 +261,7 @@ void PlanReconstructor::extract_all_zero_plans(SymCut &sym_cut, bool fw, Plan &p
       intersection = sym_cut.get_cut() * uni_search_fw->getClosedShared()->get_start_states();
       if (!intersection.IsZero())
       {
-        SymCut new_cut(0, sym_cut.get_h(), get_resulting_state(plan));
+        SymSolutionCut new_cut(0, sym_cut.get_h(), get_resulting_state(plan));
 
         intersection = new_cut.get_cut() * uni_search_bw->getClosedShared()->get_start_states();
         if (!intersection.IsZero())
@@ -301,7 +304,7 @@ void PlanReconstructor::extract_all_zero_plans(SymCut &sym_cut, bool fw, Plan &p
         intersection = sym_cut.get_cut() * uni_search_fw->getClosedShared()->get_start_states();
         if (!intersection.IsZero())
         {
-          SymCut new_cut(0, sym_cut.get_h(), get_resulting_state(plan));
+          SymSolutionCut new_cut(0, sym_cut.get_h(), get_resulting_state(plan));
           reconstruct_cost_action(new_cut, false, uni_search_bw->getClosedShared(), plan);
           reconstruct_zero_action(new_cut, false, uni_search_bw->getClosedShared(), plan);
         }
@@ -317,7 +320,7 @@ void PlanReconstructor::extract_all_zero_plans(SymCut &sym_cut, bool fw, Plan &p
 }
 
 bool PlanReconstructor::reconstruct_zero_action(
-    SymCut &sym_cut, bool fw, std::shared_ptr<ClosedList> closed,
+    SymSolutionCut &sym_cut, bool fw, std::shared_ptr<ClosedList> closed,
     const Plan &plan)
 {
   int cur_cost = fw ? sym_cut.get_g() : sym_cut.get_h();
@@ -349,7 +352,7 @@ bool PlanReconstructor::reconstruct_zero_action(
         {
           new_plan.push_back(*(tr.getOpsIds().begin()));
         }
-        SymCut new_cut(sym_cut.get_g(), sym_cut.get_h(), intersection);
+        SymSolutionCut new_cut(sym_cut.get_g(), sym_cut.get_h(), intersection);
         extract_all_plans(new_cut, fw, new_plan);
 
         if (found_enough_plans())
@@ -363,7 +366,7 @@ bool PlanReconstructor::reconstruct_zero_action(
 }
 
 bool PlanReconstructor::reconstruct_cost_action(
-    SymCut &sym_cut, bool fw, std::shared_ptr<ClosedList> closed,
+    SymSolutionCut &sym_cut, bool fw, std::shared_ptr<ClosedList> closed,
     const Plan &plan)
 {
   int cur_cost = fw ? sym_cut.get_g() : sym_cut.get_h();
@@ -387,7 +390,7 @@ bool PlanReconstructor::reconstruct_cost_action(
       }
       Plan new_plan = plan;
       some_action_found = true;
-      SymCut new_cut(0, 0, intersection);
+      SymSolutionCut new_cut(0, 0, intersection);
       if (fw)
       {
         new_plan.insert(new_plan.begin(), *(tr.getOpsIds().begin()));
@@ -424,14 +427,14 @@ PlanReconstructor::PlanReconstructor(
   plan_mgr.set_plan_filename("found_plans/sas_plan");
 }
 
-int PlanReconstructor::reconstruct_plans(const SymCut &cut,
+int PlanReconstructor::reconstruct_plans(const SymSolutionCut &cut,
                                          size_t num_desired_plans, BDD &goal_path_states)
 {
   this->num_desired_plans = num_desired_plans;
   num_found_plans = 0;
   states_on_goal_path = sym_vars->zeroBDD();
   Plan plan;
-  SymCut modifiable_cut = cut;
+  SymSolutionCut modifiable_cut = cut;
 
   if (uni_search_fw && !uni_search_bw)
   {

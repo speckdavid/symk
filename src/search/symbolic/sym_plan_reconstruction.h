@@ -58,16 +58,16 @@ protected:
   // BID: After reconstruction of the forward part we reverse the plan and
   // call extract_all_plans in bw direction which completes the plan
   // After completing a plan we store it in found plans!
-  void extract_all_plans(SymCut &sym_cut, bool fw, Plan plan);
+  void extract_all_plans(SymSolutionCut &sym_cut, bool fw, Plan plan);
 
-  void extract_all_cost_plans(SymCut &sym_cut, bool fw, Plan &plan);
-  void extract_all_zero_plans(SymCut &sym_cut, bool fw, Plan &plan);
+  void extract_all_cost_plans(SymSolutionCut &sym_cut, bool fw, Plan &plan);
+  void extract_all_zero_plans(SymSolutionCut &sym_cut, bool fw, Plan &plan);
 
   // Return wether a zero cost reconstruction step was necessary
-  bool reconstruct_zero_action(SymCut &sym_cut, bool fw,
+  bool reconstruct_zero_action(SymSolutionCut &sym_cut, bool fw,
                                std::shared_ptr<ClosedList> closed,
                                const Plan &plan);
-  bool reconstruct_cost_action(SymCut &sym_cut, bool fw,
+  bool reconstruct_cost_action(SymSolutionCut &sym_cut, bool fw,
                                std::shared_ptr<ClosedList> closed,
                                const Plan &plan);
 
@@ -79,7 +79,7 @@ public:
 
   // Resets found plans and desired_num_plans which are helper functions
   // Returns all states on the new plans
-  int reconstruct_plans(const SymCut &cut, size_t num_desired_plans, BDD &goal_path_states);
+  int reconstruct_plans(const SymSolutionCut &cut, size_t num_desired_plans, BDD &goal_path_states);
 };
 
 } // namespace symbolic

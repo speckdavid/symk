@@ -41,8 +41,11 @@ void SymbolicBidirectionalUniformCostSearch::initialize()
     fw_search->init(mgr, true, bw_search->getClosedShared());
     bw_search->init(mgr, false, fw_search->getClosedShared());
 
+    SymController::init(fw_search.get(), bw_search.get());
+    
     search = unique_ptr<BidirectionalSearch>(new BidirectionalSearch(
         this, searchParams, move(fw_search), move(bw_search)));
+    
 }
 
 SymbolicUniformCostSearch::SymbolicUniformCostSearch(
@@ -57,10 +60,12 @@ void SymbolicUniformCostSearch::initialize()
     if (fw)
     {
         uni_search->init(mgr, true, nullptr);
+        SymController::init(uni_search.get(),  nullptr);
     }
     else
     {
         uni_search->init(mgr, false, nullptr);
+        SymController::init(nullptr,  uni_search.get());
     }
 
     search.reset(uni_search.release());
@@ -74,9 +79,9 @@ SearchStatus SymbolicSearch::step()
     {
         return IN_PROGRESS;
     }
-    else if (found_solution())
+    else if (!SymController::get_states_on_goal_paths().IsZero())
     {
-
+        solution_found = true;
         return SOLVED;
     }
     else
@@ -85,32 +90,8 @@ SearchStatus SymbolicSearch::step()
     }
 }
 
-void SymbolicSearch::new_solution(const SymSolution &sol)
+void SymbolicSearch::new_solution(const SymSolutionCut &sol)
 {
-
-    if (sol.solved() && !solution.solved())
-    {
-        // std::cout << "PLAN RECONSTRUCTION!" << std::endl;
-        vector<OperatorID> plan;
-        sol.getPlan(plan);
-        set_plan(plan);
-    }
-    if (sol.solved() && solution.solved() && sol.getCost() < solution.getCost())
-    {
-        // std::cout << "PLAN RECONSTRUCTION!" << std::endl;
-        vector<OperatorID> plan;
-        solution.getPlan(plan);
-        set_plan(plan);
-    }
-    /*else if (sol.solved() && solution.solved())
-    {
-        std::cout << "PLAN RECONSTRUCTION!" << std::endl;
-        vector<OperatorID> plan;
-        SymSolution cheaper = sol.getCost() < solution.getCost() ? sol : solution;
-        cheaper.getPlan(plan);
-        set_plan(plan);
-    }*/
-
     SymController::new_solution(sol);
 }
 } // namespace symbolic_search
@@ -179,6 +160,6 @@ static shared_ptr<SearchEngine> _parse_backward_ucs(OptionParser &parser)
     return engine;
 }
 
-static Plugin<SearchEngine> _plugin_bd("sbd", _parse_bidirectional_ucs);
-static Plugin<SearchEngine> _plugin_fw("sfw", _parse_forward_ucs);
-static Plugin<SearchEngine> _plugin_bw("sbw", _parse_backward_ucs);
+static Plugin<SearchEngine> _plugin_bd("symk-bd", _parse_bidirectional_ucs);
+static Plugin<SearchEngine> _plugin_fw("symk-fw", _parse_forward_ucs);
+static Plugin<SearchEngine> _plugin_bw("symk-bw", _parse_backward_ucs);

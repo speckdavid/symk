@@ -1,10 +1,9 @@
 #include "open_list.h"
 
-#include "debug_macros.h"
 #include "frontier.h"
 
 #include <cassert>
-using namespace std;
+
 
 namespace symbolic {
 
@@ -22,7 +21,7 @@ namespace symbolic {
         int next_g = (frontier.empty() ? std::numeric_limits<int>::max()
                 : frontier.g() + min_action_cost);
         if (!open.empty()) {
-            return min(next_g, open.begin()->first);
+            return std::min(next_g, open.begin()->first);
         }
         return next_g;
     }
