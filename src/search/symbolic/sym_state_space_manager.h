@@ -29,8 +29,6 @@ namespace symbolic {
      */
     class SymParamsMgr {
     public:
-        // Numbers of plans for top-k planning
-        int num_plans;
         // Parameters to generate the TRs
         int max_tr_size, max_tr_time;
 

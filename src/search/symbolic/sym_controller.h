@@ -21,6 +21,7 @@ namespace options {
 
 namespace symbolic {
     class SymVariables;
+    class PlanDataBase;
 
     class SymController {
     protected:
@@ -32,6 +33,7 @@ namespace symbolic {
         int lower_bound; // Lower bound of search (incl. min-action costs)
         int min_g; // min g costs of open lists
 
+        std::shared_ptr<PlanDataBase> plan_data_base;
         SymSolutionRegistry solution_registry; // Solution registry
 
     public:
@@ -39,8 +41,9 @@ namespace symbolic {
 
         virtual ~SymController() {
         }
-        
-        void init(UnidirectionalSearch* fwd_search, UnidirectionalSearch* bwd_search);
+
+        void init(UnidirectionalSearch* fwd_search,
+                UnidirectionalSearch* bwd_search);
 
         virtual void new_solution(const SymSolutionCut &sol);
         void setLowerBound(int lower);
@@ -82,5 +85,6 @@ namespace symbolic {
         static void add_options_to_parser(options::OptionParser &parser,
                 int maxStepTime, int maxStepNodes);
     };
+        
 } // namespace symbolic
 #endif

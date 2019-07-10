@@ -3,6 +3,8 @@
 
 #include "sym_bucket.h"
 
+#include "../tasks/root_task.h"
+#include "../state_registry.h"
 #include "../utils/timer.h"
 
 #include <cassert>
@@ -44,6 +46,7 @@ namespace symbolic {
         const bool gamer_ordering;
 
         std::unique_ptr<Cudd> manager; //manager associated with this symbolic search
+        std::shared_ptr<StateRegistry> state_registry; // used for explicit stuff
 
         int numBDDVars; // Number of binary variables (just one set, the total number
         // is numBDDVars*3
@@ -73,6 +76,14 @@ namespace symbolic {
     public:
         SymVariables(const options::Options &opts);
         void init();
+
+        std::shared_ptr<StateRegistry> get_state_registry() {
+            if (state_registry == nullptr) {
+                state_registry =
+                        std::make_shared<StateRegistry>(TaskProxy(*tasks::g_root_task));
+            }
+            return state_registry;
+        }
 
         // State getStateFrom(const BDD & bdd) const;
         BDD getStateBDD(const std::vector<int> &state) const;

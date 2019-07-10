@@ -772,6 +772,7 @@ fast_downward_plugin(
         symbolic/sym_solution_cut
         symbolic/sym_solution_registry
         symbolic/sym_plan_reconstruction
+        symbolic/plan_selection/plan_database
         symbolic/unidirectional_search
         symbolic/frontier
         symbolic/open_list
@@ -780,6 +781,8 @@ fast_downward_plugin(
         symbolic/bidirectional_search
         symbolic/uniform_cost_search
         search_engines/symbolic_search
+        symbolic/plan_selection/top_k_selector
+        symbolic/plan_selection/top_k_even_selector
 )
 
 fast_downward_add_plugin_sources(PLANNER_SOURCES)

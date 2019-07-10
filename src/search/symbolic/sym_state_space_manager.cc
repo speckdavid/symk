@@ -175,8 +175,7 @@ namespace symbolic {
         }
     }
 
-    SymParamsMgr::SymParamsMgr(const options::Options &opts)
-    : num_plans(opts.get<int>("num_plans")),
+    SymParamsMgr::SymParamsMgr(const options::Options &opts) :
     max_tr_size(opts.get<int>("max_tr_size")),
     max_tr_time(opts.get<int>("max_tr_time")),
     mutex_type(MutexType(opts.get_enum("mutex_type"))),
@@ -196,7 +195,7 @@ namespace symbolic {
     }
 
     SymParamsMgr::SymParamsMgr()
-    : num_plans(1), max_tr_size(100000), max_tr_time(60000),
+    : max_tr_size(100000), max_tr_time(60000),
     mutex_type(MutexType::MUTEX_EDELETION), max_mutex_size(100000),
     max_mutex_time(60000), max_aux_nodes(1000000), max_aux_time(2000) {
         // Don't use edeletion with conditional effects
@@ -219,8 +218,6 @@ namespace symbolic {
     }
 
     void SymParamsMgr::add_options_to_parser(options::OptionParser &parser) {
-        parser.add_option<int>("num_plans", "number of plans", "1");
-
         parser.add_option<int>("max_tr_size", "maximum size of TR BDDs", "100000");
 
         parser.add_option<int>("max_tr_time", "maximum time (ms) to generate TR BDDs",

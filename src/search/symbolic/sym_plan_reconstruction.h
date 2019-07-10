@@ -4,38 +4,23 @@
 #include "../plan_manager.h"
 #include "sym_solution_registry.h"
 #include "unidirectional_search.h"
+#include "plan_selection/plan_database.h"
 
 namespace symbolic
 {
 
 class ClosedList;
+class PlanDataBase;
 
-class PlanReconstructor
+class SymPlanReconstructor
 {
 protected:
   UnidirectionalSearch *uni_search_fw;
   UnidirectionalSearch *uni_search_bw;
   std::shared_ptr<SymVariables> sym_vars;
-  std::shared_ptr<StateRegistry> state_registry;
   std::map<int, std::vector<TransitionRelation>> trs;
-  std::unordered_map<size_t, std::vector<Plan>> hashes_found_plans;
-
-  BDD states_on_goal_path;
-  size_t num_found_plans;
-  size_t num_desired_plans;
-  PlanManager plan_mgr;
-
-  size_t different(const std::vector<Plan> &plans, const Plan &plan) const;
-  bool states_on_path(const Plan &plan, BDD &states); // also returns if a zero_loop is detected
-
-  size_t get_hash_value(const Plan &plan) const;
-
-  void add_plan(const Plan &plan);
-
-  bool found_enough_plans() const
-  {
-    return num_found_plans >= num_desired_plans;
-  }
+  
+  std::shared_ptr<PlanDataBase> plan_data_base;
 
   bool task_has_zero_costs() const
   {
@@ -45,13 +30,6 @@ protected:
   bool bw_reconstruction_necessary() const;
 
   BDD get_resulting_state(const Plan &plan) const;
-
-  // Returns zero BDD if we dont need zero reconstruction. otherwise it returns
-  // the correct cutted bdd!
-  // First we need to check if it is contained in any 0 bucket or if the
-  // pre/succcessor is contained in any bucket
-  BDD bdd_for_zero_reconstruction(const BDD &cut, int cost,
-                                  std::shared_ptr<ClosedList> closed) const;
 
   // Extracts all plans by a DFS, we copy the current plan suffix by every
   // recusive call which is why we don't use any reference for plan
@@ -72,14 +50,12 @@ protected:
                                const Plan &plan);
 
 public:
-  PlanReconstructor(UnidirectionalSearch *uni_search_fw,
+  SymPlanReconstructor(UnidirectionalSearch *uni_search_fw,
                     UnidirectionalSearch *uni_search_bw,
                     std::shared_ptr<SymVariables> sym_vars,
-                    std::shared_ptr<StateRegistry> state_registry);
+                    std::shared_ptr<PlanDataBase> plan_data_base);
 
-  // Resets found plans and desired_num_plans which are helper functions
-  // Returns all states on the new plans
-  int reconstruct_plans(const SymSolutionCut &cut, size_t num_desired_plans, BDD &goal_path_states);
+  void reconstruct_plans(const SymSolutionCut &cut);
 };
 
 } // namespace symbolic
