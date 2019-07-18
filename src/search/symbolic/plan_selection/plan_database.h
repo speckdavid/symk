@@ -19,22 +19,26 @@ namespace symbolic {
 
     class PlanDataBase {
     public:
-        
+
         static void add_options_to_parser(options::OptionParser &parser);
 
         PlanDataBase(const options::Options &opts);
 
         virtual ~PlanDataBase() {
         };
-        
+
         virtual void init(std::shared_ptr<SymVariables> sym_vars);
 
         virtual void add_plan(const Plan& plan) = 0;
-        
+
         bool has_accepted_plan(const Plan& plan) const;
-        
+
         bool has_rejected_plan(const Plan& plan) const;
 
+        bool has_zero_cost_loop(const Plan& plan) const;
+        
+        std::pair<int,int> get_first_zero_cost_loop(const Plan& plan) const;
+        
         int get_num_desired_plans() const {
             return num_desired_plans;
         }
@@ -52,17 +56,27 @@ namespace symbolic {
         }
 
         BDD get_states_accepted_goal_path() const {
-            return states_accepted_goal_paths;
+            return anytime_completness ?
+                    states_accepted_goal_paths : sym_vars->oneBDD();
         }
         
         virtual void print_options() const;
-        
+
         virtual std::string tag() const = 0;
-        
+
     protected:
+        // Determines if it possible/desired to proof that no more (accepted)
+        // plans exits
+        // 1. If true: terminates if open contains only states which are in 
+        // the closed list and not on an accepted goal path 8e.g. top-k)
+        // 2. If false: terminates never and keeps searching for new plans
+        // Note: the algorithm still terminates if the open list is empty
+        // which only occurs if no reachable loops part of in the state space
+        bool anytime_completness;
+
         void save_accepted_plan(const Plan &plan);
         void save_rejected_plan(const Plan &plan);
-        
+
     private:
         int num_desired_plans;
         int num_accepted_plans;
@@ -75,13 +89,14 @@ namespace symbolic {
         std::shared_ptr<SymVariables> sym_vars;
 
         PlanManager plan_mgr;
+        bool task_hash_zero_cost_actions;
 
         size_t different(const std::vector<Plan> &plans, const Plan &plan) const;
         BDD states_on_path(const Plan &plan);
         size_t get_hash_value(const Plan &plan) const;
 
     };
-    
+
 }
 
 

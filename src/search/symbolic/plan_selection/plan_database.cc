@@ -13,6 +13,7 @@ namespace symbolic {
     }
 
     PlanDataBase::PlanDataBase(const options::Options &opts) :
+    anytime_completness(false),
     num_desired_plans(opts.get<int>("num_plans")),
     num_accepted_plans(0),
     num_rejected_plans(0),
@@ -25,7 +26,7 @@ namespace symbolic {
         states_accepted_goal_paths = sym_vars->zeroBDD();
     }
 
-    bool PlanDataBase::has_accepted_plan(const Plan& plan) const {
+    bool PlanDataBase::has_accepted_plan(const Plan & plan) const {
         size_t plan_seed = get_hash_value(plan);
         if (hashes_accepted_plans.count(plan_seed) == 0) {
             return false;
@@ -36,7 +37,7 @@ namespace symbolic {
         return true;
     }
 
-    bool PlanDataBase::has_rejected_plan(const Plan& plan) const {
+    bool PlanDataBase::has_rejected_plan(const Plan & plan) const {
         size_t plan_seed = get_hash_value(plan);
         if (hashes_rejected_plans.count(plan_seed) == 0) {
             return false;
@@ -51,7 +52,7 @@ namespace symbolic {
         std::cout << "Plan Selector: " << tag() << std::endl;
     }
 
-    size_t PlanDataBase::different(const std::vector<Plan> &plans, const Plan &plan) const {
+    size_t PlanDataBase::different(const std::vector<Plan> &plans, const Plan & plan) const {
         for (auto &cur : plans) {
             if (cur.size() == plan.size()) {
                 bool same = true;
@@ -69,7 +70,7 @@ namespace symbolic {
         return true;
     }
 
-    BDD PlanDataBase::states_on_path(const Plan &plan) {
+    BDD PlanDataBase::states_on_path(const Plan & plan) {
         GlobalState cur = sym_vars->get_state_registry()->get_initial_state();
         BDD path_states = sym_vars->getStateBDD(cur);
         for (auto &op : plan) {
@@ -85,7 +86,7 @@ namespace symbolic {
     // for hashing vector<int>. Experience: really good function
     // https://stackoverflow.com/questions/20511347/a-good-hash-function-for-a-vector
 
-    size_t PlanDataBase::get_hash_value(const Plan &plan) const {
+    size_t PlanDataBase::get_hash_value(const Plan & plan) const {
         std::size_t seed = plan.size();
         for (auto &op : plan) {
             seed ^= op.get_index() + 0x9e3779b9 + (seed << 6) + (seed >> 2);
@@ -93,7 +94,7 @@ namespace symbolic {
         return seed;
     }
 
-    void PlanDataBase::save_accepted_plan(const Plan &plan) {
+    void PlanDataBase::save_accepted_plan(const Plan & plan) {
         size_t plan_seed = get_hash_value(plan);
         if (hashes_accepted_plans.count(plan_seed) == 0) {
             hashes_accepted_plans[plan_seed] = std::vector<Plan>();
@@ -104,7 +105,7 @@ namespace symbolic {
         plan_mgr.save_plan(plan, sym_vars->get_state_registry()->get_task_proxy(), false, true);
     }
 
-    void PlanDataBase::save_rejected_plan(const Plan &plan) {
+    void PlanDataBase::save_rejected_plan(const Plan & plan) {
         size_t plan_seed = get_hash_value(plan);
         if (hashes_rejected_plans.count(plan_seed) == 0) {
             hashes_rejected_plans[plan_seed] = std::vector<Plan>();
@@ -113,6 +114,63 @@ namespace symbolic {
         states_accepted_goal_paths += states_on_path(plan);
         num_rejected_plans++;
     }
+
+    bool PlanDataBase::has_zero_cost_loop(const Plan & plan) const {
+        GlobalState cur = sym_vars->get_state_registry()->get_initial_state();
+        BDD zero_reachable = sym_vars->getStateBDD(cur);
+        for (auto &op : plan) {
+            cur = sym_vars->get_state_registry()->get_successor_state(
+                    cur, sym_vars->get_state_registry()->get_task_proxy().get_operators()[op]);
+            BDD new_state = sym_vars->getStateBDD(cur);
+
+            if (sym_vars->get_state_registry()->get_task_proxy().get_operators()[op].get_cost() != 0) {
+                zero_reachable = new_state;
+            } else {
+                BDD intersection = zero_reachable * new_state;
+                if (!intersection.IsZero()) {
+                    return true;
+                }
+                zero_reachable += new_state;
+            }
+        }
+
+        return false;
+    }
+
+    std::pair<int, int> PlanDataBase::get_first_zero_cost_loop(const Plan& plan) const {
+        std::pair<int, int> zero_cost_op_seq(-1, -1);
+        int last_zero_op_state = 0;
+        std::vector<GlobalState> states;
+        states.push_back(sym_vars->get_state_registry()->get_initial_state());
+        for (size_t op_i = 0; op_i < plan.size(); ++op_i) {
+            GlobalState succ = sym_vars->get_state_registry()->get_successor_state(
+                    states.back(), sym_vars->get_state_registry()->get_task_proxy().get_operators()[plan[op_i]]);
+
+            for (size_t state_i = last_zero_op_state; state_i < states.size(); ++state_i) {
+                if (states[state_i].get_id() == succ.get_id()) {
+                    zero_cost_op_seq.first = state_i;
+                    zero_cost_op_seq.second = op_i;
+                    break;
+                }
+            }
+            if (sym_vars->get_state_registry()->get_task_proxy().get_operators()[op_i].get_cost() != 0) {
+                last_zero_op_state = states.size() - 1;
+            }
+
+            if (zero_cost_op_seq.first != -1) {
+                break;
+            }
+            states.push_back(succ);
+        }
+
+
+        /*if (zero_cost_op_seq.first == -1) {
+            std::cerr << "Zero loop goes wrong!" << std::endl;
+            exit(0);
+        }*/
+        return zero_cost_op_seq;
+    }
+
 
     /*static std::shared_ptr<PlanDataBase> _parse(OptionParser &parser) {
         PlanDataBase::add_options_to_parser(parser);

@@ -30,6 +30,8 @@ protected:
   bool bw_reconstruction_necessary() const;
 
   BDD get_resulting_state(const Plan &plan) const;
+  
+  void add_plan(const Plan &plan) const;
 
   // Extracts all plans by a DFS, we copy the current plan suffix by every
   // recusive call which is why we don't use any reference for plan

@@ -783,6 +783,7 @@ fast_downward_plugin(
         search_engines/symbolic_search
         symbolic/plan_selection/top_k_selector
         symbolic/plan_selection/top_k_even_selector
+        symbolic/plan_selection/moral_permissibility_selector
 )
 
 fast_downward_add_plugin_sources(PLANNER_SOURCES)

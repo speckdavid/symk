@@ -4,6 +4,22 @@
 
 namespace symbolic {
 
+    void SymPlanReconstructor::add_plan(const Plan &plan) const {
+        plan_data_base->add_plan(plan);
+        if (!plan_data_base->found_enough_plans()
+                && task_has_zero_costs()
+                && plan_data_base->has_zero_cost_loop(plan)) {
+            std::pair<int, int> zero_cost_op_seq = plan_data_base->get_first_zero_cost_loop(plan);
+            Plan cur_plan = plan;
+            std::cout << " => zero cost loop detected =>" << std::flush;
+            while (!plan_data_base->found_enough_plans()) {
+                cur_plan.insert(cur_plan.begin() + zero_cost_op_seq.first,
+                        plan.begin() + zero_cost_op_seq.first, plan.begin() + zero_cost_op_seq.second + 1);
+                plan_data_base->add_plan(cur_plan);
+            }
+        }
+    }
+
     BDD SymPlanReconstructor::get_resulting_state(const Plan &plan) const {
         GlobalState cur = sym_vars->get_state_registry()->get_initial_state();
         for (auto &op : plan) {
@@ -28,7 +44,7 @@ namespace symbolic {
     void SymPlanReconstructor::extract_all_cost_plans(SymSolutionCut &sym_cut, bool fw, Plan &plan) {
         // std::cout << sym_cut << std::endl;
         if (sym_cut.get_g() == 0 && sym_cut.get_h() == 0) {
-            plan_data_base->add_plan(plan);
+            add_plan(plan);
             return;
         }
 
@@ -53,7 +69,7 @@ namespace symbolic {
             if (fw && !uni_search_bw) {
                 intersection = sym_cut.get_cut() * uni_search_fw->getClosedShared()->get_start_states();
                 if (!intersection.IsZero()) {
-                    plan_data_base->add_plan(plan);
+                    add_plan(plan);
                     if (plan_data_base->found_enough_plans()) {
                         return;
                     }
@@ -66,7 +82,7 @@ namespace symbolic {
 
                     intersection = new_cut.get_cut() * uni_search_bw->getClosedShared()->get_start_states();
                     if (!intersection.IsZero()) {
-                        plan_data_base->add_plan(plan);
+                        add_plan(plan);
                         if (plan_data_base->found_enough_plans()) {
                             return;
                         }
@@ -77,7 +93,7 @@ namespace symbolic {
             } else { // bw
                 intersection = sym_cut.get_cut() * uni_search_bw->getClosedShared()->get_start_states();
                 if (!intersection.IsZero()) {
-                    plan_data_base->add_plan(plan);
+                    add_plan(plan);
                     if (plan_data_base->found_enough_plans()) {
                         return;
                     }
