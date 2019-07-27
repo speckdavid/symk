@@ -9,7 +9,7 @@
 namespace symbolic {
 
     void PlanDataBase::add_options_to_parser(options::OptionParser &parser) {
-        parser.add_option<int>("num_plans", "number of plans", "1");
+        parser.add_option<int>("num_plans", "number of plans", "10000");
     }
 
     PlanDataBase::PlanDataBase(const options::Options &opts) :

@@ -59,9 +59,7 @@ namespace symbolic_search {
         auto uni_search =
                 unique_ptr<UniformCostSearch>(new UniformCostSearch(this, searchParams));
         if (fw) {
-            std::cout << "before search init" << std::endl;
             uni_search->init(mgr, true, nullptr);
-            std::cout << "after search init" << std::endl;
             SymController::init(uni_search.get(), nullptr);
         } else {
             uni_search->init(mgr, false, nullptr);
