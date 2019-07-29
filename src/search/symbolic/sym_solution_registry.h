@@ -33,7 +33,7 @@ namespace symbolic {
         void construct_cheaper_solutions(int bound);
 
         bool found_all_plans() const {
-            return plan_data_base->found_enough_plans();
+            return plan_data_base && plan_data_base->found_enough_plans();
         }
 
         int get_num_found_plans() const {

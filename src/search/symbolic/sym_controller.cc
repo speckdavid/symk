@@ -51,15 +51,19 @@ namespace symbolic {
     }
 
     void SymController::setLowerBound(int lower) {
-        if (lower > lower_bound) {
-            lower_bound = lower;
-            std::cout << "BOUND: " << lower_bound << " < " << getUpperBound()
-                    << std::flush;
-            solution_registry.construct_cheaper_solutions(lower);
-            std::cout << " [" << solution_registry.get_num_found_plans() << "/"
-                    << plan_data_base->get_num_desired_plans() << " plans]" << std::flush;
-            std::cout << ", total time: " << utils::g_timer << std::endl;
-        }
+        if (solution_registry.found_all_plans()) {
+            lower_bound = std::numeric_limits<int>::max();
+        } else {
+            if (lower > lower_bound) {
+                lower_bound = lower;
+                std::cout << "BOUND: " << lower_bound << " < " << getUpperBound()
+                        << std::flush;
+                solution_registry.construct_cheaper_solutions(lower);
+                std::cout << " [" << solution_registry.get_num_found_plans() << "/"
+                        << plan_data_base->get_num_desired_plans() << " plans]" << std::flush;
+                std::cout << ", total time: " << utils::g_timer << std::endl;
+            } 
+       }
     }
 
     BDD SymController::get_states_on_goal_paths() const {
