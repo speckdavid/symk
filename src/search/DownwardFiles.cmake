@@ -758,13 +758,6 @@ fast_downward_plugin(
     NAME SYMBOLIC
     HELP "Plugin containing the base for symbolic search"
     SOURCES
-        symbolic/decision_diagrams/bdd_tmpl
-        symbolic/decision_diagrams/add_cudd
-        symbolic/decision_diagrams/bdd_cudd
-        symbolic/decision_diagrams/bdd_sylvan
-        symbolic/decision_diagrams/bdd_buddy
-        symbolic/decision_diagrams/bdd_cacbdd
-        symbolic/decision_diagrams/evmdd_meddly
         symbolic/sym_bucket
         symbolic/opt_order
         symbolic/sym_variables
@@ -776,9 +769,10 @@ fast_downward_plugin(
         symbolic/sym_params_search
         symbolic/sym_estimate
         symbolic/sym_search
-        symbolic/sym_solution
+        symbolic/sym_solution_cut
         symbolic/sym_solution_registry
         symbolic/sym_plan_reconstruction
+        symbolic/plan_selection/plan_database
         symbolic/unidirectional_search
         symbolic/frontier
         symbolic/open_list
@@ -787,30 +781,9 @@ fast_downward_plugin(
         symbolic/bidirectional_search
         symbolic/uniform_cost_search
         search_engines/symbolic_search
-)
-
-fast_downward_plugin(
-    NAME MEDDLY_OPERATIONS
-    HELP "Plugin containing user definied operations for meddly library"
-    SOURCES
-        ../dd_libs/Meddly/operations_extension/userOperations
-	    ../dd_libs/Meddly/operations_extension/evplus
-	    ../dd_libs/Meddly/operations_extension/minus.
-	    ../dd_libs/Meddly/operations_extension/multiply
-	    ../dd_libs/Meddly/operations_extension/divide
-	    ../dd_libs/Meddly/operations_extension/unionmin
-	    ../dd_libs/Meddly/operations_extension/greaterThan
-	    ../dd_libs/Meddly/operations_extension/greaterEquals
-	    ../dd_libs/Meddly/operations_extension/lessThan
-	    ../dd_libs/Meddly/operations_extension/lessEquals
-	    ../dd_libs/Meddly/operations_extension/equals
-	    ../dd_libs/Meddly/operations_extension/intersectionmax
-	    ../dd_libs/Meddly/operations_extension/partialcomplement
-	    ../dd_libs/Meddly/operations_extension/pow
-	    ../dd_libs/Meddly/operations_extension/restrict
-	    ../dd_libs/Meddly/operations_extension/swapVar
-	    ../dd_libs/Meddly/operations_extension/pot_heuristic
-	    ../dd_libs/Meddly/operations_extension/copy
+        symbolic/plan_selection/top_k_selector
+        symbolic/plan_selection/top_k_even_selector
+        symbolic/plan_selection/moral_permissibility_selector
 )
 
 fast_downward_add_plugin_sources(PLANNER_SOURCES)

@@ -126,8 +126,8 @@ void merge(std::vector<T> &elems, FunctionMerge f, int maxSize) {
 
 TransitionRelation mergeTR(TransitionRelation tr, const TransitionRelation &tr2,
                            int maxSize);
-Bdd mergeAndBDD(const Bdd &bdd, const Bdd &bdd2, int maxSize);
-Bdd mergeOrBDD(const Bdd &bdd, const Bdd &bdd2, int maxSize);
+BDD mergeAndBDD(const BDD &bdd, const BDD &bdd2, int maxSize);
+BDD mergeOrBDD(const BDD &bdd, const BDD &bdd2, int maxSize);
 
 inline std::string dirname(bool fw) { return fw ? "fw" : "bw"; }
 } // namespace symbolic

@@ -10,95 +10,92 @@
 #include <vector>
 
 namespace symbolic {
-class SymSolution;
-class UnidirectionalSearch;
-class SymController;
-class ClosedList;
-class SymExpStatistics {
-public:
-  double image_time, image_time_failed;
-  double time_heuristic_evaluation;
-  int num_steps_succeeded;
-  double step_time;
+    class SymSolutionCut;
+    class UnidirectionalSearch;
+    class SymController;
+    class ClosedList;
 
-  SymExpStatistics()
-      : image_time(0), image_time_failed(0), time_heuristic_evaluation(0),
-        num_steps_succeeded(0), step_time(0) {}
+    class SymExpStatistics {
+    public:
+        double image_time, image_time_failed;
+        double time_heuristic_evaluation;
+        int num_steps_succeeded;
+        double step_time;
 
-  void add_image_time(double t) {
-    image_time += t;
-    num_steps_succeeded += 1;
-  }
+        SymExpStatistics()
+        : image_time(0), image_time_failed(0), time_heuristic_evaluation(0),
+        num_steps_succeeded(0), step_time(0) {
+        }
 
-  void add_image_time_failed(double t) {
-    image_time += t;
-    image_time_failed += t;
-    num_steps_succeeded += 1;
-  }
-};
+        void add_image_time(double t) {
+            image_time += t;
+            num_steps_succeeded += 1;
+        }
 
-class OppositeFrontier {
-public:
-  virtual ~OppositeFrontier() {}
-  virtual SymSolution checkCut(UnidirectionalSearch *search, const Bdd &states,
-                               int g, bool fw) const = 0;
-  virtual std::vector<SymSolution> getAllCuts(UnidirectionalSearch *search,
-                                              const Bdd &states, int g, bool fw,
-                                              int lower_bound) const = 0;
+        void add_image_time_failed(double t) {
+            image_time += t;
+            image_time_failed += t;
+            num_steps_succeeded += 1;
+        }
+    };
 
-  virtual Bdd notClosed() const = 0;
+    class OppositeFrontier {
+    public:
 
-  // Returns true only if all not closed states are guaranteed to be dead ends
-  virtual bool exhausted() const = 0;
+        virtual ~OppositeFrontier() {
+        }
 
-  virtual int getHNotClosed() const = 0;
-};
+        virtual std::vector<SymSolutionCut> getAllCuts(const BDD &states, int g, bool fw,
+                int lower_bound) const = 0;
 
-class OppositeFrontierFixed : public OppositeFrontier {
-  Bdd goal;
-  int hNotGoal;
+        virtual BDD notClosed() const = 0;
 
-public:
-  OppositeFrontierFixed(Bdd g, const SymStateSpaceManager &mgr);
-  virtual SymSolution checkCut(UnidirectionalSearch *search, const Bdd &states,
-                               int g, bool fw) const override;
-  virtual std::vector<SymSolution> getAllCuts(UnidirectionalSearch *search,
-                                              const Bdd &states, int g, bool fw,
-                                              int lower_bound) const override;
+    };
 
-  virtual Bdd notClosed() const override { return !goal; }
+    class OppositeFrontierFixed : public OppositeFrontier {
+        BDD goal;
+        int hNotGoal;
 
-  virtual bool exhausted() const override { return false; }
+    public:
+        OppositeFrontierFixed(BDD g, const SymStateSpaceManager &mgr);
 
-  virtual int getHNotClosed() const { return hNotGoal; }
-};
+        virtual std::vector<SymSolutionCut> getAllCuts(const BDD &states, int g, bool fw,
+                int lower_bound) const override;
 
-class UnidirectionalSearch : public SymSearch {
-protected:
-  bool fw; // Direction of the search. true=forward, false=backward
-  std::shared_ptr<ClosedList> closed; // Closed list is a shared ptr so that we
-                                      // can share it with other searches
+        virtual BDD notClosed() const override {
+            return !goal;
+        }
 
-  SymExpStatistics stats;
+    };
 
-  std::shared_ptr<OppositeFrontier> perfectHeuristic;
+    class UnidirectionalSearch : public SymSearch {
+    protected:
+        bool fw; // Direction of the search. true=forward, false=backward
+        std::shared_ptr<ClosedList> closed; // Closed list is a shared ptr so that we
+        // can share it with other searches
 
-public:
-  UnidirectionalSearch(SymController *eng, const SymParamsSearch &params);
+        SymExpStatistics stats;
 
-  inline bool isFW() const { return fw; }
+        std::shared_ptr<OppositeFrontier> perfectHeuristic;
 
-  void statistics() const;
+    public:
+        UnidirectionalSearch(SymController *eng, const SymParamsSearch &params);
 
-  virtual void getPlan(const Bdd &cut, int g,
-                       std::vector<OperatorID> &path) const = 0;
+        inline bool isFW() const {
+            return fw;
+        }
 
-  virtual int getG() const = 0;
+        virtual int getG() const = 0;
 
-  // Pointer to the closed list Used to set as heuristic of other explorations.
-  inline ClosedList *getClosed() const { return closed.get(); }
+        // Pointer to the closed list Used to set as heuristic of other explorations.
 
-  inline std::shared_ptr<ClosedList> getClosedShared() const { return closed; }
-};
+        inline ClosedList *getClosed() const {
+            return closed.get();
+        }
+
+        inline std::shared_ptr<ClosedList> getClosedShared() const {
+            return closed;
+        }
+    };
 } // namespace symbolic
 #endif

@@ -8,7 +8,7 @@ namespace utils {
 const char *get_exit_code_message_reentrant(ExitCode exitcode) {
     switch (exitcode) {
     case ExitCode::SUCCESS:
-        return "Solution found.";
+        return "Solutions found.";
     case ExitCode::SEARCH_CRITICAL_ERROR:
         return "Unexplained error occurred.";
     case ExitCode::SEARCH_INPUT_ERROR:

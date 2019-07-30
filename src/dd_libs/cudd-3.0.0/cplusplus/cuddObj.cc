@@ -78,8 +78,6 @@ using std::sort;
 
 */
 
-namespace cudd {
-
 class Capsule {
 public:
     Capsule(unsigned int numVars, unsigned int numVarsZ,
@@ -5335,5 +5333,3 @@ Cudd::OrderString(void) const {
     }
     return oss.str();
 } // Cudd::OrderString
-
-} // namespace

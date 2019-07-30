@@ -11,18 +11,21 @@
 // with the order in the xxxValues vector
 
 namespace symbolic {
-enum class MutexType {
-  MUTEX_NOT,
-  MUTEX_AND,
-  MUTEX_EDELETION,
-  /*MUTEX_RESTRICT, MUTEX_NPAND, MUTEX_CONSTRAIN, MUTEX_LICOMP*/
-};
-std::ostream &operator<<(std::ostream &os, const MutexType &m);
-extern const std::vector<std::string> MutexTypeValues;
 
-enum class Dir { FW, BW, BIDIR };
-std::ostream &operator<<(std::ostream &os, const Dir &dir);
-extern const std::vector<std::string> DirValues;
+    enum class MutexType {
+        MUTEX_NOT,
+        MUTEX_AND,
+        MUTEX_EDELETION,
+        /*MUTEX_RESTRICT, MUTEX_NPAND, MUTEX_CONSTRAIN, MUTEX_LICOMP*/
+    };
+    std::ostream &operator<<(std::ostream &os, const MutexType &m);
+    extern const std::vector<std::string> MutexTypeValues;
+
+    enum class Dir {
+        FW, BW, BIDIR
+    };
+    std::ostream &operator<<(std::ostream &os, const Dir &dir);
+    extern const std::vector<std::string> DirValues;
 
 } // namespace symbolic
 #endif

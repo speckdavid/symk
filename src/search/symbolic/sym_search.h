@@ -43,10 +43,6 @@ public:
     return mgr;
   }
 
-  bool isAbstracted() const { return mgr->isAbstracted(); }
-
-  bool isOriginal() const { return mgr->isOriginal(); }
-
   bool isSearchable() const {
     return isSearchableWithNodes(p.getMaxStepNodes());
   }
@@ -64,8 +60,6 @@ public:
   virtual long nextStepTime() const = 0;
   virtual long nextStepNodes() const = 0;
   virtual long nextStepNodesResult() const = 0;
-
-  virtual void statistics() const = 0;
 
   virtual bool isSearchableWithNodes(int maxNodes) const = 0;
 };
