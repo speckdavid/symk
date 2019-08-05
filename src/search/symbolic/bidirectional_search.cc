@@ -27,7 +27,7 @@ namespace symbolic {
         } else if (!fwSearchable && bwSearchable) {
             return bw.get();
         }
-        std::cout << (fw->nextStepNodes() <= bw->nextStepNodes() ? "fwd " : "bwd ") << std::flush;
+        // std::cout << (fw->nextStepNodes() <= bw->nextStepNodes() ? "fwd " : "bwd ") << std::flush;
         return fw->nextStepNodes() <= bw->nextStepNodes() ? fw.get() : bw.get();
     }
 
