@@ -2,6 +2,8 @@
 
 #include "../abstract_task.h"
 #include "../mutex_group.h"
+#include "../task_utils/task_properties.h"
+#include "sym_axiom/sym_axiom_compilation.h"
 
 #include <algorithm>
 #include <limits>
@@ -16,19 +18,24 @@ namespace symbolic {
         if (zero_transform) {
             std::cout << "=> Zero costs are treated as unit costs!" << std::endl;
         }
-        initialState =
-                vars->getStateBDD(tasks::g_root_task->get_initial_state_values());
-        std::vector<std::pair<int, int>> goal_facts;
-        for (int i = 0; i < tasks::g_root_task->get_num_goals(); i++) {
-            auto fact = tasks::g_root_task->get_goal_fact(i);
-            goal_facts.emplace_back(fact.var, fact.value);
+
+        // Transform initial state and goal states if axioms are present
+        if (task_properties::has_axioms(TaskProxy(*tasks::g_root_task))) {
+            initialState = v->get_axiom_compiliation()->get_compilied_init_state();
+            goal = v->get_axiom_compiliation()->get_compilied_goal_state();
+        } else {
+            initialState =
+                    vars->getStateBDD(tasks::g_root_task->get_initial_state_values());
+            std::vector<std::pair<int, int>> goal_facts;
+            for (int i = 0; i < tasks::g_root_task->get_num_goals(); i++) {
+                auto fact = tasks::g_root_task->get_goal_fact(i);
+                goal_facts.emplace_back(fact.var, fact.value);
+            }
+            goal = vars->getPartialStateBDD(goal_facts);
         }
-        goal = vars->getPartialStateBDD(goal_facts);
-
+        
         init_mutex(tasks::g_root_task->get_mutex_groups());
-
         create_single_trs(zero_transform);
-
         init_transitions(indTRs);
     }
 

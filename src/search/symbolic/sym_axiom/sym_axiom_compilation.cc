@@ -76,7 +76,6 @@ namespace symbolic {
             if (is_derived_variable(var)) {
                 res *= get_primary_representation(var, val);
             } else {
-
                 res *= sym_vars->preBDD(var, val);
             }
         }
@@ -84,8 +83,11 @@ namespace symbolic {
     }
 
     BDD SymAxiomCompilation::get_primary_representation(int var, int val) const {
-        BDD res = primary_representations.at(var);
+        if (!is_derived_variable(var)) {
+                return sym_vars->preBDD(var, val);
+        }
 
+        BDD res = primary_representations.at(var);
         // Negation because default derived variable has default value
         return task.get_variables()[var].get_default_axiom_value() == val ? !res : res;
     }
@@ -187,4 +189,4 @@ namespace symbolic {
         return res;
     }
 
-} // namespace symbolic
+} // namespace symbolicclo

@@ -25,7 +25,7 @@ namespace symbolic {
 
         for (auto const &pre : op.get_preconditions()) { // Put precondition of label
             FactPair fact = pre.get_pair();
-            tBDD *= sV->preBDD(fact.var, fact.value);
+            tBDD *= sV->get_axiom_compiliation()->get_primary_representation(fact.var, fact.value);
         }
 
         std::string op_name = op.get_name();
@@ -53,7 +53,7 @@ namespace symbolic {
 
             for (const auto &cPrev : eff.get_conditions()) {
                 FactPair cPrev_cond = cPrev.get_pair();
-                condition *= sV->preBDD(cPrev_cond.var, cPrev_cond.value);
+                condition *= sV->get_axiom_compiliation()->get_primary_representation(cPrev_cond.var, cPrev_cond.value);
             }
             effect_conditions[var] *= !condition;
             effects[var] += (condition * ppBDD);
