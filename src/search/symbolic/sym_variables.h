@@ -6,6 +6,7 @@
 #include "../tasks/root_task.h"
 #include "../state_registry.h"
 #include "../utils/timer.h"
+#include "sym_axiom/sym_axiom_compilation.h"
 
 #include <cassert>
 #include <fstream>
@@ -46,6 +47,7 @@ namespace symbolic {
         const bool gamer_ordering;
 
         std::unique_ptr<Cudd> manager; //manager associated with this symbolic search
+        std::shared_ptr<SymAxiomCompilation> ax_comp; // used for axioms
         std::shared_ptr<StateRegistry> state_registry; // used for explicit stuff
 
         int numBDDVars; // Number of binary variables (just one set, the total number
@@ -83,6 +85,10 @@ namespace symbolic {
                         std::make_shared<StateRegistry>(TaskProxy(*tasks::g_root_task));
             }
             return state_registry;
+        }
+        
+        std::shared_ptr<SymAxiomCompilation> get_axiom_compiliation() {
+            return ax_comp;
         }
 
         // State getStateFrom(const BDD & bdd) const;

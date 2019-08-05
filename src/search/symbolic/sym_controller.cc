@@ -18,7 +18,7 @@ namespace symbolic {
     lower_bound(0),
     plan_data_base(opts.get<std::shared_ptr<PlanDataBase>>("plan_selection")),
     solution_registry() {
-        task_properties::verify_no_axioms(TaskProxy(*tasks::g_root_task));
+        // task_properties::verify_no_axioms(TaskProxy(*tasks::g_root_task));
         mgrParams.print_options();
         searchParams.print_options();
         plan_data_base->print_options();
