@@ -153,7 +153,7 @@ namespace symbolic {
                     break;
                 }
             }
-            if (sym_vars->get_state_registry()->get_task_proxy().get_operators()[op_i].get_cost() != 0) {
+            if (sym_vars->get_state_registry()->get_task_proxy().get_operators()[plan[op_i]].get_cost() != 0) {
                 last_zero_op_state = states.size() - 1;
             }
 
@@ -164,10 +164,10 @@ namespace symbolic {
         }
 
 
-        /*if (zero_cost_op_seq.first == -1) {
+        if (zero_cost_op_seq.first == -1) {
             std::cerr << "Zero loop goes wrong!" << std::endl;
             exit(0);
-        }*/
+        }
         return zero_cost_op_seq;
     }
 
