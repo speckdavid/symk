@@ -1,3 +1,48 @@
+# A Symbolic Top-k Version of Fast Downward with Axiom Support:
+ - Symbolic Top-k Paper is currently under review
+ - Speck, D.; Geißer, F.; Mattmüller, R.; and Torralba, Á. 2019. Symbolic planning with axioms. In Lipovetzky, N.; Onaindia, E.; and Smith, D. E., eds., Proceedings of the Twenty-Ninth International Conference on Automated Planning and Scheduling (ICAPS 2019), 464–572. AAAI Press.
+ - Symbolic Fast Downward: https://fai.cs.uni-saarland.de/torralba/software.html
+ - Fast Downward (http://www.fast-downward.org/)
+
+## Configurations
+
+We recommend to use the following configuration which uses bidirectional search and 
+reports the best **k** plans.
+
+```console
+$ ./fast-downward.py domain.pddl problem.pddl --search "symk-bd(plan_selection=top_k(num_plans=**k**))"
+```
+
+Other configurations are as follows.
+
+ 
+```console
+# Forward Search
+$ ./fast-downward.py domain.pddl problem.pddl --search "symk-fw(plan_selection=top_k(num_plans=**k**))"
+
+
+# Backward Search
+$ ./fast-downward.py domain.pddl problem.pddl --search "symk-bw(plan_selection=top_k(num_plans=**k**))"
+```
+
+## Generate-and-Test Plans Framework
+
+It is possible to create plans until a plan is found that meets complex requirements.
+For this purpose it is possible to write your own plan selector. During the search, plans are created and handed over to a plan selector with an anytime behavior. 
+Two examples of plan selectors are the [ top_k_selector](src/search/symbolic/plan_selection/top_k_selector.cc) and
+the [top_k_even_selector](src/search/symbolic/plan_selection/top_k_even_selector.cc).
+The most important function is *add_plan*, in which you can specify whether a newly generated plan shall be accepted or rejected.
+To create your own plan selector, you can copy the *.cc* and *.h* files of one of these two selectors and adjust them accordingly. Also add the new file name to [DownwardFiles.cmake](src/search/symbolic/DownwardFiles.cmake), similar to the other selection files.
+Finally, if you want to find a plan with your *awesome_selector* selector (the name of the selector you specified for the plugin in the *cc* file), you can use the following command. 
+
+```console
+$ ./fast-downward.py domain.pddl problem.pddl --search "symk-bd(plan_selection=awesome_selector(num_plans=1))"
+```
+
+Note, that in general you can also search for the best **k** plans using you selector.
+
+# Fast Downward
+
 Fast Downward is a domain-independent planning system.
 
 For documentation and contact information see http://www.fast-downward.org/.
