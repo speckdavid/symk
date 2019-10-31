@@ -33,13 +33,13 @@ Two examples of plan selectors are the [ top_k_selector](src/search/symbolic/pla
 the [top_k_even_selector](src/search/symbolic/plan_selection/top_k_even_selector.cc).
 The most important function is *add_plan*, in which you can specify whether a newly generated plan shall be accepted or rejected.
 To create your own plan selector, you can copy the *.cc* and *.h* files of one of these two selectors and adjust them accordingly. Also add the new file name to [DownwardFiles.cmake](src/search/symbolic/DownwardFiles.cmake), similar to the other selection files.
-Finally, if you want to find a plan with your *awesome_selector* selector (the name of the selector you specified for the plugin in the *cc* file), you can use the following command. 
+Finally, if you want to find a plan with your *awesome_selector* selector (the name of the selector you specified for the plugin in the *.cc* file), you can use the following command. 
 
 ```console
 $ ./fast-downward.py domain.pddl problem.pddl --search "symk-bd(plan_selection=awesome_selector(num_plans=1))"
 ```
 
-Note, that in general you can also search for the best **k** plans using you selector.
+Note, that you can also search for the best **k** plans using your selector.
 
 # Fast Downward
 
