@@ -1,7 +1,7 @@
 # Symbolic Top-k Planner
  - Symbolic Top-k: Paper is currently under review
  - Symbolic Fast Downward: https://fai.cs.uni-saarland.de/torralba/software.html
- - Symbolic Axioms: Speck, D.; Geißer, F.; Mattmüller, R.; and Torralba, Á. 2019. Symbolic planning with axioms. In Lipovetzky, N.; Onaindia, E.; and Smith, D. E., eds., Proceedings of the Twenty-Ninth International Conference on Automated Planning and Scheduling (ICAPS 2019), 464–572. AAAI Press.
+ - Symbolic Axioms: Speck, D.; Geißer, F.; Mattmüller, R.; and Torralba, Á. 2019. Symbolic planning with axioms. In Lipovetzky, N.; Onaindia, E.; and Smith, D. E., eds., Proceedings of the Twenty-Ninth International Conference on Automated Planning and Scheduling (ICAPS 2019), 464–572. AAAI Press. ([pdf](http://gki.informatik.uni-freiburg.de/papers/speck-etal-icaps2019.pdf))
  - Fast Downward: http://www.fast-downward.org/
 
 ## Configurations
@@ -32,7 +32,7 @@ For this purpose it is possible to write your own plan selector. During the sear
 Two examples of plan selectors are the [ top_k_selector](src/search/symbolic/plan_selection/top_k_selector.cc) and
 the [top_k_even_selector](src/search/symbolic/plan_selection/top_k_even_selector.cc).
 The most important function is *add_plan*, in which you can specify whether a newly generated plan shall be accepted or rejected.
-To create your own plan selector, you can copy the *.cc* and *.h* files of one of these two selectors and adjust them accordingly. Also add the new file name to [DownwardFiles.cmake](src/search/symbolic/DownwardFiles.cmake), similar to the other selection files.
+To create your own plan selector, you can copy the *.cc* and *.h* files of one of these two selectors and adjust them accordingly. Also add the new file name to [DownwardFiles.cmake](src/search/DownwardFiles.cmake), similar to the other selection files.
 Finally, if you want to find a plan with your *awesome_selector* selector (the name of the selector you specified for the plugin in the *.cc* file), you can use the following command. 
 
 ```console
