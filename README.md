@@ -1,8 +1,8 @@
-# A Symbolic Top-k Version of Fast Downward with Axiom Support:
- - Symbolic Top-k Paper is currently under review
- - Speck, D.; Geißer, F.; Mattmüller, R.; and Torralba, Á. 2019. Symbolic planning with axioms. In Lipovetzky, N.; Onaindia, E.; and Smith, D. E., eds., Proceedings of the Twenty-Ninth International Conference on Automated Planning and Scheduling (ICAPS 2019), 464–572. AAAI Press.
+# Symbolic Top-k Planner
+ - Symbolic Top-k: Paper is currently under review
  - Symbolic Fast Downward: https://fai.cs.uni-saarland.de/torralba/software.html
- - Fast Downward (http://www.fast-downward.org/)
+ - Symbolic Axioms: Speck, D.; Geißer, F.; Mattmüller, R.; and Torralba, Á. 2019. Symbolic planning with axioms. In Lipovetzky, N.; Onaindia, E.; and Smith, D. E., eds., Proceedings of the Twenty-Ninth International Conference on Automated Planning and Scheduling (ICAPS 2019), 464–572. AAAI Press.
+ - Fast Downward: http://www.fast-downward.org/
 
 ## Configurations
 
