@@ -3,6 +3,7 @@ Sym-k is a state-of-the-art top-k planner. The objective of top-k planning is to
 
 Main source:
  - Symbolic Top-k: Speck, D.; Mattmüller, R.; and Nebel, B. 2020. Symbolic top-k planning. In Proceedings of the Thirty-Second AAAI Conference on Artificial Intelligence (AAAI 2020). AAAI Press.
+
 Based on:
  - Symbolic Fast Downward: https://fai.cs.uni-saarland.de/torralba/software.html
  - Symbolic Axioms: Speck, D.; Geißer, F.; Mattmüller, R.; and Torralba, Á. 2019. Symbolic planning with axioms. In Lipovetzky, N.; Onaindia, E.; and Smith, D. E., eds., Proceedings of the Twenty-Ninth International Conference on Automated Planning and Scheduling (ICAPS 2019), 464–572. AAAI Press. ([pdf](http://gki.informatik.uni-freiburg.de/papers/speck-etal-icaps2019.pdf))
