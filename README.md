@@ -1,8 +1,24 @@
 # Symbolic Top-k Planner
- - Symbolic Top-k: Paper is currently under review
+Sym-k is a state-of-the-art top-k planner. The objective of top-k planning is to determine a set of k different plans with lowest cost for a given planning task.
+
+Main source:
+ - Symbolic Top-k: Speck, D.; Mattmüller, R.; and Nebel, B. 2020. Symbolic top-k planning. In Proceedings of the Thirty-Second AAAI Conference on Artificial Intelligence (AAAI 2020). AAAI Press.
+Based on:
  - Symbolic Fast Downward: https://fai.cs.uni-saarland.de/torralba/software.html
  - Symbolic Axioms: Speck, D.; Geißer, F.; Mattmüller, R.; and Torralba, Á. 2019. Symbolic planning with axioms. In Lipovetzky, N.; Onaindia, E.; and Smith, D. E., eds., Proceedings of the Twenty-Ninth International Conference on Automated Planning and Scheduling (ICAPS 2019), 464–572. AAAI Press. ([pdf](http://gki.informatik.uni-freiburg.de/papers/speck-etal-icaps2019.pdf))
  - Fast Downward: http://www.fast-downward.org/
+ 
+## Dependencies
+Currently we only support Linux systems. The following should install all necessary dependencies.
+```console
+$ sudo apt-get -y install cmake g++ make python autotools-dev automake gcc g++-multilib
+```
+ 
+## Compiling the Top-k Planner
+
+```console
+$ ./buildy.py 
+```
 
 ## Configurations
 
@@ -67,3 +83,4 @@ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program. If not, see <http://www.gnu.org/licenses/>.
 ```
+

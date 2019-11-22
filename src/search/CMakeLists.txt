@@ -74,19 +74,34 @@ if(PLUGIN_LP_SOLVER_ENABLED AND USE_LP)
 endif()
 
 
-    target_compile_definitions(downward PRIVATE DDLIBCUDD=TRUE)
-    include(ExternalProject)
-    include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/cudd)
-    include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/cplusplus)
-    ExternalProject_add(
-      libcudd
-      #PREFIX ${downward_BINARY_DIR}/
-      SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/
-      CONFIGURE_COMMAND touch ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/* && ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/configure --enable-obj --enable-silent-rules "CFLAGS=-m64 -Wall -Wextra -g -O3" "CXXFLAGS=-m64 -Wall -Wextra -std=c++0x -g -O3" "LDFLAGS=-m64"
-      #CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/cudd-3.0.0/configure --enable-obj --build=i686-pc-linux-gnu "CFLAGS=-m32 -Wall -Wextra -g -O3" "CXXFLAGS=-m32 -Wall -Wextra -std=c++0x -g -O3" "LDFLAGS=-m32"
-      BUILD_COMMAND make
-      INSTALL_COMMAND ""
-      BUILD_IN_SOURCE 0
-    )
-    target_link_libraries(downward ${downward_BINARY_DIR}/libcudd-prefix/src/libcudd-build/cudd/.libs/libcudd.a)
+target_compile_definitions(downward PRIVATE DDLIBCUDD=TRUE)
+include(ExternalProject)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/cudd)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/cplusplus)
 
+if(${CMAKE_SIZEOF_VOID_P} EQUAL 4)
+    message(STATUS "Building Cudd with 32-bit.")
+    ExternalProject_add(
+        libcudd
+        SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/
+        CONFIGURE_COMMAND touch ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/* && ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/configure --enable-obj --enable-silent-rules "CFLAGS=-m32 -Wall -Wextra -g -O3" "CXXFLAGS=-m32 -Wall -Wextra -std=c++0x -g -O3" "LDFLAGS=-m32"
+        BUILD_COMMAND make
+        INSTALL_COMMAND ""
+        BUILD_IN_SOURCE 0
+    )
+elseif(${CMAKE_SIZEOF_VOID_P} EQUAL 8)
+    message(STATUS "Building Cudd with 64-bit.")
+    ExternalProject_add(
+        libcudd
+        SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/
+        CONFIGURE_COMMAND touch ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/* && ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/configure --enable-obj --enable-silent-rules "CFLAGS=-m64 -Wall -Wextra -g -O3" "CXXFLAGS=-m64 -Wall -Wextra -std=c++0x -g -O3" "LDFLAGS=-m64"
+        BUILD_COMMAND make
+        INSTALL_COMMAND ""
+        BUILD_IN_SOURCE 0
+    )
+else()
+    message(FATAL_ERROR, "Could not determine bitwidth for Cudd.")
+endif()
+
+
+target_link_libraries(downward ${downward_BINARY_DIR}/libcudd-prefix/src/libcudd-build/cudd/.libs/libcudd.a)
