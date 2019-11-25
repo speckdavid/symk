@@ -2,7 +2,7 @@
 Sym-k is a state-of-the-art top-k planner. The objective of top-k planning is to determine a set of k different plans with lowest cost for a given planning task.
 
 Main source:
- - Speck, D.; Mattmüller, R.; and Nebel, B. 2020. Symbolic top-k planning. In Proceedings of the Thirty-Second AAAI Conference on Artificial Intelligence (AAAI 2020). AAAI Press.
+ - Speck, D.; Mattmüller, R.; and Nebel, B. 2020. Symbolic top-k planning. In Proceedings of the Thirty-Second AAAI Conference on Artificial Intelligence (AAAI 2020). AAAI Press. ([pdf](http://gki.informatik.uni-freiburg.de/papers/speck-etal-aaai2020.pdf))
 
 Based on:
  - Symbolic Fast Downward: https://fai.cs.uni-saarland.de/torralba/software.html
