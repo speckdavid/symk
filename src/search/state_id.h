@@ -28,6 +28,10 @@ public:
 
     static const StateID no_state;
 
+    int get_value() const {
+        return value;
+    }
+
     bool operator==(const StateID &other) const {
         return value == other.value;
     }
