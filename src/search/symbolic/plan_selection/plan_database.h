@@ -65,6 +65,8 @@ namespace symbolic {
         virtual std::string tag() const = 0;
 
     protected:
+        std::shared_ptr<SymVariables> sym_vars;
+
         // Determines if it possible/desired to proof that no more (accepted)
         // plans exits
         // 1. If true: terminates if open contains only states which are in 
@@ -77,6 +79,8 @@ namespace symbolic {
         void save_accepted_plan(const Plan &plan);
         void save_rejected_plan(const Plan &plan);
 
+        std::vector<Plan> get_accepted_plans() const;
+
     private:
         int num_desired_plans;
         int num_accepted_plans;
@@ -86,7 +90,6 @@ namespace symbolic {
         std::unordered_map<size_t, std::vector<Plan>> hashes_rejected_plans;
 
         BDD states_accepted_goal_paths;
-        std::shared_ptr<SymVariables> sym_vars;
 
         PlanManager plan_mgr;
         bool task_hash_zero_cost_actions;

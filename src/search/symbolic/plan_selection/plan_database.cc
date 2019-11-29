@@ -13,11 +13,11 @@ namespace symbolic {
     }
 
     PlanDataBase::PlanDataBase(const options::Options &opts) :
+    sym_vars(nullptr),
     anytime_completness(false),
     num_desired_plans(opts.get<int>("num_plans")),
     num_accepted_plans(0),
-    num_rejected_plans(0),
-    sym_vars(nullptr) {
+    num_rejected_plans(0) {
         plan_mgr.set_plan_filename("found_plans/sas_plan");
     }
 
@@ -171,17 +171,13 @@ namespace symbolic {
         return zero_cost_op_seq;
     }
 
-
-    /*static std::shared_ptr<PlanDataBase> _parse(OptionParser &parser) {
-        PlanDataBase::add_options_to_parser(parser);
-
-        Options opts = parser.parse();
-        if (parser.dry_run())
-            return nullptr;
-        return std::make_shared<PlanDataBase>(opts);
-    }*/
-
-    // static Plugin<PlanDataBase> _plugin("top_k_original", _parse);
+    std::vector<Plan> PlanDataBase::get_accepted_plans() const {
+        std::vector<Plan> res;
+        for (auto& it: hashes_accepted_plans) {
+            res.insert(res.end(), it.second.begin(), it.second.end());
+        }
+        return res;
+    }
 
     static PluginTypePlugin<PlanDataBase> _type_plugin(
             "PlanDataBase", "");
