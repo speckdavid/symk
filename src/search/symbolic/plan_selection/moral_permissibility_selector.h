@@ -5,21 +5,17 @@
 
 namespace symbolic {
 
-    class MoralPermissibilitySelector : public PlanDataBase {
-    public:
-        MoralPermissibilitySelector(const options::Options &opts);
-        
-        ~MoralPermissibilitySelector() {};
-        
-        void add_plan(const Plan& plan) override;
-        
-        std::string tag() const override {
-            return "Moral Permissibility";
-        }
+class MoralPermissibilitySelector : public PlanDataBase {
+public:
+  MoralPermissibilitySelector(const options::Options &opts);
 
-    };
-    
-}
+  ~MoralPermissibilitySelector(){};
 
+  void add_plan(const Plan &plan) override;
+
+  std::string tag() const override { return "Moral Permissibility"; }
+};
+
+} // namespace symbolic
 
 #endif /* SYMBOLIC_MOTAL_PERMISSIBILITY_SELECTOR_H */

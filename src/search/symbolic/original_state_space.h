@@ -6,49 +6,48 @@
 
 namespace symbolic {
 
-    class OriginalStateSpace : public SymStateSpaceManager {
-        void create_single_trs(bool zero_transform);
+class OriginalStateSpace : public SymStateSpaceManager {
+  void create_single_trs(bool zero_transform);
 
-        void init_mutex(const std::vector<MutexGroup> &mutex_groups);
-        void init_mutex(const std::vector<MutexGroup> &mutex_groups, bool genMutexBDD,
-                bool genMutexBDDByFluent, bool fw);
+  void init_mutex(const std::vector<MutexGroup> &mutex_groups);
+  void init_mutex(const std::vector<MutexGroup> &mutex_groups, bool genMutexBDD,
+                  bool genMutexBDDByFluent, bool fw);
 
-    public:
-        OriginalStateSpace(SymVariables *v, const SymParamsMgr &params, bool zero_transform = false);
+public:
+  OriginalStateSpace(SymVariables *v, const SymParamsMgr &params,
+                     bool zero_transform = false);
 
-        // Individual TRs: Useful for shrink and plan construction
-        std::map<int, std::vector<TransitionRelation>> indTRs;
+  // Individual TRs: Useful for shrink and plan construction
+  std::map<int, std::vector<TransitionRelation>> indTRs;
 
-        // notMutex relative for each fluent
-        std::vector<std::vector<BDD>> notMutexBDDsByFluentFw, notMutexBDDsByFluentBw;
-        std::vector<std::vector<BDD>> exactlyOneBDDsByFluent;
+  // notMutex relative for each fluent
+  std::vector<std::vector<BDD>> notMutexBDDsByFluentFw, notMutexBDDsByFluentBw;
+  std::vector<std::vector<BDD>> exactlyOneBDDsByFluent;
 
-        virtual std::string tag() const override {
-            return "original";
-        }
+  virtual std::string tag() const override { return "original"; }
 
-        // Methods that require of mutex initialized
+  // Methods that require of mutex initialized
 
-        inline const BDD &getNotMutexBDDFw(int var, int val) const {
-            return notMutexBDDsByFluentFw[var][val];
-        }
+  inline const BDD &getNotMutexBDDFw(int var, int val) const {
+    return notMutexBDDsByFluentFw[var][val];
+  }
 
-        // Methods that require of mutex initialized
+  // Methods that require of mutex initialized
 
-        inline const BDD &getNotMutexBDDBw(int var, int val) const {
-            return notMutexBDDsByFluentBw[var][val];
-        }
+  inline const BDD &getNotMutexBDDBw(int var, int val) const {
+    return notMutexBDDsByFluentBw[var][val];
+  }
 
-        // Methods that require of mutex initialized
+  // Methods that require of mutex initialized
 
-        inline const BDD &getExactlyOneBDD(int var, int val) const {
-            return exactlyOneBDDsByFluent[var][val];
-        }
+  inline const BDD &getExactlyOneBDD(int var, int val) const {
+    return exactlyOneBDDsByFluent[var][val];
+  }
 
-        virtual const std::map<int, std::vector<TransitionRelation>> &
-        getIndividualTRs() const {
-            return indTRs;
-        }
-    };
+  virtual const std::map<int, std::vector<TransitionRelation>> &
+  getIndividualTRs() const {
+    return indTRs;
+  }
+};
 } // namespace symbolic
 #endif

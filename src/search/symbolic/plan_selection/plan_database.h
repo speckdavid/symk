@@ -2,106 +2,95 @@
 #define SYMBOLIC_PLAN_DATABASE_H
 
 #include "../../plan_manager.h"
-#include "../sym_variables.h"
 #include "../../plugin.h"
+#include "../sym_variables.h"
 
-#include <unordered_map>
 #include <memory>
+#include <unordered_map>
 
 class StateRegistry;
 
 namespace options {
-    class OptionParser;
-    class Options;
+class OptionParser;
+class Options;
 } // namespace options
 
 namespace symbolic {
 
-    class PlanDataBase {
-    public:
+class PlanDataBase {
+public:
+  static void add_options_to_parser(options::OptionParser &parser);
 
-        static void add_options_to_parser(options::OptionParser &parser);
+  PlanDataBase(const options::Options &opts);
 
-        PlanDataBase(const options::Options &opts);
+  virtual ~PlanDataBase(){};
 
-        virtual ~PlanDataBase() {
-        };
+  virtual void init(std::shared_ptr<SymVariables> sym_vars);
 
-        virtual void init(std::shared_ptr<SymVariables> sym_vars);
+  virtual void add_plan(const Plan &plan) = 0;
 
-        virtual void add_plan(const Plan& plan) = 0;
+  bool has_accepted_plan(const Plan &plan) const;
 
-        bool has_accepted_plan(const Plan& plan) const;
+  bool has_rejected_plan(const Plan &plan) const;
 
-        bool has_rejected_plan(const Plan& plan) const;
+  bool has_zero_cost_loop(const Plan &plan) const;
 
-        bool has_zero_cost_loop(const Plan& plan) const;
-        
-        std::pair<int,int> get_first_zero_cost_loop(const Plan& plan) const;
-        
-        int get_num_desired_plans() const {
-            return num_desired_plans;
-        }
+  std::pair<int, int> get_first_zero_cost_loop(const Plan &plan) const;
 
-        int get_num_accepted_plans() const {
-            return num_accepted_plans;
-        }
+  int get_num_desired_plans() const { return num_desired_plans; }
 
-        int get_num_rejected_plans() const {
-            return num_rejected_plans;
-        }
+  int get_num_accepted_plans() const { return num_accepted_plans; }
 
-        bool found_enough_plans() const {
-            return num_accepted_plans >= num_desired_plans;
-        }
+  int get_num_rejected_plans() const { return num_rejected_plans; }
 
-        BDD get_states_accepted_goal_path() const {
-            return anytime_completness ?
-                    states_accepted_goal_paths : sym_vars->oneBDD();
-        }
-        
-        virtual void print_options() const;
+  bool found_enough_plans() const {
+    return num_accepted_plans >= num_desired_plans;
+  }
 
-        virtual std::string tag() const = 0;
+  BDD get_states_accepted_goal_path() const {
+    return anytime_completness ? states_accepted_goal_paths
+                               : sym_vars->oneBDD();
+  }
 
-    protected:
-        std::shared_ptr<SymVariables> sym_vars;
+  virtual void print_options() const;
 
-        // Determines if it possible/desired to proof that no more (accepted)
-        // plans exits
-        // 1. If true: terminates if open contains only states which are in 
-        // the closed list and not on an accepted goal path 8e.g. top-k)
-        // 2. If false: terminates never and keeps searching for new plans
-        // Note: the algorithm still terminates if the open list is empty
-        // which only occurs if no reachable loops part of in the state space
-        bool anytime_completness;
+  virtual std::string tag() const = 0;
 
-        void save_accepted_plan(const Plan &plan);
-        void save_rejected_plan(const Plan &plan);
+protected:
+  std::shared_ptr<SymVariables> sym_vars;
 
-        std::vector<Plan> get_accepted_plans() const;
+  // Determines if it possible/desired to proof that no more (accepted)
+  // plans exits
+  // 1. If true: terminates if open contains only states which are in
+  // the closed list and not on an accepted goal path 8e.g. top-k)
+  // 2. If false: terminates never and keeps searching for new plans
+  // Note: the algorithm still terminates if the open list is empty
+  // which only occurs if no reachable loops part of in the state space
+  bool anytime_completness;
 
-    private:
-        int num_desired_plans;
-        int num_accepted_plans;
-        int num_rejected_plans;
+  void save_accepted_plan(const Plan &plan);
+  void save_rejected_plan(const Plan &plan);
 
-        std::unordered_map<size_t, std::vector<Plan>> hashes_accepted_plans;
-        std::unordered_map<size_t, std::vector<Plan>> hashes_rejected_plans;
+  std::vector<Plan> get_accepted_plans() const;
 
-        BDD states_accepted_goal_paths;
+private:
+  int num_desired_plans;
+  int num_accepted_plans;
+  int num_rejected_plans;
 
-        PlanManager plan_mgr;
-        bool task_hash_zero_cost_actions;
+  std::unordered_map<size_t, std::vector<Plan>> hashes_accepted_plans;
+  std::unordered_map<size_t, std::vector<Plan>> hashes_rejected_plans;
 
-        size_t different(const std::vector<Plan> &plans, const Plan &plan) const;
-        BDD states_on_path(const Plan &plan);
-        size_t get_hash_value(const Plan &plan) const;
+  BDD states_accepted_goal_paths;
 
-    };
+  PlanManager plan_mgr;
+  bool task_hash_zero_cost_actions;
 
-}
+  size_t different(const std::vector<Plan> &plans, const Plan &plan) const;
+  BDD states_on_path(const Plan &plan);
+  size_t get_hash_value(const Plan &plan) const;
+};
 
+} // namespace symbolic
 
 #endif /* SYMBOLIC_PLAN_DATABASE_H */
-

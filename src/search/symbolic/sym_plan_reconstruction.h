@@ -2,35 +2,30 @@
 #define SYMBOLIC_SYM_PLAN_RECONSTRUCTION_H
 
 #include "../plan_manager.h"
+#include "plan_selection/plan_database.h"
 #include "sym_solution_registry.h"
 #include "unidirectional_search.h"
-#include "plan_selection/plan_database.h"
 
-namespace symbolic
-{
+namespace symbolic {
 
 class ClosedList;
 class PlanDataBase;
 
-class SymPlanReconstructor
-{
+class SymPlanReconstructor {
 protected:
   UnidirectionalSearch *uni_search_fw;
   UnidirectionalSearch *uni_search_bw;
   std::shared_ptr<SymVariables> sym_vars;
   std::map<int, std::vector<TransitionRelation>> trs;
-  
+
   std::shared_ptr<PlanDataBase> plan_data_base;
 
-  bool task_has_zero_costs() const
-  {
-    return trs.count(0) > 0;
-  }
+  bool task_has_zero_costs() const { return trs.count(0) > 0; }
 
   bool bw_reconstruction_necessary() const;
 
   BDD get_resulting_state(const Plan &plan) const;
-  
+
   void add_plan(const Plan &plan) const;
 
   // Extracts all plans by a DFS, we copy the current plan suffix by every
@@ -53,9 +48,9 @@ protected:
 
 public:
   SymPlanReconstructor(UnidirectionalSearch *uni_search_fw,
-                    UnidirectionalSearch *uni_search_bw,
-                    std::shared_ptr<SymVariables> sym_vars,
-                    std::shared_ptr<PlanDataBase> plan_data_base);
+                       UnidirectionalSearch *uni_search_bw,
+                       std::shared_ptr<SymVariables> sym_vars,
+                       std::shared_ptr<PlanDataBase> plan_data_base);
 
   void reconstruct_plans(const SymSolutionCut &cut);
 };

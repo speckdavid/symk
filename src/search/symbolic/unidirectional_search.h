@@ -10,92 +10,79 @@
 #include <vector>
 
 namespace symbolic {
-    class SymSolutionCut;
-    class UnidirectionalSearch;
-    class SymController;
-    class ClosedList;
+class SymSolutionCut;
+class UnidirectionalSearch;
+class SymController;
+class ClosedList;
 
-    class SymExpStatistics {
-    public:
-        double image_time, image_time_failed;
-        double time_heuristic_evaluation;
-        int num_steps_succeeded;
-        double step_time;
+class SymExpStatistics {
+public:
+  double image_time, image_time_failed;
+  double time_heuristic_evaluation;
+  int num_steps_succeeded;
+  double step_time;
 
-        SymExpStatistics()
-        : image_time(0), image_time_failed(0), time_heuristic_evaluation(0),
-        num_steps_succeeded(0), step_time(0) {
-        }
+  SymExpStatistics()
+      : image_time(0), image_time_failed(0), time_heuristic_evaluation(0),
+        num_steps_succeeded(0), step_time(0) {}
 
-        void add_image_time(double t) {
-            image_time += t;
-            num_steps_succeeded += 1;
-        }
+  void add_image_time(double t) {
+    image_time += t;
+    num_steps_succeeded += 1;
+  }
 
-        void add_image_time_failed(double t) {
-            image_time += t;
-            image_time_failed += t;
-            num_steps_succeeded += 1;
-        }
-    };
+  void add_image_time_failed(double t) {
+    image_time += t;
+    image_time_failed += t;
+    num_steps_succeeded += 1;
+  }
+};
 
-    class OppositeFrontier {
-    public:
+class OppositeFrontier {
+public:
+  virtual ~OppositeFrontier() {}
 
-        virtual ~OppositeFrontier() {
-        }
+  virtual std::vector<SymSolutionCut>
+  getAllCuts(const BDD &states, int g, bool fw, int lower_bound) const = 0;
 
-        virtual std::vector<SymSolutionCut> getAllCuts(const BDD &states, int g, bool fw,
-                int lower_bound) const = 0;
+  virtual BDD notClosed() const = 0;
+};
 
-        virtual BDD notClosed() const = 0;
+class OppositeFrontierFixed : public OppositeFrontier {
+  BDD goal;
+  int hNotGoal;
 
-    };
+public:
+  OppositeFrontierFixed(BDD g, const SymStateSpaceManager &mgr);
 
-    class OppositeFrontierFixed : public OppositeFrontier {
-        BDD goal;
-        int hNotGoal;
+  virtual std::vector<SymSolutionCut>
+  getAllCuts(const BDD &states, int g, bool fw, int lower_bound) const override;
 
-    public:
-        OppositeFrontierFixed(BDD g, const SymStateSpaceManager &mgr);
+  virtual BDD notClosed() const override { return !goal; }
+};
 
-        virtual std::vector<SymSolutionCut> getAllCuts(const BDD &states, int g, bool fw,
-                int lower_bound) const override;
+class UnidirectionalSearch : public SymSearch {
+protected:
+  bool fw; // Direction of the search. true=forward, false=backward
+  std::shared_ptr<ClosedList> closed; // Closed list is a shared ptr so that we
+  // can share it with other searches
 
-        virtual BDD notClosed() const override {
-            return !goal;
-        }
+  SymExpStatistics stats;
 
-    };
+  std::shared_ptr<OppositeFrontier> perfectHeuristic;
 
-    class UnidirectionalSearch : public SymSearch {
-    protected:
-        bool fw; // Direction of the search. true=forward, false=backward
-        std::shared_ptr<ClosedList> closed; // Closed list is a shared ptr so that we
-        // can share it with other searches
+public:
+  UnidirectionalSearch(SymController *eng, const SymParamsSearch &params);
 
-        SymExpStatistics stats;
+  inline bool isFW() const { return fw; }
 
-        std::shared_ptr<OppositeFrontier> perfectHeuristic;
+  virtual int getG() const = 0;
 
-    public:
-        UnidirectionalSearch(SymController *eng, const SymParamsSearch &params);
+  // Pointer to the closed list Used to set as heuristic of other explorations.
 
-        inline bool isFW() const {
-            return fw;
-        }
+  inline ClosedList *getClosed() const { return closed.get(); }
 
-        virtual int getG() const = 0;
-
-        // Pointer to the closed list Used to set as heuristic of other explorations.
-
-        inline ClosedList *getClosed() const {
-            return closed.get();
-        }
-
-        inline std::shared_ptr<ClosedList> getClosedShared() const {
-            return closed;
-        }
-    };
+  inline std::shared_ptr<ClosedList> getClosedShared() const { return closed; }
+};
 } // namespace symbolic
 #endif
