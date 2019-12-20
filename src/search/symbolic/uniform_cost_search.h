@@ -80,8 +80,6 @@ public:
   virtual ~UniformCostSearch() = default;
 
   virtual bool finished() const {
-    assert(!open_list.empty() || !frontier.empty() ||
-           closed->getHNotClosed() == std::numeric_limits<int>::max());
     return open_list.empty() && frontier.empty();
   }
 

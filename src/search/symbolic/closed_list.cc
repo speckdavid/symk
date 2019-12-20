@@ -23,6 +23,7 @@ void ClosedList::init(SymStateSpaceManager *manager,
   map<int, vector<BDD>>().swap(zeroCostClosed);
   map<int, BDD>().swap(closed);
   closedTotal = mgr->zeroBDD();
+  hNotClosed = 0;
 }
 
 void ClosedList::init(SymStateSpaceManager *manager,
@@ -32,6 +33,7 @@ void ClosedList::init(SymStateSpaceManager *manager,
   map<int, vector<BDD>>().swap(zeroCostClosed);
   map<int, BDD>().swap(closed);
   closedTotal = mgr->zeroBDD();
+  hNotClosed = 0;
 
   closedTotal = other.closedTotal;
   closed[0] = closedTotal;
