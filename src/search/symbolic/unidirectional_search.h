@@ -42,6 +42,8 @@ class OppositeFrontier {
 public:
   virtual ~OppositeFrontier() {}
 
+  virtual SymSolutionCut getCheapestCut(const BDD &states, int g, bool fw) const = 0;
+
   virtual std::vector<SymSolutionCut>
   getAllCuts(const BDD &states, int g, bool fw, int lower_bound) const = 0;
 
@@ -54,6 +56,8 @@ class OppositeFrontierFixed : public OppositeFrontier {
 
 public:
   OppositeFrontierFixed(BDD g, const SymStateSpaceManager &mgr);
+
+  virtual SymSolutionCut getCheapestCut(const BDD &states, int g, bool fw) const override;
 
   virtual std::vector<SymSolutionCut>
   getAllCuts(const BDD &states, int g, bool fw, int lower_bound) const override;

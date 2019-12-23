@@ -64,45 +64,62 @@ void UniformCostSearch::checkCutOriginal(Bucket &bucket, int g_val) {
   }
 
   for (BDD &bucketBDD : bucket) {
-    auto all_sols =
-        perfectHeuristic->getAllCuts(bucketBDD, g_val, fw, engine->getMinG());
-    for (auto &sol : all_sols) {
-      engine->new_solution(sol);
+    // Get one or all solutions
+    if(!p.top_k) {
+        auto sol = perfectHeuristic->getCheapestCut(bucketBDD, g_val, fw);
+        if (sol.get_f() >= 0) {
+            engine->new_solution(sol);
+        }
+        // Prune everything closed in opposite direction
+	bucketBDD *= perfectHeuristic->notClosed();
+    } else {
+        auto all_sols = perfectHeuristic->getAllCuts(bucketBDD, g_val, fw, engine->getMinG());
+        for (auto &sol : all_sols) {
+            engine->new_solution(sol);
+        }
     }
   }
+}
+
+bool UniformCostSearch::provable_no_more_plans() {
+    // If we will expand states with new costs
+    // We check weather all states in the open list have already
+    // been expanded and not part of a goal path
+    if (!p.top_k) {
+        // Here last_g_cost corresponds to the current g-value of the
+        // search dir. Thus we consider all smaller
+        if (getG() > last_g_cost) {
+            BDD no_goal_path_states = !engine->get_states_on_goal_paths();
+            no_goal_path_states *= closed->getPartialClosed(last_g_cost - 1);
+            if (!open_list.contains_any_state(!no_goal_path_states)) {
+               return true; // Search finished
+           }
+        }
+    }
+    
+    // Important special case: open is empty => terminate
+    if (open_list.empty()) {
+      return true; // Search finished
+    }
+
+    return false;
 }
 
 void UniformCostSearch::prepareBucket() {
   if (!frontier.bucketReady()) {
 
-    // TODO: here we should use  and totalClosed to
-    if (getG() > last_g_cost) {
-      // We check if the fully closed states
-      // Here last_g_cost corresponds to the current g-value of the
-      // search dir. Thus we consider all smaller
-      BDD no_goal_path_states = !engine->get_states_on_goal_paths();
-      no_goal_path_states *= closed->getPartialClosed(last_g_cost - 1);
-      if (!open_list.contains_any_state(!no_goal_path_states)) {
-        std::cout << "FIXPOINT found!" << std::endl;
-        engine->setLowerBound(std::numeric_limits<int>::max());
-        return; // Search finished
-      }
-    }
-
-    if (open_list.empty()) {
-      engine->setLowerBound(getF());
-      return; // Search finished
+    if (provable_no_more_plans()) {
+      engine->setLowerBound(std::numeric_limits<int>::max());
+      return;
     }
 
     open_list.pop(frontier);
     last_g_cost = frontier.g();
     assert(!frontier.empty() || frontier.g() == numeric_limits<int>::max());
     checkCutOriginal(frontier.bucket(), frontier.g());
+    
+    filterFrontier();
 
-    frontier.filter(closed->get_closed_at(frontier.g()));
-
-    mgr->filterMutex(frontier.bucket(), fw, initialization());
-    removeZero(frontier.bucket());
 
     // Close and move to reopen
 
@@ -112,7 +129,6 @@ void UniformCostSearch::prepareBucket() {
         closed->insert(frontier.g(), states);
       }
     }
-
     engine->setLowerBound(getF());
     engine->setMinG(getG());
 
@@ -132,6 +148,19 @@ void UniformCostSearch::prepareBucket() {
   if (!res.ok) {
     violated(res.truncated_reason, res.time_spent, maxTime, maxNodes);
   }
+}
+
+// Here we filter states: remove closed states and mutex states
+// This procedure is delayed in comparision to explicit search
+// Idea: no need to "change" BDDs until we actually process them
+void UniformCostSearch::filterFrontier() {
+    if (!p.top_k) {
+        frontier.filter(!closed->notClosed());
+    } else{
+        frontier.filter(closed->get_closed_at(frontier.g()));
+    }
+    mgr->filterMutex(frontier.bucket(), fw, initialization());
+    removeZero(frontier.bucket());
 }
 
 bool UniformCostSearch::stepImage(int maxTime, int maxNodes) {
@@ -167,7 +196,7 @@ bool UniformCostSearch::stepImage(int maxTime, int maxNodes) {
                    pairCostBDDs.first; // Include states of the given cost
         mgr->mergeBucket(pairCostBDDs.second);
 
-        // TODO(speckd): Really necessary?
+        // Check for cut (remove those states)
         checkCutOriginal(pairCostBDDs.second, cost);
 
         for (auto &bdd : pairCostBDDs.second) {

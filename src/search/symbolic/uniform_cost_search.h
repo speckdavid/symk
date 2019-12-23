@@ -58,6 +58,11 @@ class UniformCostSearch : public UnidirectionalSearch {
   }
 
   /*
+   * Check if we can proof that no more plans exist
+   */
+  bool provable_no_more_plans();  
+
+  /*
    * Check generated or closed states with other frontiers.  In the
    * original state space we obtain a solution (maybe suboptimal if
    * the states are not closed).
@@ -67,6 +72,8 @@ class UniformCostSearch : public UnidirectionalSearch {
   void closeStates(Bucket &bucket, int g);
 
   void prepareBucket();
+
+  void filterFrontier();
 
   void computeEstimation(bool prepare);
 

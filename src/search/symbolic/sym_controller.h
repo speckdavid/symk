@@ -31,7 +31,9 @@ protected:
   SymParamsSearch searchParams; // Parameters to search the original state space
 
   int lower_bound; // Lower bound of search (incl. min-action costs)
+  int upper_bound; // Upper bound of search (not use by top_k)
   int min_g;       // min g costs of open lists
+
 
   std::shared_ptr<PlanDataBase> plan_data_base;
   SymSolutionRegistry solution_registry; // Solution registry
@@ -48,7 +50,13 @@ public:
 
   void setMinG(int g) { min_g = std::max(g, min_g); }
 
-  int getUpperBound() const { return std::numeric_limits<int>::max(); }
+  int getUpperBound() const {
+    return upper_bound;
+  }
+
+  void setUpperBound(int upper) {
+    upper_bound = upper;
+  }
 
   int getLowerBound() const { return lower_bound; }
 

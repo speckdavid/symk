@@ -28,7 +28,6 @@ private:
   // here is an (admissible) estimation and this should be taken into account
   std::map<int, std::vector<BDD>> zeroCostClosed;
   BDD closedTotal; // All closed states.
-  int hNotClosed; // if we use bidirectional search this is used to prune states from the other side
 
 public:
   ClosedList();
@@ -37,9 +36,10 @@ public:
             const ClosedList &other);
 
   void insert(int h, const BDD &S);
-  void setHNotClosed(int h);
 
   BDD getPartialClosed(int upper_bound) const;
+
+  virtual SymSolutionCut getCheapestCut(const BDD &states, int g, bool fw) const override;
 
   virtual std::vector<SymSolutionCut>
   getAllCuts(const BDD &states, int g, bool fw, int lower_bound) const override;
@@ -49,8 +49,6 @@ public:
   virtual BDD notClosed() const override { return !closedTotal; }
 
   inline std::map<int, BDD> getClosedList() const { return closed; }
-
-  int getHNotClosed() const { return hNotClosed; }
 
   BDD get_start_states() const {
     if (get_num_zero_closed_layers(0) == 0) {

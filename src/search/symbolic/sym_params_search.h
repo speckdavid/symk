@@ -12,6 +12,9 @@ namespace symbolic {
 
 class SymParamsSearch {
 public:
+  // Determines weather we close states nad use symk
+  bool top_k;
+  
   // By default max<int>. If lower, it allows for skip disjunction if the size
   // of S is greater.
   int max_disj_nodes;

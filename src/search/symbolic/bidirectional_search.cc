@@ -38,7 +38,6 @@ bool BidirectionalSearch::finished() const {
 
 bool BidirectionalSearch::stepImage(int maxTime, int maxNodes) {
   bool res = selectBestDirection()->stepImage(maxTime, maxNodes);
-
   engine->setLowerBound(getF());
   engine->setMinG(fw->getG() + bw->getG());
 

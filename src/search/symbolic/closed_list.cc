@@ -23,7 +23,6 @@ void ClosedList::init(SymStateSpaceManager *manager,
   map<int, vector<BDD>>().swap(zeroCostClosed);
   map<int, BDD>().swap(closed);
   closedTotal = mgr->zeroBDD();
-  hNotClosed = 0;
 }
 
 void ClosedList::init(SymStateSpaceManager *manager,
@@ -33,7 +32,6 @@ void ClosedList::init(SymStateSpaceManager *manager,
   map<int, vector<BDD>>().swap(zeroCostClosed);
   map<int, BDD>().swap(closed);
   closedTotal = mgr->zeroBDD();
-  hNotClosed = 0;
 
   closedTotal = other.closedTotal;
   closed[0] = closedTotal;
@@ -62,6 +60,25 @@ BDD ClosedList::getPartialClosed(int upper_bound) const {
     res += pair.second;
   }
   return res;
+}
+
+SymSolutionCut ClosedList::getCheapestCut(const BDD &states, int g, bool fw) const {
+  BDD cut_candidate = states * closedTotal;
+  if (cut_candidate.IsZero()) {
+    return SymSolutionCut();
+  }
+
+  for (const auto &closedH : closed) {
+    int h = closedH.first;
+
+    BDD cut = closedH.second * cut_candidate;
+    if (!cut.IsZero()) {
+      if (fw)
+        return SymSolutionCut(g, h, cut);
+      else
+        return SymSolutionCut(h, g, cut);
+    }
+  }
 }
 
 std::vector<SymSolutionCut> ClosedList::getAllCuts(const BDD &states, int g,

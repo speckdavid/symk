@@ -14,6 +14,7 @@ protected:
   BDD cut;
 
 public:
+  SymSolutionCut(); // dummy for no solution
   SymSolutionCut(int g, int h, BDD cut);
 
   int get_g() const;

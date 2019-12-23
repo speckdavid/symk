@@ -9,6 +9,8 @@ using namespace std;
 
 namespace symbolic {
 
+SymSolutionCut::SymSolutionCut() : g(-1), h(-1) {}
+
 SymSolutionCut::SymSolutionCut(int g, int h, BDD cut) : g(g), h(h), cut(cut) {}
 
 int SymSolutionCut::get_g() const { return g; }

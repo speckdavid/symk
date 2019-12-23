@@ -12,7 +12,7 @@ namespace symbolic {
 
 SymController::SymController(const Options &opts)
     : vars(make_shared<SymVariables>(opts)), mgrParams(opts),
-      searchParams(opts), lower_bound(0), min_g(0),
+      searchParams(opts), lower_bound(0), upper_bound(std::numeric_limits<int>::max()), min_g(0),
       plan_data_base(opts.get<std::shared_ptr<PlanDataBase>>("plan_selection")),
       solution_registry() {
   // task_properties::verify_no_axioms(TaskProxy(*tasks::g_root_task));
@@ -41,6 +41,9 @@ void SymController::add_options_to_parser(OptionParser &parser, int maxStepTime,
 void SymController::new_solution(const SymSolutionCut &sol) {
   if (!solution_registry.found_all_plans()) {
     solution_registry.register_solution(sol);
+    if (!searchParams.top_k) {
+        setUpperBound(sol.get_f());
+    }
   } else {
     lower_bound = std::numeric_limits<int>::max();
   }
@@ -54,7 +57,13 @@ void SymController::setLowerBound(int lower) {
       lower_bound = lower;
       std::cout << "BOUND: " << lower_bound << " < " << getUpperBound()
                 << std::flush;
-      solution_registry.construct_cheaper_solutions(lower);
+      if (!searchParams.top_k) {
+        if (lower_bound >= upper_bound) {
+          solution_registry.construct_cheaper_solutions(std::numeric_limits<int>::max());
+        }
+      } else {
+        solution_registry.construct_cheaper_solutions(lower);
+      }
       std::cout << " [" << solution_registry.get_num_found_plans() << "/"
                 << plan_data_base->get_num_desired_plans() << " plans]"
                 << std::flush;

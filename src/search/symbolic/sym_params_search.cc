@@ -10,7 +10,8 @@ using utils::g_timer;
 namespace symbolic {
 
 SymParamsSearch::SymParamsSearch(const Options &opts)
-    : max_disj_nodes(opts.get<int>("max_disj_nodes")),
+    : top_k(opts.get<bool>("top_k")),
+      max_disj_nodes(opts.get<int>("max_disj_nodes")),
       min_estimation_time(opts.get<double>("min_estimation_time")),
       penalty_time_estimation_sum(
           opts.get<double>("penalty_time_estimation_sum")),
@@ -59,6 +60,10 @@ void SymParamsSearch::print_options() const {
 
 void SymParamsSearch::add_options_to_parser(OptionParser &parser,
                                             int maxStepTime, int maxStepNodes) {
+  parser.add_option<bool>("top_k",
+                         "symk search",
+                         "true");
+
   parser.add_option<int>("max_disj_nodes",
                          "maximum size to enforce disjunction before image",
                          "infinity");
