@@ -103,5 +103,7 @@ else()
     message(FATAL_ERROR, "Could not determine bitwidth for Cudd.")
 endif()
 
-
+add_dependencies(translate libcudd)
+add_dependencies(preprocess libcudd)
+add_dependencies(downward libcudd)
 target_link_libraries(downward ${downward_BINARY_DIR}/libcudd-prefix/src/libcudd-build/cudd/.libs/libcudd.a)
