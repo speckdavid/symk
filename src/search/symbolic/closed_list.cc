@@ -73,12 +73,17 @@ SymSolutionCut ClosedList::getCheapestCut(const BDD &states, int g, bool fw) con
 
     BDD cut = closedH.second * cut_candidate;
     if (!cut.IsZero()) {
-      if (fw)
+      if (fw) {
         return SymSolutionCut(g, h, cut);
-      else
+      }
+      else {
         return SymSolutionCut(h, g, cut);
+      }
     }
   }
+  std::cerr << "Inconsitent cut result" << std::endl;
+  exit(0);
+  return SymSolutionCut();
 }
 
 std::vector<SymSolutionCut> ClosedList::getAllCuts(const BDD &states, int g,
