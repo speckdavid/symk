@@ -85,7 +85,7 @@ bool UniformCostSearch::provable_no_more_plans() {
     // If we will expand states with new costs
     // We check weather all states in the open list have already
     // been expanded and not part of a goal path
-    if (!p.top_k) {
+    if (p.top_k) {
         // Here last_g_cost corresponds to the current g-value of the
         // search dir. Thus we consider all smaller
         if (getG() > last_g_cost) {
