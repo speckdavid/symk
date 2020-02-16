@@ -228,9 +228,6 @@ def _set_components_and_inputs(parser, args):
     if args.search or args.run_all:
         args.components.append("search")
 
-    if args.components == ["translate", "preprocess", "search"]:
-        parser.error("cannot run translator and search without preprocessor")
-
     if not args.components:
         _set_components_automatically(parser, args)
 
