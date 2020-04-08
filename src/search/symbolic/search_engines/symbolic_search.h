@@ -1,14 +1,15 @@
-#ifndef SEARCH_ENGINES_SYMBOLIC_SEARCH_H
-#define SEARCH_ENGINES_SYMBOLIC_SEARCH_H
+#ifndef SYMBOLIC_SEARCH_ENGINES_SYMBOLIC_SEARCH_H
+#define SYMBOLIC_SEARCH_ENGINES_SYMBOLIC_SEARCH_H
 
 #include <memory>
 #include <vector>
 
+#include "../../option_parser.h"
 #include "../search_engine.h"
-#include "../symbolic/sym_enums.h"
-#include "../symbolic/sym_params_search.h"
-#include "../symbolic/sym_solution_registry.h"
-#include "../symbolic/sym_state_space_manager.h"
+#include "../sym_enums.h"
+#include "../sym_params_search.h"
+#include "../sym_solution_registry.h"
+#include "../sym_state_space_manager.h"
 
 namespace options {
 class Options;
@@ -53,7 +54,15 @@ public:
 
   virtual int getLowerBound() const { return lower_bound; }
 
+  virtual int getMinG() const { return min_g; }
+
+  virtual BDD get_states_on_goal_paths() const {
+    return solution_registry.get_states_on_goal_paths();
+  }
+
   virtual void new_solution(const SymSolutionCut &sol);
+
+  static void add_options_to_parser(OptionParser &parser);
 };
 
 //////// Specialized
@@ -65,17 +74,6 @@ protected:
 public:
   SymbolicBidirectionalUniformCostSearch(const options::Options &opts);
   virtual ~SymbolicBidirectionalUniformCostSearch() = default;
-};
-
-class SymbolicUniformCostSearch : public SymbolicSearch {
-  bool fw;
-
-protected:
-  virtual void initialize() override;
-
-public:
-  SymbolicUniformCostSearch(const options::Options &opts, bool _fw);
-  virtual ~SymbolicUniformCostSearch() = default;
 };
 
 } // namespace symbolic

@@ -778,7 +778,10 @@ fast_downward_plugin(
         symbolic/searches/bidirectional_search
         symbolic/searches/uniform_cost_search
         symbolic/searches/sym_search
-        search_engines/symbolic_search
+        symbolic/searches/top_k_uniform_cost_search
+        symbolic/search_engines/symbolic_search
+        symbolic/search_engines/symbolic_uniform_cost_search
+        symbolic/search_engines/top_k_symbolic_uniform_cost_search
         symbolic/plan_selection/top_k_selector
         symbolic/plan_selection/top_k_even_selector
         symbolic/plan_selection/moral_permissibility_selector

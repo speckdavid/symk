@@ -1,6 +1,6 @@
 #include "top_k_uniform_cost_search.h"
 #include "../closed_list.h"
-#include "../sym_controller.h"
+#include "../search_engines/symbolic_search.h"
 
 namespace symbolic {
 

@@ -3,13 +3,15 @@
 #include "../option_parser.h"
 #include "../plugin.h"
 
-#include "../symbolic/original_state_space.h"
-#include "../symbolic/plan_selection/plan_database.h"
-#include "../symbolic/searches/bidirectional_search.h"
-#include "../symbolic/searches/uniform_cost_search.h"
-#include "../symbolic/sym_params_search.h"
-#include "../symbolic/sym_state_space_manager.h"
-#include "../symbolic/sym_variables.h"
+#include "../original_state_space.h"
+#include "../plan_selection/plan_database.h"
+#include "../searches/bidirectional_search.h"
+#include "../searches/top_k_uniform_cost_search.h"
+#include "../searches/uniform_cost_search.h"
+
+#include "../sym_params_search.h"
+#include "../sym_state_space_manager.h"
+#include "../sym_variables.h"
 
 #include "../task_utils/task_properties.h"
 
@@ -18,11 +20,6 @@ using namespace symbolic;
 using namespace options;
 
 namespace symbolic {
-
-bool only_zero_cost_actions() {
-  return task_properties::get_max_operator_cost(
-             TaskProxy(*tasks::g_root_task)) == 0;
-}
 
 SymbolicSearch::SymbolicSearch(const options::Options &opts)
     : SearchEngine(opts), vars(make_shared<SymVariables>(opts)),
@@ -41,8 +38,7 @@ SymbolicBidirectionalUniformCostSearch::SymbolicBidirectionalUniformCostSearch(
     : SymbolicSearch(opts) {}
 
 void SymbolicBidirectionalUniformCostSearch::initialize() {
-  mgr = shared_ptr<OriginalStateSpace>(
-      new OriginalStateSpace(vars.get(), mgrParams, only_zero_cost_actions()));
+  mgr = make_shared<OriginalStateSpace>(vars.get(), mgrParams);
   auto fw_search =
       unique_ptr<UniformCostSearch>(new UniformCostSearch(this, searchParams));
   auto bw_search =
@@ -56,28 +52,6 @@ void SymbolicBidirectionalUniformCostSearch::initialize() {
 
   search = unique_ptr<BidirectionalSearch>(new BidirectionalSearch(
       this, searchParams, move(fw_search), move(bw_search)));
-}
-
-SymbolicUniformCostSearch::SymbolicUniformCostSearch(
-    const options::Options &opts, bool _fw)
-    : SymbolicSearch(opts), fw(_fw) {}
-
-void SymbolicUniformCostSearch::initialize() {
-  mgr = make_shared<OriginalStateSpace>(vars.get(), mgrParams,
-                                        only_zero_cost_actions());
-  auto uni_search =
-      unique_ptr<UniformCostSearch>(new UniformCostSearch(this, searchParams));
-  if (fw) {
-    uni_search->init(mgr, true, nullptr);
-    plan_data_base->init(vars);
-    solution_registry.init(vars, uni_search.get(), nullptr, plan_data_base);
-  } else {
-    uni_search->init(mgr, false, nullptr);
-    plan_data_base->init(vars);
-    solution_registry.init(vars, nullptr, uni_search.get(), plan_data_base);
-  }
-
-  search.reset(uni_search.release());
 }
 
 SearchStatus SymbolicSearch::step() {
@@ -105,14 +79,12 @@ void SymbolicSearch::setLowerBound(int lower) {
       lower_bound = lower;
       std::cout << "BOUND: " << lower_bound << " < " << upper_bound
                 << std::flush;
-      if (!searchParams.top_k) {
-        if (lower_bound >= upper_bound) {
-          solution_registry.construct_cheaper_solutions(
-              std::numeric_limits<int>::max());
-        }
-      } else {
-        solution_registry.construct_cheaper_solutions(lower);
+
+      if (lower_bound >= upper_bound) {
+        solution_registry.construct_cheaper_solutions(
+            std::numeric_limits<int>::max());
       }
+
       std::cout << " [" << solution_registry.get_num_found_plans() << "/"
                 << plan_data_base->get_num_desired_plans() << " plans]"
                 << std::flush;
@@ -124,17 +96,11 @@ void SymbolicSearch::setLowerBound(int lower) {
 void SymbolicSearch::new_solution(const SymSolutionCut &sol) {
   if (!solution_registry.found_all_plans()) {
     solution_registry.register_solution(sol);
-    if (!searchParams.top_k) {
-      upper_bound = std::min(upper_bound, sol.get_f());
-    }
-  } else {
-    lower_bound = std::numeric_limits<int>::max();
+    upper_bound = std::min(upper_bound, sol.get_f());
   }
 }
-} // namespace symbolic
 
-// Parsing Symbolic Planning
-static void add_options(OptionParser &parser) {
+void SymbolicSearch::add_options_to_parser(OptionParser &parser) {
   SearchEngine::add_options_to_parser(parser);
   SymVariables::add_options_to_parser(parser);
   SymParamsSearch::add_options_to_parser(parser, 30e3, 10e7);
@@ -144,35 +110,16 @@ static void add_options(OptionParser &parser) {
       "plan_selection", "plan selection strategy", "top_k(1)");
 }
 
-static shared_ptr<SearchEngine> _parse_bidirectional_ucs(OptionParser &parser,
+} // namespace symbolic
+
+// Parsing Symbolic Planning
+/*static shared_ptr<SearchEngine> _parse_bidirectional_ucs(OptionParser &parser,
                                                          Options &opts) {
   parser.document_synopsis("Symbolic Bidirectional Uniform Cost Search", "");
   shared_ptr<symbolic::SymbolicSearch> engine = nullptr;
   if (!parser.dry_run()) {
     engine =
         make_shared<symbolic::SymbolicBidirectionalUniformCostSearch>(opts);
-  }
-
-  return engine;
-}
-
-static shared_ptr<SearchEngine> _parse_forward_ucs(OptionParser &parser,
-                                                   Options &opts) {
-  parser.document_synopsis("Symbolic Forward Uniform Cost Search", "");
-  shared_ptr<symbolic::SymbolicSearch> engine = nullptr;
-  if (!parser.dry_run()) {
-    engine = make_shared<symbolic::SymbolicUniformCostSearch>(opts, true);
-  }
-
-  return engine;
-}
-
-static shared_ptr<SearchEngine> _parse_backward_ucs(OptionParser &parser,
-                                                    Options &opts) {
-  parser.document_synopsis("Symbolic Backward Uniform Cost Search", "");
-  shared_ptr<symbolic::SymbolicSearch> engine = nullptr;
-  if (!parser.dry_run()) {
-    engine = make_shared<symbolic::SymbolicUniformCostSearch>(opts, false);
   }
 
   return engine;
@@ -186,7 +133,7 @@ _parse_bidirectional_ucs_ordinary(OptionParser &parser) {
   if (!parser.dry_run()) {
     std::cout << planner << std::endl;
   }
-  add_options(parser);
+  symbolic::SymbolicSearch::add_options_to_parser(parser);
   Options opts = parser.parse();
   opts.set("top_k", false);
   return _parse_bidirectional_ucs(parser, opts);
@@ -268,4 +215,4 @@ static Plugin<SearchEngine>
 static Plugin<SearchEngine> _plugin_sym_fw_top_k("symk-fw",
                                                  _parse_forward_ucs_top_k);
 static Plugin<SearchEngine> _plugin_sym_bw_top_k("symk-bw",
-                                                 _parse_backward_ucs_top_k);
+                                                 _parse_backward_ucs_top_k);*/
