@@ -3,8 +3,8 @@
 
 #include "../plan_manager.h"
 #include "plan_selection/plan_database.h"
+#include "searches/uniform_cost_search.h"
 #include "sym_solution_registry.h"
-#include "unidirectional_search.h"
 
 namespace symbolic {
 
@@ -13,8 +13,8 @@ class PlanDataBase;
 
 class SymPlanReconstructor {
 protected:
-  UnidirectionalSearch *uni_search_fw;
-  UnidirectionalSearch *uni_search_bw;
+  UniformCostSearch *uni_search_fw;
+  UniformCostSearch *uni_search_bw;
   std::shared_ptr<SymVariables> sym_vars;
   std::map<int, std::vector<TransitionRelation>> trs;
 
@@ -47,8 +47,8 @@ protected:
                                const Plan &plan);
 
 public:
-  SymPlanReconstructor(UnidirectionalSearch *uni_search_fw,
-                       UnidirectionalSearch *uni_search_bw,
+  SymPlanReconstructor(UniformCostSearch *uni_search_fw,
+                       UniformCostSearch *uni_search_bw,
                        std::shared_ptr<SymVariables> sym_vars,
                        std::shared_ptr<PlanDataBase> plan_data_base);
 

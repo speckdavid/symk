@@ -2,21 +2,21 @@
 #define SYMBOLIC_BIDIRECTIONAL_SEARCH_H
 
 #include "sym_search.h"
-#include "unidirectional_search.h"
+#include "uniform_cost_search.h"
 
 namespace symbolic {
 
 class BidirectionalSearch : public SymSearch {
 private:
-  std::unique_ptr<UnidirectionalSearch> fw, bw;
+  std::unique_ptr<UniformCostSearch> fw, bw;
 
   // Returns the best direction to search the bd exp
-  UnidirectionalSearch *selectBestDirection() const;
+  UniformCostSearch *selectBestDirection() const;
 
 public:
   BidirectionalSearch(SymController *eng, const SymParamsSearch &params,
-                      std::unique_ptr<UnidirectionalSearch> fw,
-                      std::unique_ptr<UnidirectionalSearch> bw);
+                      std::unique_ptr<UniformCostSearch> fw,
+                      std::unique_ptr<UniformCostSearch> bw);
 
   virtual bool finished() const override;
 
@@ -47,9 +47,9 @@ public:
 
   bool isExpFor(BidirectionalSearch *bdExp) const;
 
-  inline UnidirectionalSearch *getFw() const { return fw.get(); }
+  inline UniformCostSearch *getFw() const { return fw.get(); }
 
-  inline UnidirectionalSearch *getBw() const { return bw.get(); }
+  inline UniformCostSearch *getBw() const { return bw.get(); }
 
   friend std::ostream &operator<<(std::ostream &os,
                                   const BidirectionalSearch &other);

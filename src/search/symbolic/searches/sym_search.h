@@ -1,26 +1,16 @@
 #ifndef SYMBOLIC_SYM_SEARCH_H
 #define SYMBOLIC_SYM_SEARCH_H
 
-#include "sym_estimate.h"
-#include "sym_params_search.h"
-#include "sym_state_space_manager.h"
-#include "sym_utils.h"
+#include "../sym_estimate.h"
+#include "../sym_params_search.h"
+#include "../sym_state_space_manager.h"
+#include "../sym_utils.h"
 #include <map>
 #include <memory>
 #include <vector>
 
 namespace symbolic {
 class SymController;
-
-// We use this enumerate to know why the current operation was truncated
-enum class TruncatedReason {
-  FILTER_MUTEX,
-  MERGE_BUCKET,
-  MERGE_BUCKET_COST,
-  IMAGE_ZERO,
-  IMAGE_COST
-};
-std::ostream &operator<<(std::ostream &os, const TruncatedReason &dir);
 
 class SymSearch {
 protected:

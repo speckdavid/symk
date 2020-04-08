@@ -1,6 +1,6 @@
 #include "bidirectional_search.h"
 
-#include "sym_controller.h"
+#include "../sym_controller.h"
 #include <memory>
 
 using namespace std;
@@ -8,17 +8,17 @@ using utils::g_timer;
 
 namespace symbolic {
 
-BidirectionalSearch::BidirectionalSearch(
-    SymController *eng, const SymParamsSearch &params,
-    std::unique_ptr<UnidirectionalSearch> _fw,
-    unique_ptr<UnidirectionalSearch> _bw)
+BidirectionalSearch::BidirectionalSearch(SymController *eng,
+                                         const SymParamsSearch &params,
+                                         std::unique_ptr<UniformCostSearch> _fw,
+                                         unique_ptr<UniformCostSearch> _bw)
     : SymSearch(eng, params), fw(std::move(_fw)), bw(std::move(_bw)) {
 
   assert(fw->getStateSpace() == bw->getStateSpace());
   mgr = fw->getStateSpaceShared();
 }
 
-UnidirectionalSearch *BidirectionalSearch::selectBestDirection() const {
+UniformCostSearch *BidirectionalSearch::selectBestDirection() const {
 
   bool fwSearchable = fw->isSearchable();
   bool bwSearchable = bw->isSearchable();

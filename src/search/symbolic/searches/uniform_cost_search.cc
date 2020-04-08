@@ -1,11 +1,11 @@
 #include "uniform_cost_search.h"
 
+#include "../closed_list.h"
+#include "../frontier.h"
+#include "../sym_controller.h"
+#include "../sym_solution_cut.h"
+#include "../sym_utils.h"
 #include "../utils/timer.h"
-#include "closed_list.h"
-#include "frontier.h"
-#include "sym_controller.h"
-#include "sym_solution_cut.h"
-#include "sym_utils.h"
 
 #include <fstream>
 #include <iostream>
@@ -20,7 +20,7 @@ namespace symbolic {
 
 UniformCostSearch::UniformCostSearch(SymController *eng,
                                      const SymParamsSearch &params)
-    : UnidirectionalSearch(eng, params), parent(nullptr),
+    : SymSearch(eng, params), fw(true), closed(std::make_shared<ClosedList>()),
       estimationCost(params), estimationZero(params), lastStepCost(true) {}
 
 bool UniformCostSearch::init(std::shared_ptr<SymStateSpaceManager> manager,
@@ -35,18 +35,18 @@ bool UniformCostSearch::init(std::shared_ptr<SymStateSpaceManager> manager,
   BDD init_bdd = fw ? mgr->getInitialState() : mgr->getGoal();
   frontier.init(manager.get(), init_bdd);
 
-  closed->init(mgr.get(), this);
+  closed->init(mgr.get());
   closed->insert(0, init_bdd);
 
   if (closed_opposite) {
     perfectHeuristic = closed_opposite;
   } else {
+    perfectHeuristic = make_shared<ClosedList>();
+    perfectHeuristic->init(mgr.get());
     if (fw) {
-      perfectHeuristic =
-          make_shared<OppositeFrontierFixed>(mgr->getGoal(), *mgr);
+      perfectHeuristic->insert(0, mgr->getGoal());
     } else {
-      perfectHeuristic =
-          make_shared<OppositeFrontierFixed>(mgr->getInitialState(), *mgr);
+      perfectHeuristic->insert(0, mgr->getInitialState());
     }
   }
 
@@ -65,44 +65,45 @@ void UniformCostSearch::checkCutOriginal(Bucket &bucket, int g_val) {
 
   for (BDD &bucketBDD : bucket) {
     // Get one or all solutions
-    if(!p.top_k) {
-        auto sol = perfectHeuristic->getCheapestCut(bucketBDD, g_val, fw);
-        if (sol.get_f() >= 0) {
-            engine->new_solution(sol);
-        }
-        // Prune everything closed in opposite direction
-	bucketBDD *= perfectHeuristic->notClosed();
+    if (!p.top_k) {
+      auto sol = perfectHeuristic->getCheapestCut(bucketBDD, g_val, fw);
+      if (sol.get_f() >= 0) {
+        engine->new_solution(sol);
+      }
+      // Prune everything closed in opposite direction
+      bucketBDD *= perfectHeuristic->notClosed();
     } else {
-        auto all_sols = perfectHeuristic->getAllCuts(bucketBDD, g_val, fw, engine->getMinG());
-        for (auto &sol : all_sols) {
-            engine->new_solution(sol);
-        }
+      auto all_sols =
+          perfectHeuristic->getAllCuts(bucketBDD, g_val, fw, engine->getMinG());
+      for (auto &sol : all_sols) {
+        engine->new_solution(sol);
+      }
     }
   }
 }
 
 bool UniformCostSearch::provable_no_more_plans() {
-    // If we will expand states with new costs
-    // We check weather all states in the open list have already
-    // been expanded and not part of a goal path
-    if (p.top_k) {
-        // Here last_g_cost corresponds to the current g-value of the
-        // search dir. Thus we consider all smaller
-        if (getG() > last_g_cost) {
-            BDD no_goal_path_states = !engine->get_states_on_goal_paths();
-            no_goal_path_states *= closed->getPartialClosed(last_g_cost - 1);
-            if (!open_list.contains_any_state(!no_goal_path_states)) {
-               return true; // Search finished
-           }
-        }
+  // If we will expand states with new costs
+  // We check weather all states in the open list have already
+  // been expanded and not part of a goal path
+  if (p.top_k) {
+    // Here last_g_cost corresponds to the current g-value of the
+    // search dir. Thus we consider all smaller
+    if (getG() > last_g_cost) {
+      BDD no_goal_path_states = !engine->get_states_on_goal_paths();
+      no_goal_path_states *= closed->getPartialClosed(last_g_cost - 1);
+      if (!open_list.contains_any_state(!no_goal_path_states)) {
+        return true; // Search finished
+      }
     }
-    
-    // Important special case: open is empty => terminate
-    if (open_list.empty()) {
-      return true; // Search finished
-    }
+  }
 
-    return false;
+  // Important special case: open is empty => terminate
+  if (open_list.empty()) {
+    return true; // Search finished
+  }
+
+  return false;
 }
 
 void UniformCostSearch::prepareBucket() {
@@ -117,9 +118,8 @@ void UniformCostSearch::prepareBucket() {
     last_g_cost = frontier.g();
     assert(!frontier.empty() || frontier.g() == numeric_limits<int>::max());
     checkCutOriginal(frontier.bucket(), frontier.g());
-    
-    filterFrontier();
 
+    filterFrontier();
 
     // Close and move to reopen
 
@@ -154,13 +154,13 @@ void UniformCostSearch::prepareBucket() {
 // This procedure is delayed in comparision to explicit search
 // Idea: no need to "change" BDDs until we actually process them
 void UniformCostSearch::filterFrontier() {
-    if (!p.top_k) {
-        frontier.filter(!closed->notClosed());
-    } else{
-        frontier.filter(closed->get_closed_at(frontier.g()));
-    }
-    mgr->filterMutex(frontier.bucket(), fw, initialization());
-    removeZero(frontier.bucket());
+  if (!p.top_k) {
+    frontier.filter(!closed->notClosed());
+  } else {
+    frontier.filter(closed->get_closed_at(frontier.g()));
+  }
+  mgr->filterMutex(frontier.bucket(), fw, initialization());
+  removeZero(frontier.bucket());
 }
 
 bool UniformCostSearch::stepImage(int maxTime, int maxNodes) {
@@ -175,7 +175,6 @@ bool UniformCostSearch::stepImage(int maxTime, int maxNodes) {
       double ratio = (double)p.maxStepTime / ((double)sTime() * 1000.0);
       p.maxStepNodes *= ratio;
     }
-    stats.step_time += sTime();
     return false;
   }
 
@@ -207,9 +206,6 @@ bool UniformCostSearch::stepImage(int maxTime, int maxNodes) {
         }
       }
     }
-    stats.add_image_time(res_expansion.time_spent);
-  } else {
-    stats.add_image_time_failed(res_expansion.time_spent);
   }
 
   if (!res_expansion.step_zero) {
@@ -236,7 +232,6 @@ bool UniformCostSearch::stepImage(int maxTime, int maxNodes) {
     p.maxStepNodes = stepNodes * 0.75;
   }
 
-  stats.step_time += sTime();
   return res_expansion.ok;
 }
 
@@ -298,21 +293,6 @@ long UniformCostSearch::nextStepNodesResult() const {
   return estimation;
 }
 
-/////////////////////////////////////////////////
-////   Auxiliar methods to load/save/print   ////
-/////////////////////////////////////////////////
-
-std::ostream &operator<<(std::ostream &os, const UniformCostSearch &exp) {
-  os << "exp " << dirname(exp.isFW());
-  if (exp.mgr) {
-    os << " in " << *(exp.mgr) << " f=" << exp.getF() << flush
-       << " g=" << exp.frontier.g() << flush << exp.open_list << flush
-       << " est_time: " << exp.nextStepTime() << flush
-       << " est_nodes: " << exp.nextStepNodes() << flush;
-  }
-  return os;
-}
-
 void UniformCostSearch::violated(TruncatedReason /*reason*/,
                                  double ellapsed_seconds, int maxTime,
                                  int maxNodes) {
@@ -327,25 +307,4 @@ void UniformCostSearch::violated(TruncatedReason /*reason*/,
   }
 }
 
-BDD UniformCostSearch::getClosedTotal() { return closed->getClosed(); }
-
-BDD UniformCostSearch::notClosed() { return closed->notClosed(); }
-
-std::ostream &operator<<(std::ostream &os, const TruncatedReason &reason) {
-  switch (reason) {
-  case TruncatedReason::FILTER_MUTEX:
-    return os << "filter_mutex";
-  case TruncatedReason::MERGE_BUCKET:
-    return os << "merge";
-  case TruncatedReason::MERGE_BUCKET_COST:
-    return os << "merge_cost";
-  case TruncatedReason::IMAGE_ZERO:
-    return os << "0-image";
-  case TruncatedReason::IMAGE_COST:
-    return os << "cost-image";
-  default:
-    cerr << "UniformCostSearch truncated by unkown reason" << endl;
-    utils::exit_with(utils::ExitCode::SEARCH_UNSUPPORTED);
-  }
-}
 } // namespace symbolic

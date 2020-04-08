@@ -12,7 +12,8 @@ namespace symbolic {
 
 SymController::SymController(const Options &opts)
     : vars(make_shared<SymVariables>(opts)), mgrParams(opts),
-      searchParams(opts), lower_bound(0), upper_bound(std::numeric_limits<int>::max()), min_g(0),
+      searchParams(opts), lower_bound(0),
+      upper_bound(std::numeric_limits<int>::max()), min_g(0),
       plan_data_base(opts.get<std::shared_ptr<PlanDataBase>>("plan_selection")),
       solution_registry() {
   // task_properties::verify_no_axioms(TaskProxy(*tasks::g_root_task));
@@ -22,8 +23,8 @@ SymController::SymController(const Options &opts)
   vars->init();
 }
 
-void SymController::init(UnidirectionalSearch *fwd_search,
-                         UnidirectionalSearch *bwd_search) {
+void SymController::init(UniformCostSearch *fwd_search,
+                         UniformCostSearch *bwd_search) {
   plan_data_base->init(vars);
   solution_registry.init(vars, fwd_search, bwd_search, plan_data_base);
 }
@@ -42,7 +43,7 @@ void SymController::new_solution(const SymSolutionCut &sol) {
   if (!solution_registry.found_all_plans()) {
     solution_registry.register_solution(sol);
     if (!searchParams.top_k) {
-        setUpperBound(sol.get_f());
+      setUpperBound(std::min(getUpperBound(), sol.get_f()));
     }
   } else {
     lower_bound = std::numeric_limits<int>::max();
@@ -59,7 +60,8 @@ void SymController::setLowerBound(int lower) {
                 << std::flush;
       if (!searchParams.top_k) {
         if (lower_bound >= upper_bound) {
-          solution_registry.construct_cheaper_solutions(std::numeric_limits<int>::max());
+          solution_registry.construct_cheaper_solutions(
+              std::numeric_limits<int>::max());
         }
       } else {
         solution_registry.construct_cheaper_solutions(lower);

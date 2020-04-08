@@ -222,7 +222,7 @@ bool SymPlanReconstructor::reconstruct_cost_action(
 }
 
 SymPlanReconstructor::SymPlanReconstructor(
-    UnidirectionalSearch *uni_search_fw, UnidirectionalSearch *uni_search_bw,
+    UniformCostSearch *uni_search_fw, UniformCostSearch *uni_search_bw,
     std::shared_ptr<SymVariables> sym_vars,
     std::shared_ptr<PlanDataBase> plan_data_base)
     : uni_search_fw(uni_search_fw), uni_search_bw(uni_search_bw),

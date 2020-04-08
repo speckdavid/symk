@@ -9,8 +9,8 @@ SymSolutionRegistry::SymSolutionRegistry()
       plan_cost_bound(-1) {}
 
 void SymSolutionRegistry::init(std::shared_ptr<SymVariables> sym_vars,
-                               UnidirectionalSearch *fwd_search,
-                               UnidirectionalSearch *bwd_search,
+                               UniformCostSearch *fwd_search,
+                               UniformCostSearch *bwd_search,
                                std::shared_ptr<PlanDataBase> plan_data_base) {
   this->sym_vars = sym_vars;
   this->plan_data_base = plan_data_base;

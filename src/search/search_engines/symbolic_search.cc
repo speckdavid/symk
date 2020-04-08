@@ -3,13 +3,13 @@
 #include "../option_parser.h"
 #include "../plugin.h"
 
-#include "../symbolic/bidirectional_search.h"
 #include "../symbolic/original_state_space.h"
 #include "../symbolic/plan_selection/plan_database.h"
+#include "../symbolic/searches/bidirectional_search.h"
+#include "../symbolic/searches/uniform_cost_search.h"
 #include "../symbolic/sym_params_search.h"
 #include "../symbolic/sym_state_space_manager.h"
 #include "../symbolic/sym_variables.h"
-#include "../symbolic/uniform_cost_search.h"
 
 #include "../task_utils/task_properties.h"
 
@@ -96,7 +96,8 @@ static void add_options(OptionParser &parser) {
       "plan_selection", "plan selection strategy", "top_k(1)");
 }
 
-static shared_ptr<SearchEngine> _parse_bidirectional_ucs(OptionParser &parser, Options &opts) {
+static shared_ptr<SearchEngine> _parse_bidirectional_ucs(OptionParser &parser,
+                                                         Options &opts) {
   parser.document_synopsis("Symbolic Bidirectional Uniform Cost Search", "");
   shared_ptr<symbolic_search::SymbolicSearch> engine = nullptr;
   if (!parser.dry_run()) {
@@ -108,7 +109,8 @@ static shared_ptr<SearchEngine> _parse_bidirectional_ucs(OptionParser &parser, O
   return engine;
 }
 
-static shared_ptr<SearchEngine> _parse_forward_ucs(OptionParser &parser, Options &opts) {
+static shared_ptr<SearchEngine> _parse_forward_ucs(OptionParser &parser,
+                                                   Options &opts) {
   parser.document_synopsis("Symbolic Forward Uniform Cost Search", "");
   shared_ptr<symbolic_search::SymbolicSearch> engine = nullptr;
   if (!parser.dry_run()) {
@@ -119,7 +121,8 @@ static shared_ptr<SearchEngine> _parse_forward_ucs(OptionParser &parser, Options
   return engine;
 }
 
-static shared_ptr<SearchEngine> _parse_backward_ucs(OptionParser &parser, Options &opts) {
+static shared_ptr<SearchEngine> _parse_backward_ucs(OptionParser &parser,
+                                                    Options &opts) {
   parser.document_synopsis("Symbolic Backward Uniform Cost Search", "");
   shared_ptr<symbolic_search::SymbolicSearch> engine = nullptr;
   if (!parser.dry_run()) {
@@ -132,20 +135,22 @@ static shared_ptr<SearchEngine> _parse_backward_ucs(OptionParser &parser, Option
 
 // Symbolic Ordinary planning
 
-static shared_ptr<SearchEngine> _parse_bidirectional_ucs_ordinary(OptionParser &parser) {
+static shared_ptr<SearchEngine>
+_parse_bidirectional_ucs_ordinary(OptionParser &parser) {
   std::string planner = "Symbolic Bidirectional Uniform Cost Search";
   if (!parser.dry_run()) {
-      std::cout << planner << std::endl;
+    std::cout << planner << std::endl;
   }
   add_options(parser);
   Options opts = parser.parse();
   opts.set("top_k", false);
   return _parse_bidirectional_ucs(parser, opts);
 }
-static shared_ptr<SearchEngine> _parse_forward_ucs_ordinary(OptionParser &parser) {
+static shared_ptr<SearchEngine>
+_parse_forward_ucs_ordinary(OptionParser &parser) {
   std::string planner = "Symbolic Forward Uniform Cost Search";
   if (!parser.dry_run()) {
-      std::cout << planner << std::endl;
+    std::cout << planner << std::endl;
   }
   add_options(parser);
   Options opts = parser.parse();
@@ -154,10 +159,11 @@ static shared_ptr<SearchEngine> _parse_forward_ucs_ordinary(OptionParser &parser
   return _parse_forward_ucs(parser, opts);
 }
 
-static shared_ptr<SearchEngine> _parse_backward_ucs_ordinary(OptionParser &parser) {
+static shared_ptr<SearchEngine>
+_parse_backward_ucs_ordinary(OptionParser &parser) {
   std::string planner = "Symbolic Backward Uniform Cost Search";
   if (!parser.dry_run()) {
-      std::cout << planner << std::endl;
+    std::cout << planner << std::endl;
   }
   add_options(parser);
   Options opts = parser.parse();
@@ -166,16 +172,20 @@ static shared_ptr<SearchEngine> _parse_backward_ucs_ordinary(OptionParser &parse
   return _parse_backward_ucs(parser, opts);
 }
 
-static Plugin<SearchEngine> _plugin_sym_bd_ordinary("sym-bd", _parse_bidirectional_ucs_ordinary);
-static Plugin<SearchEngine> _plugin_sym_fw_ordinary("sym-fw", _parse_forward_ucs_ordinary);
-static Plugin<SearchEngine> _plugin_sym_bw_ordinary("sym-bw", _parse_backward_ucs_ordinary);
+static Plugin<SearchEngine>
+    _plugin_sym_bd_ordinary("sym-bd", _parse_bidirectional_ucs_ordinary);
+static Plugin<SearchEngine>
+    _plugin_sym_fw_ordinary("sym-fw", _parse_forward_ucs_ordinary);
+static Plugin<SearchEngine>
+    _plugin_sym_bw_ordinary("sym-bw", _parse_backward_ucs_ordinary);
 
 // Symbolic Top-k planning
 
-static shared_ptr<SearchEngine> _parse_bidirectional_ucs_top_k(OptionParser &parser) {
+static shared_ptr<SearchEngine>
+_parse_bidirectional_ucs_top_k(OptionParser &parser) {
   std::string planner = "Top-k Symbolic Bdirectional Uniform Cost Search";
   if (!parser.dry_run()) {
-      std::cout << planner << std::endl;
+    std::cout << planner << std::endl;
   }
   add_options(parser);
   Options opts = parser.parse();
@@ -186,7 +196,7 @@ static shared_ptr<SearchEngine> _parse_bidirectional_ucs_top_k(OptionParser &par
 static shared_ptr<SearchEngine> _parse_forward_ucs_top_k(OptionParser &parser) {
   std::string planner = "Top-k Symbolic Forward Uniform Cost Search";
   if (!parser.dry_run()) {
-      std::cout << planner << std::endl;
+    std::cout << planner << std::endl;
   }
   add_options(parser);
   Options opts = parser.parse();
@@ -195,10 +205,11 @@ static shared_ptr<SearchEngine> _parse_forward_ucs_top_k(OptionParser &parser) {
   return _parse_forward_ucs(parser, opts);
 }
 
-static shared_ptr<SearchEngine> _parse_backward_ucs_top_k(OptionParser &parser) {
+static shared_ptr<SearchEngine>
+_parse_backward_ucs_top_k(OptionParser &parser) {
   std::string planner = "Top-k Symbolic Backward Uniform Cost Search";
   if (!parser.dry_run()) {
-      std::cout << planner << std::endl;
+    std::cout << planner << std::endl;
   }
   add_options(parser);
   Options opts = parser.parse();
@@ -207,6 +218,9 @@ static shared_ptr<SearchEngine> _parse_backward_ucs_top_k(OptionParser &parser) 
   return _parse_backward_ucs(parser, opts);
 }
 
-static Plugin<SearchEngine> _plugin_sym_bd_top_k("symk-bd", _parse_bidirectional_ucs_top_k);
-static Plugin<SearchEngine> _plugin_sym_fw_top_k("symk-fw", _parse_forward_ucs_top_k);
-static Plugin<SearchEngine> _plugin_sym_bw_top_k("symk-bw", _parse_backward_ucs_top_k);
+static Plugin<SearchEngine>
+    _plugin_sym_bd_top_k("symk-bd", _parse_bidirectional_ucs_top_k);
+static Plugin<SearchEngine> _plugin_sym_fw_top_k("symk-fw",
+                                                 _parse_forward_ucs_top_k);
+static Plugin<SearchEngine> _plugin_sym_bw_top_k("symk-bw",
+                                                 _parse_backward_ucs_top_k);

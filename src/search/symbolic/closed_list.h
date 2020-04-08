@@ -1,8 +1,9 @@
 #ifndef SYMBOLIC_CLOSED_LIST_H
 #define SYMBOLIC_CLOSED_LIST_H
 
+#include "searches/uniform_cost_search.h"
+#include "sym_state_space_manager.h"
 #include "sym_variables.h"
-#include "unidirectional_search.h"
 
 #include <map>
 #include <set>
@@ -10,14 +11,12 @@
 
 namespace symbolic {
 
-class SymStateSpaceManager;
 class SymSolutionCut;
-class UnidirectionalSearch;
+class UniformCostSearch;
 class SymSearch;
 
-class ClosedList : public OppositeFrontier {
+class ClosedList {
 private:
-  UnidirectionalSearch *my_search;
   SymStateSpaceManager *mgr; // Symbolic manager to perform bdd operations
 
   std::map<int, BDD> closed; // Mapping from cost to set of states
@@ -31,22 +30,23 @@ private:
 
 public:
   ClosedList();
-  void init(SymStateSpaceManager *manager, UnidirectionalSearch *search);
-  void init(SymStateSpaceManager *manager, UnidirectionalSearch *search,
-            const ClosedList &other);
+  virtual ~ClosedList(){};
+  void init(SymStateSpaceManager *manager);
+  void init(SymStateSpaceManager *manager, const ClosedList &other);
 
   void insert(int h, const BDD &S);
 
   BDD getPartialClosed(int upper_bound) const;
 
-  virtual SymSolutionCut getCheapestCut(const BDD &states, int g, bool fw) const override;
+  virtual SymSolutionCut getCheapestCut(const BDD &states, int g,
+                                        bool fw) const;
 
   virtual std::vector<SymSolutionCut>
-  getAllCuts(const BDD &states, int g, bool fw, int lower_bound) const override;
+  getAllCuts(const BDD &states, int g, bool fw, int lower_bound) const;
 
   inline BDD getClosed() const { return closedTotal; }
 
-  virtual BDD notClosed() const override { return !closedTotal; }
+  virtual BDD notClosed() const { return !closedTotal; }
 
   inline std::map<int, BDD> getClosedList() const { return closed; }
 

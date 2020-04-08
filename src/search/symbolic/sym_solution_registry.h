@@ -10,7 +10,7 @@
 
 namespace symbolic {
 class SymPlanReconstructor;
-class UnidirectionalSearch;
+class UniformCostSearch;
 
 class SymSolutionRegistry {
 protected:
@@ -25,7 +25,7 @@ public:
   SymSolutionRegistry();
 
   void init(std::shared_ptr<SymVariables> sym_vars,
-            UnidirectionalSearch *fwd_search, UnidirectionalSearch *bwd_search,
+            UniformCostSearch *fwd_search, UniformCostSearch *bwd_search,
             std::shared_ptr<PlanDataBase> plan_data_base);
 
   void register_solution(const SymSolutionCut &solution);

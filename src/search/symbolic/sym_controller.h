@@ -3,12 +3,12 @@
 
 // Shared class for SymEngine and smas_heuristic
 
+#include "searches/uniform_cost_search.h"
 #include "sym_enums.h"
 #include "sym_params_search.h"
 #include "sym_solution_cut.h"
 #include "sym_solution_registry.h"
 #include "sym_state_space_manager.h"
-#include "unidirectional_search.h"
 
 #include <limits>
 #include <memory>
@@ -34,7 +34,6 @@ protected:
   int upper_bound; // Upper bound of search (not use by top_k)
   int min_g;       // min g costs of open lists
 
-
   std::shared_ptr<PlanDataBase> plan_data_base;
   SymSolutionRegistry solution_registry; // Solution registry
 
@@ -43,20 +42,16 @@ public:
 
   virtual ~SymController() {}
 
-  void init(UnidirectionalSearch *fwd_search, UnidirectionalSearch *bwd_search);
+  void init(UniformCostSearch *fwd_search, UniformCostSearch *bwd_search);
 
   virtual void new_solution(const SymSolutionCut &sol);
   void setLowerBound(int lower);
 
   void setMinG(int g) { min_g = std::max(g, min_g); }
 
-  int getUpperBound() const {
-    return upper_bound;
-  }
+  int getUpperBound() const { return upper_bound; }
 
-  void setUpperBound(int upper) {
-    upper_bound = upper;
-  }
+  void setUpperBound(int upper) { upper_bound = upper; }
 
   int getLowerBound() const { return lower_bound; }
 

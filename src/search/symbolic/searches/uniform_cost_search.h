@@ -1,14 +1,14 @@
 #ifndef SYMBOLIC_UNIFORM_COST_SEARCH_H
 #define SYMBOLIC_UNIFORM_COST_SEARCH_H
 
-#include "closed_list.h"
-#include "frontier.h"
-#include "open_list.h"
-#include "sym_bucket.h"
-#include "sym_estimate.h"
-#include "sym_state_space_manager.h"
-#include "sym_utils.h"
-#include "unidirectional_search.h"
+#include "../closed_list.h"
+#include "../frontier.h"
+#include "../open_list.h"
+#include "../sym_bucket.h"
+#include "../sym_estimate.h"
+#include "../sym_state_space_manager.h"
+#include "../sym_utils.h"
+#include "sym_search.h"
 #include <map>
 #include <memory>
 #include <vector>
@@ -31,12 +31,16 @@ namespace symbolic {
 class SymController;
 class ClosedList;
 
-class UniformCostSearch : public UnidirectionalSearch {
-  UnidirectionalSearch *parent; // Parent of the search
+class UniformCostSearch : public SymSearch {
+  bool fw; // Direction of the search. true=forward, false=backward
 
   // Current state of the search:
+  std::shared_ptr<ClosedList> closed; // Closed list is a shared ptr to share
   OpenList open_list;
   Frontier frontier;
+
+  // Opposite direction. Mostly relevant when bidirectional search ist used
+  std::shared_ptr<ClosedList> perfectHeuristic;
 
   SymStepCostEstimation estimationCost, estimationZero; // Time/nodes estimated
   // NOTE: This was used to estimate the time and nodes needed to
@@ -51,8 +55,6 @@ class UniformCostSearch : public UnidirectionalSearch {
 
   int last_g_cost;
 
-  SymExpStatistics stats;
-
   virtual bool initialization() const {
     return frontier.g() == 0 && lastStepCost;
   }
@@ -60,7 +62,7 @@ class UniformCostSearch : public UnidirectionalSearch {
   /*
    * Check if we can proof that no more plans exist
    */
-  bool provable_no_more_plans();  
+  bool provable_no_more_plans();
 
   /*
    * Check generated or closed states with other frontiers.  In the
@@ -102,15 +104,11 @@ public:
     return open_list.minNextG(frontier, mgr->getAbsoluteMinTransitionCost());
   }
 
-  virtual int getG() const override {
+  virtual int getG() const {
     return frontier.empty() ? open_list.minG() : frontier.g();
   }
 
-  BDD getClosedTotal();
-
-  BDD notClosed();
-
-  void desactivate();
+  std::shared_ptr<ClosedList> getClosedShared() const { return closed; }
 
   void filterDuplicates(Bucket &bucket);
 
@@ -131,9 +129,6 @@ public:
 
 private:
   void violated(TruncatedReason reason, double time, int maxTime, int maxNodes);
-
-  friend std::ostream &operator<<(std::ostream &os,
-                                  const UniformCostSearch &bdexp);
 };
 
 } // namespace symbolic

@@ -25,5 +25,15 @@ enum class Dir { FW, BW, BIDIR };
 std::ostream &operator<<(std::ostream &os, const Dir &dir);
 extern const std::vector<std::string> DirValues;
 
+// We use this enumerate to know why the current operation was truncated
+enum class TruncatedReason {
+  FILTER_MUTEX,
+  MERGE_BUCKET,
+  MERGE_BUCKET_COST,
+  IMAGE_ZERO,
+  IMAGE_COST
+};
+// std::ostream &operator<<(std::ostream &os, const TruncatedReason &dir);
+
 } // namespace symbolic
 #endif

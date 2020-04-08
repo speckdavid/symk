@@ -1,9 +1,7 @@
 #include "sym_solution_cut.h"
 
 #include "../state_registry.h"
-#include <vector> // std::vector
-
-#include "unidirectional_search.h"
+#include <vector>
 
 using namespace std;
 
