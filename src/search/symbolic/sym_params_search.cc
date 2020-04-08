@@ -60,9 +60,7 @@ void SymParamsSearch::print_options() const {
 
 void SymParamsSearch::add_options_to_parser(OptionParser &parser,
                                             int maxStepTime, int maxStepNodes) {
-  parser.add_option<bool>("top_k",
-                         "symk search",
-                         "true");
+  parser.add_option<bool>("top_k", "symk search", "true");
 
   parser.add_option<int>("max_disj_nodes",
                          "maximum size to enforce disjunction before image",

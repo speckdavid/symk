@@ -5,8 +5,10 @@
 #include <vector>
 
 #include "../search_engine.h"
-#include "../symbolic/sym_controller.h"
 #include "../symbolic/sym_enums.h"
+#include "../symbolic/sym_params_search.h"
+#include "../symbolic/sym_solution_registry.h"
+#include "../symbolic/sym_state_space_manager.h"
 
 namespace options {
 class Options;
@@ -15,17 +17,27 @@ class Options;
 namespace symbolic {
 class SymStateSpaceManager;
 class SymSearch;
+class PlanDataBase;
+class SymVariables;
 
-} // namespace symbolic
-
-namespace symbolic_search {
-
-class SymbolicSearch : public SearchEngine, public symbolic::SymController {
+class SymbolicSearch : public SearchEngine {
 protected:
   // Symbolic manager to perform bdd operations
-  std::shared_ptr<symbolic::SymStateSpaceManager> mgr;
+  std::shared_ptr<SymStateSpaceManager> mgr;
 
-  std::unique_ptr<symbolic::SymSearch> search;
+  std::unique_ptr<SymSearch> search;
+
+  std::shared_ptr<SymVariables> vars; // The symbolic variables are declared
+
+  SymParamsMgr mgrParams; // Parameters for SymStateSpaceManager configuration.
+  SymParamsSearch searchParams; // Parameters to search the original state space
+
+  int lower_bound; // Lower bound of search (incl. min-action costs)
+  int upper_bound; // Upper bound of search (not use by top_k)
+  int min_g;       // min g costs of open lists
+
+  std::shared_ptr<PlanDataBase> plan_data_base;
+  SymSolutionRegistry solution_registry; // Solution registry
 
   virtual SearchStatus step() override;
 
@@ -33,8 +45,18 @@ public:
   SymbolicSearch(const options::Options &opts);
   virtual ~SymbolicSearch() = default;
 
-  virtual void new_solution(const symbolic::SymSolutionCut &sol) override;
+  virtual void setLowerBound(int lower);
+
+  virtual void setMinG(int g) { min_g = std::max(g, min_g); }
+
+  virtual bool solved() const { return lower_bound >= upper_bound; }
+
+  virtual int getLowerBound() const { return lower_bound; }
+
+  virtual void new_solution(const SymSolutionCut &sol);
 };
+
+//////// Specialized
 
 class SymbolicBidirectionalUniformCostSearch : public SymbolicSearch {
 protected:
@@ -56,6 +78,6 @@ public:
   virtual ~SymbolicUniformCostSearch() = default;
 };
 
-} // namespace symbolic_search
+} // namespace symbolic
 
 #endif

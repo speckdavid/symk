@@ -17,7 +17,7 @@ using namespace std;
 using namespace symbolic;
 using namespace options;
 
-namespace symbolic_search {
+namespace symbolic {
 
 bool only_zero_cost_actions() {
   return task_properties::get_max_operator_cost(
@@ -25,7 +25,16 @@ bool only_zero_cost_actions() {
 }
 
 SymbolicSearch::SymbolicSearch(const options::Options &opts)
-    : SearchEngine(opts), SymController(opts) {}
+    : SearchEngine(opts), vars(make_shared<SymVariables>(opts)),
+      mgrParams(opts), searchParams(opts), lower_bound(0),
+      upper_bound(std::numeric_limits<int>::max()), min_g(0),
+      plan_data_base(opts.get<std::shared_ptr<PlanDataBase>>("plan_selection")),
+      solution_registry() {
+  mgrParams.print_options();
+  searchParams.print_options();
+  plan_data_base->print_options();
+  vars->init();
+}
 
 SymbolicBidirectionalUniformCostSearch::SymbolicBidirectionalUniformCostSearch(
     const options::Options &opts)
@@ -41,7 +50,9 @@ void SymbolicBidirectionalUniformCostSearch::initialize() {
   fw_search->init(mgr, true, bw_search->getClosedShared());
   bw_search->init(mgr, false, fw_search->getClosedShared());
 
-  SymController::init(fw_search.get(), bw_search.get());
+  plan_data_base->init(vars);
+  solution_registry.init(vars, fw_search.get(), bw_search.get(),
+                         plan_data_base);
 
   search = unique_ptr<BidirectionalSearch>(new BidirectionalSearch(
       this, searchParams, move(fw_search), move(bw_search)));
@@ -58,10 +69,12 @@ void SymbolicUniformCostSearch::initialize() {
       unique_ptr<UniformCostSearch>(new UniformCostSearch(this, searchParams));
   if (fw) {
     uni_search->init(mgr, true, nullptr);
-    SymController::init(uni_search.get(), nullptr);
+    plan_data_base->init(vars);
+    solution_registry.init(vars, uni_search.get(), nullptr, plan_data_base);
   } else {
     uni_search->init(mgr, false, nullptr);
-    SymController::init(nullptr, uni_search.get());
+    plan_data_base->init(vars);
+    solution_registry.init(vars, nullptr, uni_search.get(), plan_data_base);
   }
 
   search.reset(uni_search.release());
@@ -70,9 +83,13 @@ void SymbolicUniformCostSearch::initialize() {
 SearchStatus SymbolicSearch::step() {
   search->step();
 
-  if (getLowerBound() < getUpperBound()) {
+  if (lower_bound < upper_bound) {
     return IN_PROGRESS;
-  } else if (!SymController::get_states_on_goal_paths().IsZero()) {
+  } else if (lower_bound == upper_bound) {
+    solution_registry.construct_cheaper_solutions(lower_bound + 1);
+    solution_found = true;
+    return SOLVED;
+  } else if (plan_data_base->get_num_reported_plan() > 0) {
     solution_found = true;
     return SOLVED;
   } else {
@@ -80,10 +97,41 @@ SearchStatus SymbolicSearch::step() {
   }
 }
 
-void SymbolicSearch::new_solution(const SymSolutionCut &sol) {
-  SymController::new_solution(sol);
+void SymbolicSearch::setLowerBound(int lower) {
+  if (solution_registry.found_all_plans()) {
+    lower_bound = std::numeric_limits<int>::max();
+  } else {
+    if (lower > lower_bound) {
+      lower_bound = lower;
+      std::cout << "BOUND: " << lower_bound << " < " << upper_bound
+                << std::flush;
+      if (!searchParams.top_k) {
+        if (lower_bound >= upper_bound) {
+          solution_registry.construct_cheaper_solutions(
+              std::numeric_limits<int>::max());
+        }
+      } else {
+        solution_registry.construct_cheaper_solutions(lower);
+      }
+      std::cout << " [" << solution_registry.get_num_found_plans() << "/"
+                << plan_data_base->get_num_desired_plans() << " plans]"
+                << std::flush;
+      std::cout << ", total time: " << utils::g_timer << std::endl;
+    }
+  }
 }
-} // namespace symbolic_search
+
+void SymbolicSearch::new_solution(const SymSolutionCut &sol) {
+  if (!solution_registry.found_all_plans()) {
+    solution_registry.register_solution(sol);
+    if (!searchParams.top_k) {
+      upper_bound = std::min(upper_bound, sol.get_f());
+    }
+  } else {
+    lower_bound = std::numeric_limits<int>::max();
+  }
+}
+} // namespace symbolic
 
 // Parsing Symbolic Planning
 static void add_options(OptionParser &parser) {
@@ -99,11 +147,10 @@ static void add_options(OptionParser &parser) {
 static shared_ptr<SearchEngine> _parse_bidirectional_ucs(OptionParser &parser,
                                                          Options &opts) {
   parser.document_synopsis("Symbolic Bidirectional Uniform Cost Search", "");
-  shared_ptr<symbolic_search::SymbolicSearch> engine = nullptr;
+  shared_ptr<symbolic::SymbolicSearch> engine = nullptr;
   if (!parser.dry_run()) {
     engine =
-        make_shared<symbolic_search::SymbolicBidirectionalUniformCostSearch>(
-            opts);
+        make_shared<symbolic::SymbolicBidirectionalUniformCostSearch>(opts);
   }
 
   return engine;
@@ -112,10 +159,9 @@ static shared_ptr<SearchEngine> _parse_bidirectional_ucs(OptionParser &parser,
 static shared_ptr<SearchEngine> _parse_forward_ucs(OptionParser &parser,
                                                    Options &opts) {
   parser.document_synopsis("Symbolic Forward Uniform Cost Search", "");
-  shared_ptr<symbolic_search::SymbolicSearch> engine = nullptr;
+  shared_ptr<symbolic::SymbolicSearch> engine = nullptr;
   if (!parser.dry_run()) {
-    engine =
-        make_shared<symbolic_search::SymbolicUniformCostSearch>(opts, true);
+    engine = make_shared<symbolic::SymbolicUniformCostSearch>(opts, true);
   }
 
   return engine;
@@ -124,10 +170,9 @@ static shared_ptr<SearchEngine> _parse_forward_ucs(OptionParser &parser,
 static shared_ptr<SearchEngine> _parse_backward_ucs(OptionParser &parser,
                                                     Options &opts) {
   parser.document_synopsis("Symbolic Backward Uniform Cost Search", "");
-  shared_ptr<symbolic_search::SymbolicSearch> engine = nullptr;
+  shared_ptr<symbolic::SymbolicSearch> engine = nullptr;
   if (!parser.dry_run()) {
-    engine =
-        make_shared<symbolic_search::SymbolicUniformCostSearch>(opts, false);
+    engine = make_shared<symbolic::SymbolicUniformCostSearch>(opts, false);
   }
 
   return engine;

@@ -10,7 +10,7 @@
 #include <vector>
 
 namespace symbolic {
-class SymController;
+class SymbolicSearch;
 
 class SymSearch {
 protected:
@@ -19,11 +19,11 @@ protected:
       mgr; // Symbolic manager to perform bdd operations
   SymParamsSearch p;
 
-  SymController *engine; // Access to the bound and notification of new
-                         // solutions
+  SymbolicSearch *engine; // Access to the bound and notification of new
+                          // solutions
 
 public:
-  SymSearch(SymController *eng, const SymParamsSearch &params);
+  SymSearch(SymbolicSearch *eng, const SymParamsSearch &params);
 
   virtual ~SymSearch() {}
 

@@ -1,6 +1,6 @@
 #include "bidirectional_search.h"
 
-#include "../sym_controller.h"
+#include "../../search_engines/symbolic_search.h"
 #include <memory>
 
 using namespace std;
@@ -8,7 +8,7 @@ using utils::g_timer;
 
 namespace symbolic {
 
-BidirectionalSearch::BidirectionalSearch(SymController *eng,
+BidirectionalSearch::BidirectionalSearch(SymbolicSearch *eng,
                                          const SymParamsSearch &params,
                                          std::unique_ptr<UniformCostSearch> _fw,
                                          unique_ptr<UniformCostSearch> _bw)

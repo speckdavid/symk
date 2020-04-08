@@ -1,8 +1,8 @@
 #include "uniform_cost_search.h"
 
+#include "../../search_engines/symbolic_search.h"
 #include "../closed_list.h"
 #include "../frontier.h"
-#include "../sym_controller.h"
 #include "../sym_solution_cut.h"
 #include "../sym_utils.h"
 #include "../utils/timer.h"
@@ -18,7 +18,7 @@ using utils::Timer;
 
 namespace symbolic {
 
-UniformCostSearch::UniformCostSearch(SymController *eng,
+UniformCostSearch::UniformCostSearch(SymbolicSearch *eng,
                                      const SymParamsSearch &params)
     : SymSearch(eng, params), fw(true), closed(std::make_shared<ClosedList>()),
       estimationCost(params), estimationZero(params), lastStepCost(true) {}
@@ -58,53 +58,22 @@ bool UniformCostSearch::init(std::shared_ptr<SymStateSpaceManager> manager,
   return true;
 }
 
-void UniformCostSearch::checkCutOriginal(Bucket &bucket, int g_val) {
+void UniformCostSearch::checkFrontierCut(Bucket &bucket, int g) {
   if (p.get_non_stop()) {
     return;
   }
 
   for (BDD &bucketBDD : bucket) {
-    // Get one or all solutions
-    if (!p.top_k) {
-      auto sol = perfectHeuristic->getCheapestCut(bucketBDD, g_val, fw);
-      if (sol.get_f() >= 0) {
-        engine->new_solution(sol);
-      }
-      // Prune everything closed in opposite direction
-      bucketBDD *= perfectHeuristic->notClosed();
-    } else {
-      auto all_sols =
-          perfectHeuristic->getAllCuts(bucketBDD, g_val, fw, engine->getMinG());
-      for (auto &sol : all_sols) {
-        engine->new_solution(sol);
-      }
+    auto sol = perfectHeuristic->getCheapestCut(bucketBDD, g, fw);
+    if (sol.get_f() >= 0) {
+      engine->new_solution(sol);
     }
+    // Prune everything closed in opposite direction
+    bucketBDD *= perfectHeuristic->notClosed();
   }
 }
 
-bool UniformCostSearch::provable_no_more_plans() {
-  // If we will expand states with new costs
-  // We check weather all states in the open list have already
-  // been expanded and not part of a goal path
-  if (p.top_k) {
-    // Here last_g_cost corresponds to the current g-value of the
-    // search dir. Thus we consider all smaller
-    if (getG() > last_g_cost) {
-      BDD no_goal_path_states = !engine->get_states_on_goal_paths();
-      no_goal_path_states *= closed->getPartialClosed(last_g_cost - 1);
-      if (!open_list.contains_any_state(!no_goal_path_states)) {
-        return true; // Search finished
-      }
-    }
-  }
-
-  // Important special case: open is empty => terminate
-  if (open_list.empty()) {
-    return true; // Search finished
-  }
-
-  return false;
-}
+bool UniformCostSearch::provable_no_more_plans() { return open_list.empty(); }
 
 void UniformCostSearch::prepareBucket() {
   if (!frontier.bucketReady()) {
@@ -117,7 +86,7 @@ void UniformCostSearch::prepareBucket() {
     open_list.pop(frontier);
     last_g_cost = frontier.g();
     assert(!frontier.empty() || frontier.g() == numeric_limits<int>::max());
-    checkCutOriginal(frontier.bucket(), frontier.g());
+    checkFrontierCut(frontier.bucket(), frontier.g());
 
     filterFrontier();
 
@@ -154,11 +123,7 @@ void UniformCostSearch::prepareBucket() {
 // This procedure is delayed in comparision to explicit search
 // Idea: no need to "change" BDDs until we actually process them
 void UniformCostSearch::filterFrontier() {
-  if (!p.top_k) {
-    frontier.filter(!closed->notClosed());
-  } else {
-    frontier.filter(closed->get_closed_at(frontier.g()));
-  }
+  frontier.filter(!closed->notClosed());
   mgr->filterMutex(frontier.bucket(), fw, initialization());
   removeZero(frontier.bucket());
 }
@@ -196,7 +161,7 @@ bool UniformCostSearch::stepImage(int maxTime, int maxNodes) {
         mgr->mergeBucket(pairCostBDDs.second);
 
         // Check for cut (remove those states)
-        checkCutOriginal(pairCostBDDs.second, cost);
+        checkFrontierCut(pairCostBDDs.second, cost);
 
         for (auto &bdd : pairCostBDDs.second) {
           if (!bdd.IsZero()) {

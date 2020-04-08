@@ -32,6 +32,7 @@ class SymController;
 class ClosedList;
 
 class UniformCostSearch : public SymSearch {
+protected:
   bool fw; // Direction of the search. true=forward, false=backward
 
   // Current state of the search:
@@ -55,33 +56,31 @@ class UniformCostSearch : public SymSearch {
 
   int last_g_cost;
 
-  virtual bool initialization() const {
-    return frontier.g() == 0 && lastStepCost;
-  }
+  void violated(TruncatedReason reason, double time, int maxTime, int maxNodes);
+
+  bool initialization() const { return frontier.g() == 0 && lastStepCost; }
 
   /*
    * Check if we can proof that no more plans exist
    */
-  bool provable_no_more_plans();
+  virtual bool provable_no_more_plans();
 
   /*
-   * Check generated or closed states with other frontiers.  In the
-   * original state space we obtain a solution (maybe suboptimal if
-   * the states are not closed).
+   * Check generated or closed states with other frontiers => solution check
    */
-  void checkCutOriginal(Bucket &bucket, int g);
+  virtual void checkFrontierCut(Bucket &bucket, int g);
 
   void closeStates(Bucket &bucket, int g);
 
   void prepareBucket();
 
-  void filterFrontier();
+  virtual void filterFrontier();
 
   void computeEstimation(bool prepare);
 
   //////////////////////////////////////////////////////////////////////////////
 public:
-  UniformCostSearch(SymController *eng, const SymParamsSearch &params);
+  UniformCostSearch(SymbolicSearch *eng, const SymParamsSearch &params);
   UniformCostSearch(const UniformCostSearch &) = delete;
   UniformCostSearch(UniformCostSearch &&) = default;
   UniformCostSearch &operator=(const UniformCostSearch &) = delete;
@@ -126,9 +125,6 @@ public:
   void filterMutex(Bucket &bucket) {
     mgr->filterMutex(bucket, fw, initialization());
   }
-
-private:
-  void violated(TruncatedReason reason, double time, int maxTime, int maxNodes);
 };
 
 } // namespace symbolic

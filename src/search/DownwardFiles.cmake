@@ -775,7 +775,6 @@ fast_downward_plugin(
         symbolic/frontier
         symbolic/open_list
         symbolic/closed_list
-        symbolic/sym_controller
         symbolic/searches/bidirectional_search
         symbolic/searches/uniform_cost_search
         symbolic/searches/sym_search

@@ -14,7 +14,7 @@ private:
   UniformCostSearch *selectBestDirection() const;
 
 public:
-  BidirectionalSearch(SymController *eng, const SymParamsSearch &params,
+  BidirectionalSearch(SymbolicSearch *eng, const SymParamsSearch &params,
                       std::unique_ptr<UniformCostSearch> fw,
                       std::unique_ptr<UniformCostSearch> bw);
 

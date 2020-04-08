@@ -52,6 +52,10 @@ public:
                                : sym_vars->oneBDD();
   }
 
+  int get_num_reported_plan() const {
+    return plan_mgr.get_num_previously_generated_plans();
+  }
+
   virtual void print_options() const;
 
   virtual std::string tag() const = 0;
