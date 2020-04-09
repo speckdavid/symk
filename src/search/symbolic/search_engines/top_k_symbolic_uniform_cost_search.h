@@ -10,10 +10,8 @@ protected:
   virtual void initialize() override;
 
 public:
-  TopkSymbolicUniformCostSearch(const options::Options &opts, bool fw);
+  TopkSymbolicUniformCostSearch(const options::Options &opts, bool fw, bool bw);
   virtual ~TopkSymbolicUniformCostSearch() = default;
-
-  virtual void setLowerBound(int lower) override;
 
   virtual void new_solution(const SymSolutionCut &sol) override;
 

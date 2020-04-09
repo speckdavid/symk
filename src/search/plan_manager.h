@@ -24,6 +24,7 @@ public:
     return num_previously_generated_plans;
   }
 
+  void dump_plan(const Plan &plan, const TaskProxy &task_proxy) const;
   /*
     Set generates_multiple_plan_files to true if the planner can find more than
     one plan and should number the plans as FILENAME.1, ..., FILENAME.n.

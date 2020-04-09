@@ -24,8 +24,7 @@ UniformCostSearch::UniformCostSearch(SymbolicSearch *eng,
       estimationCost(params), estimationZero(params), lastStepCost(true) {}
 
 bool UniformCostSearch::init(std::shared_ptr<SymStateSpaceManager> manager,
-                             bool forward,
-                             std::shared_ptr<ClosedList> closed_opposite) {
+                             bool forward, UniformCostSearch *opposite_search) {
   mgr = manager;
   fw = forward;
   lastStepCost = true;
@@ -38,8 +37,8 @@ bool UniformCostSearch::init(std::shared_ptr<SymStateSpaceManager> manager,
   closed->init(mgr.get());
   closed->insert(0, init_bdd);
 
-  if (closed_opposite) {
-    perfectHeuristic = closed_opposite;
+  if (opposite_search) {
+    perfectHeuristic = opposite_search->getClosedShared();
   } else {
     perfectHeuristic = make_shared<ClosedList>();
     perfectHeuristic->init(mgr.get());

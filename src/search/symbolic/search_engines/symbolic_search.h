@@ -33,6 +33,7 @@ protected:
   SymParamsMgr mgrParams; // Parameters for SymStateSpaceManager configuration.
   SymParamsSearch searchParams; // Parameters to search the original state space
 
+  bool lower_bound_increased;
   int lower_bound; // Lower bound of search (incl. min-action costs)
   int upper_bound; // Upper bound of search (not use by top_k)
   int min_g;       // min g costs of open lists

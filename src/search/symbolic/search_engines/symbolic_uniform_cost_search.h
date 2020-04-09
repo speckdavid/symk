@@ -8,11 +8,12 @@ class SymbolicUniformCostSearch : public SymbolicSearch {
 
 protected:
   bool fw;
+  bool bw;
 
   virtual void initialize() override;
 
 public:
-  SymbolicUniformCostSearch(const options::Options &opts, bool fw);
+  SymbolicUniformCostSearch(const options::Options &opts, bool fw, bool bw);
   virtual ~SymbolicUniformCostSearch() = default;
 
   static void add_options_to_parser(OptionParser &parser);

@@ -94,6 +94,10 @@ size_t PlanDataBase::get_hash_value(const Plan &plan) const {
 }
 
 void PlanDataBase::save_accepted_plan(const Plan &plan) {
+  if (num_accepted_plans == 0) {
+    first_accepted_plan = plan;
+  }
+
   size_t plan_seed = get_hash_value(plan);
   if (hashes_accepted_plans.count(plan_seed) == 0) {
     hashes_accepted_plans[plan_seed] = std::vector<Plan>();

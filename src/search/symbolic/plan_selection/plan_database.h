@@ -56,6 +56,11 @@ public:
     return plan_mgr.get_num_previously_generated_plans();
   }
 
+  void dump_first_accepted_plan() const {
+    plan_mgr.dump_plan(first_accepted_plan,
+                       sym_vars->get_state_registry()->get_task_proxy());
+  }
+
   virtual void print_options() const;
 
   virtual std::string tag() const = 0;
@@ -84,6 +89,8 @@ private:
 
   std::unordered_map<size_t, std::vector<Plan>> hashes_accepted_plans;
   std::unordered_map<size_t, std::vector<Plan>> hashes_rejected_plans;
+
+  Plan first_accepted_plan;
 
   BDD states_accepted_goal_paths;
 

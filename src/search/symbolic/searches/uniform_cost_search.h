@@ -93,9 +93,9 @@ public:
 
   virtual bool stepImage(int maxTime, int maxNodes);
 
-  bool init(std::shared_ptr<SymStateSpaceManager> manager, bool fw,
-            std::shared_ptr<ClosedList> closed_opposite =
-                nullptr); // Init forward or backward search
+  bool
+  init(std::shared_ptr<SymStateSpaceManager> manager, bool fw,
+       UniformCostSearch *opposite_search); // Init forward or backward search
 
   virtual bool isSearchableWithNodes(int maxNodes) const;
 
