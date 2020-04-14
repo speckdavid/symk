@@ -49,8 +49,8 @@ SearchStatus SymbolicSearch::step() {
   if (lower_bound >= upper_bound) {
     solution_registry.construct_cheaper_solutions(
         std::numeric_limits<int>::max());
-    solution_found = true;
-    cur_status = plan_data_base->get_num_reported_plan() > 0 ? SOLVED : FAILED;
+    solution_found = plan_data_base->get_num_reported_plan() > 0;
+    cur_status = solution_found ? SOLVED : FAILED;
   } else {
     // Bound increade => construct plans
     if (lower_bound_increased) {
