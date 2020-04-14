@@ -22,6 +22,9 @@ class PlanDataBase;
 class SymVariables;
 
 class SymbolicSearch : public SearchEngine {
+private:
+  int step_num;
+
 protected:
   // Symbolic manager to perform bdd operations
   std::shared_ptr<SymStateSpaceManager> mgr;
