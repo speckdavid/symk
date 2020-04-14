@@ -50,6 +50,13 @@ SymbolicUniformCostSearch::SymbolicUniformCostSearch(
     const options::Options &opts, bool fw, bool bw)
     : SymbolicSearch(opts), fw(fw), bw(bw) {}
 
+void SymbolicUniformCostSearch::new_solution(const SymSolutionCut &sol) {
+  if (!solution_registry.found_all_plans() && sol.get_f() < upper_bound) {
+    solution_registry.register_solution(sol);
+    upper_bound = sol.get_f();
+  }
+}
+
 void SymbolicUniformCostSearch::add_options_to_parser(OptionParser &parser) {
   SymbolicSearch::add_options_to_parser(parser);
 }

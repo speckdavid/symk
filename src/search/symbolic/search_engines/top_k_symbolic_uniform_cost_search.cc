@@ -50,17 +50,17 @@ TopkSymbolicUniformCostSearch::TopkSymbolicUniformCostSearch(
     const options::Options &opts, bool fw, bool bw)
     : SymbolicUniformCostSearch(opts, fw, bw) {}
 
-void TopkSymbolicUniformCostSearch::add_options_to_parser(
-    OptionParser &parser) {
-  SymbolicUniformCostSearch::add_options_to_parser(parser);
-}
-
 void TopkSymbolicUniformCostSearch::new_solution(const SymSolutionCut &sol) {
   if (!solution_registry.found_all_plans()) {
     solution_registry.register_solution(sol);
   } else {
     lower_bound = std::numeric_limits<int>::max();
   }
+}
+
+void TopkSymbolicUniformCostSearch::add_options_to_parser(
+    OptionParser &parser) {
+  SymbolicUniformCostSearch::add_options_to_parser(parser);
 }
 
 } // namespace symbolic
