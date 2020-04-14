@@ -243,13 +243,14 @@ bool SymSolutionRegistry::reconstruct_cost_action(
 ////// Plan registry
 
 SymSolutionRegistry::SymSolutionRegistry()
-    : sym_vars(nullptr), fw_search(nullptr), bw_search(nullptr),
-      plan_data_base(nullptr), plan_cost_bound(-1) {}
+    : single_solution(true), sym_vars(nullptr), fw_search(nullptr),
+      bw_search(nullptr), plan_data_base(nullptr), plan_cost_bound(-1) {}
 
 void SymSolutionRegistry::init(std::shared_ptr<SymVariables> sym_vars,
                                UniformCostSearch *fwd_search,
                                UniformCostSearch *bwd_search,
-                               std::shared_ptr<PlanDataBase> plan_data_base) {
+                               std::shared_ptr<PlanDataBase> plan_data_base,
+                               bool single_solution) {
   this->sym_vars = sym_vars;
   this->plan_data_base = plan_data_base;
   this->fw_search = fwd_search;
@@ -257,11 +258,18 @@ void SymSolutionRegistry::init(std::shared_ptr<SymVariables> sym_vars,
   this->trs = fwd_search
                   ? fwd_search->getStateSpaceShared()->getIndividualTRs()
                   : bwd_search->getStateSpaceShared()->getIndividualTRs();
+  this->single_solution = single_solution;
 }
 
 void SymSolutionRegistry::register_solution(const SymSolutionCut &solution) {
-
-  // std::cout << "\nregister " << new_cut << std::endl;
+  if (single_solution) {
+    if (sym_cuts.empty()) {
+      sym_cuts.push_back(solution);
+    } else {
+      sym_cuts[0] = solution;
+    }
+    return;
+  }
 
   bool merged = false;
   size_t pos = 0;

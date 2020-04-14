@@ -35,8 +35,8 @@ void TopkSymbolicUniformCostSearch::initialize() {
   }
 
   plan_data_base->init(vars);
-  solution_registry.init(vars, fw_search.get(), bw_search.get(),
-                         plan_data_base);
+  solution_registry.init(vars, fw_search.get(), bw_search.get(), plan_data_base,
+                         false);
 
   if (fw && bw) {
     search = std::unique_ptr<BidirectionalSearch>(new BidirectionalSearch(
