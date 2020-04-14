@@ -1,6 +1,6 @@
 #include "closed_list.h"
 
-#include "sym_solution_registry.h"
+#include "plan_reconstruction/sym_solution_registry.h"
 #include "sym_state_space_manager.h"
 #include "sym_utils.h"
 

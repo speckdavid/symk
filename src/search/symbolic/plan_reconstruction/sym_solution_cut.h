@@ -1,8 +1,8 @@
-#ifndef SYMBOLIC_SYM_SOLUTION_H
-#define SYMBOLIC_SYM_SOLUTION_H
+#ifndef SYMBOLIC_PLAN_RECONSTRUCTION_SYM_SOLUTION_H
+#define SYMBOLIC_PLAN_RECONSTRUCTION_SYM_SOLUTION_H
 
-#include "../task_proxy.h"
-#include "sym_variables.h"
+#include "../../task_proxy.h"
+#include "../sym_variables.h"
 
 #include <vector>
 

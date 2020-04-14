@@ -5,10 +5,10 @@
 #include <vector>
 
 #include "../../option_parser.h"
+#include "../plan_reconstruction/sym_solution_registry.h"
 #include "../search_engine.h"
 #include "../sym_enums.h"
 #include "../sym_params_search.h"
-#include "../sym_solution_registry.h"
 #include "../sym_state_space_manager.h"
 
 namespace options {
