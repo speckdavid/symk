@@ -17,8 +17,6 @@ public:
   virtual ~SymbolicUniformCostSearch() = default;
 
   virtual void new_solution(const SymSolutionCut &sol) override;
-
-  static void add_options_to_parser(OptionParser &parser);
 };
 
 } // namespace symbolic
