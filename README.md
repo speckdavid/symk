@@ -18,7 +18,7 @@ $ sudo apt-get -y install cmake g++ make python autotools-dev automake gcc g++-m
 ## Compiling the Top-k Planner
 
 ```console
-$ ./buildy.py 
+$ ./build.py 
 ```
 
 ## Configurations
