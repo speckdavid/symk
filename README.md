@@ -47,7 +47,7 @@ $ ./fast-downward.py domain.pddl problem.pddl --search "symk-bw(plan_selection=t
 ## Top-q Configurations
 We recommend to use the following configuration which uses bidirectional search and
 reports the **k** plans with quality bound **q**. Quality `1<=q<=infinity` is a multiplier that is multiplied to the cost of the cheapest solution. 
-For example, q=1 reports only the cheapest plans, where quality=infinity corresponds to the top-k planning.
+For example, `q=1` reports only the cheapest plans, where `quality=infinity` corresponds to the top-k planning.
 
 ```console
 $ ./fast-downward.py domain.pddl problem.pddl --search "symq-bd(plan_selection=top_k(num_plans=**k**),quality=**q**)"
