@@ -9,6 +9,10 @@ class TopkSymbolicUniformCostSearch : public SymbolicUniformCostSearch {
 protected:
   virtual void initialize() override;
 
+  virtual SearchStatus step() override {
+    return SymbolicUniformCostSearch::step();
+  }
+
 public:
   TopkSymbolicUniformCostSearch(const options::Options &opts, bool fw, bool bw);
   virtual ~TopkSymbolicUniformCostSearch() = default;

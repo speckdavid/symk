@@ -76,6 +76,17 @@ public:
   BDD get_states_on_goal_paths() const {
     return plan_data_base->get_states_accepted_goal_path();
   }
+
+  double cheapest_solution_cost_found() const {
+    double cheapest = std::numeric_limits<double>::infinity();
+    if (plan_data_base) {
+      cheapest = std::min(cheapest, plan_data_base->get_first_plan_cost());
+    }
+    if (sym_cuts.size() > 0) {
+      cheapest = std::min(cheapest, (double)sym_cuts.at(0).get_f());
+    }
+    return cheapest;
+  }
 };
 } // namespace symbolic
 

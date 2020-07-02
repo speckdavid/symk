@@ -23,10 +23,10 @@ $ sudo apt-get -y install cmake g++ make python autotools-dev automake gcc g++-m
 $ ./build.py 
 ```
 
-## Configurations
+## Top-k Configurations
 
 We recommend to use the following configuration which uses bidirectional search and 
-reports the best **k** plans.
+reports the best **k** plans. Note that you can also specify `num_plans=infinity` if you want to find all possible plans.
 
 ```console
 $ ./fast-downward.py domain.pddl problem.pddl --search "symk-bd(plan_selection=top_k(num_plans=**k**))"
@@ -42,6 +42,49 @@ $ ./fast-downward.py domain.pddl problem.pddl --search "symk-fw(plan_selection=t
 
 # Backward Search
 $ ./fast-downward.py domain.pddl problem.pddl --search "symk-bw(plan_selection=top_k(num_plans=**k**))"
+```
+
+## Top-q Configurations
+We recommend to use the following configuration which uses bidirectional search and
+reports the **k** plans with quality bound **q**. Quality `1<=q<=infinity` is a multiplier that is multiplied to the cost of the cheapest solution. 
+For example, q=1 reports only the cheapest plans, where quality=infinity corresponds to the top-k planning.
+
+```console
+$ ./fast-downward.py domain.pddl problem.pddl --search "symq-bd(plan_selection=top_k(num_plans=**k**),quality=**q**)"
+```
+
+Other configurations are as follows.
+
+
+```console
+# Forward Search
+$ ./fast-downward.py domain.pddl problem.pddl --search "symk-fw(plan_selection=top_k(num_plans=**k**),quality=**q**)"
+
+
+# Backward Search
+$ ./fast-downward.py domain.pddl problem.pddl --search "symk-bw(plan_selection=top_k(num_plans=**k**),,quality=**q**)"
+```
+
+## Ordinary Planning Configurations
+We recommend to use the following configuration which uses bidirectional search.
+
+We recommend to use the following configuration which uses bidirectional search and
+reports the best **k** plans. Note that you can also specify `num_plans=infinity` if you want to find all possible plans.
+
+```console
+$ ./fast-downward.py domain.pddl problem.pddl --search "sym-bd()"
+```
+
+Other configurations are as follows.
+
+
+```console
+# Forward Search
+$ ./fast-downward.py domain.pddl problem.pddl --search "symk-fw())"
+
+
+# Backward Search
+$ ./fast-downward.py domain.pddl problem.pddl --search "symk-bw()"
 ```
 
 ## Generate-and-Test Plans Framework

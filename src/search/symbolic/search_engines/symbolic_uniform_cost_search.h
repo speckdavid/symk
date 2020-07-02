@@ -12,6 +12,8 @@ protected:
 
   virtual void initialize() override;
 
+  virtual SearchStatus step() override { return SymbolicSearch::step(); }
+
 public:
   SymbolicUniformCostSearch(const options::Options &opts, bool fw, bool bw);
   virtual ~SymbolicUniformCostSearch() = default;

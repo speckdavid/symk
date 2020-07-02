@@ -61,6 +61,8 @@ public:
                        sym_vars->get_state_registry()->get_task_proxy());
   }
 
+  double get_first_plan_cost() const { return first_accepted_plan_cost; }
+
   virtual void print_options() const;
 
   virtual std::string tag() const = 0;
@@ -91,6 +93,7 @@ private:
   std::unordered_map<size_t, std::vector<Plan>> hashes_rejected_plans;
 
   Plan first_accepted_plan;
+  double first_accepted_plan_cost;
 
   BDD states_accepted_goal_paths;
 

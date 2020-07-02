@@ -14,7 +14,8 @@ void PlanDataBase::add_options_to_parser(options::OptionParser &parser) {
 PlanDataBase::PlanDataBase(const options::Options &opts)
     : sym_vars(nullptr), anytime_completness(false),
       num_desired_plans(opts.get<int>("num_plans")), num_accepted_plans(0),
-      num_rejected_plans(0) {
+      num_rejected_plans(0),
+      first_accepted_plan_cost(std::numeric_limits<double>::infinity()) {
   plan_mgr.set_plan_filename("found_plans/sas_plan");
 }
 
@@ -96,6 +97,8 @@ size_t PlanDataBase::get_hash_value(const Plan &plan) const {
 void PlanDataBase::save_accepted_plan(const Plan &plan) {
   if (num_accepted_plans == 0) {
     first_accepted_plan = plan;
+    first_accepted_plan_cost = calculate_plan_cost(
+        plan, sym_vars->get_state_registry()->get_task_proxy());
   }
 
   size_t plan_seed = get_hash_value(plan);
