@@ -68,9 +68,6 @@ $ ./fast-downward.py domain.pddl problem.pddl --search "symk-bw(plan_selection=t
 ## Ordinary Planning Configurations
 We recommend to use the following configuration which uses bidirectional search.
 
-We recommend to use the following configuration which uses bidirectional search and
-reports the best **k** plans. Note that you can also specify `num_plans=infinity` if you want to find all possible plans.
-
 ```console
 $ ./fast-downward.py domain.pddl problem.pddl --search "sym-bd()"
 ```
