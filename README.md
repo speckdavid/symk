@@ -58,11 +58,11 @@ Other configurations are as follows.
 
 ```console
 # Forward Search
-$ ./fast-downward.py domain.pddl problem.pddl --search "symk-fw(plan_selection=top_k(num_plans=**k**),quality=**q**)"
+$ ./fast-downward.py domain.pddl problem.pddl --search "symq-fw(plan_selection=top_k(num_plans=**k**),quality=**q**)"
 
 
 # Backward Search
-$ ./fast-downward.py domain.pddl problem.pddl --search "symk-bw(plan_selection=top_k(num_plans=**k**),,quality=**q**)"
+$ ./fast-downward.py domain.pddl problem.pddl --search "symq-bw(plan_selection=top_k(num_plans=**k**),,quality=**q**)"
 ```
 
 ## Ordinary Planning Configurations
@@ -77,11 +77,11 @@ Other configurations are as follows.
 
 ```console
 # Forward Search
-$ ./fast-downward.py domain.pddl problem.pddl --search "symk-fw())"
+$ ./fast-downward.py domain.pddl problem.pddl --search "sym-fw())"
 
 
 # Backward Search
-$ ./fast-downward.py domain.pddl problem.pddl --search "symk-bw()"
+$ ./fast-downward.py domain.pddl problem.pddl --search "sym-bw()"
 ```
 
 ## Generate-and-Test Plans Framework
