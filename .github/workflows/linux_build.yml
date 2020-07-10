@@ -16,7 +16,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Install packages
-      run: sudo apt install cmake g++ make python3 autotools-dev automake
+      run: sudo apt install cmake g++ make python3 autoconf automake
     
     - name: Build release
       run: ./build.py
