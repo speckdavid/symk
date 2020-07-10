@@ -16,7 +16,6 @@ PlanDataBase::PlanDataBase(const options::Options &opts)
       num_desired_plans(opts.get<int>("num_plans")), num_accepted_plans(0),
       num_rejected_plans(0),
       first_accepted_plan_cost(std::numeric_limits<double>::infinity()) {
-  plan_mgr.set_plan_filename("found_plans/sas_plan");
 }
 
 void PlanDataBase::init(std::shared_ptr<SymVariables> sym_vars) {
@@ -48,6 +47,8 @@ bool PlanDataBase::has_rejected_plan(const Plan &plan) const {
 
 void PlanDataBase::print_options() const {
   std::cout << "Plan Selector: " << tag() << std::endl;
+  std::cout << "Plan files: " << plan_mgr.get_plan_filename() << std::endl;
+  
 }
 
 size_t PlanDataBase::different(const std::vector<Plan> &plans,

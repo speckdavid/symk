@@ -20,7 +20,8 @@ int calculate_plan_cost(const Plan &plan, const TaskProxy &task_proxy) {
 }
 
 PlanManager::PlanManager()
-    : plan_filename("sas_plan"), num_previously_generated_plans(0),
+    : plan_filename("sas_plan"), 
+      num_previously_generated_plans(0),
       is_part_of_anytime_portfolio(false) {}
 
 void PlanManager::set_plan_filename(const string &plan_filename_) {

@@ -66,7 +66,9 @@ public:
   virtual void print_options() const;
 
   virtual std::string tag() const = 0;
-
+  void set_plan_manager(PlanManager& _plan_manager) {
+      plan_mgr = _plan_manager;
+  }
 protected:
   std::shared_ptr<SymVariables> sym_vars;
 

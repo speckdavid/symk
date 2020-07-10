@@ -30,8 +30,12 @@ SymbolicSearch::SymbolicSearch(const options::Options &opts)
       solution_registry() {
   mgrParams.print_options();
   searchParams.print_options();
-  plan_data_base->print_options();
   vars->init();
+}
+
+void SymbolicSearch::initialize() {
+  plan_data_base->set_plan_manager(get_plan_manager());
+  plan_data_base->print_options();
 }
 
 SearchStatus SymbolicSearch::step() {

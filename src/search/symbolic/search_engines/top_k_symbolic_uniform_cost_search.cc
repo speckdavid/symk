@@ -10,6 +10,8 @@
 namespace symbolic {
 
 void TopkSymbolicUniformCostSearch::initialize() {
+  SymbolicSearch::initialize();
+
   mgr = std::make_shared<OriginalStateSpace>(vars.get(), mgrParams);
 
   std::unique_ptr<TopkUniformCostSearch> fw_search = nullptr;
