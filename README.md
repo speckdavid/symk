@@ -16,6 +16,8 @@ Currently we only support Linux systems. The following should install all necess
 ```console
 $ sudo apt-get -y install cmake g++ make python3 autotools-dev automake
 ```
+
+Sym-k should compile on MacOS with the GNU C++ compiler and clang with the same instructions described above.
  
 ## Compiling the Top-k Planner
 
