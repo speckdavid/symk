@@ -15,5 +15,8 @@ jobs:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
 
+    - name: Install packages
+      run: brew install cmake make python3 autotools-dev automake
+    
     - name: Build release
       run: ./build.py

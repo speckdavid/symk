@@ -1,6 +1,5 @@
 
-# Symbolic Top-k Planner [![Linux build](https://github.com/speckdavid/symk/workflows/Linux%20build/badge.svg)](https://github.com/speckdavid/symk/actions?query=workflow%3A%22Linux+build%22)
-# Symbolic Top-k Planner [![MacOS build](https://github.com/speckdavid/symk/workflows/MacOS%20build/badge.svg)](https://github.com/speckdavid/symk/actions?query=workflow%3A%22MacOS+build%22)
+# Symbolic Top-k Planner [![Linux build](https://github.com/speckdavid/symk/workflows/Linux%20build/badge.svg)](https://github.com/speckdavid/symk/actions?query=workflow%3A%22Linux+build%22) [![MacOS build](https://github.com/speckdavid/symk/workflows/MacOS%20build/badge.svg)](https://github.com/speckdavid/symk/actions?query=workflow%3A%22MacOS+build%22)
 
 Sym-k is a state-of-the-art top-k planner. The objective of top-k planning is to determine a set of k different plans with lowest cost for a given planning task.
 
@@ -15,7 +14,7 @@ Based on:
 ## Dependencies
 Currently we only support Linux systems. The following should install all necessary dependencies.
 ```console
-$ sudo apt-get -y install cmake g++ make python autotools-dev automake gcc g++-multilib
+$ sudo apt-get -y install cmake g++ make python3 autotools-dev automake
 ```
  
 ## Compiling the Top-k Planner
