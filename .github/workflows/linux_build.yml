@@ -1,4 +1,4 @@
-name: Build
+name: Linux build
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 jobs:
   # Job name
   build:
-    name: build
+    name: Linux build
     runs-on: ubuntu-20.04
 
     # Steps represent a sequence of tasks that will be executed as part of the job

@@ -1,5 +1,5 @@
 
-# Symbolic Top-k Planner [![Build](https://github.com/speckdavid/symk/workflows/Build/badge.svg)](https://github.com/speckdavid/symk/actions?query=workflow%3ABuild)
+# Symbolic Top-k Planner [![Build](https://github.com/speckdavid/symk/workflows/Linux%20build/badge.svg)](https://github.com/speckdavid/symk/actions?query=workflow%3ABuild)
 
 Sym-k is a state-of-the-art top-k planner. The objective of top-k planning is to determine a set of k different plans with lowest cost for a given planning task.
 
