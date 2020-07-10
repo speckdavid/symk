@@ -7,9 +7,8 @@ Main source:
  - Speck, D.; Mattmüller, R.; and Nebel, B. 2020. Symbolic top-k planning. In Proceedings of the Thirty-Second AAAI Conference on Artificial Intelligence (AAAI 2020), S. 9967-9974. AAAI Press. ([pdf](http://gki.informatik.uni-freiburg.de/papers/speck-etal-aaai2020.pdf))
 
 Based on:
- - Symbolic Fast Downward: https://fai.cs.uni-saarland.de/torralba/software.html
- - Speck, D.; Geißer, F.; Mattmüller, R.; and Torralba, Á. 2019. Symbolic planning with axioms. In Lipovetzky, N.; Onaindia, E.; and Smith, D. E., eds., Proceedings of the Twenty-Ninth International Conference on Automated Planning and Scheduling (ICAPS 2019), 464–572. AAAI Press. ([pdf](http://gki.informatik.uni-freiburg.de/papers/speck-etal-icaps2019.pdf))
  - Fast Downward: http://www.fast-downward.org/
+ - Symbolic Fast Downward: https://fai.cs.uni-saarland.de/torralba/software.html
  
 ## Dependencies
 Currently we only support Linux systems. The following should install all necessary dependencies.
