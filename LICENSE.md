@@ -4,7 +4,7 @@ The following directories are not part of Fast Downward as covered by this
 license:
 
 * [./src/search/ext](./src/search/ext)
-* [./src/dd_libs/cudd-3.0.0](./src/dd_libs/cudd-3.0.0): [CUDD License](./src/dd_libs/cudd-3.0.0/LICENSE) 
+* [./src/dd_libs/cudd-3.0.0](./src/dd_libs/cudd-3.0.0): see [CUDD License](./src/dd_libs/cudd-3.0.0/LICENSE) 
 
 For the rest, the following license applies:
 
