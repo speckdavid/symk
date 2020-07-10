@@ -13,7 +13,7 @@ Based on:
 ## Dependencies
 Currently we only support Linux systems. The following should install all necessary dependencies.
 ```console
-$ sudo apt-get -y install cmake g++ make python3 autotools-dev automake
+$ sudo apt-get -y install cmake g++ make python3 autoconf automake
 ```
 
 Sym-k should compile on MacOS with the GNU C++ compiler and clang with the same instructions described above.
