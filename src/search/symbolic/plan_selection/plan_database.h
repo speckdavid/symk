@@ -81,12 +81,7 @@ protected:
   // which only occurs if no reachable loops part of in the state space
   bool anytime_completness;
 
-  void save_accepted_plan(const Plan &plan);
-  void save_rejected_plan(const Plan &plan);
 
-  std::vector<Plan> get_accepted_plans() const;
-
-private:
   int num_desired_plans;
   int num_accepted_plans;
   int num_rejected_plans;
@@ -101,6 +96,11 @@ private:
 
   PlanManager plan_mgr;
   bool task_hash_zero_cost_actions;
+  
+  void save_accepted_plan(const Plan &plan);
+  void save_rejected_plan(const Plan &plan);
+
+  std::vector<Plan> get_accepted_plans() const;
 
   size_t different(const std::vector<Plan> &plans, const Plan &plan) const;
   BDD states_on_path(const Plan &plan);
