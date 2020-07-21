@@ -94,11 +94,11 @@ Note that plan selectors can be combined with the different planning configurati
 
 We recommend to use the following configurations which use bidirectional search.
 
-Top-k:
+#### Unordered Top-k:
 ```console
 $ ./fast-downward.py domain.pddl problem.pddl --search "symk-bd(plan_selection=unordered(num_plans=**k**))"
 ```
-Top-q:
+#### Unordered Top-q:
 ```console
 $ ./fast-downward.py domain.pddl problem.pddl --search "symq-bd(plan_selection=unordered(num_plans=**k**),quality=**q**)"
 ```
