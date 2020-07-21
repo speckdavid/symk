@@ -88,7 +88,7 @@ $ ./fast-downward.py domain.pddl problem.pddl --search "sym-bw()"
 It is possible to create plans until a number of plans or simply a single plan is found that meets certain requirements.
 For this purpose it is possible to write your own plan selector. During the search, plans are created and handed over to a plan selector with an anytime behavior. 
 
-## Unordered Plan Selector
+### Unordered Plan Selector
 One example of a plan selector is [unordered_selector](src/search/symbolic/plan_selection/unordered_selector.cc) that consideres two plans to be equivalent if their action
 multi-sets are. In other words, plans with the same multi-set of actions form an equivalence class and only one representative plan is reported for each equivalence class.
 Note that plan selectors can be combined with the different planning configurations.
@@ -104,7 +104,7 @@ Top-q:
 $ ./fast-downward.py domain.pddl problem.pddl --search "symq-bd(plan_selection=unordered(num_plans=**k**),quality=**q**)"
 ```
 
-## New Plan Selector
+### New Plan Selector
 Two simple examples of plan selectors are the [top_k_selector](src/search/symbolic/plan_selection/top_k_selector.cc) and
 the [top_k_even_selector](src/search/symbolic/plan_selection/top_k_even_selector.cc).
 For this purpose it is possible to write your own plan selector.
