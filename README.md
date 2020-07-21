@@ -84,13 +84,30 @@ $ ./fast-downward.py domain.pddl problem.pddl --search "sym-fw())"
 # Backward Search
 $ ./fast-downward.py domain.pddl problem.pddl --search "sym-bw()"
 ```
-
-## Generate-and-Test Plans Framework
-
-It is possible to create plans until a plan is found that meets complex requirements.
+## Plan Selection - Generate-and-Test Plans Framework
+It is possible to create plans until a number of plans or simply a single plan is found that meets certain requirements.
 For this purpose it is possible to write your own plan selector. During the search, plans are created and handed over to a plan selector with an anytime behavior. 
-Two examples of plan selectors are the [ top_k_selector](src/search/symbolic/plan_selection/top_k_selector.cc) and
+
+## Unordered Plan Selector
+One example of a plan selector is [unordered_selector](src/search/symbolic/plan_selection/unordered_selector.cc) that consideres two plans to be equivalent if their action
+multi-sets are. In other words, plans with the same multi-set of actions form an equivalence class and only one representative plan is reported for each equivalence class.
+Note that plan selectors can be combined with the different planning configurations.
+
+We recommend to use the following configuration which uses bidirectional search.
+
+Top-k:
+```console
+$ ./fast-downward.py domain.pddl problem.pddl --search "symk-bd(plan_selection=unordered(num_plans=**k**))"
+```
+Top-q:
+```console
+$ ./fast-downward.py domain.pddl problem.pddl --search "symq-bd(plan_selection=unordered(num_plans=**k**),quality=**q**)"
+```
+
+## New Plan Selector
+Two simple examples of plan selectors are the [top_k_selector](src/search/symbolic/plan_selection/top_k_selector.cc) and
 the [top_k_even_selector](src/search/symbolic/plan_selection/top_k_even_selector.cc).
+For this purpose it is possible to write your own plan selector.
 The most important function is *add_plan*, in which you can specify whether a newly generated plan shall be accepted or rejected.
 To create your own plan selector, you can copy the *.cc* and *.h* files of one of these two selectors and adjust them accordingly. Also add the new file name to [DownwardFiles.cmake](src/search/DownwardFiles.cmake), similar to the other selection files.
 Finally, if you want to find a plan with your *awesome_selector* selector (the name of the selector you specified for the plugin in the *.cc* file), you can use the following command. 
