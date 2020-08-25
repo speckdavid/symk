@@ -88,8 +88,8 @@ SearchStatus TopqSymbolicUniformCostSearch::step() {
 
 void TopqSymbolicUniformCostSearch::add_options_to_parser(
     OptionParser &parser) {
-  parser.add_option<double>("quality", "relative quality multiplier", "1.0",
-                            Bounds("1.0", "infinity"));
+  parser.add_option<double>("quality", "relative quality multiplier",
+                            "infinity", Bounds("1.0", "infinity"));
 }
 
 } // namespace symbolic
@@ -97,9 +97,10 @@ void TopqSymbolicUniformCostSearch::add_options_to_parser(
 static std::shared_ptr<SearchEngine> _parse_forward_ucs(OptionParser &parser) {
   parser.document_synopsis("Top-q Symbolic Forward Uniform Cost Search", "");
   symbolic::SymbolicSearch::add_options_to_parser(parser);
+  parser.add_option<std::shared_ptr<symbolic::PlanDataBase>>(
+      "plan_selection", "plan selection strategy");
   symbolic::TopqSymbolicUniformCostSearch::add_options_to_parser(parser);
   Options opts = parser.parse();
-  opts.set("top_k", true);
 
   std::shared_ptr<symbolic::SymbolicSearch> engine = nullptr;
   if (!parser.dry_run()) {
@@ -114,9 +115,10 @@ static std::shared_ptr<SearchEngine> _parse_forward_ucs(OptionParser &parser) {
 static std::shared_ptr<SearchEngine> _parse_backward_ucs(OptionParser &parser) {
   parser.document_synopsis("Top-q Symbolic Backward Uniform Cost Search", "");
   symbolic::SymbolicSearch::add_options_to_parser(parser);
+  parser.add_option<std::shared_ptr<symbolic::PlanDataBase>>(
+      "plan_selection", "plan selection strategy");
   symbolic::TopqSymbolicUniformCostSearch::add_options_to_parser(parser);
   Options opts = parser.parse();
-  opts.set("top_k", true);
 
   std::shared_ptr<symbolic::SymbolicSearch> engine = nullptr;
   if (!parser.dry_run()) {
@@ -133,9 +135,10 @@ _parse_bidirectional_ucs(OptionParser &parser) {
   parser.document_synopsis("Top-q Symbolic Bidirectional Uniform Cost Search",
                            "");
   symbolic::SymbolicSearch::add_options_to_parser(parser);
+  parser.add_option<std::shared_ptr<symbolic::PlanDataBase>>(
+      "plan_selection", "plan selection strategy");
   symbolic::TopqSymbolicUniformCostSearch::add_options_to_parser(parser);
   Options opts = parser.parse();
-  opts.set("top_k", true);
 
   std::shared_ptr<symbolic::SymbolicSearch> engine = nullptr;
   if (!parser.dry_run()) {

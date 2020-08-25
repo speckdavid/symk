@@ -62,6 +62,8 @@ void SymbolicUniformCostSearch::new_solution(const SymSolutionCut &sol) {
 static std::shared_ptr<SearchEngine> _parse_forward_ucs(OptionParser &parser) {
   parser.document_synopsis("Symbolic Forward Uniform Cost Search", "");
   symbolic::SymbolicSearch::add_options_to_parser(parser);
+  parser.add_option<std::shared_ptr<symbolic::PlanDataBase>>(
+      "plan_selection", "plan selection strategy", "top_k(num_plans=1)");
   Options opts = parser.parse();
 
   std::shared_ptr<symbolic::SymbolicSearch> engine = nullptr;
@@ -77,6 +79,8 @@ static std::shared_ptr<SearchEngine> _parse_forward_ucs(OptionParser &parser) {
 static std::shared_ptr<SearchEngine> _parse_backward_ucs(OptionParser &parser) {
   parser.document_synopsis("Symbolic Backward Uniform Cost Search", "");
   symbolic::SymbolicSearch::add_options_to_parser(parser);
+  parser.add_option<std::shared_ptr<symbolic::PlanDataBase>>(
+      "plan_selection", "plan selection strategy", "top_k(num_plans=1)");
   Options opts = parser.parse();
 
   std::shared_ptr<symbolic::SymbolicSearch> engine = nullptr;
@@ -93,6 +97,8 @@ static std::shared_ptr<SearchEngine>
 _parse_bidirectional_ucs(OptionParser &parser) {
   parser.document_synopsis("Symbolic Bidirectional Uniform Cost Search", "");
   symbolic::SymbolicSearch::add_options_to_parser(parser);
+  parser.add_option<std::shared_ptr<symbolic::PlanDataBase>>(
+      "plan_selection", "plan selection strategy", "top_k(num_plans=1)");
   Options opts = parser.parse();
 
   std::shared_ptr<symbolic::SymbolicSearch> engine = nullptr;

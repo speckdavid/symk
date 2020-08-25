@@ -116,7 +116,5 @@ void SymbolicSearch::add_options_to_parser(OptionParser &parser) {
   SymParamsSearch::add_options_to_parser(parser, 30e3, 10e7);
   SymParamsMgr::add_options_to_parser(parser);
   PlanDataBase::add_options_to_parser(parser);
-  parser.add_option<std::shared_ptr<PlanDataBase>>(
-      "plan_selection", "plan selection strategy", "top_k(1)");
 }
 } // namespace symbolic
