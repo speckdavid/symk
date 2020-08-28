@@ -1,9 +1,0 @@
-/home/speckd/git/symple-top-k/cmake/CMakeFiles/rebuild_cache.dir
-/home/speckd/git/symple-top-k/cmake/CMakeFiles/translate.dir
-/home/speckd/git/symple-top-k/cmake/CMakeFiles/edit_cache.dir
-/home/speckd/git/symple-top-k/cmake/h2-preprocessor/CMakeFiles/rebuild_cache.dir
-/home/speckd/git/symple-top-k/cmake/h2-preprocessor/CMakeFiles/preprocess.dir
-/home/speckd/git/symple-top-k/cmake/h2-preprocessor/CMakeFiles/edit_cache.dir
-/home/speckd/git/symple-top-k/cmake/search/CMakeFiles/rebuild_cache.dir
-/home/speckd/git/symple-top-k/cmake/search/CMakeFiles/downward.dir
-/home/speckd/git/symple-top-k/cmake/search/CMakeFiles/edit_cache.dir
