@@ -1,8 +1,8 @@
 #ifndef SYMBOLIC_FRONTIER_H
 #define SYMBOLIC_FRONTIER_H
 
+#include "searches/sym_search.h"
 #include "sym_bucket.h"
-#include "sym_search.h"
 
 #include <cassert>
 #include <map>

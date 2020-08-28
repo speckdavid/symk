@@ -1,0 +1,22 @@
+name: MacOS build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  # Job name
+  build:
+    name: MacOS build
+    runs-on: macos-10.15
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      run: brew install cmake make python3 autoconf automake
+    
+    - name: Build release
+      run: ./build.py

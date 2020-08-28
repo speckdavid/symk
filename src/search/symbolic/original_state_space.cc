@@ -13,12 +13,8 @@ using namespace std;
 namespace symbolic {
 
 OriginalStateSpace::OriginalStateSpace(SymVariables *v,
-                                       const SymParamsMgr &params,
-                                       bool zero_transform)
+                                       const SymParamsMgr &params)
     : SymStateSpaceManager(v, params) {
-  if (zero_transform) {
-    std::cout << "=> Zero costs are treated as unit costs!" << std::endl;
-  }
 
   // Transform initial state and goal states if axioms are present
   if (task_properties::has_axioms(TaskProxy(*tasks::g_root_task))) {
@@ -36,22 +32,15 @@ OriginalStateSpace::OriginalStateSpace(SymVariables *v,
   }
 
   init_mutex(tasks::g_root_task->get_mutex_groups());
-  create_single_trs(zero_transform);
+  create_single_trs();
   init_transitions(indTRs);
 }
 
-void OriginalStateSpace::create_single_trs(bool zero_transform) {
+void OriginalStateSpace::create_single_trs() {
   for (int i = 0; i < tasks::g_root_task->get_num_operators(); i++) {
     int cost = tasks::g_root_task->get_operator_cost(i, false);
 
     // Ignore cost operators and set zero costs to 1
-    if (zero_transform) {
-      if (cost > 0) {
-        continue;
-      } else {
-        cost = 1;
-      }
-    }
     // cout << "Creating TR of op " << i << " of cost " << cost << endl;
     indTRs[cost].emplace_back(vars, OperatorID(i), cost);
     indTRs[cost].back().init();

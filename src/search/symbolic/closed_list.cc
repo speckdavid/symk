@@ -1,6 +1,6 @@
 #include "closed_list.h"
 
-#include "sym_solution_registry.h"
+#include "plan_reconstruction/sym_solution_registry.h"
 #include "sym_state_space_manager.h"
 #include "sym_utils.h"
 
@@ -16,19 +16,15 @@ namespace symbolic {
 
 ClosedList::ClosedList() : mgr(nullptr) {}
 
-void ClosedList::init(SymStateSpaceManager *manager,
-                      UnidirectionalSearch *search) {
+void ClosedList::init(SymStateSpaceManager *manager) {
   mgr = manager;
-  my_search = search;
   map<int, vector<BDD>>().swap(zeroCostClosed);
   map<int, BDD>().swap(closed);
   closedTotal = mgr->zeroBDD();
 }
 
-void ClosedList::init(SymStateSpaceManager *manager,
-                      UnidirectionalSearch *search, const ClosedList &other) {
+void ClosedList::init(SymStateSpaceManager *manager, const ClosedList &other) {
   mgr = manager;
-  my_search = search;
   map<int, vector<BDD>>().swap(zeroCostClosed);
   map<int, BDD>().swap(closed);
   closedTotal = mgr->zeroBDD();
@@ -39,7 +35,6 @@ void ClosedList::init(SymStateSpaceManager *manager,
 
 void ClosedList::insert(int h, const BDD &S) {
   if (closed.count(h)) {
-    assert(h_values.count(h));
     closed[h] += S;
   } else {
     closed[h] = S;
@@ -60,6 +55,30 @@ BDD ClosedList::getPartialClosed(int upper_bound) const {
     res += pair.second;
   }
   return res;
+}
+
+SymSolutionCut ClosedList::getCheapestCut(const BDD &states, int g,
+                                          bool fw) const {
+  BDD cut_candidate = states * closedTotal;
+  if (cut_candidate.IsZero()) {
+    return SymSolutionCut();
+  }
+
+  for (const auto &closedH : closed) {
+    int h = closedH.first;
+
+    BDD cut = closedH.second * cut_candidate;
+    if (!cut.IsZero()) {
+      if (fw) {
+        return SymSolutionCut(g, h, cut);
+      } else {
+        return SymSolutionCut(h, g, cut);
+      }
+    }
+  }
+  std::cerr << "Inconsitent cut result" << std::endl;
+  exit(0);
+  return SymSolutionCut();
 }
 
 std::vector<SymSolutionCut> ClosedList::getAllCuts(const BDD &states, int g,

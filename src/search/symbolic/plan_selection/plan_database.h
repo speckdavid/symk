@@ -52,10 +52,23 @@ public:
                                : sym_vars->oneBDD();
   }
 
+  int get_num_reported_plan() const {
+    return plan_mgr.get_num_previously_generated_plans();
+  }
+
+  void dump_first_accepted_plan() const {
+    plan_mgr.dump_plan(first_accepted_plan,
+                       sym_vars->get_state_registry()->get_task_proxy());
+  }
+
+  double get_first_plan_cost() const { return first_accepted_plan_cost; }
+
   virtual void print_options() const;
 
   virtual std::string tag() const = 0;
-
+  void set_plan_manager(PlanManager& _plan_manager) {
+      plan_mgr = _plan_manager;
+  }
 protected:
   std::shared_ptr<SymVariables> sym_vars;
 
@@ -68,12 +81,7 @@ protected:
   // which only occurs if no reachable loops part of in the state space
   bool anytime_completness;
 
-  void save_accepted_plan(const Plan &plan);
-  void save_rejected_plan(const Plan &plan);
 
-  std::vector<Plan> get_accepted_plans() const;
-
-private:
   int num_desired_plans;
   int num_accepted_plans;
   int num_rejected_plans;
@@ -81,10 +89,18 @@ private:
   std::unordered_map<size_t, std::vector<Plan>> hashes_accepted_plans;
   std::unordered_map<size_t, std::vector<Plan>> hashes_rejected_plans;
 
+  Plan first_accepted_plan;
+  double first_accepted_plan_cost;
+
   BDD states_accepted_goal_paths;
 
   PlanManager plan_mgr;
   bool task_hash_zero_cost_actions;
+  
+  void save_accepted_plan(const Plan &plan);
+  void save_rejected_plan(const Plan &plan);
+
+  std::vector<Plan> get_accepted_plans() const;
 
   size_t different(const std::vector<Plan> &plans, const Plan &plan) const;
   BDD states_on_path(const Plan &plan);

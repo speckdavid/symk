@@ -768,22 +768,24 @@ fast_downward_plugin(
         symbolic/original_state_space
         symbolic/sym_params_search
         symbolic/sym_estimate
-        symbolic/sym_search
-        symbolic/sym_solution_cut
-        symbolic/sym_solution_registry
-        symbolic/sym_plan_reconstruction
-        symbolic/plan_selection/plan_database
-        symbolic/unidirectional_search
         symbolic/frontier
         symbolic/open_list
         symbolic/closed_list
-        symbolic/sym_controller
-        symbolic/bidirectional_search
-        symbolic/uniform_cost_search
-        search_engines/symbolic_search
+        symbolic/searches/bidirectional_search
+        symbolic/searches/uniform_cost_search
+        symbolic/searches/sym_search
+        symbolic/searches/top_k_uniform_cost_search
+        symbolic/search_engines/symbolic_search
+        symbolic/search_engines/symbolic_uniform_cost_search
+        symbolic/search_engines/top_k_symbolic_uniform_cost_search
+        symbolic/search_engines/top_q_symbolic_uniform_cost_search
+        symbolic/plan_reconstruction/sym_solution_cut
+        symbolic/plan_reconstruction/sym_solution_registry
+        symbolic/plan_selection/plan_database
         symbolic/plan_selection/top_k_selector
         symbolic/plan_selection/top_k_even_selector
         symbolic/plan_selection/moral_permissibility_selector
+        symbolic/plan_selection/unordered_selector
         symbolic/sym_axiom/sym_axiom_compilation
 )
 

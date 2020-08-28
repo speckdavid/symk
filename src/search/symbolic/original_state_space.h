@@ -7,15 +7,14 @@
 namespace symbolic {
 
 class OriginalStateSpace : public SymStateSpaceManager {
-  void create_single_trs(bool zero_transform);
+  void create_single_trs();
 
   void init_mutex(const std::vector<MutexGroup> &mutex_groups);
   void init_mutex(const std::vector<MutexGroup> &mutex_groups, bool genMutexBDD,
                   bool genMutexBDDByFluent, bool fw);
 
 public:
-  OriginalStateSpace(SymVariables *v, const SymParamsMgr &params,
-                     bool zero_transform = false);
+  OriginalStateSpace(SymVariables *v, const SymParamsMgr &params);
 
   // Individual TRs: Useful for shrink and plan construction
   std::map<int, std::vector<TransitionRelation>> indTRs;
