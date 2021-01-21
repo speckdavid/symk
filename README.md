@@ -6,16 +6,18 @@ Sym-k is a state-of-the-art top-k planner. The objective of top-k planning is to
 Main source:
  - Speck, D.; Mattmüller, R.; and Nebel, B. 2020. Symbolic top-k planning. In Proceedings of the 34th AAAI Conference on Artificial Intelligence (AAAI 2020), S. 9967-9974. AAAI Press. ([pdf](http://gki.informatik.uni-freiburg.de/papers/speck-etal-aaai2020.pdf))
 
-    @InProceedings{speck-et-al-aaai2020,
-      author =       "David Speck and Robert Mattm{\"u}ller and Bernhard Nebel",
-      title =        "Symbolic Top-k Planning",
-      editor =       "Vincent Conitzer and Fei Sha",
-      booktitle =    "Proceedings of the Thirty-Fourth {AAAI} Conference on
-                      Artificial Intelligence ({AAAI} 2020)",
-      publisher =    "{AAAI} Press",
-      year =         "2020",
-      pages =        "9967--9974"
-    }
+```console
+@InProceedings{speck-et-al-aaai2020,
+  author =       "David Speck and Robert Mattm{\"u}ller and Bernhard Nebel",
+  title =        "Symbolic Top-k Planning",
+  editor =       "Vincent Conitzer and Fei Sha",
+  booktitle =    "Proceedings of the Thirty-Fourth {AAAI} Conference on
+                  Artificial Intelligence ({AAAI} 2020)",
+  publisher =    "{AAAI} Press",
+  year =         "2020",
+  pages =        "9967--9974"
+}
+```
 
 Based on:
  - Fast Downward: http://www.fast-downward.org/
