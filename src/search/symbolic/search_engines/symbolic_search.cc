@@ -28,6 +28,7 @@ SymbolicSearch::SymbolicSearch(const options::Options &opts)
       upper_bound(std::numeric_limits<int>::max()), min_g(0),
       plan_data_base(opts.get<std::shared_ptr<PlanDataBase>>("plan_selection")),
       solution_registry() {
+  save_plans = false; // we handle plans seperat
   mgrParams.print_options();
   searchParams.print_options();
   vars->init();
