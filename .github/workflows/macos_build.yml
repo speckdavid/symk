@@ -16,7 +16,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Install packages
-      run: brew install cmake make python3 autoconf automake
+      run: brew install cmake make python3 autoconf automake gcc
     
     - name: Build release
       run: ./build.py
