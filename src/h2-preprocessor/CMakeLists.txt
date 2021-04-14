@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 2.8.3...3.20.1)
 
 if(NOT FAST_DOWNWARD_MAIN_CMAKELISTS_READ)
     message(
@@ -13,19 +13,19 @@ fast_downward_set_compiler_flags()
 fast_downward_set_linker_flags()
 
 set(PREPROCESS_SOURCES
-    planner
-    axiom
-    causal_graph
-    domain_transition_graph
-    h2_mutexes
-    helper_functions
-    max_dag
-    mutex_group
-    operator
-    scc
-    state
-    successor_generator
-    variable
+    planner.cc
+    axiom.cc
+    causal_graph.cc
+    domain_transition_graph.cc
+    h2_mutexes.cc
+    helper_functions.cc
+    max_dag.cc
+    mutex_group.cc
+    operator.cc
+    scc.cc
+    state.cc
+    successor_generator.cc
+    variable.cc
 )
 
 add_executable(preprocess ${PREPROCESS_SOURCES})

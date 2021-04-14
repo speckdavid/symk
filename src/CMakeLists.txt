@@ -28,7 +28,7 @@
 # to the cmake call.
 
 # Version 2.8.3 introduces CMakeParseArguments.
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 2.8.3...3.20.1)
 
 # Respect the PATH environment variable when searching for compilers.
 find_program(CMAKE_C_COMPILER NAMES $ENV{CC} gcc PATHS ENV PATH NO_DEFAULT_PATH)

@@ -45,7 +45,7 @@ int main(int argc, const char **argv) {
             if (i < argc) {
                 try {
                     h2_mutex_time = atoi(argv[i]);
-                }catch (std::invalid_argument) {
+                }catch (std::invalid_argument&) {
                     cerr << "please specify the number of seconds after --h2_time_limit" << endl;
                     exit(2);
                 }
