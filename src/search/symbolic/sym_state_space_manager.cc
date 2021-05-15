@@ -19,18 +19,9 @@ using namespace std;
 namespace symbolic {
 
 SymStateSpaceManager::SymStateSpaceManager(SymVariables *v,
-                                           const SymParamsMgr &params,
-                                           const set<int> &relevant_vars_)
-    : vars(v), p(params), relevant_vars(relevant_vars_),
-      initialState(v->zeroBDD()), goal(v->zeroBDD()), min_transition_cost(0),
-      hasTR0(false) {
-
-  if (relevant_vars.empty()) {
-    for (int i = 0; i < tasks::g_root_task->get_num_variables(); ++i) {
-      relevant_vars.insert(i);
-    }
-  }
-}
+                                           const SymParamsMgr &params)
+    : vars(v), p(params), initialState(v->zeroBDD()), goal(v->zeroBDD()),
+      min_transition_cost(0), hasTR0(false) {}
 
 void SymStateSpaceManager::dumpMutexBDDs(bool fw) const {
   if (fw) {
@@ -175,7 +166,8 @@ void SymStateSpaceManager::init_transitions(
   }
 }
 
-SymParamsMgr::SymParamsMgr(const options::Options &opts)
+SymParamsMgr::SymParamsMgr(const options::Options &opts,
+                           const std::shared_ptr<AbstractTask> &task)
     : max_tr_size(opts.get<int>("max_tr_size")),
       max_tr_time(opts.get<int>("max_tr_time")),
       mutex_type(MutexType(opts.get_enum("mutex_type"))),
@@ -184,24 +176,8 @@ SymParamsMgr::SymParamsMgr(const options::Options &opts)
       max_aux_nodes(opts.get<int>("max_aux_nodes")),
       max_aux_time(opts.get<int>("max_aux_time")) {
   // Don't use edeletion with conditional effects
-  TaskProxy task_proxy(*tasks::g_root_task);
   if (mutex_type == MutexType::MUTEX_EDELETION &&
-      task_properties::has_conditional_effects(task_proxy)) {
-    cout << "Mutex type changed to mutex_and because the domain has "
-            "conditional effects"
-         << endl;
-    mutex_type = MutexType::MUTEX_AND;
-  }
-}
-
-SymParamsMgr::SymParamsMgr()
-    : max_tr_size(100000), max_tr_time(60000),
-      mutex_type(MutexType::MUTEX_EDELETION), max_mutex_size(100000),
-      max_mutex_time(60000), max_aux_nodes(1000000), max_aux_time(2000) {
-  // Don't use edeletion with conditional effects
-  TaskProxy task_proxy(*tasks::g_root_task);
-  if (mutex_type == MutexType::MUTEX_EDELETION &&
-      task_properties::has_conditional_effects(task_proxy)) {
+      task_properties::has_conditional_effects(TaskProxy(*task))) {
     cout << "Mutex type changed to mutex_and because the domain has "
             "conditional effects"
          << endl;

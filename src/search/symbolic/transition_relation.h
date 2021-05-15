@@ -22,8 +22,10 @@ class OriginalStateSpace;
  */
 class TransitionRelation {
   SymVariables *sV; // To call basic BDD creation methods
-  int cost;         // transition cost
-  BDD tBDD;         // bdd for making the relprod
+  // Use task_proxy to access task information.
+  TaskProxy task_proxy;
+  int cost; // transition cost
+  BDD tBDD; // bdd for making the relprod
 
   std::vector<int> effVars;     // FD Index of eff variables. Must be sorted!!
   BDD existsVars, existsBwVars; // Cube with variables to existentialize
@@ -34,7 +36,8 @@ class TransitionRelation {
 
 public:
   // Constructor for transitions irrelevant for the abstraction
-  TransitionRelation(SymVariables *sVars, OperatorID op_id, int cost_);
+  TransitionRelation(SymVariables *sVars, OperatorID op_id,
+                     const std::shared_ptr<AbstractTask> &task);
   void init();
 
   // Copy constructor
@@ -60,9 +63,6 @@ public:
   const std::set<OperatorID> &getOpsIds() const { return ops_ids; }
 
   const BDD &getBDD() const { return tBDD; }
-
-  friend std::ostream &operator<<(std::ostream &os,
-                                  const TransitionRelation &tr);
 };
 } // namespace symbolic
 #endif

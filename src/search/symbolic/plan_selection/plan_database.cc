@@ -3,7 +3,6 @@
 #include "../../option_parser.h"
 #include "../../plugin.h"
 #include "../../state_registry.h"
-#include "../../tasks/root_task.h"
 
 namespace symbolic {
 

@@ -1,6 +1,5 @@
 #include "sym_solution_registry.h"
 #include "../searches/uniform_cost_search.h"
-#include "../tasks/root_task.h"
 
 namespace symbolic {
 

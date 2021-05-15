@@ -4,7 +4,6 @@
 #include "../options/option_parser.h"
 #include "../options/options.h"
 #include "../task_utils/task_properties.h"
-#include "../tasks/root_task.h"
 #include "opt_order.h"
 #include "sym_axiom/sym_axiom_compilation.h"
 
@@ -23,17 +22,22 @@ void exceptionError(string /*message*/) {
   throw BDDError();
 }
 
-SymVariables::SymVariables(const Options &opts)
-    : cudd_init_nodes(16000000L), cudd_init_cache_size(16000000L),
+SymVariables::SymVariables(const Options &opts,
+                           const std::shared_ptr<AbstractTask> &task)
+    : task_proxy(*task), task(task),
+      state_registry(std::make_shared<StateRegistry>(task_proxy)),
+      cudd_init_nodes(16000000L), cudd_init_cache_size(16000000L),
       cudd_init_available_memory(0L),
-      gamer_ordering(opts.get<bool>("gamer_ordering")) {}
+      gamer_ordering(opts.get<bool>("gamer_ordering")),
+      ax_comp(std::make_shared<SymAxiomCompilation>(
+          std::shared_ptr<SymVariables>(this), task)) {}
 
 void SymVariables::init() {
   vector<int> var_order;
   if (gamer_ordering) {
-    InfluenceGraph::compute_gamer_ordering(var_order);
+    InfluenceGraph::compute_gamer_ordering(var_order, task);
   } else {
-    for (int i = 0; i < tasks::g_root_task->get_num_variables(); ++i) {
+    for (size_t i = 0; i < task_proxy.get_variables().size(); ++i) {
       var_order.push_back(i);
     }
   }
@@ -60,7 +64,7 @@ void SymVariables::init(const vector<int> &v_order) {
   bdd_index_abs = vector<vector<int>>(v_order.size());
   int _numBDDVars = 0; // numBDDVars;
   for (int var : var_order) {
-    int var_len = ceil(log2(tasks::g_root_task->get_variable_domain_size(var)));
+    int var_len = ceil(log2(task_proxy.get_variables()[var].get_domain_size()));
     numBDDVars += var_len;
     for (int j = 0; j < var_len; j++) {
       bdd_index_pre[var].push_back(_numBDDVars);
@@ -95,13 +99,13 @@ void SymVariables::init(const vector<int> &v_order) {
   validBDD = oneBDD();
   // Generate predicate (precondition (s) and effect (s')) BDDs
   for (int var : var_order) {
-    for (int j = 0; j < tasks::g_root_task->get_variable_domain_size(var);
+    for (int j = 0; j < task_proxy.get_variables()[var].get_domain_size();
          j++) {
       preconditionBDDs[var].push_back(createPreconditionBDD(var, j));
       effectBDDs[var].push_back(createEffectBDD(var, j));
     }
     validValues[var] = zeroBDD();
-    for (int j = 0; j < tasks::g_root_task->get_variable_domain_size(var);
+    for (int j = 0; j < task_proxy.get_variables()[var].get_domain_size();
          j++) {
       validValues[var] += preconditionBDDs[var][j];
     }
@@ -114,14 +118,16 @@ void SymVariables::init(const vector<int> &v_order) {
 
   cout << "Symbolic Variables... Done." << endl;
 
-  ax_comp = std::shared_ptr<SymAxiomCompilation>(
-      new SymAxiomCompilation(std::shared_ptr<SymVariables>(this)));
-  if (task_properties::has_axioms(TaskProxy(*tasks::g_root_task))) {
+  if (task_properties::has_axioms(task_proxy)) {
     std::cout << "Creating Primary Representation for Derived Predicates..."
               << std::endl;
     ax_comp->init_axioms();
     std::cout << "Primary Representation... Done!" << std::endl;
   }
+}
+
+std::shared_ptr<StateRegistry> SymVariables::get_state_registry() {
+  return state_registry;
 }
 
 BDD SymVariables::getStateBDD(const std::vector<int> &state) const {
@@ -210,9 +216,9 @@ std::vector<std::string> SymVariables::get_fd_variable_names() const {
   for (int v : var_order) {
     int exp = 0;
     for (int j : bdd_index_pre[v]) {
-      var_names[j] = tasks::g_root_task->get_variable_name(v) + "_2^" +
+      var_names[j] = task_proxy.get_variables()[v].get_name() + "_2^" +
                      std::to_string(exp);
-      var_names[j + 1] = tasks::g_root_task->get_variable_name(v) + "_2^" +
+      var_names[j + 1] = task_proxy.get_variables()[v].get_name() + "_2^" +
                          std::to_string(exp++) + "_primed";
     }
   }

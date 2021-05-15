@@ -11,19 +11,20 @@ using namespace std;
 namespace symbolic {
 // Returns a optimized variable ordering that reorders the variables
 // according to the standard causal graph criterion
-void InfluenceGraph::compute_gamer_ordering(std::vector<int> &var_order) {
-  TaskProxy task_proxy(*tasks::g_root_task);
+void InfluenceGraph::compute_gamer_ordering(
+    std::vector<int> &var_order, const std::shared_ptr<AbstractTask> &task) {
+  TaskProxy task_proxy(*task);
 
   const causal_graph::CausalGraph &cg = task_proxy.get_causal_graph();
 
   if (var_order.empty()) {
-    for (int v = 0; v < tasks::g_root_task->get_num_variables(); v++) {
+    for (size_t v = 0; v < task_proxy.get_variables().size(); v++) {
       var_order.push_back(v);
     }
   }
 
-  InfluenceGraph ig_partitions(tasks::g_root_task->get_num_variables());
-  for (int v = 0; v < tasks::g_root_task->get_num_variables(); v++) {
+  InfluenceGraph ig_partitions(task_proxy.get_variables().size());
+  for (size_t v = 0; v < task_proxy.get_variables().size(); v++) {
     for (int v2 : cg.get_successors(v)) {
       if ((int)v != v2) {
         ig_partitions.set_influence(v, v2);

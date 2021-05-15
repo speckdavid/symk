@@ -24,6 +24,12 @@ class SymVariables;
 class SymbolicSearch : public SearchEngine {
 private:
 protected:
+  // Hold a reference to the task implementation and pass it to objects that
+  // need it.
+  const std::shared_ptr<AbstractTask> task;
+  // Use task_proxy to access task information.
+  TaskProxy task_proxy;
+
   // Symbolic manager to perform bdd operations
   std::shared_ptr<SymStateSpaceManager> mgr;
 
@@ -42,7 +48,7 @@ protected:
 
   std::shared_ptr<PlanDataBase> plan_data_base;
   SymSolutionRegistry solution_registry; // Solution registry
-  
+
   virtual void initialize() override;
 
   virtual SearchStatus step() override;

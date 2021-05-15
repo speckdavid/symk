@@ -11,7 +11,7 @@ namespace symbolic {
 
 void SymbolicUniformCostSearch::initialize() {
   SymbolicSearch::initialize();
-  mgr = std::make_shared<OriginalStateSpace>(vars.get(), mgrParams);
+  mgr = std::make_shared<OriginalStateSpace>(vars.get(), mgrParams, task);
 
   std::unique_ptr<UniformCostSearch> fw_search = nullptr;
   std::unique_ptr<UniformCostSearch> bw_search = nullptr;

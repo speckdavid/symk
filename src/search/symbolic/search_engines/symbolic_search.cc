@@ -22,8 +22,9 @@ using namespace options;
 namespace symbolic {
 
 SymbolicSearch::SymbolicSearch(const options::Options &opts)
-    : SearchEngine(opts), vars(make_shared<SymVariables>(opts)),
-      mgrParams(opts), searchParams(opts), step_num(-1),
+    : SearchEngine(opts), task(opts.get<shared_ptr<AbstractTask>>("transform")),
+      task_proxy(*task), vars(make_shared<SymVariables>(opts, task)),
+      mgrParams(opts, task), searchParams(opts), step_num(-1),
       lower_bound_increased(true), lower_bound(0),
       upper_bound(std::numeric_limits<int>::max()), min_g(0),
       plan_data_base(opts.get<std::shared_ptr<PlanDataBase>>("plan_selection")),
@@ -32,6 +33,8 @@ SymbolicSearch::SymbolicSearch(const options::Options &opts)
   mgrParams.print_options();
   searchParams.print_options();
   vars->init();
+  std::cout << "MAX COST: "
+            << task_properties::get_max_operator_cost(task_proxy) << std::endl;
 }
 
 void SymbolicSearch::initialize() {
@@ -112,6 +115,11 @@ void SymbolicSearch::new_solution(const SymSolutionCut &sol) {
 }
 
 void SymbolicSearch::add_options_to_parser(OptionParser &parser) {
+  parser.add_option<shared_ptr<AbstractTask>>(
+      "transform",
+      "Optional task transformation for the search."
+      " Currently, adapt_costs() and no_transform() are available.",
+      "no_transform()");
   SearchEngine::add_options_to_parser(parser);
   SymVariables::add_options_to_parser(parser);
   SymParamsSearch::add_options_to_parser(parser, 30e3, 10e7);

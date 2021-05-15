@@ -12,48 +12,51 @@ using namespace std;
 
 namespace symbolic {
 
-OriginalStateSpace::OriginalStateSpace(SymVariables *v,
-                                       const SymParamsMgr &params)
-    : SymStateSpaceManager(v, params) {
+OriginalStateSpace::OriginalStateSpace(
+    SymVariables *v, const SymParamsMgr &params,
+    const std::shared_ptr<AbstractTask> &task)
+    : SymStateSpaceManager(v, params), task(task) {
 
   // Transform initial state and goal states if axioms are present
-  if (task_properties::has_axioms(TaskProxy(*tasks::g_root_task))) {
+  if (task_properties::has_axioms(TaskProxy(*task))) {
     initialState = v->get_axiom_compiliation()->get_compilied_init_state();
     goal = v->get_axiom_compiliation()->get_compilied_goal_state();
   } else {
-    initialState =
-        vars->getStateBDD(tasks::g_root_task->get_initial_state_values());
+    initialState = vars->getStateBDD(task->get_initial_state_values());
     std::vector<std::pair<int, int>> goal_facts;
-    for (int i = 0; i < tasks::g_root_task->get_num_goals(); i++) {
-      auto fact = tasks::g_root_task->get_goal_fact(i);
+    for (int i = 0; i < task->get_num_goals(); i++) {
+      auto fact = task->get_goal_fact(i);
       goal_facts.emplace_back(fact.var, fact.value);
     }
     goal = vars->getPartialStateBDD(goal_facts);
   }
 
-  init_mutex(tasks::g_root_task->get_mutex_groups());
+  init_mutex(task->get_mutex_groups());
   create_single_trs();
   init_transitions(indTRs);
 }
 
 void OriginalStateSpace::create_single_trs() {
-  for (int i = 0; i < tasks::g_root_task->get_num_operators(); i++) {
-    int cost = tasks::g_root_task->get_operator_cost(i, false);
+  for (int i = 0; i < task->get_num_operators(); i++) {
+    int cost = task->get_operator_cost(i, false);
 
     // Ignore cost operators and set zero costs to 1
     // cout << "Creating TR of op " << i << " of cost " << cost << endl;
-    indTRs[cost].emplace_back(vars, OperatorID(i), cost);
+    indTRs[cost].emplace_back(vars, OperatorID(i), task);
     indTRs[cost].back().init();
-    if (p.mutex_type == MutexType::MUTEX_EDELETION) {
+    // indTRs[cost].back().overapproximate();
+
+    if (p.mutex_type == MutexType::MUTEX_EDELETION)
+    {
       indTRs[cost].back().edeletion(notMutexBDDsByFluentFw,
                                     notMutexBDDsByFluentBw,
                                     exactlyOneBDDsByFluent);
     }
-    /*cout << tasks::g_root_task->get_operator_name(i, false) << " with of cost
+    /*cout << task->get_operator_name(i, false) << " with of cost
     " << cost << " and nodes "
          << indTRs[cost].back().nodeCount() << endl;
     auto names = vars->get_fd_variable_names();
-    indTRs[cost].back().getBDD().toDot(tasks::g_root_task->get_operator_name(i,
+    indTRs[cost].back().getBDD().toDot(task->get_operator_name(i,
     false) + ".dot", names);*/
   }
 }
@@ -70,12 +73,10 @@ void OriginalStateSpace::init_mutex(
   if (genMutexBDDByFluent) {
     // Initialize structure for exactlyOneBDDsByFluent (common to both
     // init_mutex calls)
-    exactlyOneBDDsByFluent.resize(tasks::g_root_task->get_num_variables());
-    for (int i = 0; i < tasks::g_root_task->get_num_variables(); ++i) {
-      exactlyOneBDDsByFluent[i].resize(
-          tasks::g_root_task->get_variable_domain_size(i));
-      for (int j = 0; j < tasks::g_root_task->get_variable_domain_size(i);
-           ++j) {
+    exactlyOneBDDsByFluent.resize(task->get_num_variables());
+    for (int i = 0; i < task->get_num_variables(); ++i) {
+      exactlyOneBDDsByFluent[i].resize(task->get_variable_domain_size(i));
+      for (int j = 0; j < task->get_variable_domain_size(i); ++j) {
         exactlyOneBDDsByFluent[i][j] = oneBDD();
       }
     }
@@ -99,12 +100,10 @@ void OriginalStateSpace::init_mutex(const std::vector<MutexGroup> &mutex_groups,
 
   if (genMutexBDDByFluent) {
     // Initialize structure for notMutexBDDsByFluent
-    notMutexBDDsByFluent.resize(tasks::g_root_task->get_num_variables());
-    for (int i = 0; i < tasks::g_root_task->get_num_variables(); ++i) {
-      notMutexBDDsByFluent[i].resize(
-          tasks::g_root_task->get_variable_domain_size(i));
-      for (int j = 0; j < tasks::g_root_task->get_variable_domain_size(i);
-           ++j) {
+    notMutexBDDsByFluent.resize(task->get_num_variables());
+    for (int i = 0; i < task->get_num_variables(); ++i) {
+      notMutexBDDsByFluent[i].resize(task->get_variable_domain_size(i));
+      for (int j = 0; j < task->get_variable_domain_size(i); ++j) {
         notMutexBDDsByFluent[i][j] = oneBDD();
       }
     }
@@ -112,13 +111,11 @@ void OriginalStateSpace::init_mutex(const std::vector<MutexGroup> &mutex_groups,
 
   // Initialize mBDDByVar and invariant_bdds_by_fluent
   vector<BDD> mBDDByVar;
-  mBDDByVar.reserve(tasks::g_root_task->get_num_variables());
-  vector<vector<BDD>> invariant_bdds_by_fluent(
-      tasks::g_root_task->get_num_variables());
+  mBDDByVar.reserve(task->get_num_variables());
+  vector<vector<BDD>> invariant_bdds_by_fluent(task->get_num_variables());
   for (size_t i = 0; i < invariant_bdds_by_fluent.size(); i++) {
     mBDDByVar.push_back(oneBDD());
-    invariant_bdds_by_fluent[i].resize(
-        tasks::g_root_task->get_variable_domain_size(i));
+    invariant_bdds_by_fluent[i].resize(task->get_variable_domain_size(i));
     for (size_t j = 0; j < invariant_bdds_by_fluent[i].size(); j++) {
       invariant_bdds_by_fluent[i][j] = oneBDD();
     }
@@ -182,7 +179,7 @@ void OriginalStateSpace::init_mutex(const std::vector<MutexGroup> &mutex_groups,
   }
 
   if (genMutexBDD) {
-    for (int var = 0; var < tasks::g_root_task->get_num_variables(); ++var) {
+    for (int var = 0; var < task->get_num_variables(); ++var) {
       if (!mBDDByVar[var].IsOne()) {
         notMutexBDDs.push_back(mBDDByVar[var]);
       }

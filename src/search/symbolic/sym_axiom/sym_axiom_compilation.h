@@ -13,7 +13,8 @@ class SymVariables;
 class SymAxiomCompilation {
 
 public:
-  SymAxiomCompilation(std::shared_ptr<SymVariables> sym_vars);
+  SymAxiomCompilation(std::shared_ptr<SymVariables> sym_vars,
+                      const std::shared_ptr<AbstractTask> &task);
 
   bool is_derived_variable(int var) const;
   bool is_in_body(int var, int axiom_id) const;
@@ -29,7 +30,7 @@ public:
 
 protected:
   std::shared_ptr<SymVariables> sym_vars; // For axiom creation
-  TaskProxy task;
+  TaskProxy task_proxy;
   std::vector<int> axiom_body_layer;
   std::map<int, BDD> primary_representations;
 

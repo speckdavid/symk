@@ -39,8 +39,8 @@ public:
   // Time and memory bounds for auxiliary operations
   int max_aux_nodes, max_aux_time;
 
-  SymParamsMgr();
-  SymParamsMgr(const options::Options &opts);
+  SymParamsMgr(const options::Options &opts,
+               const std::shared_ptr<AbstractTask> &task);
   static void add_options_to_parser(options::OptionParser &parser);
   void print_options() const;
 };
@@ -57,9 +57,6 @@ protected:
   SymVariables *vars;
   const SymParamsMgr p;
 
-  // If the variable is fully/partially/not considered in the abstraction
-  std::set<int> relevant_vars;
-
   BDD initialState; // initial state
   BDD goal; // bdd representing the true (i.e. not simplified) goal-state
 
@@ -74,18 +71,13 @@ protected:
   // filter_mutex (it does not matter which mutex_type we are using).
   std::vector<BDD> notDeadEndFw, notDeadEndBw;
 
-  BDD getRelVarsCubePre() const { return vars->getCubePre(relevant_vars); }
-
-  BDD getRelVarsCubeEff() const { return vars->getCubeEff(relevant_vars); }
-
   virtual std::string tag() const = 0;
 
   void init_transitions(
       const std::map<int, std::vector<TransitionRelation>> &(indTRs));
 
 public:
-  SymStateSpaceManager(SymVariables *v, const SymParamsMgr &params,
-                       const std::set<int> &relevant_vars_ = std::set<int>());
+  SymStateSpaceManager(SymVariables *v, const SymParamsMgr &params);
 
   virtual ~SymStateSpaceManager() {}
 
@@ -186,9 +178,7 @@ public:
   friend std::ostream &operator<<(std::ostream &os,
                                   const SymStateSpaceManager &state_space);
 
-  virtual void print(std::ostream &os, bool /*fullInfo*/) const {
-    os << tag() << " (" << relevant_vars.size() << ")";
-  }
+  virtual void print(std::ostream &os, bool /*fullInfo*/) const { os << tag(); }
 
   // For plan solution reconstruction. Only avaialble in original state space
 

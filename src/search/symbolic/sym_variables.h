@@ -38,6 +38,11 @@ struct BDDError {};
 extern void exceptionError(std::string message);
 
 class SymVariables {
+  // Use task_proxy to access task information.
+  TaskProxy task_proxy;
+  const std::shared_ptr<AbstractTask> task;
+  std::shared_ptr<StateRegistry> state_registry; // used for explicit stuff
+
   // Var order used by the algorithm.
   // const VariableOrderType variable_ordering;
   // Parameters to initialize the CUDD manager
@@ -47,8 +52,7 @@ class SymVariables {
   const bool gamer_ordering;
 
   std::unique_ptr<Cudd> manager; // manager associated with this symbolic search
-  std::shared_ptr<SymAxiomCompilation> ax_comp;  // used for axioms
-  std::shared_ptr<StateRegistry> state_registry; // used for explicit stuff
+  std::shared_ptr<SymAxiomCompilation> ax_comp; // used for axioms
 
   int numBDDVars; // Number of binary variables (just one set, the total number
   // is numBDDVars*3
@@ -76,16 +80,11 @@ class SymVariables {
   void init(const std::vector<int> &v_order);
 
 public:
-  SymVariables(const options::Options &opts);
+  SymVariables(const options::Options &opts,
+               const std::shared_ptr<AbstractTask> &task);
   void init();
 
-  std::shared_ptr<StateRegistry> get_state_registry() {
-    if (state_registry == nullptr) {
-      state_registry =
-          std::make_shared<StateRegistry>(TaskProxy(*tasks::g_root_task));
-    }
-    return state_registry;
-  }
+  std::shared_ptr<StateRegistry> get_state_registry();
 
   std::shared_ptr<SymAxiomCompilation> get_axiom_compiliation() {
     return ax_comp;

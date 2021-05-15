@@ -12,15 +12,16 @@ using namespace std;
 
 namespace symbolic {
 
-TransitionRelation::TransitionRelation(SymVariables *sVars, OperatorID op_id,
-                                       int cost_)
-    : sV(sVars), cost(cost_), tBDD(sVars->oneBDD()),
+TransitionRelation::TransitionRelation(
+    SymVariables *sVars, OperatorID op_id,
+    const std::shared_ptr<AbstractTask> &task)
+    : sV(sVars), task_proxy(*task),
+      cost(task_proxy.get_operators()[op_id].get_cost()), tBDD(sVars->oneBDD()),
       existsVars(sVars->oneBDD()), existsBwVars(sVars->oneBDD()) {
   ops_ids.insert(op_id);
 }
 
 void TransitionRelation::init() {
-  TaskProxy task_proxy(*tasks::g_root_task);
   OperatorProxy op = task_proxy.get_operators()[ops_ids.begin()->get_index()];
 
   for (auto const &pre : op.get_preconditions()) { // Put precondition of label
@@ -189,13 +190,10 @@ void TransitionRelation::edeletion(
     const std::vector<std::vector<BDD>> &notMutexBDDsByFluentBw,
     const std::vector<std::vector<BDD>> &exactlyOneBDDsByFluent) {
   assert(ops_ids.size() == 1);
-  assert(notMutexBDDsByFluentFw.size() ==
-         tasks::g_root_task->get_num_variables());
-  assert(notMutexBDDsByFluentBw.size() ==
-         tasks::g_root_task->get_num_variables());
-  assert(exactlyOneBDDsByFluent.size() ==
-         tasks::g_root_task->get_num_variables());
-  TaskProxy task_proxy(*tasks::g_root_task);
+  assert(notMutexBDDsByFluentFw.size() == task_proxy.get_variables().size());
+  assert(notMutexBDDsByFluentBw.size() == task_proxy.get_variables().size());
+  assert(exactlyOneBDDsByFluent.size() == task_proxy.get_variables().size());
+
   // For each op, include relevant mutexes
   for (const OperatorID &op_id : ops_ids) {
     OperatorProxy op = task_proxy.get_operators()[op_id.get_index()];
@@ -216,7 +214,7 @@ void TransitionRelation::edeletion(
         // That means that every previous value is possible
         // for each value of the variable
         for (int val = 0;
-             val < tasks::g_root_task->get_variable_domain_size(pp.var);
+             val < task_proxy.get_variables()[pp.var].get_domain_size();
              val++) {
           tBDD *= notMutexBDDsByFluentBw[pp.var][val];
         }
@@ -234,14 +232,6 @@ void TransitionRelation::edeletion(
       tBDD *= exactlyOneBDDsByFluent[pp.var][pp.value];
     }
   }
-}
-
-ostream &operator<<(std::ostream &os, const TransitionRelation &tr) {
-  os << "TR(";
-  for (auto &op : tr.ops_ids) {
-    os << tasks::g_root_task->get_operator_name(op.get_index(), false) << ", ";
-  }
-  return os << "): " << tr.tBDD.nodeCount() << endl;
 }
 
 } // namespace symbolic

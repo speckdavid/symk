@@ -7,6 +7,10 @@
 namespace symbolic {
 
 class OriginalStateSpace : public SymStateSpaceManager {
+  // Hold a reference to the task implementation and pass it to objects that
+  // need it.
+  const std::shared_ptr<AbstractTask> task;
+
   void create_single_trs();
 
   void init_mutex(const std::vector<MutexGroup> &mutex_groups);
@@ -14,7 +18,8 @@ class OriginalStateSpace : public SymStateSpaceManager {
                   bool genMutexBDDByFluent, bool fw);
 
 public:
-  OriginalStateSpace(SymVariables *v, const SymParamsMgr &params);
+  OriginalStateSpace(SymVariables *v, const SymParamsMgr &params,
+                     const std::shared_ptr<AbstractTask> &task);
 
   // Individual TRs: Useful for shrink and plan construction
   std::map<int, std::vector<TransitionRelation>> indTRs;
