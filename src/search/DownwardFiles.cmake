@@ -786,6 +786,7 @@ fast_downward_plugin(
         symbolic/plan_selection/top_k_even_selector
         symbolic/plan_selection/simple_selector
         symbolic/plan_selection/unordered_selector
+        symbolic/plan_selection/validation_selector
         symbolic/sym_axiom/sym_axiom_compilation
 )
 
