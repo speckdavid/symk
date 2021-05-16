@@ -33,8 +33,6 @@ SymbolicSearch::SymbolicSearch(const options::Options &opts)
   mgrParams.print_options();
   searchParams.print_options();
   vars->init();
-  std::cout << "MAX COST: "
-            << task_properties::get_max_operator_cost(task_proxy) << std::endl;
 }
 
 void SymbolicSearch::initialize() {

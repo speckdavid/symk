@@ -17,32 +17,30 @@ void ValidationSelector::add_plan(const Plan &plan) {
       save_accepted_plan(plan);
     } else {
       save_rejected_plan(plan);
-      std::cout << "Rejected: " << num_rejected_plans << std::endl;
+      // std::cout << "Rejected: " << num_rejected_plans << std::endl;
     }
   }
 }
 
 bool ValidationSelector::is_valid_plan(const Plan &plan) {
-  GlobalState cur = sym_vars->get_state_registry()->get_initial_state();
+  GlobalState cur = original_state_registry.get_initial_state();
 
   for (size_t i = 0; i < plan.size(); i++) {
     auto original_op_id =
         sym_vars->get_state_registry()
             ->get_task_proxy()
-            .get_operators()[i]
+            .get_operators()[plan[i]]
             .get_ancestor_operator_id(tasks::g_root_task.get());
-    auto original_op =
-        sym_vars->get_state_registry()->get_task_proxy().get_operators()[i];
-    // original_task_proxy.get_operators()[original_op_id];
+    auto original_op = original_task_proxy.get_operators()[original_op_id];
     if (task_properties::is_applicable(original_op, cur.unpack()))
     {
-      cur = sym_vars->get_state_registry()->get_successor_state(cur, original_op);
+      cur = original_state_registry.get_successor_state(cur, original_op);
     }
     else {
       return false;
     }
   }
-  return true;
+  return task_properties::is_goal_state(original_task_proxy, cur.unpack());
 }
 
 static std::shared_ptr<PlanDataBase> _parse(OptionParser &parser) {
