@@ -33,6 +33,8 @@ SymbolicSearch::SymbolicSearch(const options::Options &opts)
   mgrParams.print_options();
   searchParams.print_options();
   vars->init();
+
+  task_properties::dump_task(task_proxy);
 }
 
 void SymbolicSearch::initialize() {

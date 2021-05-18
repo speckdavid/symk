@@ -21,7 +21,12 @@ TransitionRelation::TransitionRelation(
   ops_ids.insert(op_id);
 }
 
-void TransitionRelation::init() {
+void TransitionRelation::init(bool delete_relaxed) {
+  if (delete_relaxed) {
+    init_delete_relaxed();
+    return;
+  }
+
   OperatorProxy op = task_proxy.get_operators()[ops_ids.begin()->get_index()];
 
   for (auto const &pre : op.get_preconditions()) { // Put precondition of label
@@ -75,6 +80,97 @@ void TransitionRelation::init() {
     }
     tBDD *= effectBDD;
     counter++;
+  }
+  if (tBDD.IsZero()) {
+    cerr << "Operator is empty: " << op.get_name() << endl;
+    // exit(0);
+  }
+
+  sort(effVars.begin(), effVars.end());
+  for (int var : effVars) {
+    for (int bdd_var : sV->vars_index_pre(var)) {
+      swapVarsS.push_back(sV->bddVar(bdd_var));
+    }
+    for (int bdd_var : sV->vars_index_eff(var)) {
+      swapVarsSp.push_back(sV->bddVar(bdd_var));
+    }
+  }
+  assert(swapVarsS.size() == swapVarsSp.size());
+  // existsVars/existsBwVars is just the conjunction of swapVarsS and swapVarsSp
+  for (size_t i = 0; i < swapVarsS.size(); ++i) {
+    existsVars *= swapVarsS[i];
+    existsBwVars *= swapVarsSp[i];
+  }
+}
+
+void TransitionRelation::init_delete_relaxed() {
+
+  OperatorProxy op = task_proxy.get_operators()[ops_ids.begin()->get_index()];
+
+  for (auto const &pre : op.get_preconditions()) { // Put precondition of label
+    FactPair fact = pre.get_pair();
+    tBDD *= sV->get_axiom_compiliation()->get_primary_representation(
+        fact.var, fact.value);
+  }
+
+  std::string op_name = op.get_name();
+  std::remove(op_name.begin(), op_name.end(), ' ');
+
+  map<int, BDD> effect_conditions;
+  map<int, BDD> effects;
+
+  // Get effects and the remaining conditions.
+  for (auto const &eff : op.get_effects()) {
+    FactPair eff_fact = eff.get_fact().get_pair();
+    int var = eff_fact.var;
+    if (std::find(effVars.begin(), effVars.end(), var) == effVars.end()) {
+      effVars.push_back(var);
+    }
+
+    BDD condition = sV->oneBDD();
+    BDD ppBDD = sV->effBDD(var, eff_fact.value);
+    if (effect_conditions.count(var)) {
+      condition = effect_conditions.at(var);
+    } else {
+      effect_conditions[var] = condition;
+      effects[var] = sV->zeroBDD();
+    }
+
+    for (const auto &cPrev : eff.get_conditions()) {
+      FactPair cPrev_cond = cPrev.get_pair();
+      condition *= sV->get_axiom_compiliation()->get_primary_representation(
+          cPrev_cond.var, cPrev_cond.value);
+    }
+    effect_conditions[var] *= !condition;
+    effects[var] += (condition * ppBDD);
+  }
+
+  // Add effects to the tBDD
+  for (auto it = effects.rbegin(); it != effects.rend(); ++it) {
+    int var = it->first;
+    BDD effectBDD = it->second;
+    // If some possibility is not covered by the conditions of the
+    // conditional effect, then in those cases the value of the value
+    // is preserved with a biimplication
+    if (!effect_conditions[var].IsZero()) {
+      std::cout << "non zero cond" << std::endl;
+      effectBDD += (effect_conditions[var] * sV->biimp(var));
+    }
+
+    // DELETE RELAXATION
+    bool var_in_pre = false;
+    for (auto const &pre : op.get_preconditions()) {
+      FactPair fact = pre.get_pair();
+      if (fact.var == var) {
+        var_in_pre = true;
+        tBDD *= effectBDD + sV->effBDD(fact.var, fact.value);
+        break;
+      }
+    }
+
+    if (!var_in_pre) {
+      tBDD *= effectBDD + sV->biimp(var);
+    }
   }
   if (tBDD.IsZero()) {
     cerr << "Operator is empty: " << op.get_name() << endl;

@@ -216,15 +216,42 @@ std::vector<std::string> SymVariables::get_fd_variable_names() const {
   for (int v : var_order) {
     int exp = 0;
     for (int j : bdd_index_pre[v]) {
-      var_names[j] = task_proxy.get_variables()[v].get_name() + "_2^" +
+      var_names[j] = tasks::g_root_task->get_variable_name(v) + "_2^" +
                      std::to_string(exp);
-      var_names[j + 1] = task_proxy.get_variables()[v].get_name() + "_2^" +
+      var_names[j + 1] = tasks::g_root_task->get_variable_name(v) + "_2^" +
                          std::to_string(exp++) + "_primed";
     }
   }
 
   return var_names;
 }
+
+void SymVariables::bdd_to_dot(const BDD &bdd,
+                              const std::string &file_name) const {
+  std::vector<string> var_names(numBDDVars * 2);
+  for (int v : var_order) {
+    int exp = 0;
+    for (int j : bdd_index_pre[v]) {
+      var_names[j] = tasks::g_root_task->get_variable_name(v) + "_2^" +
+                     std::to_string(exp);
+      var_names[j + 1] = tasks::g_root_task->get_variable_name(v) + "_2^" +
+                         std::to_string(exp++) + "_primed";
+    }
+  }
+
+  std::vector<char *> names(numBDDVars * 2);
+  for (int i = 0; i < numBDDVars * 2; ++i) {
+    names[i] = &var_names[i].front();
+  }
+  FILE *outfile = fopen(file_name.c_str(), "w");
+  DdNode **ddnodearray = (DdNode **)malloc(sizeof(bdd.Add().getNode()));
+  ddnodearray[0] = bdd.Add().getNode();
+  Cudd_DumpDot(manager->getManager(), 1, ddnodearray, names.data(), NULL,
+               outfile); // dump the function to .dot file
+  free(ddnodearray);
+  fclose(outfile);
+}
+
 
 void SymVariables::print_options() const {
   cout << "CUDD Init: nodes=" << cudd_init_nodes

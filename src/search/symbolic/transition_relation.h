@@ -38,7 +38,8 @@ public:
   // Constructor for transitions irrelevant for the abstraction
   TransitionRelation(SymVariables *sVars, OperatorID op_id,
                      const std::shared_ptr<AbstractTask> &task);
-  void init();
+  void init(bool delete_relaxed);
+  void init_delete_relaxed();
 
   // Copy constructor
   TransitionRelation(const TransitionRelation &) = default;

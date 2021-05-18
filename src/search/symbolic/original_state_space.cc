@@ -43,7 +43,7 @@ void OriginalStateSpace::create_single_trs() {
     // Ignore cost operators and set zero costs to 1
     // cout << "Creating TR of op " << i << " of cost " << cost << endl;
     indTRs[cost].emplace_back(vars, OperatorID(i), task);
-    indTRs[cost].back().init();
+    indTRs[cost].back().init(true);
     // indTRs[cost].back().overapproximate();
 
     if (p.mutex_type == MutexType::MUTEX_EDELETION)
