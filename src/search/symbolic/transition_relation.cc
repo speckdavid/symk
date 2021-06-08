@@ -11,272 +11,175 @@
 using namespace std;
 
 namespace symbolic {
-
 TransitionRelation::TransitionRelation(
     SymVariables *sVars, OperatorID op_id,
     const std::shared_ptr<AbstractTask> &task)
     : sV(sVars), task_proxy(*task),
       cost(task_proxy.get_operators()[op_id].get_cost()), tBDD(sVars->oneBDD()),
       existsVars(sVars->oneBDD()), existsBwVars(sVars->oneBDD()) {
-  ops_ids.insert(op_id);
+    ops_ids.insert(op_id);
 }
 
-void TransitionRelation::init(bool delete_relaxed) {
-  if (delete_relaxed) {
-    init_delete_relaxed();
-    return;
-  }
+void TransitionRelation::init() {
+    OperatorProxy op = task_proxy.get_operators()[ops_ids.begin()->get_index()];
 
-  OperatorProxy op = task_proxy.get_operators()[ops_ids.begin()->get_index()];
-
-  for (auto const &pre : op.get_preconditions()) { // Put precondition of label
-    FactPair fact = pre.get_pair();
-    tBDD *= sV->get_axiom_compiliation()->get_primary_representation(
-        fact.var, fact.value);
-  }
-
-  std::string op_name = op.get_name();
-  std::remove(op_name.begin(), op_name.end(), ' ');
-
-  map<int, BDD> effect_conditions;
-  map<int, BDD> effects;
-
-  // Get effects and the remaining conditions.
-  for (auto const &eff : op.get_effects()) {
-    FactPair eff_fact = eff.get_fact().get_pair();
-    int var = eff_fact.var;
-    if (std::find(effVars.begin(), effVars.end(), var) == effVars.end()) {
-      effVars.push_back(var);
+    for (auto const &pre : op.get_preconditions()) { // Put precondition of label
+        FactPair fact = pre.get_pair();
+        tBDD *= sV->get_axiom_compiliation()->get_primary_representation(
+            fact.var, fact.value);
     }
 
-    BDD condition = sV->oneBDD();
-    BDD ppBDD = sV->effBDD(var, eff_fact.value);
-    if (effect_conditions.count(var)) {
-      condition = effect_conditions.at(var);
-    } else {
-      effect_conditions[var] = condition;
-      effects[var] = sV->zeroBDD();
+    std::string op_name = op.get_name();
+    std::remove(op_name.begin(), op_name.end(), ' ');
+
+    map<int, BDD> effect_conditions;
+    map<int, BDD> effects;
+
+    // Get effects and the remaining conditions.
+    for (auto const &eff : op.get_effects()) {
+        FactPair eff_fact = eff.get_fact().get_pair();
+        int var = eff_fact.var;
+        if (std::find(effVars.begin(), effVars.end(), var) == effVars.end()) {
+            effVars.push_back(var);
+        }
+
+        BDD condition = sV->oneBDD();
+        BDD ppBDD = sV->effBDD(var, eff_fact.value);
+        if (effect_conditions.count(var)) {
+            condition = effect_conditions.at(var);
+        } else {
+            effect_conditions[var] = condition;
+            effects[var] = sV->zeroBDD();
+        }
+
+        for (const auto &cPrev : eff.get_conditions()) {
+            FactPair cPrev_cond = cPrev.get_pair();
+            condition *= sV->get_axiom_compiliation()->get_primary_representation(
+                cPrev_cond.var, cPrev_cond.value);
+        }
+        effect_conditions[var] *= !condition;
+        effects[var] += (condition * ppBDD);
     }
 
-    for (const auto &cPrev : eff.get_conditions()) {
-      FactPair cPrev_cond = cPrev.get_pair();
-      condition *= sV->get_axiom_compiliation()->get_primary_representation(
-          cPrev_cond.var, cPrev_cond.value);
+    // Add effects to the tBDD
+    int counter = 0;
+    for (auto it = effects.rbegin(); it != effects.rend(); ++it) {
+        int var = it->first;
+        BDD effectBDD = it->second;
+        // If some possibility is not covered by the conditions of the
+        // conditional effect, then in those cases the value of the value
+        // is preserved with a biimplication
+        if (!effect_conditions[var].IsZero()) {
+            effectBDD += (effect_conditions[var] * sV->biimp(var));
+        }
+        tBDD *= effectBDD;
+        counter++;
     }
-    effect_conditions[var] *= !condition;
-    effects[var] += (condition * ppBDD);
-  }
-
-  // Add effects to the tBDD
-  int counter = 0;
-  for (auto it = effects.rbegin(); it != effects.rend(); ++it) {
-    int var = it->first;
-    BDD effectBDD = it->second;
-    // If some possibility is not covered by the conditions of the
-    // conditional effect, then in those cases the value of the value
-    // is preserved with a biimplication
-    if (!effect_conditions[var].IsZero()) {
-      effectBDD += (effect_conditions[var] * sV->biimp(var));
-    }
-    tBDD *= effectBDD;
-    counter++;
-  }
-  if (tBDD.IsZero()) {
-    cerr << "Operator is empty: " << op.get_name() << endl;
-    // exit(0);
-  }
-
-  sort(effVars.begin(), effVars.end());
-  for (int var : effVars) {
-    for (int bdd_var : sV->vars_index_pre(var)) {
-      swapVarsS.push_back(sV->bddVar(bdd_var));
-    }
-    for (int bdd_var : sV->vars_index_eff(var)) {
-      swapVarsSp.push_back(sV->bddVar(bdd_var));
-    }
-  }
-  assert(swapVarsS.size() == swapVarsSp.size());
-  // existsVars/existsBwVars is just the conjunction of swapVarsS and swapVarsSp
-  for (size_t i = 0; i < swapVarsS.size(); ++i) {
-    existsVars *= swapVarsS[i];
-    existsBwVars *= swapVarsSp[i];
-  }
-}
-
-void TransitionRelation::init_delete_relaxed() {
-
-  OperatorProxy op = task_proxy.get_operators()[ops_ids.begin()->get_index()];
-
-  for (auto const &pre : op.get_preconditions()) { // Put precondition of label
-    FactPair fact = pre.get_pair();
-    tBDD *= sV->get_axiom_compiliation()->get_primary_representation(
-        fact.var, fact.value);
-  }
-
-  std::string op_name = op.get_name();
-  std::remove(op_name.begin(), op_name.end(), ' ');
-
-  map<int, BDD> effect_conditions;
-  map<int, BDD> effects;
-
-  // Get effects and the remaining conditions.
-  for (auto const &eff : op.get_effects()) {
-    FactPair eff_fact = eff.get_fact().get_pair();
-    int var = eff_fact.var;
-    if (std::find(effVars.begin(), effVars.end(), var) == effVars.end()) {
-      effVars.push_back(var);
+    if (tBDD.IsZero()) {
+        cerr << "Operator is empty: " << op.get_name() << endl;
+        // exit(0);
     }
 
-    BDD condition = sV->oneBDD();
-    BDD ppBDD = sV->effBDD(var, eff_fact.value);
-    if (effect_conditions.count(var)) {
-      condition = effect_conditions.at(var);
-    } else {
-      effect_conditions[var] = condition;
-      effects[var] = sV->zeroBDD();
+    sort(effVars.begin(), effVars.end());
+    for (int var : effVars) {
+        for (int bdd_var : sV->vars_index_pre(var)) {
+            swapVarsS.push_back(sV->bddVar(bdd_var));
+        }
+        for (int bdd_var : sV->vars_index_eff(var)) {
+            swapVarsSp.push_back(sV->bddVar(bdd_var));
+        }
     }
-
-    for (const auto &cPrev : eff.get_conditions()) {
-      FactPair cPrev_cond = cPrev.get_pair();
-      condition *= sV->get_axiom_compiliation()->get_primary_representation(
-          cPrev_cond.var, cPrev_cond.value);
+    assert(swapVarsS.size() == swapVarsSp.size());
+    // existsVars/existsBwVars is just the conjunction of swapVarsS and swapVarsSp
+    for (size_t i = 0; i < swapVarsS.size(); ++i) {
+        existsVars *= swapVarsS[i];
+        existsBwVars *= swapVarsSp[i];
     }
-    effect_conditions[var] *= !condition;
-    effects[var] += (condition * ppBDD);
-  }
-
-  // Add effects to the tBDD
-  for (auto it = effects.rbegin(); it != effects.rend(); ++it) {
-    int var = it->first;
-    BDD effectBDD = it->second;
-    // If some possibility is not covered by the conditions of the
-    // conditional effect, then in those cases the value of the value
-    // is preserved with a biimplication
-    if (!effect_conditions[var].IsZero()) {
-      std::cout << "non zero cond" << std::endl;
-      effectBDD += (effect_conditions[var] * sV->biimp(var));
-    }
-
-    // DELETE RELAXATION
-    bool var_in_pre = false;
-    for (auto const &pre : op.get_preconditions()) {
-      FactPair fact = pre.get_pair();
-      if (fact.var == var) {
-        var_in_pre = true;
-        tBDD *= effectBDD + sV->effBDD(fact.var, fact.value);
-        break;
-      }
-    }
-
-    if (!var_in_pre) {
-      tBDD *= effectBDD + sV->biimp(var);
-    }
-  }
-  if (tBDD.IsZero()) {
-    cerr << "Operator is empty: " << op.get_name() << endl;
-    // exit(0);
-  }
-
-  sort(effVars.begin(), effVars.end());
-  for (int var : effVars) {
-    for (int bdd_var : sV->vars_index_pre(var)) {
-      swapVarsS.push_back(sV->bddVar(bdd_var));
-    }
-    for (int bdd_var : sV->vars_index_eff(var)) {
-      swapVarsSp.push_back(sV->bddVar(bdd_var));
-    }
-  }
-  assert(swapVarsS.size() == swapVarsSp.size());
-  // existsVars/existsBwVars is just the conjunction of swapVarsS and swapVarsSp
-  for (size_t i = 0; i < swapVarsS.size(); ++i) {
-    existsVars *= swapVarsS[i];
-    existsBwVars *= swapVarsSp[i];
-  }
 }
 
 BDD TransitionRelation::image(const BDD &from) const {
-  BDD aux = from;
-  BDD tmp = tBDD.AndAbstract(aux, existsVars);
-  BDD res = tmp.SwapVariables(swapVarsS, swapVarsSp);
-  return res;
+    BDD aux = from;
+    BDD tmp = tBDD.AndAbstract(aux, existsVars);
+    BDD res = tmp.SwapVariables(swapVarsS, swapVarsSp);
+    return res;
 }
 
 BDD TransitionRelation::image(const BDD &from, int maxNodes) const {
-  utils::Timer t;
-  BDD aux = from;
-  BDD tmp = tBDD.AndAbstract(aux, existsVars, maxNodes);
-  BDD res = tmp.SwapVariables(swapVarsS, swapVarsSp);
-  return res;
+    utils::Timer t;
+    BDD aux = from;
+    BDD tmp = tBDD.AndAbstract(aux, existsVars, maxNodes);
+    BDD res = tmp.SwapVariables(swapVarsS, swapVarsSp);
+    return res;
 }
 
 BDD TransitionRelation::preimage(const BDD &from) const {
-  BDD tmp = from.SwapVariables(swapVarsS, swapVarsSp);
-  BDD res = tBDD.AndAbstract(tmp, existsBwVars);
-  return res;
+    BDD tmp = from.SwapVariables(swapVarsS, swapVarsSp);
+    BDD res = tBDD.AndAbstract(tmp, existsBwVars);
+    return res;
 }
 
 BDD TransitionRelation::preimage(const BDD &from, int maxNodes) const {
-  utils::Timer t;
-  BDD tmp = from.SwapVariables(swapVarsS, swapVarsSp);
-  BDD res = tBDD.AndAbstract(tmp, existsBwVars, maxNodes);
-  return res;
+    utils::Timer t;
+    BDD tmp = from.SwapVariables(swapVarsS, swapVarsSp);
+    BDD res = tBDD.AndAbstract(tmp, existsBwVars, maxNodes);
+    return res;
 }
 
 void TransitionRelation::merge(const TransitionRelation &t2, int maxNodes) {
-  assert(cost == t2.cost);
-  if (cost != t2.cost) {
-    cout << "Error: merging transitions with different cost: " << cost << " "
-         << t2.cost << endl;
-    utils::exit_with(utils::ExitCode::SEARCH_CRITICAL_ERROR);
-  }
-
-  //  cout << "set_union" << endl;
-  // Attempt to generate the new tBDD
-  vector<int> newEffVars;
-  set_union(effVars.begin(), effVars.end(), t2.effVars.begin(),
-            t2.effVars.end(), back_inserter(newEffVars));
-
-  BDD newTBDD = tBDD;
-  BDD newTBDD2 = t2.tBDD;
-
-  //    cout << "Eff vars" << endl;
-  vector<int>::const_iterator var1 = effVars.begin();
-  vector<int>::const_iterator var2 = t2.effVars.begin();
-  for (vector<int>::const_iterator var = newEffVars.begin();
-       var != newEffVars.end(); ++var) {
-    if (var1 == effVars.end() || *var1 != *var) {
-      newTBDD *= sV->biimp(*var);
-    } else {
-      ++var1;
+    assert(cost == t2.cost);
+    if (cost != t2.cost) {
+        cout << "Error: merging transitions with different cost: " << cost << " "
+             << t2.cost << endl;
+        utils::exit_with(utils::ExitCode::SEARCH_CRITICAL_ERROR);
     }
 
-    if (var2 == t2.effVars.end() || *var2 != *var) {
-      newTBDD2 *= sV->biimp(*var);
-    } else {
-      ++var2;
+    //  cout << "set_union" << endl;
+    // Attempt to generate the new tBDD
+    vector<int> newEffVars;
+    set_union(effVars.begin(), effVars.end(), t2.effVars.begin(),
+              t2.effVars.end(), back_inserter(newEffVars));
+
+    BDD newTBDD = tBDD;
+    BDD newTBDD2 = t2.tBDD;
+
+    //    cout << "Eff vars" << endl;
+    vector<int>::const_iterator var1 = effVars.begin();
+    vector<int>::const_iterator var2 = t2.effVars.begin();
+    for (vector<int>::const_iterator var = newEffVars.begin();
+         var != newEffVars.end(); ++var) {
+        if (var1 == effVars.end() || *var1 != *var) {
+            newTBDD *= sV->biimp(*var);
+        } else {
+            ++var1;
+        }
+
+        if (var2 == t2.effVars.end() || *var2 != *var) {
+            newTBDD2 *= sV->biimp(*var);
+        } else {
+            ++var2;
+        }
     }
-  }
-  newTBDD = newTBDD.Or(newTBDD2, maxNodes);
+    newTBDD = newTBDD.Or(newTBDD2, maxNodes);
 
-  if (newTBDD.nodeCount() > maxNodes) {
-    throw BDDError(); // We could not sucessfully merge
-  }
-
-  tBDD = newTBDD;
-
-  effVars.swap(newEffVars);
-  existsVars *= t2.existsVars;
-  existsBwVars *= t2.existsBwVars;
-
-  for (size_t i = 0; i < t2.swapVarsS.size(); i++) {
-    if (find(swapVarsS.begin(), swapVarsS.end(), t2.swapVarsS[i]) ==
-        swapVarsS.end()) {
-      swapVarsS.push_back(t2.swapVarsS[i]);
-      swapVarsSp.push_back(t2.swapVarsSp[i]);
+    if (newTBDD.nodeCount() > maxNodes) {
+        throw BDDError(); // We could not sucessfully merge
     }
-  }
 
-  ops_ids.insert(t2.ops_ids.begin(), t2.ops_ids.end());
+    tBDD = newTBDD;
+
+    effVars.swap(newEffVars);
+    existsVars *= t2.existsVars;
+    existsBwVars *= t2.existsBwVars;
+
+    for (size_t i = 0; i < t2.swapVarsS.size(); i++) {
+        if (find(swapVarsS.begin(), swapVarsS.end(), t2.swapVarsS[i]) ==
+            swapVarsS.end()) {
+            swapVarsS.push_back(t2.swapVarsS[i]);
+            swapVarsSp.push_back(t2.swapVarsSp[i]);
+        }
+    }
+
+    ops_ids.insert(t2.ops_ids.begin(), t2.ops_ids.end());
 }
 
 // For each op, include relevant mutexes
@@ -285,49 +188,48 @@ void TransitionRelation::edeletion(
     const std::vector<std::vector<BDD>> &notMutexBDDsByFluentFw,
     const std::vector<std::vector<BDD>> &notMutexBDDsByFluentBw,
     const std::vector<std::vector<BDD>> &exactlyOneBDDsByFluent) {
-  assert(ops_ids.size() == 1);
-  assert(notMutexBDDsByFluentFw.size() == task_proxy.get_variables().size());
-  assert(notMutexBDDsByFluentBw.size() == task_proxy.get_variables().size());
-  assert(exactlyOneBDDsByFluent.size() == task_proxy.get_variables().size());
+    assert(ops_ids.size() == 1);
+    assert(notMutexBDDsByFluentFw.size() == task_proxy.get_variables().size());
+    assert(notMutexBDDsByFluentBw.size() == task_proxy.get_variables().size());
+    assert(exactlyOneBDDsByFluent.size() == task_proxy.get_variables().size());
 
-  // For each op, include relevant mutexes
-  for (const OperatorID &op_id : ops_ids) {
-    OperatorProxy op = task_proxy.get_operators()[op_id.get_index()];
-    for (const auto &eff : op.get_effects()) {
-      FactPair pp = eff.get_fact().get_pair();
-      // TODO: somehow fix this here
-      FactPair pre(-1, -1);
-      for (const auto &cond : op.get_preconditions()) {
-        if (cond.get_pair().var == pp.var) {
-          pre = cond.get_pair();
-          break;
+    // For each op, include relevant mutexes
+    for (const OperatorID &op_id : ops_ids) {
+        OperatorProxy op = task_proxy.get_operators()[op_id.get_index()];
+        for (const auto &eff : op.get_effects()) {
+            FactPair pp = eff.get_fact().get_pair();
+            // TODO: somehow fix this here
+            FactPair pre(-1, -1);
+            for (const auto &cond : op.get_preconditions()) {
+                if (cond.get_pair().var == pp.var) {
+                    pre = cond.get_pair();
+                    break;
+                }
+            }
+
+            // edeletion bw
+            if (pre.var == -1) {
+                // We have a post effect over this variable.
+                // That means that every previous value is possible
+                // for each value of the variable
+                for (int val = 0;
+                     val < task_proxy.get_variables()[pp.var].get_domain_size();
+                     val++) {
+                    tBDD *= notMutexBDDsByFluentBw[pp.var][val];
+                }
+            } else {
+                // In regression, we are making true pp.pre
+                // So we must negate everything of these.
+                tBDD *= notMutexBDDsByFluentBw[pp.var][pre.value];
+            }
+            // TODO(speckd): Here we need to swap in the correct direction!
+            // edeletion fw
+            tBDD *= notMutexBDDsByFluentFw[pp.var][pp.value].SwapVariables(
+                swapVarsS, swapVarsSp);
+
+            // edeletion invariants
+            tBDD *= exactlyOneBDDsByFluent[pp.var][pp.value];
         }
-      }
-
-      // edeletion bw
-      if (pre.var == -1) {
-        // We have a post effect over this variable.
-        // That means that every previous value is possible
-        // for each value of the variable
-        for (int val = 0;
-             val < task_proxy.get_variables()[pp.var].get_domain_size();
-             val++) {
-          tBDD *= notMutexBDDsByFluentBw[pp.var][val];
-        }
-      } else {
-        // In regression, we are making true pp.pre
-        // So we must negate everything of these.
-        tBDD *= notMutexBDDsByFluentBw[pp.var][pre.value];
-      }
-      // TODO(speckd): Here we need to swap in the correct direction!
-      // edeletion fw
-      tBDD *= notMutexBDDsByFluentFw[pp.var][pp.value].SwapVariables(
-          swapVarsS, swapVarsSp);
-
-      // edeletion invariants
-      tBDD *= exactlyOneBDDsByFluent[pp.var][pp.value];
     }
-  }
 }
-
 } // namespace symbolic

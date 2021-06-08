@@ -33,13 +33,7 @@ bool SimpleSelector::is_simple(const Plan &plan) {
   unordered_set<int> visited_states = {cur.get_id().get_value()};
 
   for (size_t i = 0; i < plan.size(); i++) {
-    if (!task_properties::is_applicable(operators[plan[i]], cur.unpack()))
-    {
-      std::cout << "not applicable" << std::endl;
-    }
-    
     cur = registry->get_successor_state(cur, operators[plan[i]]);
-    
 
     auto ret = visited_states.insert(cur.get_id().get_value());
     if (!ret.second)

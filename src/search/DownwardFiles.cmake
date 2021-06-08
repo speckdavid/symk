@@ -540,7 +540,6 @@ fast_downward_plugin(
     SOURCES
         tasks/cost_adapted_task
         tasks/delegating_task
-        tasks/test_task
         tasks/root_task
     CORE_PLUGIN
 )

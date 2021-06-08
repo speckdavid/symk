@@ -21,49 +21,48 @@ class OriginalStateSpace;
  * Each label has one or more abstract state transitions
  */
 class TransitionRelation {
-  SymVariables *sV; // To call basic BDD creation methods
-  // Use task_proxy to access task information.
-  TaskProxy task_proxy;
-  int cost; // transition cost
-  BDD tBDD; // bdd for making the relprod
+    SymVariables *sV; // To call basic BDD creation methods
+    // Use task_proxy to access task information.
+    TaskProxy task_proxy;
+    int cost; // transition cost
+    BDD tBDD; // bdd for making the relprod
 
-  std::vector<int> effVars;     // FD Index of eff variables. Must be sorted!!
-  BDD existsVars, existsBwVars; // Cube with variables to existentialize
-  std::vector<BDD> swapVarsS,
-      swapVarsSp; // Swap variables s to sp and viceversa
+    std::vector<int> effVars;   // FD Index of eff variables. Must be sorted!!
+    BDD existsVars, existsBwVars; // Cube with variables to existentialize
+    std::vector<BDD> swapVarsS,
+                     swapVarsSp; // Swap variables s to sp and viceversa
 
-  std::set<OperatorID> ops_ids; // List of operators represented by the TR
+    std::set<OperatorID> ops_ids; // List of operators represented by the TR
 
 public:
-  // Constructor for transitions irrelevant for the abstraction
-  TransitionRelation(SymVariables *sVars, OperatorID op_id,
-                     const std::shared_ptr<AbstractTask> &task);
-  void init(bool delete_relaxed);
-  void init_delete_relaxed();
+    // Constructor for transitions irrelevant for the abstraction
+    TransitionRelation(SymVariables *sVars, OperatorID op_id,
+                       const std::shared_ptr<AbstractTask> &task);
+    void init();
 
-  // Copy constructor
-  TransitionRelation(const TransitionRelation &) = default;
+    // Copy constructor
+    TransitionRelation(const TransitionRelation &) = default;
 
-  BDD image(const BDD &from) const;
-  BDD preimage(const BDD &from) const;
-  BDD image(const BDD &from, int maxNodes) const;
-  BDD preimage(const BDD &from, int maxNodes) const;
+    BDD image(const BDD &from) const;
+    BDD preimage(const BDD &from) const;
+    BDD image(const BDD &from, int maxNodes) const;
+    BDD preimage(const BDD &from, int maxNodes) const;
 
-  void edeletion(const std::vector<std::vector<BDD>> &notMutexBDDsByFluentFw,
-                 const std::vector<std::vector<BDD>> &notMutexBDDsByFluentBw,
-                 const std::vector<std::vector<BDD>> &exactlyOneBDDsByFluent);
+    void edeletion(const std::vector<std::vector<BDD>> &notMutexBDDsByFluentFw,
+                   const std::vector<std::vector<BDD>> &notMutexBDDsByFluentBw,
+                   const std::vector<std::vector<BDD>> &exactlyOneBDDsByFluent);
 
-  void merge(const TransitionRelation &t2, int maxNodes);
+    void merge(const TransitionRelation &t2, int maxNodes);
 
-  int getCost() const { return cost; }
+    int getCost() const {return cost;}
 
-  void set_cost(int cost_) { cost = cost_; }
+    void set_cost(int cost_) {cost = cost_;}
 
-  int nodeCount() const { return tBDD.nodeCount(); }
+    int nodeCount() const {return tBDD.nodeCount();}
 
-  const std::set<OperatorID> &getOpsIds() const { return ops_ids; }
+    const std::set<OperatorID> &getOpsIds() const {return ops_ids;}
 
-  const BDD &getBDD() const { return tBDD; }
+    const BDD &getBDD() const {return tBDD;}
 };
 } // namespace symbolic
 #endif
