@@ -28,6 +28,10 @@ int CostAdaptedTask::get_operator_cost(int index, bool is_axiom) const {
     return get_adjusted_action_cost(op, cost_type, parent_is_unit_cost);
 }
 
+string CostAdaptedTask::get_operator_cost_function(int index, bool is_axiom) const {
+    return to_string(get_operator_cost(index, is_axiom));
+}
+
 
 static shared_ptr<AbstractTask> _parse(OptionParser &parser) {
     parser.document_synopsis(

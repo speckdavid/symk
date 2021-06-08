@@ -13,115 +13,129 @@
 #include "../sym_state_space_manager.h"
 #include "../sym_variables.h"
 
-#include "../task_utils/task_properties.h"
+#include "../../task_utils/task_properties.h"
+#include "../../tasks/sdac_task.h"
 
 using namespace std;
 using namespace symbolic;
 using namespace options;
 
 namespace symbolic {
-
 SymbolicSearch::SymbolicSearch(const options::Options &opts)
-    : SearchEngine(opts), task(opts.get<shared_ptr<AbstractTask>>("transform")),
-      task_proxy(*task), vars(make_shared<SymVariables>(opts, task)),
-      mgrParams(opts, task), searchParams(opts), step_num(-1),
-      lower_bound_increased(true), lower_bound(0),
-      upper_bound(std::numeric_limits<int>::max()), min_g(0),
+    : SearchEngine(opts),
+      task(opts.get<shared_ptr<AbstractTask>>("transform")),
+      search_task(task),
+      task_proxy(*task),
+      vars(make_shared<SymVariables>(opts, task)),
+      mgrParams(opts, task),
+      searchParams(opts), step_num(-1),
+      lower_bound_increased(true),
+      lower_bound(0),
+      upper_bound(std::numeric_limits<int>::max()),
+      min_g(0),
       plan_data_base(opts.get<std::shared_ptr<PlanDataBase>>("plan_selection")),
       solution_registry() {
-  save_plans = false; // we handle plans seperat
-  mgrParams.print_options();
-  searchParams.print_options();
-  vars->init();
+    save_plans = false; // we handle plans seperat
+    mgrParams.print_options();
+    searchParams.print_options();
+    vars->init();
 }
 
 void SymbolicSearch::initialize() {
-  plan_data_base->set_plan_manager(get_plan_manager());
-  plan_data_base->print_options();
+    plan_data_base->print_options();
+
+    if (task_properties::has_sdac_cost_operator(task_proxy)) {
+        std::cout << "Creating sdac task..." << std::endl;
+        search_task = std::make_shared<extra_tasks::SdacTask>(task, vars.get());
+        std::cout << "#Operators with sdac: " << task->get_num_operators() << std::endl;
+        std::cout << "#Operators without sdac: " << search_task->get_num_operators() << std::endl;
+    }
+
+    plan_data_base->init(vars, search_task, get_plan_manager());
 }
 
 SearchStatus SymbolicSearch::step() {
-  step_num++;
-  // Handling empty plan
-  if (step_num == 0) {
-    BDD cut = mgr->getInitialState() * mgr->getGoal();
-    if (!cut.IsZero()) {
-      new_solution(SymSolutionCut(0, 0, cut));
-    }
-  }
-
-  SearchStatus cur_status;
-
-  // Search finished!
-  if (lower_bound >= upper_bound) {
-    solution_registry.construct_cheaper_solutions(
-        std::numeric_limits<int>::max());
-    solution_found = plan_data_base->get_num_reported_plan() > 0;
-    cur_status = solution_found ? SOLVED : FAILED;
-  } else {
-    // Bound increade => construct plans
-    if (lower_bound_increased) {
-      solution_registry.construct_cheaper_solutions(lower_bound);
+    step_num++;
+    // Handling empty plan
+    if (step_num == 0) {
+        BDD cut = mgr->getInitialState() * mgr->getGoal();
+        if (!cut.IsZero()) {
+            new_solution(SymSolutionCut(0, 0, cut));
+        }
     }
 
-    // All plans found
-    if (solution_registry.found_all_plans()) {
-      solution_found = true;
-      cur_status = SOLVED;
+    SearchStatus cur_status;
+
+    // Search finished!
+    if (lower_bound >= upper_bound) {
+        solution_registry.construct_cheaper_solutions(
+            std::numeric_limits<int>::max());
+        solution_found = plan_data_base->get_num_reported_plan() > 0;
+        cur_status = solution_found ? SOLVED : FAILED;
     } else {
-      cur_status = IN_PROGRESS;
+        // Bound increade => construct plans
+        if (lower_bound_increased) {
+            solution_registry.construct_cheaper_solutions(lower_bound);
+        }
+
+        // All plans found
+        if (solution_registry.found_all_plans()) {
+            solution_found = true;
+            cur_status = SOLVED;
+        } else {
+            cur_status = IN_PROGRESS;
+        }
     }
-  }
 
-  if (lower_bound_increased) {
-    std::cout << "BOUND: " << lower_bound << " < " << upper_bound << std::flush;
+    if (lower_bound_increased) {
+        std::cout << "BOUND: " << lower_bound << " < " << upper_bound << std::flush;
 
-    std::cout << " [" << solution_registry.get_num_found_plans() << "/"
-              << plan_data_base->get_num_desired_plans() << " plans]"
-              << std::flush;
-    std::cout << ", total time: " << utils::g_timer << std::endl;
-  }
-  lower_bound_increased = false;
+        std::cout << " [" << solution_registry.get_num_found_plans() << "/"
+                  << plan_data_base->get_num_desired_plans() << " plans]"
+                  << std::flush;
+        std::cout << ", total time: " << utils::g_timer << std::endl;
+    }
+    lower_bound_increased = false;
 
-  if (cur_status == SOLVED) {
-    std::cout << "Best plan:" << std::endl;
-    plan_data_base->dump_first_accepted_plan();
+    if (cur_status == SOLVED) {
+        std::cout << "Best plan:" << std::endl;
+        plan_data_base->dump_first_accepted_plan();
+        return cur_status;
+    }
+    if (cur_status == FAILED) {
+        return cur_status;
+    }
+
+    // Actuall step
+    search->step();
+
     return cur_status;
-  }
-  if (cur_status == FAILED) {
-    return cur_status;
-  }
-
-  // Actuall step
-  search->step();
-
-  return cur_status;
 }
 
 void SymbolicSearch::setLowerBound(int lower) {
-  if (lower > lower_bound) {
-    lower_bound_increased = true;
-  }
-  lower_bound = std::max(lower_bound, lower);
+    if (lower > lower_bound) {
+        lower_bound_increased = true;
+    }
+    lower_bound = std::max(lower_bound, lower);
 }
 
 void SymbolicSearch::new_solution(const SymSolutionCut &sol) {
-  if (!solution_registry.found_all_plans()) {
-    solution_registry.register_solution(sol);
-    upper_bound = std::min(upper_bound, sol.get_f());
-  }
+    if (!solution_registry.found_all_plans()) {
+        solution_registry.register_solution(sol);
+        upper_bound = std::min(upper_bound, sol.get_f());
+    }
 }
 
 void SymbolicSearch::add_options_to_parser(OptionParser &parser) {
-  parser.add_option<shared_ptr<AbstractTask>>(
-      "transform",
-      "Optional task transformation for the search."
-      " Currently, adapt_costs() and no_transform() are available.",
-      "no_transform()");
-  SearchEngine::add_options_to_parser(parser);
-  SymVariables::add_options_to_parser(parser);
-  SymParamsSearch::add_options_to_parser(parser, 30e3, 10e7);
-  SymParamsMgr::add_options_to_parser(parser);
-  PlanDataBase::add_options_to_parser(parser);
+    parser.add_option<shared_ptr<AbstractTask>>(
+        "transform",
+        "Optional task transformation for the search."
+        " Currently, adapt_costs() and no_transform() are available.",
+        "no_transform()");
+    SearchEngine::add_options_to_parser(parser);
+    SymVariables::add_options_to_parser(parser);
+    SymParamsSearch::add_options_to_parser(parser, 30e3, 10e7);
+    SymParamsMgr::add_options_to_parser(parser);
+    PlanDataBase::add_options_to_parser(parser);
 }
 } // namespace symbolic

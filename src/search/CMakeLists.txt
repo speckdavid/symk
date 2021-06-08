@@ -73,8 +73,14 @@ if(PLUGIN_LP_SOLVER_ENABLED AND USE_LP)
     endif()
 endif()
 
-
 include(ExternalProject)
+
+### Boost
+message(STATUS "Building MiniBoost.")
+include_directories(SYSTEM sdac_parser/boost_dependencies)
+add_subdirectory(sdac_parser/boost_dependencies/libs)
+
+### Cudd
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/cudd)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/cplusplus)
 
@@ -102,6 +108,7 @@ else()
     message(FATAL_ERROR, "Could not determine bitwidth for Cudd.")
 endif()
 
+add_dependencies(libcudd MiniBoost)
 add_dependencies(translate libcudd)
 add_dependencies(preprocess libcudd)
 add_dependencies(downward libcudd)

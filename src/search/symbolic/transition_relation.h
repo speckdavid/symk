@@ -39,6 +39,7 @@ public:
     TransitionRelation(SymVariables *sVars, OperatorID op_id,
                        const std::shared_ptr<AbstractTask> &task);
     void init();
+    void init_sdac(BDD cost_cond);
 
     // Copy constructor
     TransitionRelation(const TransitionRelation &) = default;
@@ -61,6 +62,8 @@ public:
     int nodeCount() const {return tBDD.nodeCount();}
 
     const std::set<OperatorID> &getOpsIds() const {return ops_ids;}
+
+    void setOpsIds(const std::set<OperatorID> &operator_ids) {ops_ids = operator_ids;}
 
     const BDD &getBDD() const {return tBDD;}
 };

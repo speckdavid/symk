@@ -29,9 +29,6 @@ void TransitionRelation::init() {
             fact.var, fact.value);
     }
 
-    std::string op_name = op.get_name();
-    std::remove(op_name.begin(), op_name.end(), ' ');
-
     map<int, BDD> effect_conditions;
     map<int, BDD> effects;
 
@@ -95,6 +92,11 @@ void TransitionRelation::init() {
         existsVars *= swapVarsS[i];
         existsBwVars *= swapVarsSp[i];
     }
+}
+
+void TransitionRelation::init_sdac(BDD cost_cond) {
+    init();
+    tBDD *= cost_cond;
 }
 
 BDD TransitionRelation::image(const BDD &from) const {

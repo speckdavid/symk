@@ -2,6 +2,7 @@
 
 #include "../abstract_task.h"
 #include "../mutex_group.h"
+#include "../tasks/sdac_task.h"
 #include "../task_utils/task_properties.h"
 #include "sym_axiom/sym_axiom_compilation.h"
 
@@ -35,25 +36,25 @@ OriginalStateSpace::OriginalStateSpace(
 }
 
 void OriginalStateSpace::create_single_trs() {
+    std::shared_ptr<extra_tasks::SdacTask> sdac_task = std::dynamic_pointer_cast<extra_tasks::SdacTask>(task);
+
     for (int i = 0; i < task->get_num_operators(); i++) {
         int cost = task->get_operator_cost(i, false);
 
-        // Ignore cost operators and set zero costs to 1
-        // cout << "Creating TR of op " << i << " of cost " << cost << endl;
         indTRs[cost].emplace_back(vars, OperatorID(i), task);
-        indTRs[cost].back().init();
+
+        if (sdac_task != nullptr) {
+            // TODO (speckd): We can copy TR and add sdac condition afterwards
+            indTRs[cost].back().init_sdac(sdac_task->get_operator_cost_condition(i, false));
+        } else {
+            indTRs[cost].back().init();
+        }
 
         if (p.mutex_type == MutexType::MUTEX_EDELETION) {
             indTRs[cost].back().edeletion(notMutexBDDsByFluentFw,
                                           notMutexBDDsByFluentBw,
                                           exactlyOneBDDsByFluent);
         }
-        /*cout << task->get_operator_name(i, false) << " with of cost
-        " << cost << " and nodes "
-             << indTRs[cost].back().nodeCount() << endl;
-        auto names = vars->get_fd_variable_names();
-        indTRs[cost].back().getBDD().toDot(task->get_operator_name(i,
-        false) + ".dot", names);*/
     }
 }
 
