@@ -29,6 +29,24 @@ int CostAdaptedTask::get_operator_cost(int index, bool is_axiom) const {
 }
 
 string CostAdaptedTask::get_operator_cost_function(int index, bool is_axiom) const {
+    if (!is_axiom) {
+        bool sdac = parent->get_operator_cost_function(index, false).find_first_not_of("0123456789");
+        if (sdac) {
+            switch (cost_type) {
+            case NORMAL:
+                return parent->get_operator_cost_function(index, false);
+            case ONE:
+                return "1";
+            case PLUSONE:
+                if (parent_is_unit_cost)
+                    return "1";
+                else
+                    return "(" + parent->get_operator_cost_function(index, false) + " + 1)";
+            default:
+                ABORT("Unknown cost type");
+            }
+        }
+    }
     return to_string(get_operator_cost(index, is_axiom));
 }
 

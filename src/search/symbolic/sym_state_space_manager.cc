@@ -177,9 +177,10 @@ SymParamsMgr::SymParamsMgr(const options::Options &opts,
     // Don't use edeletion with conditional effects
     if (mutex_type == MutexType::MUTEX_EDELETION &&
         (task_properties::has_conditional_effects(TaskProxy(*task))
+         || task_properties::has_axioms(TaskProxy(*task))
          || task_properties::has_sdac_cost_operator(TaskProxy(*task)))) {
         cout << "Mutex type changed to mutex_and because the domain has "
-            "conditional effects or sdac."
+            "conditional effects, axioms and/or sdac."
              << endl;
         mutex_type = MutexType::MUTEX_AND;
     }
