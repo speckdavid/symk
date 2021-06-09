@@ -31,29 +31,65 @@ OriginalStateSpace::OriginalStateSpace(
     }
 
     init_mutex(task->get_mutex_groups());
-    create_single_trs();
+    std::shared_ptr<extra_tasks::SdacTask> sdac_task = std::dynamic_pointer_cast<extra_tasks::SdacTask>(task);
+    if (sdac_task == nullptr) {
+        create_single_trs();
+    } else {
+        create_single_sdac_trs(sdac_task, p.fast_sdac_generation);
+    }
     init_transitions(indTRs);
 }
 
 void OriginalStateSpace::create_single_trs() {
-    std::shared_ptr<extra_tasks::SdacTask> sdac_task = std::dynamic_pointer_cast<extra_tasks::SdacTask>(task);
-
     for (int i = 0; i < task->get_num_operators(); i++) {
         int cost = task->get_operator_cost(i, false);
-
         indTRs[cost].emplace_back(vars, OperatorID(i), task);
 
-        if (sdac_task != nullptr) {
-            // TODO (speckd): We can copy TR and add sdac condition afterwards
-            indTRs[cost].back().init_sdac(sdac_task->get_operator_cost_condition(i, false));
-        } else {
-            indTRs[cost].back().init();
-        }
+        indTRs[cost].back().init();
 
         if (p.mutex_type == MutexType::MUTEX_EDELETION) {
             indTRs[cost].back().edeletion(notMutexBDDsByFluentFw,
                                           notMutexBDDsByFluentBw,
                                           exactlyOneBDDsByFluent);
+        }
+    }
+}
+
+void OriginalStateSpace::create_single_sdac_trs(
+    std::shared_ptr<extra_tasks::SdacTask> sdac_task, bool fast_creation) {
+    if (!fast_creation) {
+        std::cout << "Normal SDAC TR generation." << std::endl;
+        for (int i = 0; i < sdac_task->get_num_operators(); i++) {
+            int cost = sdac_task->get_operator_cost(i, false);
+            indTRs[cost].emplace_back(vars, OperatorID(i), sdac_task);
+
+            indTRs[cost].back().init();
+            indTRs[cost].back().add_condition(sdac_task->get_operator_cost_condition(i, false));
+        }
+    } else {
+        std::cout << "Fast SDAC TR generation." << std::endl;
+        // Generate template TRs
+        std::vector<TransitionRelation> look_up;
+        int last_parent_id = -1;
+        for (int i = 0; i < sdac_task->get_num_operators(); i++) {
+            int parent_op_id = sdac_task->convert_operator_index_to_parent(i);
+            if (last_parent_id != parent_op_id) {
+                last_parent_id = parent_op_id;
+                look_up.emplace_back(vars, OperatorID(i), sdac_task);
+                look_up.back().init();
+            }
+        }
+
+        // Create actual TRs
+        for (int i = 0; i < sdac_task->get_num_operators(); i++) {
+            int parent_op_id = sdac_task->convert_operator_index_to_parent(i);
+            int cost = sdac_task->get_operator_cost(i, false);
+            indTRs[cost].emplace_back(vars, OperatorID(i), sdac_task);
+
+            indTRs[cost].back().init_from_tr(look_up[parent_op_id]);
+            indTRs[cost].back().set_cost(cost);
+            indTRs[cost].back().setOpsIds(std::set<OperatorID>({OperatorID(i)}));
+            indTRs[cost].back().add_condition(sdac_task->get_operator_cost_condition(i, false));
         }
     }
 }

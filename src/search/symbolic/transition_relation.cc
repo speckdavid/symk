@@ -94,9 +94,19 @@ void TransitionRelation::init() {
     }
 }
 
-void TransitionRelation::init_sdac(BDD cost_cond) {
-    init();
-    tBDD *= cost_cond;
+void TransitionRelation::init_from_tr(const TransitionRelation &other) {
+    tBDD = other.getTrBDD();
+    ops_ids = other.getOpsIds();
+    cost = other.getCost();
+    effVars = other.getEffVars();
+    existsVars = other.getExistsVars();
+    existsBwVars = other.getExistBwVars();
+    swapVarsS = other.getSwapVars();
+    swapVarsSp = other.getSwapVarsP();
+}
+
+void TransitionRelation::add_condition(BDD cond) {
+    tBDD *= cond;
 }
 
 BDD TransitionRelation::image(const BDD &from) const {

@@ -172,7 +172,8 @@ SymParamsMgr::SymParamsMgr(const options::Options &opts,
       max_mutex_size(opts.get<int>("max_mutex_size")),
       max_mutex_time(opts.get<int>("max_mutex_time")),
       max_aux_nodes(opts.get<int>("max_aux_nodes")),
-      max_aux_time(opts.get<int>("max_aux_time")) {
+      max_aux_time(opts.get<int>("max_aux_time")),
+      fast_sdac_generation(opts.get<bool>("fast_sdac_generation")) {
     // Don't use edeletion with conditional effects
     if (mutex_type == MutexType::MUTEX_EDELETION &&
         (task_properties::has_conditional_effects(TaskProxy(*task))
@@ -211,6 +212,10 @@ void SymParamsMgr::add_options_to_parser(options::OptionParser &parser) {
                            "1000000");
     parser.add_option<int>("max_aux_time", "maximum time (ms) in pop operations",
                            "2000");
+    parser.add_option<bool>(
+        "fast_sdac_generation",
+        "Generates one TR per original operators and reuses it.",
+        "true");
 }
 
 std::ostream &operator<<(std::ostream &os, const SymStateSpaceManager &abs) {

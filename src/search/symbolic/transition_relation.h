@@ -39,7 +39,9 @@ public:
     TransitionRelation(SymVariables *sVars, OperatorID op_id,
                        const std::shared_ptr<AbstractTask> &task);
     void init();
-    void init_sdac(BDD cost_cond);
+    void init_from_tr(const TransitionRelation &other);
+
+    void add_condition(BDD cond);
 
     // Copy constructor
     TransitionRelation(const TransitionRelation &) = default;
@@ -65,7 +67,14 @@ public:
 
     void setOpsIds(const std::set<OperatorID> &operator_ids) {ops_ids = operator_ids;}
 
-    const BDD &getBDD() const {return tBDD;}
+    const std::vector<int> &getEffVars() const {return effVars;}
+
+    BDD getExistsVars() const {return existsVars;}
+    BDD getExistBwVars() const {return existsBwVars;}
+    const std::vector<BDD> &getSwapVars() const {return swapVarsS;}
+    const std::vector<BDD> &getSwapVarsP() const {return swapVarsSp;}
+
+    BDD getTrBDD() const {return tBDD;}
 };
 } // namespace symbolic
 #endif
