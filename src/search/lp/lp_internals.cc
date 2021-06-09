@@ -33,6 +33,11 @@
 #include <OsiGrbSolverInterface.hpp>
 #endif
 
+#ifdef COIN_HAS_SPX
+#include <OsiSpxSolverInterface.hpp>
+#include <spxout.h>
+#endif
+
 #ifdef __GNUG__
 #pragma GCC diagnostic pop
 #endif
@@ -49,6 +54,7 @@ static const string CPLEX_WARNING_WRITE_MPS_ROWS = "CPX0000  Default row    name
 static const string CPLEX_ERROR_OOM = "CPX0000  CPLEX Error  1001: Out of memory.";
 static const string CPLEX_ERROR_OOM_PRE = "CPX0000  Insufficient memory for presolve.";
 static const string CPLEX_ERROR_OOM_DEVEX = "CPX0000  Not enough memory for devex.";
+static const string COIN_CPLEX_ERROR_OOM = "returned error 1001";
 
 /*
   CPLEX sometimes does not report errors as exceptions and only prints an
@@ -116,6 +122,17 @@ unique_ptr<OsiSolverInterface> create_lp_solver(LPSolverType solver_type) {
         missing_symbol = "COIN_HAS_GRB";
 #endif
         break;
+    case LPSolverType::SOPLEX:
+#ifdef COIN_HAS_SPX
+        {
+            OsiSpxSolverInterface *spx_solver = new OsiSpxSolverInterface;
+            spx_solver->getSPxOut()->setVerbosity(soplex::SPxOut::ERROR);
+            lp_solver = spx_solver;
+        }
+#else
+        missing_symbol = "COIN_HAS_SPX";
+#endif
+        break;
     default:
         ABORT("Unknown LP solver type.");
     }
@@ -130,10 +147,18 @@ unique_ptr<OsiSolverInterface> create_lp_solver(LPSolverType solver_type) {
 
 NO_RETURN
 void handle_coin_error(const CoinError &error) {
-    cerr << "Coin threw exception: " << error.message() << endl
-         << " from method " << error.methodName() << endl
-         << " from class " << error.className() << endl;
-    utils::exit_with(ExitCode::SEARCH_CRITICAL_ERROR);
+    if (error.message().find(COIN_CPLEX_ERROR_OOM) != string::npos) {
+        cout << "CPLEX ran out of memory during OSI method." << endl
+             << "Coin exception: " << error.message() << endl
+             << " from method " << error.methodName() << endl
+             << " from class " << error.className() << endl;
+        utils::exit_with(ExitCode::SEARCH_OUT_OF_MEMORY);
+    } else {
+        cerr << "Coin threw exception: " << error.message() << endl
+             << " from method " << error.methodName() << endl
+             << " from class " << error.className() << endl;
+        utils::exit_with(ExitCode::SEARCH_CRITICAL_ERROR);
+    }
 }
 }
 
