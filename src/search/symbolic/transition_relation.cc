@@ -73,8 +73,7 @@ void TransitionRelation::init() {
         counter++;
     }
     if (tBDD.IsZero()) {
-        cerr << "Operator is empty: " << op.get_name() << endl;
-        // exit(0);
+        cout << "Operator is empty: " << op.get_name() << endl;
     }
 
     sort(effVars.begin(), effVars.end());
