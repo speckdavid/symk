@@ -32,7 +32,7 @@ Version number available as major.
 
 #if defined(__LIBCOMO__)
 #   undef BOOST_LIB_STD_COMO
-#   define BOOST_LIB_STD_COMO BOOST_VERSION_NUMBER(__LIBCOMO_VERSION__,0,0)
+#   define BOOST_LIB_STD_COMO BOOST_VERSION_NUMBER(__LIBCOMO_VERSION__, 0, 0)
 #endif
 
 #if BOOST_LIB_STD_COMO
@@ -44,4 +44,4 @@ Version number available as major.
 #endif
 
 #include <boost/predef/detail/test.h>
-BOOST_PREDEF_DECLARE_TEST(BOOST_LIB_STD_COMO,BOOST_LIB_STD_COMO_NAME)
+BOOST_PREDEF_DECLARE_TEST(BOOST_LIB_STD_COMO, BOOST_LIB_STD_COMO_NAME)

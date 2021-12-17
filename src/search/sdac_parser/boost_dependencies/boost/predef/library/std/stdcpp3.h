@@ -50,4 +50,4 @@ Version number available as year (from 1970), month, and day.
 #endif
 
 #include <boost/predef/detail/test.h>
-BOOST_PREDEF_DECLARE_TEST(BOOST_LIB_STD_GNU,BOOST_LIB_STD_GNU_NAME)
+BOOST_PREDEF_DECLARE_TEST(BOOST_LIB_STD_GNU, BOOST_LIB_STD_GNU_NAME)

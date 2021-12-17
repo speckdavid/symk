@@ -69,8 +69,8 @@ http://www.boost.org/LICENSE_1_0.txt)
 #if !defined(BOOST_HW_SIMD_X86_AMD)
 #   define BOOST_HW_SIMD_X86_AMD BOOST_VERSION_NUMBER_NOT_AVAILABLE
 #else
-    // At this point, we know that we have an AMD CPU, we do need to check for
-    // other x86 extensions to determine the final version number.
+// At this point, we know that we have an AMD CPU, we do need to check for
+// other x86 extensions to determine the final version number.
 #   include <boost/predef/hardware/simd/x86.h>
 #   if BOOST_HW_SIMD_X86 > BOOST_HW_SIMD_X86_AMD
 #      undef BOOST_HW_SIMD_X86_AMD

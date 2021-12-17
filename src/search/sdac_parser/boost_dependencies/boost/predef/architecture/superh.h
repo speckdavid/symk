@@ -36,19 +36,19 @@ If available versions \[1-5\] are specifically detected.
 #if defined(__sh__)
 #   undef BOOST_ARCH_SH
 #   if !defined(BOOST_ARCH_SH) && (defined(__SH5__))
-#       define BOOST_ARCH_SH BOOST_VERSION_NUMBER(5,0,0)
+#       define BOOST_ARCH_SH BOOST_VERSION_NUMBER(5, 0, 0)
 #   endif
 #   if !defined(BOOST_ARCH_SH) && (defined(__SH4__))
-#       define BOOST_ARCH_SH BOOST_VERSION_NUMBER(4,0,0)
+#       define BOOST_ARCH_SH BOOST_VERSION_NUMBER(4, 0, 0)
 #   endif
 #   if !defined(BOOST_ARCH_SH) && (defined(__sh3__) || defined(__SH3__))
-#       define BOOST_ARCH_SH BOOST_VERSION_NUMBER(3,0,0)
+#       define BOOST_ARCH_SH BOOST_VERSION_NUMBER(3, 0, 0)
 #   endif
 #   if !defined(BOOST_ARCH_SH) && (defined(__sh2__))
-#       define BOOST_ARCH_SH BOOST_VERSION_NUMBER(2,0,0)
+#       define BOOST_ARCH_SH BOOST_VERSION_NUMBER(2, 0, 0)
 #   endif
 #   if !defined(BOOST_ARCH_SH) && (defined(__sh1__))
-#       define BOOST_ARCH_SH BOOST_VERSION_NUMBER(1,0,0)
+#       define BOOST_ARCH_SH BOOST_VERSION_NUMBER(1, 0, 0)
 #   endif
 #   if !defined(BOOST_ARCH_SH)
 #       define BOOST_ARCH_SH BOOST_VERSION_NUMBER_AVAILABLE
@@ -64,4 +64,4 @@ If available versions \[1-5\] are specifically detected.
 #endif
 
 #include <boost/predef/detail/test.h>
-BOOST_PREDEF_DECLARE_TEST(BOOST_ARCH_SH,BOOST_ARCH_SH_NAME)
+BOOST_PREDEF_DECLARE_TEST(BOOST_ARCH_SH, BOOST_ARCH_SH_NAME)

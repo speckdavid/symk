@@ -29,7 +29,7 @@ http://www.boost.org/LICENSE_1_0.txt)
 #   undef BOOST_PLAT_WINDOWS_PHONE
 #   define BOOST_PLAT_WINDOWS_PHONE BOOST_VERSION_NUMBER_AVAILABLE
 #endif
- 
+
 #if BOOST_PLAT_WINDOWS_PHONE
 #   define BOOST_PLAT_WINDOWS_PHONE_AVAILABLE
 #   include <boost/predef/detail/platform_detected.h>
@@ -40,4 +40,4 @@ http://www.boost.org/LICENSE_1_0.txt)
 #endif
 
 #include <boost/predef/detail/test.h>
-BOOST_PREDEF_DECLARE_TEST(BOOST_PLAT_WINDOWS_PHONE,BOOST_PLAT_WINDOWS_PHONE_NAME)
+BOOST_PREDEF_DECLARE_TEST(BOOST_PLAT_WINDOWS_PHONE, BOOST_PLAT_WINDOWS_PHONE_NAME)

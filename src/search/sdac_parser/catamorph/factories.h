@@ -4,7 +4,6 @@
 #include "expression.h"
 
 namespace sdac_parser {
-
 class Factories {
 public:
     static Expression cst(float i);
@@ -101,7 +100,6 @@ public:
         return boost::get<abs_op<T>>(&e);
     }
 };
-
 }
 
 #endif

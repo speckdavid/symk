@@ -30,7 +30,7 @@ http://www.boost.org/LICENSE_1_0.txt)
 
 #if !defined(BOOST_PREDEF_DETAIL_OS_DETECTED) && ( \
     defined(VMS) || defined(__VMS) \
-    )
+                            )
 #   undef BOOST_OS_VMS
 #   if defined(__VMS_VER)
 #       define BOOST_OS_VMS BOOST_PREDEF_MAKE_10_VVRR00PP00(__VMS_VER)
@@ -49,4 +49,4 @@ http://www.boost.org/LICENSE_1_0.txt)
 #endif
 
 #include <boost/predef/detail/test.h>
-BOOST_PREDEF_DECLARE_TEST(BOOST_OS_VMS,BOOST_OS_VMS_NAME)
+BOOST_PREDEF_DECLARE_TEST(BOOST_OS_VMS, BOOST_OS_VMS_NAME)

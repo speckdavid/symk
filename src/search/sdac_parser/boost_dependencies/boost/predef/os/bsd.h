@@ -62,17 +62,17 @@ of BSD. If the above variants is detected the corresponding macro is also set.]
 #if !defined(BOOST_PREDEF_DETAIL_OS_DETECTED) && ( \
     defined(BSD) || \
     defined(_SYSTYPE_BSD) \
-    )
+            )
 #   undef BOOST_OS_BSD
 #   include <sys/param.h>
 #   if !defined(BOOST_OS_BSD) && defined(BSD4_4)
-#       define BOOST_OS_BSD BOOST_VERSION_NUMBER(4,4,0)
+#       define BOOST_OS_BSD BOOST_VERSION_NUMBER(4, 4, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD) && defined(BSD4_3)
-#       define BOOST_OS_BSD BOOST_VERSION_NUMBER(4,3,0)
+#       define BOOST_OS_BSD BOOST_VERSION_NUMBER(4, 3, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD) && defined(BSD4_2)
-#       define BOOST_OS_BSD BOOST_VERSION_NUMBER(4,2,0)
+#       define BOOST_OS_BSD BOOST_VERSION_NUMBER(4, 2, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD) && defined(BSD)
 #       define BOOST_OS_BSD BOOST_PREDEF_MAKE_10_VVRR(BSD)
@@ -100,4 +100,4 @@ of BSD. If the above variants is detected the corresponding macro is also set.]
 #endif
 
 #include <boost/predef/detail/test.h>
-BOOST_PREDEF_DECLARE_TEST(BOOST_OS_BSD,BOOST_OS_BSD_NAME)
+BOOST_PREDEF_DECLARE_TEST(BOOST_OS_BSD, BOOST_OS_BSD_NAME)

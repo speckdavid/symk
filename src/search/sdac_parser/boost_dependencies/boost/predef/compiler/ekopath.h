@@ -30,7 +30,7 @@ Version number available as major, minor, and patch.
 
 #if defined(__PATHCC__)
 #   define BOOST_COMP_PATH_DETECTION \
-        BOOST_VERSION_NUMBER(__PATHCC__,__PATHCC_MINOR__,__PATHCC_PATCHLEVEL__)
+    BOOST_VERSION_NUMBER(__PATHCC__, __PATHCC_MINOR__, __PATHCC_PATCHLEVEL__)
 #endif
 
 #ifdef BOOST_COMP_PATH_DETECTION
@@ -49,9 +49,9 @@ Version number available as major, minor, and patch.
 #endif
 
 #include <boost/predef/detail/test.h>
-BOOST_PREDEF_DECLARE_TEST(BOOST_COMP_PATH,BOOST_COMP_PATH_NAME)
+BOOST_PREDEF_DECLARE_TEST(BOOST_COMP_PATH, BOOST_COMP_PATH_NAME)
 
 #ifdef BOOST_COMP_PATH_EMULATED
 #include <boost/predef/detail/test.h>
-BOOST_PREDEF_DECLARE_TEST(BOOST_COMP_PATH_EMULATED,BOOST_COMP_PATH_NAME)
+BOOST_PREDEF_DECLARE_TEST(BOOST_COMP_PATH_EMULATED, BOOST_COMP_PATH_NAME)
 #endif

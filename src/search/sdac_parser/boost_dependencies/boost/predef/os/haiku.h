@@ -43,4 +43,4 @@ http://www.boost.org/LICENSE_1_0.txt)
 #endif
 
 #include <boost/predef/detail/test.h>
-BOOST_PREDEF_DECLARE_TEST(BOOST_OS_HAIKU,BOOST_OS_HAIKU_NAME)
+BOOST_PREDEF_DECLARE_TEST(BOOST_OS_HAIKU, BOOST_OS_HAIKU_NAME)

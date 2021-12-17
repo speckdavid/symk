@@ -29,7 +29,7 @@ http://www.boost.org/LICENSE_1_0.txt)
 
 #if !defined(BOOST_PREDEF_DETAIL_OS_DETECTED) && ( \
     defined(hpux) || defined(_hpux) || defined(__hpux) \
-    )
+                                               )
 #   undef BOOST_OS_HPUX
 #   define BOOST_OS_HPUX BOOST_VERSION_NUMBER_AVAILABLE
 #endif
@@ -44,4 +44,4 @@ http://www.boost.org/LICENSE_1_0.txt)
 #endif
 
 #include <boost/predef/detail/test.h>
-BOOST_PREDEF_DECLARE_TEST(BOOST_OS_HPUX,BOOST_OS_HPUX_NAME)
+BOOST_PREDEF_DECLARE_TEST(BOOST_OS_HPUX, BOOST_OS_HPUX_NAME)

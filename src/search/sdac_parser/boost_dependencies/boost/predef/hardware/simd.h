@@ -71,15 +71,15 @@ http://www.boost.org/LICENSE_1_0.txt)
 //
 // NOTE: _X86_AMD implies _X86, so there is no need to check for it here!
 //
-#if defined(BOOST_HW_SIMD_ARM_AVAILABLE) && defined(BOOST_HW_SIMD_PPC_AVAILABLE) ||\
-    defined(BOOST_HW_SIMD_ARM_AVAILABLE) && defined(BOOST_HW_SIMD_X86_AVAILABLE) ||\
+#if defined(BOOST_HW_SIMD_ARM_AVAILABLE) && defined(BOOST_HW_SIMD_PPC_AVAILABLE) || \
+    defined(BOOST_HW_SIMD_ARM_AVAILABLE) && defined(BOOST_HW_SIMD_X86_AVAILABLE) || \
     defined(BOOST_HW_SIMD_PPC_AVAILABLE) && defined(BOOST_HW_SIMD_X86_AVAILABLE)
 #   error "Multiple SIMD architectures detected, this cannot happen!"
 #endif
 
 #if defined(BOOST_HW_SIMD_X86_AVAILABLE) && defined(BOOST_HW_SIMD_X86_AMD_AVAILABLE)
-    // If both standard _X86 and _X86_AMD are available,
-    // then take the biggest version of the two!
+// If both standard _X86 and _X86_AMD are available,
+// then take the biggest version of the two!
 #   if BOOST_HW_SIMD_X86 >= BOOST_HW_SIMD_X86_AMD
 #      define BOOST_HW_SIMD BOOST_HW_SIMD_X86
 #   else
@@ -88,7 +88,7 @@ http://www.boost.org/LICENSE_1_0.txt)
 #endif
 
 #if !defined(BOOST_HW_SIMD)
-    // At this point, only one of these two is defined
+// At this point, only one of these two is defined
 #   if defined(BOOST_HW_SIMD_X86_AVAILABLE)
 #      define BOOST_HW_SIMD BOOST_HW_SIMD_X86
 #   endif

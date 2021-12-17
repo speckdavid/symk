@@ -28,7 +28,7 @@ http://www.boost.org/LICENSE_1_0.txt)
 
 #if !defined(BOOST_PREDEF_DETAIL_OS_DETECTED) && ( \
     defined(linux) || defined(__linux) \
-    )
+                              )
 #   undef BOOST_OS_LINUX
 #   define BOOST_OS_LINUX BOOST_VERSION_NUMBER_AVAILABLE
 #endif
@@ -43,4 +43,4 @@ http://www.boost.org/LICENSE_1_0.txt)
 #endif
 
 #include <boost/predef/detail/test.h>
-BOOST_PREDEF_DECLARE_TEST(BOOST_OS_LINUX,BOOST_OS_LINUX_NAME)
+BOOST_PREDEF_DECLARE_TEST(BOOST_OS_LINUX, BOOST_OS_LINUX_NAME)

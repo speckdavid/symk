@@ -64,94 +64,94 @@ http://www.boost.org/LICENSE_1_0.txt)
 #   endif
 #   undef BOOST_OS_BSD_OPEN
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD2_0)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(2,0,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(2, 0, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD2_1)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(2,1,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(2, 1, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD2_2)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(2,2,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(2, 2, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD2_3)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(2,3,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(2, 3, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD2_4)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(2,4,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(2, 4, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD2_5)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(2,5,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(2, 5, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD2_6)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(2,6,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(2, 6, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD2_7)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(2,7,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(2, 7, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD2_8)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(2,8,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(2, 8, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD2_9)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(2,9,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(2, 9, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD3_0)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(3,0,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(3, 0, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD3_1)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(3,1,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(3, 1, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD3_2)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(3,2,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(3, 2, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD3_3)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(3,3,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(3, 3, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD3_4)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(3,4,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(3, 4, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD3_5)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(3,5,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(3, 5, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD3_6)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(3,6,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(3, 6, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD3_7)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(3,7,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(3, 7, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD3_8)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(3,8,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(3, 8, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD3_9)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(3,9,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(3, 9, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD4_0)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(4,0,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(4, 0, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD4_1)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(4,1,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(4, 1, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD4_2)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(4,2,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(4, 2, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD4_3)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(4,3,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(4, 3, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD4_4)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(4,4,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(4, 4, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD4_5)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(4,5,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(4, 5, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD4_6)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(4,6,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(4, 6, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD4_7)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(4,7,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(4, 7, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD4_8)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(4,8,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(4, 8, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN) && defined(OpenBSD4_9)
-#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(4,9,0)
+#       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER(4, 9, 0)
 #   endif
 #   if !defined(BOOST_OS_BSD_OPEN)
 #       define BOOST_OS_BSD_OPEN BOOST_VERSION_NUMBER_AVAILABLE
@@ -168,4 +168,4 @@ http://www.boost.org/LICENSE_1_0.txt)
 #endif
 
 #include <boost/predef/detail/test.h>
-BOOST_PREDEF_DECLARE_TEST(BOOST_OS_BSD_OPEN,BOOST_OS_BSD_OPEN_NAME)
+BOOST_PREDEF_DECLARE_TEST(BOOST_OS_BSD_OPEN, BOOST_OS_BSD_OPEN_NAME)

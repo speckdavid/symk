@@ -33,99 +33,98 @@ class ClosedList;
 
 class UniformCostSearch : public SymSearch {
 protected:
-  bool fw; // Direction of the search. true=forward, false=backward
+    bool fw; // Direction of the search. true=forward, false=backward
 
-  // Current state of the search:
-  std::shared_ptr<ClosedList> closed; // Closed list is a shared ptr to share
-  OpenList open_list;
-  Frontier frontier;
+    // Current state of the search:
+    std::shared_ptr<ClosedList> closed; // Closed list is a shared ptr to share
+    OpenList open_list;
+    Frontier frontier;
 
-  // Opposite direction. Mostly relevant when bidirectional search ist used
-  std::shared_ptr<ClosedList> perfectHeuristic;
+    // Opposite direction. Mostly relevant when bidirectional search ist used
+    std::shared_ptr<ClosedList> perfectHeuristic;
 
-  SymStepCostEstimation estimationCost, estimationZero; // Time/nodes estimated
-  // NOTE: This was used to estimate the time and nodes needed to
-  // perform a step in case that the next bucket is still not prepared.
-  // Now, we always prepare the next bucket and when that fails no
-  // estimation is needed (the exploration is deemed as not searchable
-  // and is worse than any other exploration which has its next bucket
-  // to expand ready)
-  // SymStepCostEstimation estimationDisjCost, estimationDisjZero;
-  bool lastStepCost; // If the last step was a cost step (to know if we are in
-                     // estimationDisjCost or Zero)
+    SymStepCostEstimation estimationCost, estimationZero; // Time/nodes estimated
+    // NOTE: This was used to estimate the time and nodes needed to
+    // perform a step in case that the next bucket is still not prepared.
+    // Now, we always prepare the next bucket and when that fails no
+    // estimation is needed (the exploration is deemed as not searchable
+    // and is worse than any other exploration which has its next bucket
+    // to expand ready)
+    // SymStepCostEstimation estimationDisjCost, estimationDisjZero;
+    bool lastStepCost; // If the last step was a cost step (to know if we are in
+                       // estimationDisjCost or Zero)
 
-  int last_g_cost;
+    int last_g_cost;
 
-  void violated(TruncatedReason reason, double time, int maxTime, int maxNodes);
+    void violated(TruncatedReason reason, double time, int maxTime, int maxNodes);
 
-  bool initialization() const { return frontier.g() == 0 && lastStepCost; }
+    bool initialization() const {return frontier.g() == 0 && lastStepCost;}
 
-  /*
-   * Check if we can proof that no more plans exist
-   */
-  virtual bool provable_no_more_plans();
+    /*
+     * Check if we can proof that no more plans exist
+     */
+    virtual bool provable_no_more_plans();
 
-  /*
-   * Check generated or closed states with other frontiers => solution check
-   */
-  virtual void checkFrontierCut(Bucket &bucket, int g);
+    /*
+     * Check generated or closed states with other frontiers => solution check
+     */
+    virtual void checkFrontierCut(Bucket &bucket, int g);
 
-  void closeStates(Bucket &bucket, int g);
+    void closeStates(Bucket &bucket, int g);
 
-  void prepareBucket();
+    void prepareBucket();
 
-  virtual void filterFrontier();
+    virtual void filterFrontier();
 
-  void computeEstimation(bool prepare);
+    void computeEstimation(bool prepare);
 
-  //////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////
 public:
-  UniformCostSearch(SymbolicSearch *eng, const SymParamsSearch &params);
-  UniformCostSearch(const UniformCostSearch &) = delete;
-  UniformCostSearch(UniformCostSearch &&) = default;
-  UniformCostSearch &operator=(const UniformCostSearch &) = delete;
-  UniformCostSearch &operator=(UniformCostSearch &&) = default;
-  virtual ~UniformCostSearch() = default;
+    UniformCostSearch(SymbolicSearch *eng, const SymParamsSearch &params);
+    UniformCostSearch(const UniformCostSearch &) = delete;
+    UniformCostSearch(UniformCostSearch &&) = default;
+    UniformCostSearch &operator=(const UniformCostSearch &) = delete;
+    UniformCostSearch &operator=(UniformCostSearch &&) = default;
+    virtual ~UniformCostSearch() = default;
 
-  virtual bool finished() const {
-    return open_list.empty() && frontier.empty();
-  }
+    virtual bool finished() const {
+        return open_list.empty() && frontier.empty();
+    }
 
-  virtual bool stepImage(int maxTime, int maxNodes);
+    virtual bool stepImage(int maxTime, int maxNodes);
 
-  bool
-  init(std::shared_ptr<SymStateSpaceManager> manager, bool fw,
-       UniformCostSearch *opposite_search); // Init forward or backward search
+    bool
+    init(std::shared_ptr<SymStateSpaceManager> manager, bool fw,
+         UniformCostSearch *opposite_search); // Init forward or backward search
 
-  virtual bool isSearchableWithNodes(int maxNodes) const;
+    virtual bool isSearchableWithNodes(int maxNodes) const;
 
-  virtual int getF() const override {
-    return open_list.minNextG(frontier, mgr->getAbsoluteMinTransitionCost());
-  }
+    virtual int getF() const override {
+        return open_list.minNextG(frontier, mgr->getAbsoluteMinTransitionCost());
+    }
 
-  virtual int getG() const {
-    return frontier.empty() ? open_list.minG() : frontier.g();
-  }
+    virtual int getG() const {
+        return frontier.empty() ? open_list.minG() : frontier.g();
+    }
 
-  std::shared_ptr<ClosedList> getClosedShared() const { return closed; }
+    std::shared_ptr<ClosedList> getClosedShared() const {return closed;}
 
-  void filterDuplicates(Bucket &bucket);
+    void filterDuplicates(Bucket &bucket);
 
-  virtual long nextStepTime() const override;
-  virtual long nextStepNodes() const override;
-  virtual long nextStepNodesResult() const override;
+    virtual long nextStepTime() const override;
+    virtual long nextStepNodes() const override;
+    virtual long nextStepNodesResult() const override;
 
-  // Returns the nodes that have been expanded by the algorithm (closed without
-  // the current frontier)
-  BDD getExpanded() const;
-  void getNotExpanded(Bucket &res) const;
+    // Returns the nodes that have been expanded by the algorithm (closed without
+    // the current frontier)
+    BDD getExpanded() const;
+    void getNotExpanded(Bucket &res) const;
 
-  // void write(const std::string & file) const;
+    // void write(const std::string & file) const;
 
-  void filterMutex(Bucket &bucket) {
-    mgr->filterMutex(bucket, fw, initialization());
-  }
+    void filterMutex(Bucket &bucket) {
+        mgr->filterMutex(bucket, fw, initialization());
+    }
 };
-
 } // namespace symbolic
 #endif

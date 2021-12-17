@@ -10,7 +10,7 @@ http://www.boost.org/LICENSE_1_0.txt)
 
 #if !defined(BOOST_PREDEF_INTERNAL_GENERATE_TESTS)
 
-#define BOOST_PREDEF_DECLARE_TEST(x,s)
+#define BOOST_PREDEF_DECLARE_TEST(x, s)
 
 #endif
 

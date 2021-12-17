@@ -31,8 +31,8 @@ http://www.boost.org/LICENSE_1_0.txt)
 
 #if defined(__UCLIBC__)
 #   undef BOOST_LIB_C_UC
-#   define BOOST_LIB_C_UC BOOST_VERSION_NUMBER(\
-        __UCLIBC_MAJOR__,__UCLIBC_MINOR__,__UCLIBC_SUBLEVEL__)
+#   define BOOST_LIB_C_UC BOOST_VERSION_NUMBER( \
+        __UCLIBC_MAJOR__, __UCLIBC_MINOR__, __UCLIBC_SUBLEVEL__)
 #endif
 
 #if BOOST_LIB_C_UC
@@ -44,4 +44,4 @@ http://www.boost.org/LICENSE_1_0.txt)
 #endif
 
 #include <boost/predef/detail/test.h>
-BOOST_PREDEF_DECLARE_TEST(BOOST_LIB_C_UC,BOOST_LIB_C_UC_NAME)
+BOOST_PREDEF_DECLARE_TEST(BOOST_LIB_C_UC, BOOST_LIB_C_UC_NAME)

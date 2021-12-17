@@ -41,43 +41,43 @@ compiler version number directly, i.e. the _MSC_VER number.]
 #   if !defined (_MSC_FULL_VER)
 #       define BOOST_COMP_MSVC_BUILD 0
 #   else
-        /* how many digits does the build number have? */
+/* how many digits does the build number have? */
 #       if _MSC_FULL_VER / 10000 == _MSC_VER
-            /* four digits */
+/* four digits */
 #           define BOOST_COMP_MSVC_BUILD (_MSC_FULL_VER % 10000)
 #       elif _MSC_FULL_VER / 100000 == _MSC_VER
-            /* five digits */
+/* five digits */
 #           define BOOST_COMP_MSVC_BUILD (_MSC_FULL_VER % 100000)
 #       else
 #           error "Cannot determine build number from _MSC_FULL_VER"
 #       endif
 #   endif
-    /*
-    VS2014 was skipped in the release sequence for MS. Which
-    means that the compiler and VS product versions are no longer
-    in sync. Hence we need to use different formulas for
-    mapping from MSC version to VS product version.
+/*
+VS2014 was skipped in the release sequence for MS. Which
+means that the compiler and VS product versions are no longer
+in sync. Hence we need to use different formulas for
+mapping from MSC version to VS product version.
 
-    VS2017 is a total nightmare when it comes to version numbers.
-    Hence to avoid arguments relating to that both present and
-    future.. Any version after VS2015 will use solely the compiler
-    version, i.e. cl.exe, as the version number here.
-    */
+VS2017 is a total nightmare when it comes to version numbers.
+Hence to avoid arguments relating to that both present and
+future.. Any version after VS2015 will use solely the compiler
+version, i.e. cl.exe, as the version number here.
+*/
 #   if (_MSC_VER > 1900)
-#       define BOOST_COMP_MSVC_DETECTION BOOST_VERSION_NUMBER(\
-            _MSC_VER/100,\
-            _MSC_VER%100,\
-            BOOST_COMP_MSVC_BUILD)
+#       define BOOST_COMP_MSVC_DETECTION BOOST_VERSION_NUMBER( \
+        _MSC_VER / 100, \
+        _MSC_VER % 100, \
+        BOOST_COMP_MSVC_BUILD)
 #   elif (_MSC_VER >= 1900)
-#       define BOOST_COMP_MSVC_DETECTION BOOST_VERSION_NUMBER(\
-            _MSC_VER/100-5,\
-            _MSC_VER%100,\
-            BOOST_COMP_MSVC_BUILD)
+#       define BOOST_COMP_MSVC_DETECTION BOOST_VERSION_NUMBER( \
+        _MSC_VER / 100 - 5, \
+        _MSC_VER % 100, \
+        BOOST_COMP_MSVC_BUILD)
 #   else
-#       define BOOST_COMP_MSVC_DETECTION BOOST_VERSION_NUMBER(\
-            _MSC_VER/100-6,\
-            _MSC_VER%100,\
-            BOOST_COMP_MSVC_BUILD)
+#       define BOOST_COMP_MSVC_DETECTION BOOST_VERSION_NUMBER( \
+        _MSC_VER / 100 - 6, \
+        _MSC_VER % 100, \
+        BOOST_COMP_MSVC_BUILD)
 #   endif
 #endif
 
@@ -97,9 +97,9 @@ compiler version number directly, i.e. the _MSC_VER number.]
 #endif
 
 #include <boost/predef/detail/test.h>
-BOOST_PREDEF_DECLARE_TEST(BOOST_COMP_MSVC,BOOST_COMP_MSVC_NAME)
+BOOST_PREDEF_DECLARE_TEST(BOOST_COMP_MSVC, BOOST_COMP_MSVC_NAME)
 
 #ifdef BOOST_COMP_MSVC_EMULATED
 #include <boost/predef/detail/test.h>
-BOOST_PREDEF_DECLARE_TEST(BOOST_COMP_MSVC_EMULATED,BOOST_COMP_MSVC_NAME)
+BOOST_PREDEF_DECLARE_TEST(BOOST_COMP_MSVC_EMULATED, BOOST_COMP_MSVC_NAME)
 #endif

@@ -48,4 +48,4 @@ If available version number as major, minor, and patch.
 #endif
 
 #include <boost/predef/detail/test.h>
-BOOST_PREDEF_DECLARE_TEST(BOOST_LIB_STD_SGI,BOOST_LIB_STD_SGI_NAME)
+BOOST_PREDEF_DECLARE_TEST(BOOST_LIB_STD_SGI, BOOST_LIB_STD_SGI_NAME)

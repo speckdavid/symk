@@ -6,27 +6,26 @@
 namespace symbolic {
 class TopqSymbolicUniformCostSearch : public TopkSymbolicUniformCostSearch {
 private:
-  double get_quality_bound() {
-    return solution_registry.cheapest_solution_cost_found() *
-           quality_multiplier;
-  }
+    double get_quality_bound() {
+        return solution_registry.cheapest_solution_cost_found() *
+               quality_multiplier;
+    }
 
 protected:
-  // Let c be the cost of the cheapest plan
-  // We want all plans with quality_multiplier * c
-  double quality_multiplier;
+    // Let c be the cost of the cheapest plan
+    // We want all plans with quality_multiplier * c
+    double quality_multiplier;
 
-  virtual SearchStatus step() override;
+    virtual SearchStatus step() override;
 
 public:
-  TopqSymbolicUniformCostSearch(const options::Options &opts, bool fw, bool bw);
-  virtual ~TopqSymbolicUniformCostSearch() = default;
+    TopqSymbolicUniformCostSearch(const options::Options &opts, bool fw, bool bw);
+    virtual ~TopqSymbolicUniformCostSearch() = default;
 
-  virtual void new_solution(const SymSolutionCut &sol) override;
+    virtual void new_solution(const SymSolutionCut &sol) override;
 
-  static void add_options_to_parser(OptionParser &parser);
+    static void add_options_to_parser(OptionParser &parser);
 };
-
 } // namespace symbolic
 
 #endif

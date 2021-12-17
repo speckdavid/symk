@@ -13,14 +13,14 @@ using namespace std;
 namespace symbolic {
 class SimpleSelector : public PlanDataBase {
 public:
-  SimpleSelector(const options::Options &opts);
-  ~SimpleSelector(){};
+    SimpleSelector(const options::Options &opts);
+    ~SimpleSelector() {}
 
-  void add_plan(const Plan &plan) override;
-  std::string tag() const override { return "Simple"; }
+    void add_plan(const Plan &plan) override;
+    std::string tag() const override {return "Simple";}
 
 private:
-  bool is_simple(const Plan &plan);
+    bool is_simple(const Plan &plan);
 };
 } // namespace symbolic
 

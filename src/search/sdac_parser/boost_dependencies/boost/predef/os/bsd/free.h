@@ -37,10 +37,10 @@ http://www.boost.org/LICENSE_1_0.txt)
 #   if defined(__FreeBSD_version)
 #       if __FreeBSD_version < 500000
 #           define BOOST_OS_BSD_FREE \
-                BOOST_PREDEF_MAKE_10_VRP000(__FreeBSD_version)
+    BOOST_PREDEF_MAKE_10_VRP000(__FreeBSD_version)
 #       else
 #           define BOOST_OS_BSD_FREE \
-                BOOST_PREDEF_MAKE_10_VRR000(__FreeBSD_version)
+    BOOST_PREDEF_MAKE_10_VRR000(__FreeBSD_version)
 #       endif
 #   else
 #       define BOOST_OS_BSD_FREE BOOST_VERSION_NUMBER_AVAILABLE
@@ -57,4 +57,4 @@ http://www.boost.org/LICENSE_1_0.txt)
 #endif
 
 #include <boost/predef/detail/test.h>
-BOOST_PREDEF_DECLARE_TEST(BOOST_OS_BSD_FREE,BOOST_OS_BSD_FREE_NAME)
+BOOST_PREDEF_DECLARE_TEST(BOOST_OS_BSD_FREE, BOOST_OS_BSD_FREE_NAME)

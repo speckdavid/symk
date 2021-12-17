@@ -42,16 +42,16 @@ http://www.boost.org/LICENSE_1_0.txt)
     defined(_M_ARM)
 #   undef BOOST_ARCH_ARM
 #   if !defined(BOOST_ARCH_ARM) && defined(__arm64)
-#       define BOOST_ARCH_ARM BOOST_VERSION_NUMBER(8,0,0)
+#       define BOOST_ARCH_ARM BOOST_VERSION_NUMBER(8, 0, 0)
 #   endif
 #   if !defined(BOOST_ARCH_ARM) && defined(__TARGET_ARCH_ARM)
-#       define BOOST_ARCH_ARM BOOST_VERSION_NUMBER(__TARGET_ARCH_ARM,0,0)
+#       define BOOST_ARCH_ARM BOOST_VERSION_NUMBER(__TARGET_ARCH_ARM, 0, 0)
 #   endif
 #   if !defined(BOOST_ARCH_ARM) && defined(__TARGET_ARCH_THUMB)
-#       define BOOST_ARCH_ARM BOOST_VERSION_NUMBER(__TARGET_ARCH_THUMB,0,0)
+#       define BOOST_ARCH_ARM BOOST_VERSION_NUMBER(__TARGET_ARCH_THUMB, 0, 0)
 #   endif
 #   if !defined(BOOST_ARCH_ARM) && defined(_M_ARM)
-#       define BOOST_ARCH_ARM BOOST_VERSION_NUMBER(_M_ARM,0,0)
+#       define BOOST_ARCH_ARM BOOST_VERSION_NUMBER(_M_ARM, 0, 0)
 #   endif
 #   if !defined(BOOST_ARCH_ARM)
 #       define BOOST_ARCH_ARM BOOST_VERSION_NUMBER_AVAILABLE
@@ -67,4 +67,4 @@ http://www.boost.org/LICENSE_1_0.txt)
 #endif
 
 #include <boost/predef/detail/test.h>
-BOOST_PREDEF_DECLARE_TEST(BOOST_ARCH_ARM,BOOST_ARCH_ARM_NAME)
+BOOST_PREDEF_DECLARE_TEST(BOOST_ARCH_ARM, BOOST_ARCH_ARM_NAME)

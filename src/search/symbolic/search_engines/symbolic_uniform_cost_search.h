@@ -5,22 +5,20 @@
 
 namespace symbolic {
 class SymbolicUniformCostSearch : public SymbolicSearch {
-
 protected:
-  bool fw;
-  bool bw;
+    bool fw;
+    bool bw;
 
-  virtual void initialize() override;
+    virtual void initialize() override;
 
-  virtual SearchStatus step() override { return SymbolicSearch::step(); }
+    virtual SearchStatus step() override {return SymbolicSearch::step();}
 
 public:
-  SymbolicUniformCostSearch(const options::Options &opts, bool fw, bool bw);
-  virtual ~SymbolicUniformCostSearch() = default;
+    SymbolicUniformCostSearch(const options::Options &opts, bool fw, bool bw);
+    virtual ~SymbolicUniformCostSearch() = default;
 
-  virtual void new_solution(const SymSolutionCut &sol) override;
+    virtual void new_solution(const SymSolutionCut &sol) override;
 };
-
 } // namespace symbolic
 
 #endif

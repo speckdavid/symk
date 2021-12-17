@@ -33,7 +33,7 @@ http://www.boost.org/LICENSE_1_0.txt)
 
 #if !defined(BOOST_PREDEF_DETAIL_OS_DETECTED) && ( \
     defined(__NETBSD__) || defined(__NetBSD__) \
-    )
+                                   )
 #   ifndef BOOST_OS_BSD_AVAILABLE
 #       define BOOST_OS_BSD BOOST_VERSION_NUMBER_AVAILABLE
 #       define BOOST_OS_BSD_AVAILABLE
@@ -43,27 +43,27 @@ http://www.boost.org/LICENSE_1_0.txt)
 #       if defined(__NETBSD_version)
 #           if __NETBSD_version < 500000
 #               define BOOST_OS_BSD_NET \
-                    BOOST_PREDEF_MAKE_10_VRP000(__NETBSD_version)
+    BOOST_PREDEF_MAKE_10_VRP000(__NETBSD_version)
 #           else
 #               define BOOST_OS_BSD_NET \
-                    BOOST_PREDEF_MAKE_10_VRR000(__NETBSD_version)
+    BOOST_PREDEF_MAKE_10_VRR000(__NETBSD_version)
 #           endif
 #       else
 #           define BOOST_OS_BSD_NET BOOST_VERSION_NUMBER_AVAILABLE
 #       endif
 #   elif defined(__NetBSD__)
 #       if !defined(BOOST_OS_BSD_NET) && defined(NetBSD0_8)
-#           define BOOST_OS_BSD_NET BOOST_VERSION_NUMBER(0,8,0)
+#           define BOOST_OS_BSD_NET BOOST_VERSION_NUMBER(0, 8, 0)
 #       endif
 #       if !defined(BOOST_OS_BSD_NET) && defined(NetBSD0_9)
-#           define BOOST_OS_BSD_NET BOOST_VERSION_NUMBER(0,9,0)
+#           define BOOST_OS_BSD_NET BOOST_VERSION_NUMBER(0, 9, 0)
 #       endif
 #       if !defined(BOOST_OS_BSD_NET) && defined(NetBSD1_0)
-#           define BOOST_OS_BSD_NET BOOST_VERSION_NUMBER(1,0,0)
+#           define BOOST_OS_BSD_NET BOOST_VERSION_NUMBER(1, 0, 0)
 #       endif
 #       if !defined(BOOST_OS_BSD_NET) && defined(__NetBSD_Version)
 #           define BOOST_OS_BSD_NET \
-                BOOST_PREDEF_MAKE_10_VVRR00PP00(__NetBSD_Version)
+    BOOST_PREDEF_MAKE_10_VVRR00PP00(__NetBSD_Version)
 #       endif
 #       if !defined(BOOST_OS_BSD_NET)
 #           define BOOST_OS_BSD_NET BOOST_VERSION_NUMBER_AVAILABLE
@@ -81,4 +81,4 @@ http://www.boost.org/LICENSE_1_0.txt)
 #endif
 
 #include <boost/predef/detail/test.h>
-BOOST_PREDEF_DECLARE_TEST(BOOST_OS_BSD_NET,BOOST_OS_BSD_NET_NAME)
+BOOST_PREDEF_DECLARE_TEST(BOOST_OS_BSD_NET, BOOST_OS_BSD_NET_NAME)
