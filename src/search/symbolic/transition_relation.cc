@@ -116,7 +116,6 @@ BDD TransitionRelation::image(const BDD &from) const {
 }
 
 BDD TransitionRelation::image(const BDD &from, int maxNodes) const {
-    utils::Timer t;
     BDD aux = from;
     BDD tmp = tBDD.AndAbstract(aux, existsVars, maxNodes);
     BDD res = tmp.SwapVariables(swapVarsS, swapVarsSp);
@@ -130,7 +129,6 @@ BDD TransitionRelation::preimage(const BDD &from) const {
 }
 
 BDD TransitionRelation::preimage(const BDD &from, int maxNodes) const {
-    utils::Timer t;
     BDD tmp = from.SwapVariables(swapVarsS, swapVarsSp);
     BDD res = tBDD.AndAbstract(tmp, existsBwVars, maxNodes);
     return res;
