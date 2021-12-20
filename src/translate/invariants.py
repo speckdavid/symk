@@ -15,6 +15,7 @@ import tools
 # we currently keep the assumption that each predicate occurs at most once
 # in every invariant.
 
+
 def invert_list(alist):
     result = defaultdict(list)
     for pos, arg in enumerate(alist):
@@ -61,7 +62,7 @@ def ensure_conjunction_sat(system, *parts):
     pos = defaultdict(set)
     neg = defaultdict(set)
     for literal in itertools.chain(*parts):
-        if literal.predicate == "=": # use (in)equalities in conditions
+        if literal.predicate == "=":  # use (in)equalities in conditions
             if literal.negated:
                 n = constraints.NegativeClause([literal.args])
                 system.add_negative_clause(n)
@@ -99,7 +100,7 @@ def ensure_inequality(system, literal1, literal2):
        literal instantiations are not equal (ignoring whether one is negated and
        the other is not)"""
     if (literal1.predicate == literal2.predicate and
-        literal1.args):
+            literal1.args):
         parts = list(zip(literal1.args, literal2.args))
         system.add_negative_clause(constraints.NegativeClause(parts))
 
@@ -181,7 +182,8 @@ class InvariantPart:
                     omitted = key
                 else:
                     new_order[value] = key
-            result.append(InvariantPart(other_literal.predicate, new_order, omitted))
+            result.append(InvariantPart(
+                other_literal.predicate, new_order, omitted))
         return result
 
     def matches(self, other, own_literal, other_literal):
@@ -198,7 +200,8 @@ class Invariant:
     def __init__(self, parts):
         self.parts = frozenset(parts)
         self.predicates = set([part.predicate for part in parts])
-        self.predicate_to_part = dict([(part.predicate, part) for part in parts])
+        self.predicate_to_part = dict(
+            [(part.predicate, part) for part in parts])
         assert len(self.parts) == len(self.predicates)
 
     def __eq__(self, other):
@@ -253,7 +256,7 @@ class Invariant:
     def operator_too_heavy(self, h_action):
         add_effects = [eff for eff in h_action.effects
                        if not eff.literal.negated and
-                          self.predicate_to_part.get(eff.literal.predicate)]
+                       self.predicate_to_part.get(eff.literal.predicate)]
         inv_vars = find_unique_variables(h_action, self)
 
         if len(add_effects) <= 1:
@@ -305,7 +308,8 @@ class Invariant:
             if len(params) > 1:
                 for (n1, n2) in itertools.combinations(params, 2):
                     if mapping.get(n1, n1) != mapping.get(n2, n2):
-                        negative_clause = constraints.NegativeClause([(n1, n2)])
+                        negative_clause = constraints.NegativeClause([
+                                                                     (n1, n2)])
                         system.add_negative_clause(negative_clause)
             minimal_renamings.append(system)
         return minimal_renamings
@@ -324,7 +328,7 @@ class Invariant:
 
         for del_effect in del_effects:
             minimal_renamings = self.unbalanced_renamings(del_effect, add_effect,
-                inv_vars, lhs_by_pred, minimal_renamings)
+                                                          inv_vars, lhs_by_pred, minimal_renamings)
             if not minimal_renamings:
                 return False
 
@@ -343,7 +347,7 @@ class Invariant:
                     enqueue_func(Invariant(self.parts.union((match,))))
 
     def unbalanced_renamings(self, del_effect, add_effect,
-        inv_vars, lhs_by_pred, unbalanced_renamings):
+                             inv_vars, lhs_by_pred, unbalanced_renamings):
         """returns the renamings from unbalanced renamings for which
            the del_effect does not balance the add_effect."""
 
@@ -358,12 +362,12 @@ class Invariant:
         # below check that this is impossible with each unbalanced renaming.
         check_constants = False
         constant_test_system = constraints.ConstraintSystem()
-        for a,b in system.combinatorial_assignments[0][0].equalities:
+        for a, b in system.combinatorial_assignments[0][0].equalities:
             # first 0 because the system was empty before we called ensure_cover
             # second 0 because ensure_cover only adds assignments with one entry
             if b[0] != "?":
                 check_constants = True
-                neg_clause = constraints.NegativeClause([(a,b)])
+                neg_clause = constraints.NegativeClause([(a, b)])
                 constant_test_system.add_negative_clause(neg_clause)
 
         ensure_inequality(system, add_effect.literal, del_effect.literal)
@@ -408,7 +412,8 @@ class Invariant:
                 if match.negated != literal.negated:
                     continue
                 else:
-                    a = constraints.Assignment(list(zip(literal.args, match.args)))
+                    a = constraints.Assignment(
+                        list(zip(literal.args, match.args)))
                     poss_assignments.append(a)
             if not poss_assignments:
                 return None

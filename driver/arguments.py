@@ -89,7 +89,8 @@ Examples:
 %s
 """ % "\n\n".join("%s\n%s" % (desc, " ".join(cmd)) for desc, cmd in EXAMPLES)
 
-COMPONENTS_PLUS_OVERALL = ["translate", "preprocess", "search", "validate", "overall"]
+COMPONENTS_PLUS_OVERALL = ["translate",
+                           "preprocess", "search", "validate", "overall"]
 DEFAULT_SAS_FILE = "output.sas"
 
 
@@ -97,13 +98,17 @@ DEFAULT_SAS_FILE = "output.sas"
 Function to emulate the behavior of ArgumentParser.error, but with our
 custom exit codes instead of 2.
 """
+
+
 def print_usage_and_exit_with_driver_input_error(parser, msg):
     parser.print_usage()
-    returncodes.exit_with_driver_input_error("{}: error: {}".format(os.path.basename(sys.argv[0]), msg))
+    returncodes.exit_with_driver_input_error(
+        "{}: error: {}".format(os.path.basename(sys.argv[0]), msg))
 
 
 class RawHelpFormatter(argparse.HelpFormatter):
     """Preserve newlines and spacing."""
+
     def _fill_text(self, text, width, indent):
         return ''.join([indent + line for line in text.splitlines(True)])
 
@@ -292,7 +297,8 @@ def _set_translator_output_options(parser, args):
 def _get_time_limit_in_seconds(limit, parser):
     match = re.match(r"^(\d+)(s|m|h)?$", limit, flags=re.I)
     if not match:
-        print_usage_and_exit_with_driver_input_error(parser, "malformed time limit parameter: {}".format(limit))
+        print_usage_and_exit_with_driver_input_error(
+            parser, "malformed time limit parameter: {}".format(limit))
     time = int(match.group(1))
     suffix = match.group(2)
     if suffix is not None:
@@ -307,7 +313,8 @@ def _get_time_limit_in_seconds(limit, parser):
 def _get_memory_limit_in_bytes(limit, parser):
     match = re.match(r"^(\d+)(k|m|g)?$", limit, flags=re.I)
     if not match:
-        print_usage_and_exit_with_driver_input_error(parser, "malformed memory limit parameter: {}".format(limit))
+        print_usage_and_exit_with_driver_input_error(
+            parser, "malformed memory limit parameter: {}".format(limit))
     memory = int(match.group(1))
     suffix = match.group(2)
     if suffix is not None:
@@ -390,12 +397,12 @@ def parse_args():
     driver_other.add_argument(
         "--build",
         help="BUILD can be a predefined build name like release "
-            "(default) and debug, a custom build name, or the path to "
-            "a directory holding the planner binaries. The driver "
-            "first looks for the planner binaries under 'BUILD'. If "
-            "this path does not exist, it tries the directory "
-            "'<repo>/builds/BUILD/bin', where the build script creates "
-            "them by default.")
+        "(default) and debug, a custom build name, or the path to "
+        "a directory holding the planner binaries. The driver "
+        "first looks for the planner binaries under 'BUILD'. If "
+        "this path does not exist, it tries the directory "
+        "'<repo>/builds/BUILD/bin', where the build script creates "
+        "them by default.")
     driver_other.add_argument(
         "--debug", action="store_true",
         help="alias for --build=debug --validate")
@@ -414,11 +421,11 @@ def parse_args():
     driver_other.add_argument(
         "--sas-file", metavar="FILE",
         help="intermediate file for storing the translator output "
-            "(implies --keep-sas-file, default: {})".format(DEFAULT_SAS_FILE))
+        "(implies --keep-sas-file, default: {})".format(DEFAULT_SAS_FILE))
     driver_other.add_argument(
         "--keep-sas-file", action="store_true",
         help="keep translator output file (implied by --sas-file, default: "
-            "delete file if translator and search component are active)")
+        "delete file if translator and search component are active)")
 
     driver_other.add_argument(
         "--portfolio", metavar="FILE",
@@ -433,7 +440,6 @@ def parse_args():
     driver_other.add_argument(
         "--cleanup", action="store_true",
         help="clean up temporary files (translator output and plan files) and exit")
-
 
     parser.add_argument(
         "planner_args", nargs=argparse.REMAINDER,
@@ -456,7 +462,7 @@ def parse_args():
     if args.build and args.debug:
         print_usage_and_exit_with_driver_input_error(
             parser, "The option --debug is an alias for --build=debug "
-                     "--validate. Do no specify both --debug and --build.")
+            "--validate. Do no specify both --debug and --build.")
     if not args.build:
         if args.debug:
             args.build = "debug"
@@ -466,9 +472,9 @@ def parse_args():
     _split_planner_args(parser, args)
 
     _check_mutex_args(parser, [
-            ("--alias", args.alias is not None),
-            ("--portfolio", args.portfolio is not None),
-            ("options for search component", bool(args.search_options))])
+        ("--alias", args.alias is not None),
+        ("--portfolio", args.portfolio is not None),
+        ("options for search component", bool(args.search_options))])
 
     _set_translator_output_options(parser, args)
 

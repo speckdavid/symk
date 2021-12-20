@@ -25,7 +25,7 @@ def parse_typed_list(alist, only_variables=False,
             alist = alist[separator_position + 2:]
         for item in items:
             assert not only_variables or item.startswith("?"), \
-                   "Expected item to be a variable: %s in (%s)" % (
+                "Expected item to be a variable: %s in (%s)" % (
                 item, " ".join(items))
             entry = constructor(item, _type)
             result.append(entry)
@@ -83,9 +83,9 @@ def parse_condition_aux(alist, negated, type_dict, predicate_dict):
 
     if tag == "imply":
         parts = [parse_condition_aux(
-                args[0], not negated, type_dict, predicate_dict),
-                 parse_condition_aux(
-                args[1], negated, type_dict, predicate_dict)]
+            args[0], not negated, type_dict, predicate_dict),
+            parse_condition_aux(
+            args[1], negated, type_dict, predicate_dict)]
         tag = "or"
     else:
         parts = [parse_condition_aux(part, negated, type_dict, predicate_dict)
@@ -121,6 +121,8 @@ def parse_literal(alist, type_dict, predicate_dict, negated=False):
 
 
 SEEN_WARNING_TYPE_PREDICATE_NAME_CLASH = False
+
+
 def _get_predicate_id_and_arity(text, type_dict, predicate_dict):
     global SEEN_WARNING_TYPE_PREDICATE_NAME_CLASH
 
@@ -151,6 +153,7 @@ def parse_effects(alist, result, type_dict, predicate_dict):
         return cost_eff.effect
     else:
         return None
+
 
 def add_effect(tmp_effect, result):
     """tmp_effect has the following structure:
@@ -184,13 +187,14 @@ def add_effect(tmp_effect, result):
         condition = condition.simplified()
         new_effect = pddl.Effect(parameters, condition, effect)
         contradiction = pddl.Effect(parameters, condition, effect.negate())
-        if not contradiction in result:
+        if contradiction not in result:
             result.append(new_effect)
         else:
             # We use add-after-delete semantics, keep positive effect
             if isinstance(contradiction.literal, pddl.NegatedAtom):
                 result.remove(contradiction)
                 result.append(new_effect)
+
 
 def parse_effect(alist, type_dict, predicate_dict):
     tag = alist[0]
@@ -229,6 +233,7 @@ def parse_expression(exp):
         raise ValueError("Negative numbers are not supported")
     else:
         return pddl.PrimitiveNumericExpression(exp, [])
+
 
 def parse_assignment(alist):
     assert len(alist) == 3
@@ -298,13 +303,14 @@ def parse_axiom(alist, type_dict, predicate_dict):
 
 def parse_task(domain_pddl, task_pddl):
     domain_name, domain_requirements, types, type_dict, constants, predicates, predicate_dict, functions, actions, axioms \
-                 = parse_domain_pddl(domain_pddl)
-    task_name, task_domain_name, task_requirements, objects, init, goal, use_metric = parse_task_pddl(task_pddl, type_dict, predicate_dict)
+        = parse_domain_pddl(domain_pddl)
+    task_name, task_domain_name, task_requirements, objects, init, goal, use_metric = parse_task_pddl(
+        task_pddl, type_dict, predicate_dict)
 
     assert domain_name == task_domain_name
     requirements = pddl.Requirements(sorted(set(
-                domain_requirements.requirements +
-                task_requirements.requirements)))
+        domain_requirements.requirements +
+        task_requirements.requirements)))
     objects = constants + objects
     check_for_duplicates(
         [o.name for o in objects],
@@ -326,9 +332,9 @@ def parse_domain_pddl(domain_pddl):
     assert domain_line[0] == "domain" and len(domain_line) == 2
     yield domain_line[1]
 
-    ## We allow an arbitrary order of the requirement, types, constants,
-    ## predicates and functions specification. The PDDL BNF is more strict on
-    ## this, so we print a warning if it is violated.
+    # We allow an arbitrary order of the requirement, types, constants,
+    # predicates and functions specification. The PDDL BNF is more strict on
+    # this, so we print a warning if it is violated.
     requirements = pddl.Requirements([":strips"])
     the_types = [pddl.Type("object")]
     constants, the_predicates, the_functions = [], [], []
@@ -345,7 +351,7 @@ def parse_domain_pddl(domain_pddl):
             raise SystemExit("Error in domain specification\n" +
                              "Reason: two '%s' specifications." % field)
         if (seen_fields and
-            correct_order.index(seen_fields[-1]) > correct_order.index(field)):
+                correct_order.index(seen_fields[-1]) > correct_order.index(field)):
             msg = "\nWarning: %s specification not allowed here (cf. PDDL BNF)" % field
             print(msg, file=sys.stderr)
         seen_fields.append(field)
@@ -353,15 +359,15 @@ def parse_domain_pddl(domain_pddl):
             requirements = pddl.Requirements(opt[1:])
         elif field == ":types":
             the_types.extend(parse_typed_list(
-                    opt[1:], constructor=pddl.Type))
+                opt[1:], constructor=pddl.Type))
         elif field == ":constants":
             constants = parse_typed_list(opt[1:])
         elif field == ":predicates":
             the_predicates = [parse_predicate(entry)
                               for entry in opt[1:]]
             the_predicates += [pddl.Predicate("=",
-                                 [pddl.TypedObject("?x", "object"),
-                                  pddl.TypedObject("?y", "object")])]
+                                              [pddl.TypedObject("?x", "object"),
+                                               pddl.TypedObject("?y", "object")])]
         elif field == ":functions":
             the_functions = parse_typed_list(
                 opt[1:],
@@ -395,6 +401,7 @@ def parse_domain_pddl(domain_pddl):
                 the_actions.append(action)
     yield the_actions
     yield the_axioms
+
 
 def parse_task_pddl(task_pddl, type_dict, predicate_dict):
     iterator = iter(task_pddl)
@@ -435,11 +442,11 @@ def parse_task_pddl(task_pddl, type_dict, predicate_dict):
                 assignment = parse_assignment(fact)
             except ValueError as e:
                 raise SystemExit("Error in initial state specification\n" +
-                                 "Reason: %s." %  e)
+                                 "Reason: %s." % e)
             if not isinstance(assignment.expression,
                               pddl.NumericConstant):
                 raise SystemExit("Illegal assignment in initial state " +
-                    "specification:\n%s" % assignment)
+                                 "specification:\n%s" % assignment)
             if assignment.fluent in initial_assignments:
                 prev = initial_assignments[assignment.fluent]
                 if assignment.expression == prev.expression:
@@ -448,7 +455,7 @@ def parse_task_pddl(task_pddl, type_dict, predicate_dict):
                 else:
                     raise SystemExit("Error in initial state specification\n" +
                                      "Reason: conflicting assignment for " +
-                                     "%s." %  assignment.fluent)
+                                     "%s." % assignment.fluent)
             else:
                 initial_assignments[assignment.fluent] = assignment
                 initial.append(assignment)
@@ -470,7 +477,7 @@ def parse_task_pddl(task_pddl, type_dict, predicate_dict):
     use_metric = False
     for entry in iterator:
         if entry[0] == ":metric":
-            if entry[1]=="minimize" and entry[2][0] == "total-cost":
+            if entry[1] == "minimize" and entry[2][0] == "total-cost":
                 use_metric = True
             else:
                 assert False, "Unknown metric."
@@ -483,7 +490,7 @@ def parse_task_pddl(task_pddl, type_dict, predicate_dict):
 def check_atom_consistency(atom, same_truth_value, other_truth_value, atom_is_true=True):
     if atom in other_truth_value:
         raise SystemExit("Error in initial state specification\n" +
-                         "Reason: %s is true and false." %  atom)
+                         "Reason: %s is true and false." % atom)
     if atom in same_truth_value:
         if not atom_is_true:
             atom = atom.negate()

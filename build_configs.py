@@ -1,4 +1,4 @@
-release = ["-DCMAKE_BUILD_TYPE=Release" ]
+release = ["-DCMAKE_BUILD_TYPE=Release"]
 debug = ["-DCMAKE_BUILD_TYPE=Debug"]
 
 releasenolp = ["-DCMAKE_BUILD_TYPE=Release", "-DUSE_LP=NO"]

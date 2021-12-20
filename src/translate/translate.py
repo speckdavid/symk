@@ -1,35 +1,35 @@
 #! /usr/bin/env python3
 
 from __future__ import print_function
+import variable_order
+import tools
+import timers
+import simplify
+import signal
+import sas_tasks
+import pddl_parser
+import pddl
+import options
+import normalize
+import instantiate
+import fact_groups
+import axiom_rules
+from itertools import product
+from copy import deepcopy
+from collections import defaultdict
 
 import os
 import sys
 import traceback
 
+
 def python_version_supported():
     return sys.version_info >= (3, 6)
+
 
 if not python_version_supported():
     sys.exit("Error: Translator only supports Python >= 3.6.")
 
-
-from collections import defaultdict
-from copy import deepcopy
-from itertools import product
-
-import axiom_rules
-import fact_groups
-import instantiate
-import normalize
-import options
-import pddl
-import pddl_parser
-import sas_tasks
-import signal
-import simplify
-import timers
-import tools
-import variable_order
 
 # TODO: The translator may generate trivial derived variables which are always
 # true, for example if there ia a derived predicate in the input that only
@@ -44,8 +44,8 @@ import variable_order
 DEBUG = False
 
 
-## For a full list of exit codes, please see driver/returncodes.py. Here,
-## we only list codes that are used by the translator component of the planner.
+# For a full list of exit codes, please see driver/returncodes.py. Here,
+# we only list codes that are used by the translator component of the planner.
 TRANSLATE_OUT_OF_MEMORY = 20
 TRANSLATE_OUT_OF_TIME = 21
 
@@ -94,19 +94,19 @@ def translate_strips_conditions_aux(conditions, dictionary, ranges):
 
     for fact in conditions:
         if fact.negated:
-           ## Note  Here we use a different solution than in Sec. 10.6.4
-           ##       of the thesis. Compare the last sentences of the third
-           ##       paragraph of the section.
-           ##       We could do what is written there. As a test case,
-           ##       consider Airport ADL tasks with only one airport, where
-           ##       (occupied ?x) variables are encoded in a single variable,
-           ##       and conditions like (not (occupied ?x)) do occur in
-           ##       preconditions.
-           ##       However, here we avoid introducing new derived predicates
-           ##       by treat the negative precondition as a disjunctive
-           ##       precondition and expanding it by "multiplying out" the
-           ##       possibilities.  This can lead to an exponential blow-up so
-           ##       it would be nice to choose the behaviour as an option.
+            # Note  Here we use a different solution than in Sec. 10.6.4
+            # of the thesis. Compare the last sentences of the third
+            # paragraph of the section.
+            # We could do what is written there. As a test case,
+            # consider Airport ADL tasks with only one airport, where
+            # (occupied ?x) variables are encoded in a single variable,
+            # and conditions like (not (occupied ?x)) do occur in
+            # preconditions.
+            # However, here we avoid introducing new derived predicates
+            # by treat the negative precondition as a disjunctive
+            # precondition and expanding it by "multiplying out" the
+            # possibilities.  This can lead to an exponential blow-up so
+            # it would be nice to choose the behaviour as an option.
             done = False
             new_condition = {}
             atom = pddl.Atom(fact.predicate, fact.args)  # force positive
@@ -134,7 +134,8 @@ def translate_strips_conditions_aux(conditions, dictionary, ranges):
                 # this atom. So we need to introduce a new condition:
                 # We can select any from new_condition and currently prefer the
                 # smallest one.
-                candidates = sorted(new_condition.items(), key=number_of_values)
+                candidates = sorted(new_condition.items(),
+                                    key=number_of_values)
                 var, vals = candidates[0]
                 condition[var] = vals
 
@@ -269,7 +270,8 @@ def translate_strips_operator_aux(operator, dictionary, ranges, mutex_dict,
                             break
                         new_cond[cvar] = cval
                     else:
-                        effects_by_variable[var][none_of_those].append(new_cond)
+                        effects_by_variable[var][none_of_those].append(
+                            new_cond)
 
     return build_sas_operator(operator.name, condition, effects_by_variable,
                               operator.cost, ranges, implied_facts)
@@ -333,21 +335,21 @@ def build_sas_operator(name, condition, effects_by_variable, cost, ranges,
 
 
 def prune_stupid_effect_conditions(var, val, conditions, effects_on_var):
-    ## (IF <conditions> THEN <var> := <val>) is a conditional effect.
-    ## <var> is guaranteed to be a binary variable.
-    ## <conditions> is in DNF representation (list of lists).
+    # (IF <conditions> THEN <var> := <val>) is a conditional effect.
+    # <var> is guaranteed to be a binary variable.
+    # <conditions> is in DNF representation (list of lists).
     ##
-    ## We simplify <conditions> by applying two rules:
-    ## 1. Conditions of the form "var = dualval" where var is the
-    ##    effect variable and dualval != val can be omitted.
-    ##    (If var != dualval, then var == val because it is binary,
-    ##    which means that in such situations the effect is a no-op.)
-    ##    The condition can only be omitted if there is no effect
-    ##    producing dualval (see issue736).
-    ## 2. If conditions contains any empty list, it is equivalent
-    ##    to True and we can remove all other disjuncts.
+    # We simplify <conditions> by applying two rules:
+    # 1. Conditions of the form "var = dualval" where var is the
+    # effect variable and dualval != val can be omitted.
+    # (If var != dualval, then var == val because it is binary,
+    # which means that in such situations the effect is a no-op.)
+    # The condition can only be omitted if there is no effect
+    # producing dualval (see issue736).
+    # 2. If conditions contains any empty list, it is equivalent
+    # to True and we can remove all other disjuncts.
     ##
-    ## returns True when anything was changed
+    # returns True when anything was changed
     if conditions == [[]]:
         return False  # Quick exit for common case.
     assert val in [0, 1]
@@ -441,8 +443,8 @@ def translate_task(strips_to_sas, ranges, translation_key,
         axioms, axiom_init, axiom_layer_dict = axiom_rules.handle_axioms(
             actions, axioms, goals)
     init = init + axiom_init
-    #axioms.sort(key=lambda axiom: axiom.name)
-    #for axiom in axioms:
+    # axioms.sort(key=lambda axiom: axiom.name)
+    # for axiom in axioms:
     #  axiom.dump()
 
     if options.dump_task:
@@ -469,12 +471,12 @@ def translate_task(strips_to_sas, ranges, translation_key,
         return unsolvable_sas_task("Goal violates a mutex")
 
     assert len(goal_dict_list) == 1, "Negative goal not supported"
-    ## we could substitute the negative goal literal in
-    ## normalize.substitute_complicated_goal, using an axiom. We currently
-    ## don't do this, because we don't run into this assertion, if the
-    ## negative goal is part of finite domain variable with only two
-    ## values, which is most of the time the case, and hence refrain from
-    ## introducing axioms (that are not supported by all heuristics)
+    # we could substitute the negative goal literal in
+    # normalize.substitute_complicated_goal, using an axiom. We currently
+    # don't do this, because we don't run into this assertion, if the
+    # negative goal is part of finite domain variable with only two
+    # values, which is most of the time the case, and hence refrain from
+    # introducing axioms (that are not supported by all heuristics)
     goal_pairs = list(goal_dict_list[0].items())
     if not goal_pairs:
         return solvable_sas_task("Empty goal")
@@ -517,13 +519,16 @@ def trivial_task(solvable):
     return sas_tasks.SASTask(variables, mutexes, init, goal,
                              operators, axioms, metric)
 
+
 def solvable_sas_task(msg):
     print("%s! Generating solvable task..." % msg)
     return trivial_task(solvable=True)
 
+
 def unsolvable_sas_task(msg):
     print("%s! Generating unsolvable task..." % msg)
     return trivial_task(solvable=False)
+
 
 def pddl_to_sas(task):
     with timers.timing("Instantiating", block=True):
@@ -567,7 +572,7 @@ def pddl_to_sas(task):
             # With our current representation, emitting complete mutex
             # information for the full encoding can incur an
             # unacceptable (quadratic) blowup in the task representation
-            #size. See issue771 for details.
+            # size. See issue771 for details.
             print("using full encoding: between-variable mutex information skipped.")
             mutex_key = []
 
@@ -618,26 +623,26 @@ def build_mutex_key(strips_to_sas, groups):
 
 
 def build_implied_facts(strips_to_sas, groups, mutex_groups):
-    ## Compute a dictionary mapping facts (FDR pairs) to lists of FDR
-    ## pairs implied by that fact. In other words, in all states
-    ## containing p, all pairs in implied_facts[p] must also be true.
+    # Compute a dictionary mapping facts (FDR pairs) to lists of FDR
+    # pairs implied by that fact. In other words, in all states
+    # containing p, all pairs in implied_facts[p] must also be true.
     ##
-    ## There are two simple cases where a pair p implies a pair q != p
-    ## in our FDR encodings:
-    ## 1. p and q encode the same fact
-    ## 2. p encodes a STRIPS proposition X, q encodes a STRIPS literal
-    ##    "not Y", and X and Y are mutex.
+    # There are two simple cases where a pair p implies a pair q != p
+    # in our FDR encodings:
+    # 1. p and q encode the same fact
+    # 2. p encodes a STRIPS proposition X, q encodes a STRIPS literal
+    # "not Y", and X and Y are mutex.
     ##
-    ## The first case cannot arise when we use partial encodings, and
-    ## when we use full encodings, I don't think it would give us any
-    ## additional information to exploit in the operator translation,
-    ## so we only use the second case.
+    # The first case cannot arise when we use partial encodings, and
+    # when we use full encodings, I don't think it would give us any
+    # additional information to exploit in the operator translation,
+    # so we only use the second case.
     ##
-    ## Note that for a pair q to encode a fact "not Y", Y must form a
-    ## fact group of size 1. We call such propositions Y "lonely".
+    # Note that for a pair q to encode a fact "not Y", Y must form a
+    # fact group of size 1. We call such propositions Y "lonely".
 
-    ## In the first step, we compute a dictionary mapping each lonely
-    ## proposition to its variable number.
+    # In the first step, we compute a dictionary mapping each lonely
+    # proposition to its variable number.
     lonely_propositions = {}
     for var_no, group in enumerate(groups):
         if len(group) == 1:
@@ -645,10 +650,10 @@ def build_implied_facts(strips_to_sas, groups, mutex_groups):
             assert strips_to_sas[lonely_prop] == [(var_no, 0)]
             lonely_propositions[lonely_prop] = var_no
 
-    ## Then we compute implied facts as follows: for each mutex group,
-    ## check if prop is lonely (then and only then "not prop" has a
-    ## representation as an FDR pair). In that case, all other facts
-    ## in this mutex group imply "not prop".
+    # Then we compute implied facts as follows: for each mutex group,
+    # check if prop is lonely (then and only then "not prop" has a
+    # representation as an FDR pair). In that case, all other facts
+    # in this mutex group imply "not prop".
     implied_facts = defaultdict(list)
     for mutex_group in mutex_groups:
         for prop in mutex_group:
@@ -722,9 +727,9 @@ if __name__ == "__main__":
         signal.signal(signal.SIGXCPU, handle_sigxcpu)
     except AttributeError:
         print("Warning! SIGXCPU is not available on your platform. "
-            "This means that the planner cannot be gracefully terminated "
-            "when using a time limit, which, however, is probably "
-            "supported on your platform anyway.")
+              "This means that the planner cannot be gracefully terminated "
+              "when using a time limit, which, however, is probably "
+              "supported on your platform anyway.")
     try:
         # Reserve about 10 MB of emergency memory.
         # https://stackoverflow.com/questions/19469608/

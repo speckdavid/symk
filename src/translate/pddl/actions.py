@@ -20,7 +20,7 @@ class Action(object):
         self.precondition = precondition
         self.effects = effects
         self.cost = cost
-        self.uniquify_variables() # TODO: uniquify variables in cost?
+        self.uniquify_variables()  # TODO: uniquify variables in cost?
 
     def __repr__(self):
         return "<Action %r at %#x>" % (self.name, id(self))
@@ -62,12 +62,13 @@ class Action(object):
         result = copy.copy(self)
         parameter_atoms = [par.to_untyped_strips() for par in self.parameters]
         new_precondition = self.precondition.untyped()
-        result.precondition = conditions.Conjunction(parameter_atoms + [new_precondition])
+        result.precondition = conditions.Conjunction(
+            parameter_atoms + [new_precondition])
         result.effects = [eff.untyped() for eff in self.effects]
         return result
 
     def instantiate(self, var_mapping, init_facts, fluent_facts,
-        objects_by_type, metric):
+                    objects_by_type, metric):
         """Return a PropositionalAction which corresponds to the instantiation of
         this action with the arguments in var_mapping. Only fluent parts of the
         conditions (those in fluent_facts) are included. init_facts are evaluated
@@ -94,7 +95,8 @@ class Action(object):
                 if self.cost is None:
                     cost = 0
                 else:
-                    cost = int(self.cost.instantiate(var_mapping, init_facts).expression.value)
+                    cost = int(self.cost.instantiate(
+                        var_mapping, init_facts).expression.value)
             else:
                 cost = 1
             return PropositionalAction(name, precondition, effects, cost)

@@ -8,6 +8,7 @@ import sccs
 
 DEBUG = False
 
+
 class CausalGraph(object):
     """Weighted causal graph used for defining a variable order.
 
@@ -27,7 +28,7 @@ class CausalGraph(object):
 
     def __init__(self, sas_task):
         self.weighted_graph = defaultdict(lambda: defaultdict(int))
-        ## var_no -> (var_no -> number)
+        # var_no -> (var_no -> number)
         self.predecessor_graph = defaultdict(set)
         self.ordering = []
 
@@ -44,11 +45,11 @@ class CausalGraph(object):
         return self.ordering
 
     def weight_graph_from_ops(self, operators):
-        ### A source variable can be processed several times. This was
-        ### probably not intended originally but in experiments (cf.
-        ### issue26) it performed better than the (clearer) weighting
-        ### described in the Fast Downward paper (which would require
-        ### a more complicated implementation).
+        # A source variable can be processed several times. This was
+        # probably not intended originally but in experiments (cf.
+        # issue26) it performed better than the (clearer) weighting
+        # described in the Fast Downward paper (which would require
+        # a more complicated implementation).
         for op in operators:
             source_vars = [var for (var, value) in op.prevail]
             for var, pre, _, _ in op.pre_post:
@@ -153,12 +154,12 @@ class MaxDAG(object):
             min_elem = None
             entries = weight_to_nodes[min_key]
             while (entries and
-                (min_elem is None or min_elem in done or
-                min_key > incoming_weights[min_elem])):
+                   (min_elem is None or min_elem in done or
+                    min_key > incoming_weights[min_elem])):
                 min_elem = entries.popleft()
             if not entries:
                 del weight_to_nodes[min_key]
-                heapq.heappop(weights) # remove min_key from heap
+                heapq.heappop(weights)  # remove min_key from heap
             if min_elem is None or min_elem in done:
                 # since we use lazy deletion from the heap weights,
                 # there can be weights with a "done" entry in
@@ -184,6 +185,7 @@ class MaxDAG(object):
 
 class VariableOrder(object):
     """Apply a given variable order to a SAS task."""
+
     def __init__(self, ordering):
         """Ordering is a list of variable numbers in the desired order.
 
