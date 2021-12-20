@@ -4,6 +4,8 @@
 #include "../../plugin.h"
 #include "../../state_registry.h"
 
+using namespace std;
+
 namespace symbolic {
 void PlanDataBase::add_options_to_parser(options::OptionParser &parser) {
     parser.add_option<int>("num_plans", "number of plans", "infinity",
@@ -14,13 +16,13 @@ PlanDataBase::PlanDataBase(const options::Options &opts)
     : sym_vars(nullptr), state_registry(nullptr), anytime_completness(false),
       num_desired_plans(opts.get<int>("num_plans")), num_accepted_plans(0),
       num_rejected_plans(0),
-      first_accepted_plan_cost(std::numeric_limits<double>::infinity()) {}
+      first_accepted_plan_cost(numeric_limits<double>::infinity()) {}
 
-void PlanDataBase::init(std::shared_ptr<SymVariables> sym_vars,
-                        const std::shared_ptr<AbstractTask> &task,
+void PlanDataBase::init(shared_ptr<SymVariables> sym_vars,
+                        const shared_ptr<AbstractTask> &task,
                         PlanManager &plan_manager) {
     this->sym_vars = sym_vars;
-    state_registry = std::make_shared<StateRegistry>(TaskProxy(*task));
+    state_registry = make_shared<StateRegistry>(TaskProxy(*task));
     plan_mgr = plan_manager;
     states_accepted_goal_paths = sym_vars->zeroBDD();
 }
@@ -53,11 +55,11 @@ void PlanDataBase::dump_first_accepted_plan() const {
 }
 
 void PlanDataBase::print_options() const {
-    std::cout << "Plan Selector: " << tag() << std::endl;
-    std::cout << "Plan files: " << plan_mgr.get_plan_filename() << std::endl;
+    cout << "Plan Selector: " << tag() << endl;
+    cout << "Plan files: " << plan_mgr.get_plan_filename() << endl;
 }
 
-size_t PlanDataBase::different(const std::vector<Plan> &plans,
+size_t PlanDataBase::different(const vector<Plan> &plans,
                                const Plan &plan) const {
     for (auto &cur : plans) {
         if (cur.size() == plan.size()) {
@@ -99,12 +101,12 @@ BDD PlanDataBase::get_final_state(const Plan &plan) const {
 }
 
 // Hashes a vector of ints (= a plan)
-// According to the following link this is the has function used by boost
+// According to the following link this is the hash function used by boost
 // for hashing vector<int>. Experience: really good function
 // https://stackoverflow.com/questions/20511347/a-good-hash-function-for-a-vector
 
 size_t PlanDataBase::get_hash_value(const Plan &plan) const {
-    std::size_t seed = plan.size();
+    size_t seed = plan.size();
     for (auto &op : plan) {
         seed ^= op.get_index() + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     }
@@ -120,7 +122,7 @@ void PlanDataBase::save_accepted_plan(const Plan &plan) {
 
     size_t plan_seed = get_hash_value(plan);
     if (hashes_accepted_plans.count(plan_seed) == 0) {
-        hashes_accepted_plans[plan_seed] = std::vector<Plan>();
+        hashes_accepted_plans[plan_seed] = vector<Plan>();
     }
     hashes_accepted_plans[plan_seed].push_back(plan);
     states_accepted_goal_paths += states_on_path(plan);
@@ -132,7 +134,7 @@ void PlanDataBase::save_accepted_plan(const Plan &plan) {
 void PlanDataBase::save_rejected_plan(const Plan &plan) {
     size_t plan_seed = get_hash_value(plan);
     if (hashes_rejected_plans.count(plan_seed) == 0) {
-        hashes_rejected_plans[plan_seed] = std::vector<Plan>();
+        hashes_rejected_plans[plan_seed] = vector<Plan>();
     }
     hashes_rejected_plans[plan_seed].push_back(plan);
     states_accepted_goal_paths += states_on_path(plan);
@@ -165,11 +167,11 @@ bool PlanDataBase::has_zero_cost_loop(const Plan &plan) const {
     return false;
 }
 
-std::pair<int, int>
+pair<int, int>
 PlanDataBase::get_first_zero_cost_loop(const Plan &plan) const {
-    std::pair<int, int> zero_cost_op_seq(-1, -1);
+    pair<int, int> zero_cost_op_seq(-1, -1);
     int last_zero_op_state = 0;
-    std::vector<GlobalState> states;
+    vector<GlobalState> states;
     states.push_back(state_registry->get_initial_state());
     for (size_t op_i = 0; op_i < plan.size(); ++op_i) {
         GlobalState succ = state_registry->get_successor_state(
@@ -199,14 +201,14 @@ PlanDataBase::get_first_zero_cost_loop(const Plan &plan) const {
     }
 
     if (zero_cost_op_seq.first == -1) {
-        std::cerr << "Zero loop goes wrong!" << std::endl;
+        cerr << "Zero loop goes wrong!" << endl;
         exit(0);
     }
     return zero_cost_op_seq;
 }
 
-std::vector<Plan> PlanDataBase::get_accepted_plans() const {
-    std::vector<Plan> res;
+vector<Plan> PlanDataBase::get_accepted_plans() const {
+    vector<Plan> res;
     for (auto &it : hashes_accepted_plans) {
         res.insert(res.end(), it.second.begin(), it.second.end());
     }
@@ -214,4 +216,4 @@ std::vector<Plan> PlanDataBase::get_accepted_plans() const {
 }
 
 static PluginTypePlugin<PlanDataBase> _type_plugin("PlanDataBase", "");
-} // namespace symbolic
+}

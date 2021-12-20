@@ -103,7 +103,7 @@ public:
     virtual FactPair get_goal_fact(int index) const override;
 
     virtual vector<int> get_initial_state_values() const override;
-    std::vector<MutexGroup> get_mutex_groups() const override;
+    virtual vector<MutexGroup> get_mutex_groups() const override;
     virtual void convert_state_values(
         vector<int> &values,
         const AbstractTask *ancestor_task) const override;
@@ -206,14 +206,14 @@ ExplicitOperator::ExplicitOperator(istream &in, bool is_an_axiom, bool use_metri
         int op_cost;
 
         // Double to move to next line
-        std::getline(in, cost_function);
-        std::getline(in, cost_function);
+        getline(in, cost_function);
+        getline(in, cost_function);
         bool sdac = cost_function.find_first_not_of("0123456789") != string::npos;
 
         if (!sdac) {
-            op_cost = std::stoi(cost_function);
+            op_cost = stoi(cost_function);
             cost = use_metric ? op_cost : 1;
-            cost_function = std::to_string(cost);
+            cost_function = to_string(cost);
         } else {
             op_cost = 1; // dummy
             if (use_metric) {
@@ -514,7 +514,7 @@ vector<int> RootTask::get_initial_state_values() const {
     return initial_state_values;
 }
 
-std::vector<MutexGroup> RootTask::get_mutex_groups() const {
+vector<MutexGroup> RootTask::get_mutex_groups() const {
     return mutex_groups;
 }
 

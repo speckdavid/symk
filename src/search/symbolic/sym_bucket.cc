@@ -7,14 +7,14 @@ using namespace std;
 
 namespace symbolic {
 void removeZero(Bucket &bucket) {
-    bucket.erase(remove_if(std::begin(bucket), std::end(bucket),
+    bucket.erase(remove_if(begin(bucket), end(bucket),
                            [](BDD &bdd) {return bdd.IsZero();}),
-                 std::end(bucket));
+                 end(bucket));
 }
 
 void copyBucket(const Bucket &bucket, Bucket &res) {
     if (!bucket.empty()) {
-        res.insert(std::end(res), std::begin(bucket), std::end(bucket));
+        res.insert(end(res), begin(bucket), end(bucket));
     }
 }
 

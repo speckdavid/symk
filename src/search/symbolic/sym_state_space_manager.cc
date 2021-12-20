@@ -165,7 +165,7 @@ void SymStateSpaceManager::init_transitions(
 }
 
 SymParamsMgr::SymParamsMgr(const options::Options &opts,
-                           const std::shared_ptr<AbstractTask> &task)
+                           const shared_ptr<AbstractTask> &task)
     : max_tr_size(opts.get<int>("max_tr_size")),
       max_tr_time(opts.get<int>("max_tr_time")),
       mutex_type(MutexType(opts.get_enum("mutex_type"))),
@@ -219,7 +219,7 @@ void SymParamsMgr::add_options_to_parser(options::OptionParser &parser) {
         "true");
 }
 
-std::ostream &operator<<(std::ostream &os, const SymStateSpaceManager &abs) {
+ostream &operator<<(ostream &os, const SymStateSpaceManager &abs) {
     abs.print(os, false);
     return os;
 }

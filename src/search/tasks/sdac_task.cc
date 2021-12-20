@@ -5,21 +5,23 @@
 using namespace std;
 
 namespace extra_tasks {
-static void create_bdds_from_add(symbolic::SymVariables *sym_vars, ADD add, std::map<int, BDD> &result) {
+static void create_bdds_from_add(symbolic::SymVariables *sym_vars, ADD add,
+                                 map<int, BDD> &result) {
     assert(result.empty());
     ADD cur_add = add;
     double min_value = Cudd_V(cur_add.FindMin().getNode());
 
-    while (cur_add != sym_vars->constant(std::numeric_limits<double>::infinity())) {
+    while (cur_add != sym_vars->constant(numeric_limits<double>::infinity())) {
         result[min_value] = cur_add.BddInterval(min_value, min_value);
         cur_add = cur_add.Maximum(result[min_value].Add()
-                                  * sym_vars->constant(std::numeric_limits<double>::infinity()));
+                                  * sym_vars->constant(numeric_limits<double>::infinity()));
         min_value = Cudd_V(cur_add.FindMin().getNode());
     }
 }
 
-SdacTask::SdacTask(const std::shared_ptr<AbstractTask> &parent,
-                   symbolic::SymVariables *sym_vars) : DelegatingTask(parent), sym_vars(sym_vars) {
+SdacTask::SdacTask(const shared_ptr<AbstractTask> &parent, symbolic::SymVariables *sym_vars)
+    : DelegatingTask(parent),
+      sym_vars(sym_vars) {
     symbolic::SymbolicFunctionCreator creator(sym_vars, parent);
 
     for (int op_id = 0; op_id < parent->get_num_operators(); ++op_id) {

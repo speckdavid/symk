@@ -22,13 +22,13 @@ void exceptionError(string /*message*/) {
 }
 
 SymVariables::SymVariables(const Options &opts,
-                           const std::shared_ptr<AbstractTask> &task)
+                           const shared_ptr<AbstractTask> &task)
     : task_proxy(*task), task(task),
       cudd_init_nodes(16000000L), cudd_init_cache_size(16000000L),
       cudd_init_available_memory(0L),
       gamer_ordering(opts.get<bool>("gamer_ordering")),
-      ax_comp(std::make_shared<SymAxiomCompilation>(
-                  std::shared_ptr<SymVariables>(this), task)) {}
+      ax_comp(make_shared<SymAxiomCompilation>(
+                  shared_ptr<SymVariables>(this), task)) {}
 
 void SymVariables::init() {
     vector<int> var_order;
@@ -117,14 +117,14 @@ void SymVariables::init(const vector<int> &v_order) {
     cout << "Symbolic Variables... Done." << endl;
 
     if (task_properties::has_axioms(task_proxy)) {
-        std::cout << "Creating Primary Representation for Derived Predicates..."
-                  << std::endl;
+        cout << "Creating Primary Representation for Derived Predicates..."
+                  << endl;
         ax_comp->init_axioms();
-        std::cout << "Primary Representation... Done!" << std::endl;
+        cout << "Primary Representation... Done!" << endl;
     }
 }
 
-BDD SymVariables::getStateBDD(const std::vector<int> &state) const {
+BDD SymVariables::getStateBDD(const vector<int> &state) const {
     BDD res = oneBDD();
     for (int i = var_order.size() - 1; i >= 0; i--) {
         res = res * preconditionBDDs[var_order[i]][state[var_order[i]]];
@@ -152,7 +152,7 @@ BDD SymVariables::getPartialStateBDD(
     return res;
 }
 
-BDD SymVariables::generateBDDVar(const std::vector<int> &_bddVars,
+BDD SymVariables::generateBDDVar(const vector<int> &_bddVars,
                                  int value) const {
     BDD res = oneBDD();
     for (int v : _bddVars) {
@@ -166,8 +166,8 @@ BDD SymVariables::generateBDDVar(const std::vector<int> &_bddVars,
     return res;
 }
 
-BDD SymVariables::createBiimplicationBDD(const std::vector<int> &vars,
-                                         const std::vector<int> &vars2) const {
+BDD SymVariables::createBiimplicationBDD(const vector<int> &vars,
+                                         const vector<int> &vars2) const {
     BDD res = oneBDD();
     for (size_t i = 0; i < vars.size(); i++) {
         res *= variables[vars[i]].Xnor(variables[vars2[i]]);
@@ -205,40 +205,25 @@ BDD SymVariables::getCube(const set<int> &vars,
     return res;
 }
 
-std::vector<std::string> SymVariables::get_fd_variable_names() const {
-    std::vector<string> var_names(numBDDVars * 2);
-    for (int v : var_order) {
-        int exp = 0;
-        for (int j : bdd_index_pre[v]) {
-            var_names[j] = tasks::g_root_task->get_variable_name(v) + "_2^" +
-                std::to_string(exp);
-            var_names[j + 1] = tasks::g_root_task->get_variable_name(v) + "_2^" +
-                std::to_string(exp++) + "_primed";
-        }
-    }
-
-    return var_names;
-}
-
 void SymVariables::to_dot(const BDD &bdd,
-                          const std::string &file_name) const {
+                          const string &file_name) const {
     to_dot(bdd.Add(), file_name);
 }
 
 void SymVariables::to_dot(const ADD &add,
-                          const std::string &file_name) const {
-    std::vector<string> var_names(numBDDVars * 2);
+                          const string &file_name) const {
+    vector<string> var_names(numBDDVars * 2);
     for (int v : var_order) {
         int exp = 0;
         for (int j : bdd_index_pre[v]) {
             var_names[j] = tasks::g_root_task->get_variable_name(v) + "_2^" +
-                std::to_string(exp);
+                to_string(exp);
             var_names[j + 1] = tasks::g_root_task->get_variable_name(v) + "_2^" +
-                std::to_string(exp++) + "_primed";
+                to_string(exp++) + "_primed";
         }
     }
 
-    std::vector<char *> names(numBDDVars * 2);
+    vector<char *> names(numBDDVars * 2);
     for (int i = 0; i < numBDDVars * 2; ++i) {
         names[i] = &var_names[i].front();
     }
@@ -263,4 +248,4 @@ void SymVariables::add_options_to_parser(options::OptionParser &parser) {
     parser.add_option<bool>("gamer_ordering", "Use Gamer ordering optimization",
                             "true");
 }
-} // namespace symbolic
+}

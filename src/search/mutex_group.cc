@@ -9,8 +9,8 @@ MutexGroup::MutexGroup(istream &in) {
     string exactly_one_str, dir;
     int num_facts;
     in >> exactly_one_str;
-    if (!exactly_one_str.empty() && exactly_one_str.find_first_not_of("0123456789") == std::string::npos) {
-        num_facts = std::stoi(exactly_one_str);
+    if (!exactly_one_str.empty() && exactly_one_str.find_first_not_of("0123456789") == string::npos) {
+        num_facts = stoi(exactly_one_str);
         exactly_one_str = "mutex";
         dir = "fw";
     } else {

@@ -8,10 +8,7 @@
 #include <iostream>
 #include <regex>
 
-using std::shared_ptr;
-using std::stod;
-using std::string;
-using std::vector;
+using namespace std;
 
 namespace sdac_parser {
 Token Lexer::getNextToken() {
@@ -26,7 +23,7 @@ Token Lexer::getNextToken() {
     // where the first value corresponds to the operator symbol and the second
     // value to the regex which is used to check for the operator in the input
     // string.
-    vector<std::pair<string, std::regex>> operator_regex_pairs;
+    vector<pair<string, regex>> operator_regex_pairs;
 
     // Important: If a regex r1 is a specialization of a regex r2 (in the sense
     // that r1 will match if r2 matches, but r2 will not match if r1 matches),
@@ -34,57 +31,57 @@ Token Lexer::getNextToken() {
     // such that this can't happen.
 
     // Arithmetic operators
-    operator_regex_pairs.emplace_back("+", std::regex("^\\+"));
-    operator_regex_pairs.emplace_back("-", std::regex("^-"));
-    operator_regex_pairs.emplace_back("*", std::regex("^\\*"));
-    operator_regex_pairs.emplace_back("/", std::regex("^\\/"));
+    operator_regex_pairs.emplace_back("+", regex("^\\+"));
+    operator_regex_pairs.emplace_back("-", regex("^-"));
+    operator_regex_pairs.emplace_back("*", regex("^\\*"));
+    operator_regex_pairs.emplace_back("/", regex("^\\/"));
     // Logical operators
-    operator_regex_pairs.emplace_back("&&", std::regex("^\\&\\&"));
-    operator_regex_pairs.emplace_back("||", std::regex("^\\|\\|"));
-    operator_regex_pairs.emplace_back("==", std::regex("^\\=\\="));
-    operator_regex_pairs.emplace_back("!", std::regex("^\\!"));
-    operator_regex_pairs.emplace_back(">=", std::regex("^\\>\\="));
-    operator_regex_pairs.emplace_back(">", std::regex("^\\>"));
-    operator_regex_pairs.emplace_back("<=", std::regex("^\\<\\="));
-    operator_regex_pairs.emplace_back("<", std::regex("^\\<"));
+    operator_regex_pairs.emplace_back("&&", regex("^\\&\\&"));
+    operator_regex_pairs.emplace_back("||", regex("^\\|\\|"));
+    operator_regex_pairs.emplace_back("==", regex("^\\=\\="));
+    operator_regex_pairs.emplace_back("!", regex("^\\!"));
+    operator_regex_pairs.emplace_back(">=", regex("^\\>\\="));
+    operator_regex_pairs.emplace_back(">", regex("^\\>"));
+    operator_regex_pairs.emplace_back("<=", regex("^\\<\\="));
+    operator_regex_pairs.emplace_back("<", regex("^\\<"));
 
     // Absolute amount function regex: abs(x)
     // We currently have to handle the absolute amount as a special case,
     // because we want to allow variables beginning with abs, e.g. abs(absinth).
     // Thus, we have to check if abs is followed by a parentheses and then
     // rewind the last parentheses.
-    std::regex absRegex("^abs\\((.*)");
+    regex absRegex("^abs\\((.*)");
 
     // Regex for constant numbers.
     // Note that we use the passive group (?:subpattern) here, so that we only
     // have one backreference for the whole constant and not multiple
     // backreferences for individual constant parts
-    std::regex constantRegex("^((?:[[:digit:]]+)(?:\\.(?:(?:[[:digit:]]+)?))?)");
+    regex constantRegex("^((?:[[:digit:]]+)(?:\\.(?:(?:[[:digit:]]+)?))?)");
     // Variables contain letters, numbers or "_",
     // but must not start with a number
-    std::regex varRegex("^((?:[[:alpha:]_]+)(?:[[:alnum:]_]*))");
+    regex varRegex("^((?:[[:alpha:]_]+)(?:[[:alnum:]_]*))");
     // Brackets and Iverson brackets
-    vector<std::pair<Type, std::regex>> bracket_regex_pairs;
-    bracket_regex_pairs.emplace_back(Type::LPAREN, std::regex("^\\("));
-    bracket_regex_pairs.emplace_back(Type::RPAREN, std::regex("^\\)"));
-    bracket_regex_pairs.emplace_back(Type::LSQRBRACK, std::regex("^\\["));
-    bracket_regex_pairs.emplace_back(Type::RSQRBRACK, std::regex("^\\]"));
+    vector<pair<Type, regex>> bracket_regex_pairs;
+    bracket_regex_pairs.emplace_back(Type::LPAREN, regex("^\\("));
+    bracket_regex_pairs.emplace_back(Type::RPAREN, regex("^\\)"));
+    bracket_regex_pairs.emplace_back(Type::LSQRBRACK, regex("^\\["));
+    bracket_regex_pairs.emplace_back(Type::RSQRBRACK, regex("^\\]"));
 
     Token token;
-    std::smatch match;
+    smatch match;
 
     // See above: we handle absolute amount as a special case
-    if (std::regex_match(input, absRegex)) {
+    if (regex_match(input, absRegex)) {
         token.type = Type::OP;
         token.value = "abs";
         // While we check matches with abs( we only want to prune abs, not (
-        input = std::regex_replace(input, std::regex("abs(.*)"), "$1");
+        input = regex_replace(input, regex("abs(.*)"), "$1");
         previousToken = token;
         return token;
     }
 
     for (auto operator_regex_pair : operator_regex_pairs) {
-        if (std::regex_search(input, match, operator_regex_pair.second)) {
+        if (regex_search(input, match, operator_regex_pair.second)) {
             token.type = Type::OP;
             token.value = operator_regex_pair.first;
             input = input.substr(match.position() + match.length());
@@ -93,18 +90,18 @@ Token Lexer::getNextToken() {
         }
     }
     for (auto bracket_regex_pair : bracket_regex_pairs) {
-        if (std::regex_search(input, match, bracket_regex_pair.second)) {
+        if (regex_search(input, match, bracket_regex_pair.second)) {
             token.type = bracket_regex_pair.first;
             input = input.substr(match.position() + match.length());
             previousToken = token;
             return token;
         }
     }
-    if (std::regex_search(input, match, constantRegex)) {
+    if (regex_search(input, match, constantRegex)) {
         token.type = Type::CONST;
         token.value = input.substr(0, match.position() + match.length());
         input = input.substr(match.position() + match.length());
-    } else if (std::regex_search(input, match, varRegex)) {
+    } else if (regex_search(input, match, varRegex)) {
         token.type = Type::VAR;
         token.value = input.substr(0, match.position() + match.length());
         input = input.substr(match.position() + match.length());
@@ -114,7 +111,7 @@ Token Lexer::getNextToken() {
     if (token.type == Type::INVALID) {
         string error = "Illegal token at start of substring: \"" + input;
         error += "\"";
-        throw std::invalid_argument(error);
+        throw invalid_argument(error);
         exit(0);
     }
     previousToken = token;
@@ -151,13 +148,13 @@ Expression Parser::parseExpression(Lexer &lexer) const {
         Expression expression = parseExpression(lexer);
         token = lexer.getNextToken();
         if (token.type != Type::RPAREN) {
-            throw std::invalid_argument("Missing ) for substring " + beforeRParen);
+            throw invalid_argument("Missing ) for substring " + beforeRParen);
         }
         return expression;
         break;
     }
     case Type::RPAREN:
-        throw std::invalid_argument("No matching ( for substring " + lexer.input);
+        throw invalid_argument("No matching ( for substring " + lexer.input);
         break;
     case Type::LSQRBRACK:
     {
@@ -165,15 +162,15 @@ Expression Parser::parseExpression(Lexer &lexer) const {
         Expression expression = parseExpression(lexer);
         token = lexer.getNextToken();
         if (token.type != Type::RSQRBRACK) {
-            throw std::invalid_argument("Missing ] for substring " + beforeRParen);
+            throw invalid_argument("Missing ] for substring " + beforeRParen);
         }
         return expression;
         break;
     }
     case Type::RSQRBRACK:
-        throw std::invalid_argument("No matching [ for substring " + lexer.input);
+        throw invalid_argument("No matching [ for substring " + lexer.input);
     default:
-        throw std::invalid_argument("Illegal expression: " + lexer.input);
+        throw invalid_argument("Illegal expression: " + lexer.input);
         break;
     }
 }
@@ -188,14 +185,14 @@ Expression Parser::parseOpExpression(Lexer &lexer) const {
     vector<Expression> exprs;
     while (token.type != Type::RPAREN) {
         if (token.type == Type::END) {
-            throw std::invalid_argument("Missing ) for substring " + beforeRParen);
+            throw invalid_argument("Missing ) for substring " + beforeRParen);
         }
         lexer.revert();
         exprs.push_back(parseExpression(lexer));
         token = lexer.getNextToken();
     }
     if (exprs.empty()) {
-        throw std::invalid_argument("Empty operator: " + opType + " before" +
+        throw invalid_argument("Empty operator: " + opType + " before" +
                                     beforeRParen);
     }
     // Revert because the ")" is again checked in the "(" expression part
@@ -223,7 +220,7 @@ Expression Parser::parseOpExpression(Lexer &lexer) const {
     } else if (opType == "!") {
         return Factories::lnot(exprs);
     } else {
-        throw std::invalid_argument("Unknown operator:" + opType);
+        throw invalid_argument("Unknown operator:" + opType);
     }
 }
 
@@ -264,9 +261,9 @@ void InfixParser::expect(Type type, Lexer &lexer) {
     if (type == next.type) {
         consume(lexer);
     } else {
-        throw std::invalid_argument("Parser error : expected " +
-                                    std::to_string(type) + " was " +
-                                    std::to_string(next.type));
+        throw invalid_argument("Parser error : expected " +
+                                    to_string(type) + " was " +
+                                    to_string(next.type));
     }
 }
 
@@ -327,15 +324,15 @@ void InfixParser::E(Lexer &lexer) {
 
 void InfixParser::P(Lexer &lexer) {
     if (next.type == Type::VAR) {
-        // std::cout<< "VAR: "<<next.value<<std::endl;
+        // cout<< "VAR: "<<next.value<<endl;
         operands.push(Factories::var(next.value));
         consume(lexer);
     } else if (next.type == Type::CONST) {
-        // std::cout<< "Const: "<<next.value<<std::endl;
+        // cout<< "Const: "<<next.value<<endl;
         operands.push(Factories::cst(stod(next.value)));
         consume(lexer);
     } else if (next.type == Type::LPAREN) {
-        // std::cout<< "LPAREN: "<<next.value<<std::endl;
+        // cout<< "LPAREN: "<<next.value<<endl;
         consume(lexer);
         Token sentinel = Token(Type::OP, "sentinel");
         operators.push(sentinel);
@@ -343,24 +340,24 @@ void InfixParser::P(Lexer &lexer) {
         expect(Type::RPAREN, lexer);
         operators.pop();
     } else if (isUnaryOperator(next)) {
-        // std::cout<< "unary: "<<next.value<<std::endl;
+        // cout<< "unary: "<<next.value<<endl;
         next.binary = false;
         pushOperator(next);
         consume(lexer);
         P(lexer);
     } else if (next.type == Type::LSQRBRACK) {
-        // std::cout<< "L Exp: "<<next.value<<std::endl;
+        // cout<< "L Exp: "<<next.value<<endl;
         LogicEXP(lexer);
     } else {
-        throw std::invalid_argument(
-                  "P Unknown Token \"" + std::to_string(next.type) + "\" with value: \"" +
+        throw invalid_argument(
+                  "P Unknown Token \"" + to_string(next.type) + "\" with value: \"" +
                   next.value + "\" at " + lexer.input);
     }
 }
 
 void InfixParser::LogicEXP(Lexer &lexer) {
     if (next.type != Type::LSQRBRACK) {
-        throw std::invalid_argument("expected [");
+        throw invalid_argument("expected [");
     }
     Token sentinel = Token(Type::OP, "sentinel");
     operators.push(sentinel);
@@ -400,8 +397,8 @@ void InfixParser::LP(Lexer &lexer) {
         expect(Type::RPAREN, lexer);
         operators.pop();
     } else {
-        throw std::invalid_argument(" LP Unknown Token \"" +
-                                    std::to_string(next.type) + "\" with value \"" +
+        throw invalid_argument(" LP Unknown Token \"" +
+                                    to_string(next.type) + "\" with value \"" +
                                     next.value + "\" at " + lexer.input);
     }
 }
@@ -432,7 +429,7 @@ Expression InfixParser::createExpression(Expression const &lhs, Token op,
     } else if (op.value == "==") {
         return Factories::equals(exprs);
     } else {
-        throw std::invalid_argument("Unknown binary operator:" + op.value);
+        throw invalid_argument("Unknown binary operator:" + op.value);
     }
 }
 
@@ -446,7 +443,7 @@ Expression InfixParser::createUnaryExpression(Expression const &exp,
     } else if (op.value == "abs") {
         return Factories::abs({exp});
     } else {
-        throw std::invalid_argument("Unknown unary operator:" + op.value);
+        throw invalid_argument("Unknown unary operator:" + op.value);
     }
 }
 }

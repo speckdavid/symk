@@ -180,8 +180,6 @@ public:
 
     inline void unsetTimeLimit() {manager->UnsetTimeLimit();}
 
-    std::vector<std::string> get_fd_variable_names() const;
-
     void to_dot(const BDD &bdd, const std::string &file_name) const;
     void to_dot(const ADD &bdd, const std::string &file_name) const;
 
