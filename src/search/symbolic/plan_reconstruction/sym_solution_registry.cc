@@ -8,12 +8,12 @@ namespace symbolic {
 
 void SymSolutionRegistry::add_plan(const Plan &plan) const {
     plan_data_base->add_plan(plan);
-    if (!plan_data_base->found_enough_plans() && task_has_zero_costs() &&
-        plan_data_base->has_zero_cost_loop(plan)) {
+    if (!plan_data_base->found_enough_plans() && task_has_zero_costs()
+        && plan_data_base->has_zero_cost_loop(plan)) {
         pair<int, int> zero_cost_op_seq =
             plan_data_base->get_first_zero_cost_loop(plan);
         Plan cur_plan = plan;
-        cout << " => zero cost loop detected =>" << flush;
+        cout << "Zero cost loop detected!" << endl;
         while (!plan_data_base->found_enough_plans()) {
             cur_plan.insert(cur_plan.begin() + zero_cost_op_seq.first,
                             plan.begin() + zero_cost_op_seq.first,
