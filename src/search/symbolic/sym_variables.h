@@ -210,6 +210,6 @@ private:
 
     inline int getNumBDDVars() const {return numBDDVars;}
 };
-} // namespace symbolic
+}
 
 #endif

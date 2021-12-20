@@ -87,6 +87,6 @@ public:
         return i;
     }
 };
-} // namespace symbolic
+}
 
 #endif

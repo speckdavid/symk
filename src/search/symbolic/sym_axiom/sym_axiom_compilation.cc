@@ -10,8 +10,8 @@ namespace symbolic {
 using namespace std;
 
 SymAxiomCompilation::SymAxiomCompilation(
-    std::shared_ptr<SymVariables> sym_vars,
-    const std::shared_ptr<AbstractTask> &task)
+    shared_ptr<SymVariables> sym_vars,
+    const shared_ptr<AbstractTask> &task)
     : sym_vars(sym_vars), task_proxy(*task) {}
 
 bool SymAxiomCompilation::is_derived_variable(int var) const {
@@ -52,7 +52,7 @@ int SymAxiomCompilation::num_axiom_levels() const {
     int num_level = -1;
     for (size_t i = 0; i < task_proxy.get_variables().size(); i++) {
         num_level =
-            std::max(num_level, task_proxy.get_variables()[i].get_axiom_layer());
+            max(num_level, task_proxy.get_variables()[i].get_axiom_layer());
     }
     return num_level + 1;
 }
@@ -61,8 +61,8 @@ void SymAxiomCompilation::init_axioms() {
     utils::Timer timer;
     create_primary_representations();
 
-    std::cout << std::fixed << "Symbolic Axiom initialization: " << timer
-              << std::endl;
+    cout << fixed << "Symbolic Axiom initialization: " << timer
+              << endl;
 }
 
 BDD SymAxiomCompilation::get_compilied_init_state() const {
@@ -119,8 +119,8 @@ void SymAxiomCompilation::create_primary_representations() {
 }
 
 void SymAxiomCompilation::create_primary_representations(int layer) {
-    std::cout << "LAYER " << layer << "..." << std::flush;
-    std::vector<int> rules_in_layer;
+    cout << "LAYER " << layer << "..." << flush;
+    vector<int> rules_in_layer;
     // add all "unproblematic" axioms to var bdd
     for (size_t i = 0; i < task_proxy.get_axioms().size(); i++) {
         if (is_trivial_axiom(i)) {
@@ -135,12 +135,12 @@ void SymAxiomCompilation::create_primary_representations(int layer) {
         }
     }
     // add vars of this layer to queue
-    std::queue<int> open_vars;
+    queue<int> open_vars;
     for (auto &cur : primary_representations) {
         int head = cur.first;
         int head_level = task_proxy.get_variables()[head].get_axiom_layer();
         if (head_level == layer) {
-            // std::cout << g_variable_name[var] << std::endl;
+            // cout << g_variable_name[var] << endl;
             open_vars.push(head);
         }
     }
@@ -164,11 +164,11 @@ void SymAxiomCompilation::create_primary_representations(int layer) {
                     open_vars.push(head);
                 }
                 primary_representations[head] = res;
-                // std::cout << g_variable_name[head] << " updated" << std::endl;
+                // cout << g_variable_name[head] << " updated" << endl;
             }
         }
     }
-    std::cout << "done!" << std::endl;
+    cout << "done!" << endl;
 }
 
 void SymAxiomCompilation::create_axiom_body_layer() {
@@ -177,7 +177,7 @@ void SymAxiomCompilation::create_axiom_body_layer() {
         const EffectProxy eff = task_proxy.get_axioms()[i].get_effects()[0];
         for (size_t cond_i = 0; cond_i < eff.get_conditions().size(); cond_i++) {
             int level = eff.get_conditions()[cond_i].get_variable().get_axiom_layer();
-            body_level = std::max(body_level, level);
+            body_level = max(body_level, level);
         }
         axiom_body_layer.push_back(body_level);
     }

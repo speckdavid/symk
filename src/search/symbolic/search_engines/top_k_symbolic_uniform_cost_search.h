@@ -18,6 +18,6 @@ public:
 
     virtual void new_solution(const SymSolutionCut &sol) override;
 };
-} // namespace symbolic
+}
 
 #endif

@@ -22,4 +22,4 @@ public:
 };
 } // namespace symbolic
 
-#endif /* SYMBOLIC_VALIDATION_SELECTOR_H */
+#endif

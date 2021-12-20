@@ -130,5 +130,5 @@ BDD mergeAndBDD(const BDD &bdd, const BDD &bdd2, int maxSize);
 BDD mergeOrBDD(const BDD &bdd, const BDD &bdd2, int maxSize);
 
 inline std::string dirname(bool fw) {return fw ? "fw" : "bw";}
-} // namespace symbolic
+}
 #endif

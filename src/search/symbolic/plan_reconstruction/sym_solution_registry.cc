@@ -1,6 +1,8 @@
 #include "sym_solution_registry.h"
 #include "../searches/uniform_cost_search.h"
 
+using namespace std;
+
 namespace symbolic {
 //////////////// Plan Reconstruction /////////////////////////
 
@@ -8,10 +10,10 @@ void SymSolutionRegistry::add_plan(const Plan &plan) const {
     plan_data_base->add_plan(plan);
     if (!plan_data_base->found_enough_plans() && task_has_zero_costs() &&
         plan_data_base->has_zero_cost_loop(plan)) {
-        std::pair<int, int> zero_cost_op_seq =
+        pair<int, int> zero_cost_op_seq =
             plan_data_base->get_first_zero_cost_loop(plan);
         Plan cur_plan = plan;
-        std::cout << " => zero cost loop detected =>" << std::flush;
+        cout << " => zero cost loop detected =>" << flush;
         while (!plan_data_base->found_enough_plans()) {
             cur_plan.insert(cur_plan.begin() + zero_cost_op_seq.first,
                             plan.begin() + zero_cost_op_seq.first,
@@ -54,7 +56,7 @@ void SymSolutionRegistry::extract_all_plans(SymSolutionCut &sym_cut, bool fw,
 
 void SymSolutionRegistry::extract_all_cost_plans(SymSolutionCut &sym_cut,
                                                  bool fw, Plan &plan) {
-    // std::cout << sym_cut << std::endl;
+    // cout << sym_cut << endl;
     if (sym_cut.get_g() == 0 && sym_cut.get_h() == 0) {
         add_plan(plan);
         return;
@@ -152,7 +154,7 @@ void SymSolutionRegistry::extract_all_zero_plans(SymSolutionCut &sym_cut,
 }
 
 bool SymSolutionRegistry::reconstruct_zero_action(
-    SymSolutionCut &sym_cut, bool fw, std::shared_ptr<ClosedList> closed,
+    SymSolutionCut &sym_cut, bool fw, shared_ptr<ClosedList> closed,
     const Plan &plan) {
     int cur_cost = fw ? sym_cut.get_g() : sym_cut.get_h();
     BDD cut = sym_cut.get_cut();
@@ -189,7 +191,7 @@ bool SymSolutionRegistry::reconstruct_zero_action(
 }
 
 bool SymSolutionRegistry::reconstruct_cost_action(
-    SymSolutionCut &sym_cut, bool fw, std::shared_ptr<ClosedList> closed,
+    SymSolutionCut &sym_cut, bool fw, shared_ptr<ClosedList> closed,
     const Plan &plan) {
     int cur_cost = fw ? sym_cut.get_g() : sym_cut.get_h();
     bool some_action_found = false;
@@ -234,10 +236,10 @@ SymSolutionRegistry::SymSolutionRegistry()
     : single_solution(true), sym_vars(nullptr), fw_search(nullptr),
       bw_search(nullptr), plan_data_base(nullptr), plan_cost_bound(-1) {}
 
-void SymSolutionRegistry::init(std::shared_ptr<SymVariables> sym_vars,
+void SymSolutionRegistry::init(shared_ptr<SymVariables> sym_vars,
                                UniformCostSearch *fwd_search,
                                UniformCostSearch *bwd_search,
-                               std::shared_ptr<PlanDataBase> plan_data_base,
+                               shared_ptr<PlanDataBase> plan_data_base,
                                bool single_solution) {
     this->sym_vars = sym_vars;
     this->plan_data_base = plan_data_base;
@@ -280,7 +282,7 @@ void SymSolutionRegistry::register_solution(const SymSolutionCut &solution) {
 
 void SymSolutionRegistry::construct_cheaper_solutions(int bound) {
     bool bound_used = false;
-    int min_plan_bound = std::numeric_limits<int>::max();
+    int min_plan_bound = numeric_limits<int>::max();
 
     while (sym_cuts.size() > 0 && sym_cuts.at(0).get_f() < bound &&
            !found_all_plans()) {
@@ -289,7 +291,7 @@ void SymSolutionRegistry::construct_cheaper_solutions(int bound) {
         if (sym_cuts.at(0).get_f() < plan_cost_bound) {
             sym_cuts.erase(sym_cuts.begin());
         } else {
-            min_plan_bound = std::min(min_plan_bound, sym_cuts.at(0).get_f());
+            min_plan_bound = min(min_plan_bound, sym_cuts.at(0).get_f());
             bound_used = true;
             reconstruct_plans(sym_cuts[0]);
             sym_cuts.erase(sym_cuts.begin());

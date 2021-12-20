@@ -37,6 +37,6 @@ protected:
     void create_axiom_body_layer();
     BDD get_body_bdd(int axiom_id) const;
 };
-} // namespace symbolic
+}
 
-#endif /* SEARCH_SYMBOLIC_SYM_AXIOM_SYM_AXIOM_COMPILATION_H_ */
+#endif

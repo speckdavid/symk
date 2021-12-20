@@ -39,7 +39,7 @@ void SymStepCostEstimation::update_data(long key, Estimation est) {
     data[key] = est;
 
     // Ensure consistency with greater estimations
-    for (auto it = data.upper_bound(nextStepNodes); it != std::end(data); ++it) {
+    for (auto it = data.upper_bound(nextStepNodes); it != data.end(); ++it) {
         if (it->second.time < est.time) {
             it->second.time = est.time;
         }
@@ -73,7 +73,7 @@ void SymStepCostEstimation::nextStep(double nodes) {
     double estimatedTime, estimatedNodes;
     // Get next data point
     auto nextIt = data.upper_bound(nextStepNodes);
-    if (nextIt == std::end(data)) {
+    if (nextIt == data.end()) {
         // This is greater than any est we have, just get the greatest
         --nextIt;
         long prevNodes = nextIt->first;
@@ -177,4 +177,4 @@ void SymStepCostEstimation::read(ifstream &file) {
 ostream &operator<<(ostream &os, const Estimation &est) {
     return os << est.time << ", " << est.nodes;
 }
-} // namespace symbolic
+}

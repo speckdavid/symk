@@ -53,5 +53,5 @@ public:
     friend std::ostream &operator<<(std::ostream &os,
                                     const BidirectionalSearch &other);
 };
-} // namespace symbolic
+}
 #endif

@@ -1,15 +1,16 @@
 #ifndef SYMBOLIC_SEARCH_ENGINES_SYMBOLIC_SEARCH_H
 #define SYMBOLIC_SEARCH_ENGINES_SYMBOLIC_SEARCH_H
 
-#include <memory>
-#include <vector>
 
-#include "../../option_parser.h"
 #include "../plan_reconstruction/sym_solution_registry.h"
 #include "../search_engine.h"
 #include "../sym_enums.h"
 #include "../sym_params_search.h"
 #include "../sym_state_space_manager.h"
+#include "../../option_parser.h"
+
+#include <memory>
+#include <vector>
 
 namespace options {
 class Options;
@@ -76,6 +77,6 @@ public:
 
     static void add_options_to_parser(OptionParser &parser);
 };
-} // namespace symbolic
+}
 
 #endif

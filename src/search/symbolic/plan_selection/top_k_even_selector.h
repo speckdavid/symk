@@ -14,6 +14,6 @@ public:
 
     std::string tag() const override {return "Top-K (even plan length)";}
 };
-} // namespace symbolic
+}
 
-#endif /* SYMBOLIC_TOP_K_EVEN_SELECTOR_H */
+#endif

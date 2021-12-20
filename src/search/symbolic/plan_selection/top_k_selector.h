@@ -14,6 +14,6 @@ public:
 
     std::string tag() const override {return "Top-K";}
 };
-} // namespace symbolic
+}
 
-#endif /* SYMBOLIC_TOP_K_SELECTOR_H */
+#endif

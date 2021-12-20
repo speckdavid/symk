@@ -15,7 +15,6 @@ enum class MutexType {
     MUTEX_NOT,
     MUTEX_AND,
     MUTEX_EDELETION,
-    /*MUTEX_RESTRICT, MUTEX_NPAND, MUTEX_CONSTRAIN, MUTEX_LICOMP*/
 };
 std::ostream &operator<<(std::ostream &os, const MutexType &m);
 extern const std::vector<std::string> MutexTypeValues;
@@ -32,6 +31,5 @@ enum class TruncatedReason {
     IMAGE_ZERO,
     IMAGE_COST
 };
-// std::ostream &operator<<(std::ostream &os, const TruncatedReason &dir);
-} // namespace symbolic
+}
 #endif

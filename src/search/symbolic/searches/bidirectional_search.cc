@@ -1,17 +1,17 @@
 #include "bidirectional_search.h"
 
 #include "../search_engines/symbolic_search.h"
+
 #include <memory>
 
 using namespace std;
-using utils::g_timer;
 
 namespace symbolic {
 BidirectionalSearch::BidirectionalSearch(SymbolicSearch *eng,
                                          const SymParamsSearch &params,
-                                         std::unique_ptr<UniformCostSearch> _fw,
+                                         unique_ptr<UniformCostSearch> _fw,
                                          unique_ptr<UniformCostSearch> _bw)
-    : SymSearch(eng, params), fw(std::move(_fw)), bw(std::move(_bw)) {
+    : SymSearch(eng, params), fw(move(_fw)), bw(move(_bw)) {
     assert(fw->getStateSpace() == bw->getStateSpace());
     mgr = fw->getStateSpaceShared();
 }
@@ -24,8 +24,8 @@ UniformCostSearch *BidirectionalSearch::selectBestDirection() const {
     } else if (!fwSearchable && bwSearchable) {
         return bw.get();
     }
-    // std::cout << (fw->nextStepNodes() <= bw->nextStepNodes() ? "fwd " : "bwd ")
-    // << std::flush;
+    // cout << (fw->nextStepNodes() <= bw->nextStepNodes() ? "fwd " : "bwd ")
+    // << flush;
     return fw->nextStepNodes() <= bw->nextStepNodes() ? fw.get() : bw.get();
 }
 

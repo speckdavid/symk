@@ -223,4 +223,4 @@ ostream &operator<<(ostream &os, const SymStateSpaceManager &abs) {
     abs.print(os, false);
     return os;
 }
-} // namespace symbolic
+}

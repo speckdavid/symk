@@ -13,16 +13,14 @@
 #include <string>
 
 using namespace std;
-using utils::g_timer;
-using utils::Timer;
 
 namespace symbolic {
 UniformCostSearch::UniformCostSearch(SymbolicSearch *eng,
                                      const SymParamsSearch &params)
-    : SymSearch(eng, params), fw(true), closed(std::make_shared<ClosedList>()),
+    : SymSearch(eng, params), fw(true), closed(make_shared<ClosedList>()),
       estimationCost(params), estimationZero(params), lastStepCost(true) {}
 
-bool UniformCostSearch::init(std::shared_ptr<SymStateSpaceManager> manager,
+bool UniformCostSearch::init(shared_ptr<SymStateSpaceManager> manager,
                              bool forward, UniformCostSearch *opposite_search) {
     mgr = manager;
     fw = forward;
@@ -76,7 +74,7 @@ bool UniformCostSearch::provable_no_more_plans() {return open_list.empty();}
 void UniformCostSearch::prepareBucket() {
     if (!frontier.bucketReady()) {
         if (provable_no_more_plans()) {
-            engine->setLowerBound(std::numeric_limits<int>::max());
+            engine->setLowerBound(numeric_limits<int>::max());
             return;
         }
 
@@ -126,7 +124,7 @@ void UniformCostSearch::filterFrontier() {
 }
 
 bool UniformCostSearch::stepImage(int maxTime, int maxNodes) {
-    Timer sTime;
+    utils::Timer sTime;
     Result prepare_res =
         frontier.prepare(maxTime, maxNodes, fw, initialization());
     if (!prepare_res.ok) {

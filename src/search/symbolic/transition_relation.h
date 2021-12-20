@@ -76,5 +76,5 @@ public:
 
     BDD getTrBDD() const {return tBDD;}
 };
-} // namespace symbolic
+}
 #endif

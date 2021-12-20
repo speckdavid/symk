@@ -75,6 +75,6 @@ public:
 
     inline bool get_non_stop() const {return non_stop;}
 };
-} // namespace symbolic
+}
 
 #endif

@@ -1,6 +1,7 @@
 #ifndef SYMBOLIC_UNIFORM_COST_SEARCH_H
 #define SYMBOLIC_UNIFORM_COST_SEARCH_H
 
+#include "sym_search.h"
 #include "../closed_list.h"
 #include "../frontier.h"
 #include "../open_list.h"
@@ -8,10 +9,8 @@
 #include "../sym_estimate.h"
 #include "../sym_state_space_manager.h"
 #include "../sym_utils.h"
-#include "sym_search.h"
-#include <map>
+
 #include <memory>
-#include <vector>
 
 namespace symbolic {
 /*
@@ -126,5 +125,5 @@ public:
         mgr->filterMutex(bucket, fw, initialization());
     }
 };
-} // namespace symbolic
+}
 #endif

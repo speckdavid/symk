@@ -17,6 +17,6 @@ public:
 protected:
     void save_accepted_plan(const Plan &ordered_plan, const Plan &unordered_plan);
 };
-} // namespace symbolic
+}
 
-#endif /* SYMBOLIC_UNORDERED_SELECTOR_H */
+#endif

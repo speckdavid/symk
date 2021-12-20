@@ -14,7 +14,7 @@ using namespace std;
 namespace symbolic {
 OriginalStateSpace::OriginalStateSpace(
     SymVariables *v, const SymParamsMgr &params,
-    const std::shared_ptr<AbstractTask> &task)
+    const shared_ptr<AbstractTask> &task)
     : SymStateSpaceManager(v, params), task(task) {
     // Transform initial state and goal states if axioms are present
     if (task_properties::has_axioms(TaskProxy(*task))) {
@@ -22,7 +22,7 @@ OriginalStateSpace::OriginalStateSpace(
         goal = v->get_axiom_compiliation()->get_compilied_goal_state();
     } else {
         initialState = vars->getStateBDD(task->get_initial_state_values());
-        std::vector<std::pair<int, int>> goal_facts;
+        vector<pair<int, int>> goal_facts;
         for (int i = 0; i < task->get_num_goals(); i++) {
             auto fact = task->get_goal_fact(i);
             goal_facts.emplace_back(fact.var, fact.value);
@@ -31,7 +31,7 @@ OriginalStateSpace::OriginalStateSpace(
     }
 
     init_mutex(task->get_mutex_groups());
-    std::shared_ptr<extra_tasks::SdacTask> sdac_task = std::dynamic_pointer_cast<extra_tasks::SdacTask>(task);
+    shared_ptr<extra_tasks::SdacTask> sdac_task = dynamic_pointer_cast<extra_tasks::SdacTask>(task);
     if (sdac_task == nullptr) {
         create_single_trs();
     } else {
@@ -56,9 +56,9 @@ void OriginalStateSpace::create_single_trs() {
 }
 
 void OriginalStateSpace::create_single_sdac_trs(
-    std::shared_ptr<extra_tasks::SdacTask> sdac_task, bool fast_creation) {
+    shared_ptr<extra_tasks::SdacTask> sdac_task, bool fast_creation) {
     if (!fast_creation) {
-        std::cout << "Normal SDAC TR generation." << std::endl;
+        cout << "Normal SDAC TR generation." << endl;
         for (int i = 0; i < sdac_task->get_num_operators(); i++) {
             int cost = sdac_task->get_operator_cost(i, false);
             indTRs[cost].emplace_back(vars, OperatorID(i), sdac_task);
@@ -67,9 +67,9 @@ void OriginalStateSpace::create_single_sdac_trs(
             indTRs[cost].back().add_condition(sdac_task->get_operator_cost_condition(i, false));
         }
     } else {
-        std::cout << "Fast SDAC TR generation." << std::endl;
+        cout << "Fast SDAC TR generation." << endl;
         // Generate template TRs
-        std::vector<TransitionRelation> look_up;
+        vector<TransitionRelation> look_up;
         int last_parent_id = -1;
         for (int i = 0; i < sdac_task->get_num_operators(); i++) {
             int parent_op_id = sdac_task->convert_operator_index_to_parent(i);
@@ -88,14 +88,14 @@ void OriginalStateSpace::create_single_sdac_trs(
 
             indTRs[cost].back().init_from_tr(look_up[parent_op_id]);
             indTRs[cost].back().set_cost(cost);
-            indTRs[cost].back().setOpsIds(std::set<OperatorID>({OperatorID(i)}));
+            indTRs[cost].back().setOpsIds(set<OperatorID>({OperatorID(i)}));
             indTRs[cost].back().add_condition(sdac_task->get_operator_cost_condition(i, false));
         }
     }
 }
 
 void OriginalStateSpace::init_mutex(
-    const std::vector<MutexGroup> &mutex_groups) {
+    const vector<MutexGroup> &mutex_groups) {
     // If (a) is initialized OR not using mutex OR edeletion does not need mutex
     if (p.mutex_type == MutexType::MUTEX_NOT)
         return; // Skip mutex initialization
@@ -118,7 +118,7 @@ void OriginalStateSpace::init_mutex(
     init_mutex(mutex_groups, genMutexBDD, genMutexBDDByFluent, true);
 }
 
-void OriginalStateSpace::init_mutex(const std::vector<MutexGroup> &mutex_groups,
+void OriginalStateSpace::init_mutex(const vector<MutexGroup> &mutex_groups,
                                     bool genMutexBDD, bool genMutexBDDByFluent,
                                     bool fw) {
     vector<vector<BDD>> &notMutexBDDsByFluent =
@@ -223,7 +223,7 @@ void OriginalStateSpace::init_mutex(const std::vector<MutexGroup> &mutex_groups,
         }
 
         merge(vars, notMutexBDDs, mergeAndBDD, p.max_mutex_time, p.max_mutex_size);
-        std::reverse(notMutexBDDs.begin(), notMutexBDDs.end());
+        reverse(notMutexBDDs.begin(), notMutexBDDs.end());
     }
 }
-} // namespace symbolic
+}

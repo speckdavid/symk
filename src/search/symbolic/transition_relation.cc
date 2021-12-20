@@ -13,7 +13,7 @@ using namespace std;
 namespace symbolic {
 TransitionRelation::TransitionRelation(
     SymVariables *sVars, OperatorID op_id,
-    const std::shared_ptr<AbstractTask> &task)
+    const shared_ptr<AbstractTask> &task)
     : sV(sVars), task_proxy(*task),
       cost(task_proxy.get_operators()[op_id].get_cost()), tBDD(sVars->oneBDD()),
       existsVars(sVars->oneBDD()), existsBwVars(sVars->oneBDD()) {
@@ -36,7 +36,7 @@ void TransitionRelation::init() {
     for (auto const &eff : op.get_effects()) {
         FactPair eff_fact = eff.get_fact().get_pair();
         int var = eff_fact.var;
-        if (std::find(effVars.begin(), effVars.end(), var) == effVars.end()) {
+        if (find(effVars.begin(), effVars.end(), var) == effVars.end()) {
             effVars.push_back(var);
         }
 
@@ -196,9 +196,9 @@ void TransitionRelation::merge(const TransitionRelation &t2, int maxNodes) {
 // For each op, include relevant mutexes
 
 void TransitionRelation::edeletion(
-    const std::vector<std::vector<BDD>> &notMutexBDDsByFluentFw,
-    const std::vector<std::vector<BDD>> &notMutexBDDsByFluentBw,
-    const std::vector<std::vector<BDD>> &exactlyOneBDDsByFluent) {
+    const vector<vector<BDD>> &notMutexBDDsByFluentFw,
+    const vector<vector<BDD>> &notMutexBDDsByFluentBw,
+    const vector<vector<BDD>> &exactlyOneBDDsByFluent) {
     assert(ops_ids.size() == 1);
     assert(notMutexBDDsByFluentFw.size() == task_proxy.get_variables().size());
     assert(notMutexBDDsByFluentBw.size() == task_proxy.get_variables().size());
@@ -243,4 +243,4 @@ void TransitionRelation::edeletion(
         }
     }
 }
-} // namespace symbolic
+}

@@ -17,7 +17,6 @@
 #include "../../tasks/sdac_task.h"
 
 using namespace std;
-using namespace symbolic;
 using namespace options;
 
 namespace symbolic {
@@ -31,9 +30,9 @@ SymbolicSearch::SymbolicSearch(const options::Options &opts)
       searchParams(opts), step_num(-1),
       lower_bound_increased(true),
       lower_bound(0),
-      upper_bound(std::numeric_limits<int>::max()),
+      upper_bound(numeric_limits<int>::max()),
       min_g(0),
-      plan_data_base(opts.get<std::shared_ptr<PlanDataBase>>("plan_selection")),
+      plan_data_base(opts.get<shared_ptr<PlanDataBase>>("plan_selection")),
       solution_registry() {
     save_plans = false; // we handle plans seperat
     mgrParams.print_options();
@@ -45,10 +44,10 @@ void SymbolicSearch::initialize() {
     plan_data_base->print_options();
 
     if (task_properties::has_sdac_cost_operator(task_proxy)) {
-        std::cout << "Creating sdac task..." << std::endl;
-        search_task = std::make_shared<extra_tasks::SdacTask>(task, vars.get());
-        std::cout << "#Operators with sdac: " << task->get_num_operators() << std::endl;
-        std::cout << "#Operators without sdac: " << search_task->get_num_operators() << std::endl;
+        cout << "Creating sdac task..." << endl;
+        search_task = make_shared<extra_tasks::SdacTask>(task, vars.get());
+        cout << "#Operators with sdac: " << task->get_num_operators() << endl;
+        cout << "#Operators without sdac: " << search_task->get_num_operators() << endl;
     }
 
     plan_data_base->init(vars, search_task, get_plan_manager());
@@ -69,7 +68,7 @@ SearchStatus SymbolicSearch::step() {
     // Search finished!
     if (lower_bound >= upper_bound) {
         solution_registry.construct_cheaper_solutions(
-            std::numeric_limits<int>::max());
+            numeric_limits<int>::max());
         solution_found = plan_data_base->get_num_reported_plan() > 0;
         cur_status = solution_found ? SOLVED : FAILED;
     } else {
@@ -88,17 +87,17 @@ SearchStatus SymbolicSearch::step() {
     }
 
     if (lower_bound_increased) {
-        std::cout << "BOUND: " << lower_bound << " < " << upper_bound << std::flush;
+        cout << "BOUND: " << lower_bound << " < " << upper_bound << flush;
 
-        std::cout << " [" << solution_registry.get_num_found_plans() << "/"
+        cout << " [" << solution_registry.get_num_found_plans() << "/"
                   << plan_data_base->get_num_desired_plans() << " plans]"
-                  << std::flush;
-        std::cout << ", total time: " << utils::g_timer << std::endl;
+                  << flush;
+        cout << ", total time: " << utils::g_timer << endl;
     }
     lower_bound_increased = false;
 
     if (cur_status == SOLVED) {
-        std::cout << "Best plan:" << std::endl;
+        cout << "Best plan:" << endl;
         plan_data_base->dump_first_accepted_plan();
         return cur_status;
     }
@@ -116,13 +115,13 @@ void SymbolicSearch::setLowerBound(int lower) {
     if (lower > lower_bound) {
         lower_bound_increased = true;
     }
-    lower_bound = std::max(lower_bound, lower);
+    lower_bound = max(lower_bound, lower);
 }
 
 void SymbolicSearch::new_solution(const SymSolutionCut &sol) {
     if (!solution_registry.found_all_plans()) {
         solution_registry.register_solution(sol);
-        upper_bound = std::min(upper_bound, sol.get_f());
+        upper_bound = min(upper_bound, sol.get_f());
     }
 }
 

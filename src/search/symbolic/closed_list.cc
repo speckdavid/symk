@@ -75,15 +75,15 @@ SymSolutionCut ClosedList::getCheapestCut(const BDD &states, int g,
             }
         }
     }
-    std::cerr << "Inconsitent cut result" << std::endl;
+    cerr << "Inconsitent cut result" << endl;
     exit(0);
     return SymSolutionCut();
 }
 
-std::vector<SymSolutionCut> ClosedList::getAllCuts(const BDD &states, int g,
+vector<SymSolutionCut> ClosedList::getAllCuts(const BDD &states, int g,
                                                    bool fw,
                                                    int lower_bound) const {
-    std::vector<SymSolutionCut> result;
+    vector<SymSolutionCut> result;
     BDD cut_candidate = states * closedTotal;
     if (!cut_candidate.IsZero()) {
         for (const auto &closedH : closed) {
@@ -109,4 +109,4 @@ std::vector<SymSolutionCut> ClosedList::getAllCuts(const BDD &states, int g,
     }
     return result;
 }
-} // namespace symbolic
+}

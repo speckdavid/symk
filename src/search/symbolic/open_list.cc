@@ -4,6 +4,8 @@
 
 #include <cassert>
 
+using namespace std;
+
 namespace symbolic {
 void OpenList::insert(const Bucket &bucket, int g) {
     assert(!bucket.empty());
@@ -16,10 +18,10 @@ void OpenList::insert(const BDD &bdd, int g) {
 }
 
 int OpenList::minNextG(const Frontier &frontier, int min_action_cost) const {
-    int next_g = (frontier.empty() ? std::numeric_limits<int>::max()
+    int next_g = (frontier.empty() ? numeric_limits<int>::max()
                   : frontier.g() + min_action_cost);
     if (!open.empty()) {
-        return std::min(next_g, open.begin()->first);
+        return min(next_g, open.begin()->first);
     }
     return next_g;
 }
@@ -32,7 +34,7 @@ void OpenList::pop(Frontier &frontier) {
 }
 
 int OpenList::minG() const {
-    return open.empty() ? std::numeric_limits<int>::max() : open.begin()->first;
+    return open.empty() ? numeric_limits<int>::max() : open.begin()->first;
 }
 
 bool OpenList::contains_any_state(const BDD &bdd) const {
@@ -44,11 +46,11 @@ bool OpenList::contains_any_state(const BDD &bdd) const {
     return false;
 }
 
-std::ostream &operator<<(std::ostream &os, const OpenList &exp) {
+ostream &operator<<(ostream &os, const OpenList &exp) {
     os << " open{";
     for (auto &o : exp.open) {
         os << o.first << " ";
     }
     return os << "}";
 }
-} // namespace symbolic
+}

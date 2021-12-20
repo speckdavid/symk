@@ -2,8 +2,11 @@
 
 #include "../../task_utils/task_properties.h"
 #include "../../state_registry.h"
+
 #include <iostream>
 #include <stdio.h>
+
+using namespace std;
 
 namespace symbolic {
 SimpleSelector::SimpleSelector(const options::Options &opts)
@@ -41,14 +44,14 @@ bool SimpleSelector::is_simple(const Plan &plan) {
     return true;
 }
 
-static std::shared_ptr<PlanDataBase> _parse(OptionParser &parser) {
+static shared_ptr<PlanDataBase> _parse(OptionParser &parser) {
     PlanDataBase::add_options_to_parser(parser);
 
     Options opts = parser.parse();
     if (parser.dry_run())
         return nullptr;
-    return std::make_shared<SimpleSelector>(opts);
+    return make_shared<SimpleSelector>(opts);
 }
 
 static Plugin<PlanDataBase> _plugin("simple", _parse);
-} // namespace symbolic
+}

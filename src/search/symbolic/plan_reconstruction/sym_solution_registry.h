@@ -1,13 +1,13 @@
 #ifndef SYMBOLIC_PLAN_RECONSTRUCTION_SYM_SOLUTION_REGISTRY_H
 #define SYMBOLIC_PLAN_RECONSTRUCTION_SYM_SOLUTION_REGISTRY_H
 
-#include "../../plan_manager.h"
-#include "../../state_registry.h"
-#include "../../task_proxy.h"
+#include "sym_solution_cut.h"
 #include "../plan_selection/plan_database.h"
 #include "../sym_variables.h"
 #include "../transition_relation.h"
-#include "sym_solution_cut.h"
+#include "../../plan_manager.h"
+#include "../../state_registry.h"
+#include "../../task_proxy.h"
 
 namespace symbolic {
 class UniformCostSearch;
@@ -86,6 +86,6 @@ public:
         return cheapest;
     }
 };
-} // namespace symbolic
+}
 
 #endif

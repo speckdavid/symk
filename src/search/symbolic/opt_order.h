@@ -37,6 +37,6 @@ public:
     static void compute_gamer_ordering(std::vector<int> &ordering,
                                        const std::shared_ptr<AbstractTask> &task);
 };
-} // namespace symbolic
+}
 
 #endif

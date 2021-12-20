@@ -38,5 +38,5 @@ public:
 
     friend std::ostream &operator<<(std::ostream &os, const OpenList &open);
 };
-} // namespace symbolic
+}
 #endif

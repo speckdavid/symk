@@ -78,5 +78,5 @@ public:
     void write(std::ofstream &file) const;
     void read(std::ifstream &file);
 };
-} // namespace symbolic
+}
 #endif

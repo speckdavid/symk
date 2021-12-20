@@ -5,7 +5,6 @@
 
 using options::Options;
 using namespace std;
-using utils::g_timer;
 
 namespace symbolic {
 SymParamsSearch::SymParamsSearch(const Options &opts)
@@ -81,10 +80,10 @@ void SymParamsSearch::add_options_to_parser(OptionParser &parser,
 
     parser.add_option<int>("max_step_time",
                            "allowed time to perform a step in the search",
-                           std::to_string(maxStepTime));
+                           to_string(maxStepTime));
     parser.add_option<int>("max_step_nodes",
                            "allowed nodes to perform a step in the search",
-                           std::to_string(maxStepNodes));
+                           to_string(maxStepNodes));
 
     parser.add_option<int>("max_step_nodes_per_planning_second",
                            "allowed nodes to perform a step in the search. "
@@ -137,12 +136,11 @@ void SymParamsSearch::add_options_to_parser(OptionParser &parser,
 int SymParamsSearch::getMaxStepNodes() const {
     if (maxStepNodesTimeStartIncrement == -1)
         return maxStepNodes;
-    if (g_timer() < maxStepNodesTimeStartIncrement)
+    if (utils::g_timer() < maxStepNodesTimeStartIncrement)
         return maxStepNodesMin;
     else
-        return std::min<double>(
-            maxStepNodes,
-            maxStepNodesMin + maxStepNodesPerPlanningSecond *
-            (g_timer() - maxStepNodesTimeStartIncrement));
+        return min<double>(maxStepNodes,
+                           maxStepNodesMin + maxStepNodesPerPlanningSecond *
+                           (utils::g_timer() - maxStepNodesTimeStartIncrement));
 }
-} // namespace symbolic
+}

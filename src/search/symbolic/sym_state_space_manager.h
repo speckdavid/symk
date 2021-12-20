@@ -193,5 +193,5 @@ public:
         utils::exit_with(utils::ExitCode::SEARCH_CRITICAL_ERROR);
     }
 };
-} // namespace symbolic
+}
 #endif

@@ -13,7 +13,7 @@ namespace symbolic {
 // Returns a optimized variable ordering that reorders the variables
 // according to the standard causal graph criterion
 void InfluenceGraph::compute_gamer_ordering(
-    std::vector<int> &var_order, const std::shared_ptr<AbstractTask> &task) {
+    vector<int> &var_order, const shared_ptr<AbstractTask> &task) {
     TaskProxy task_proxy(*task);
 
     const causal_graph::CausalGraph &cg = task_proxy.get_causal_graph();
@@ -41,7 +41,7 @@ void InfluenceGraph::compute_gamer_ordering(
 }
 
 void InfluenceGraph::get_ordering(vector<int> &ordering) const {
-    std::cout << "Optimizing variable ordering..." << std::flush;
+    cout << "Optimizing variable ordering..." << flush;
     utils::Timer timer;
     double value_optimization_function =
         optimize_variable_ordering_gamer(ordering, 50000);
@@ -56,7 +56,7 @@ void InfluenceGraph::get_ordering(vector<int> &ordering) const {
             ordering.swap(new_order);
         }
     }
-    std::cout << "done!" << " [t=" << timer << "]" << std::endl;
+    cout << "done!" << " [t=" << timer << "]" << endl;
 }
 
 void InfluenceGraph::randomize(vector<int> &ordering,
@@ -130,7 +130,7 @@ double InfluenceGraph::optimize_variable_ordering_gamer(vector<int> &order,
     return totalDistance;
 }
 
-double InfluenceGraph::compute_function(const std::vector<int> &order) const {
+double InfluenceGraph::compute_function(const vector<int> &order) const {
     double totalDistance = 0;
     for (size_t i = 0; i < order.size() - 1; i++) {
         for (size_t j = i + 1; j < order.size(); j++) {
@@ -144,7 +144,7 @@ double InfluenceGraph::compute_function(const std::vector<int> &order) const {
 
 InfluenceGraph::InfluenceGraph(int num) {
     // TODO(speckd): we need to randomize the seed here
-    rng = std::make_shared<utils::RandomNumberGenerator>(0);
+    rng = make_shared<utils::RandomNumberGenerator>(0);
     influence_graph.resize(num);
     for (auto &i : influence_graph) {
         i.resize(num, 0);

@@ -61,4 +61,4 @@ bool bucket_contains_any_state(const Bucket &bucket, const BDD &bdd) {
     }
     return false;
 }
-} // namespace symbolic
+}

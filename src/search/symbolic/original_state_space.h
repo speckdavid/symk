@@ -59,5 +59,5 @@ public:
         return indTRs;
     }
 };
-} // namespace symbolic
+}
 #endif
