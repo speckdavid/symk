@@ -62,7 +62,7 @@ void SymAxiomCompilation::init_axioms() {
     create_primary_representations();
 
     cout << fixed << "Symbolic Axiom initialization: " << timer
-              << endl;
+         << endl;
 }
 
 BDD SymAxiomCompilation::get_compilied_init_state() const {

@@ -1,5 +1,5 @@
-#ifndef SYMBOLIC_SYM_UTIL_H
-#define SYMBOLIC_SYM_UTIL_H
+#ifndef SYMBOLIC_SYM_UTILS_H
+#define SYMBOLIC_SYM_UTILS_H
 
 #include "sym_bucket.h"
 #include "sym_variables.h"

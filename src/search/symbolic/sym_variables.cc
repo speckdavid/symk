@@ -118,7 +118,7 @@ void SymVariables::init(const vector<int> &v_order) {
 
     if (task_properties::has_axioms(task_proxy)) {
         cout << "Creating Primary Representation for Derived Predicates..."
-                  << endl;
+             << endl;
         ax_comp->init_axioms();
         cout << "Primary Representation... Done!" << endl;
     }

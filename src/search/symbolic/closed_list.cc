@@ -81,8 +81,8 @@ SymSolutionCut ClosedList::getCheapestCut(const BDD &states, int g,
 }
 
 vector<SymSolutionCut> ClosedList::getAllCuts(const BDD &states, int g,
-                                                   bool fw,
-                                                   int lower_bound) const {
+                                              bool fw,
+                                              int lower_bound) const {
     vector<SymSolutionCut> result;
     BDD cut_candidate = states * closedTotal;
     if (!cut_candidate.IsZero()) {

@@ -193,7 +193,7 @@ Expression Parser::parseOpExpression(Lexer &lexer) const {
     }
     if (exprs.empty()) {
         throw invalid_argument("Empty operator: " + opType + " before" +
-                                    beforeRParen);
+                               beforeRParen);
     }
     // Revert because the ")" is again checked in the "(" expression part
     lexer.revert();
@@ -262,8 +262,8 @@ void InfixParser::expect(Type type, Lexer &lexer) {
         consume(lexer);
     } else {
         throw invalid_argument("Parser error : expected " +
-                                    to_string(type) + " was " +
-                                    to_string(next.type));
+                               to_string(type) + " was " +
+                               to_string(next.type));
     }
 }
 
@@ -398,8 +398,8 @@ void InfixParser::LP(Lexer &lexer) {
         operators.pop();
     } else {
         throw invalid_argument(" LP Unknown Token \"" +
-                                    to_string(next.type) + "\" with value \"" +
-                                    next.value + "\" at " + lexer.input);
+                               to_string(next.type) + "\" with value \"" +
+                               next.value + "\" at " + lexer.input);
     }
 }
 

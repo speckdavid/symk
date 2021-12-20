@@ -1,5 +1,5 @@
-#ifndef TASKS_MODIFIED_GOALS_TASK_H
-#define TASKS_MODIFIED_GOALS_TASK_H
+#ifndef TASKS_SDAC_TASK_H
+#define TASKS_SDAC_TASK_H
 
 #include "delegating_task.h"
 

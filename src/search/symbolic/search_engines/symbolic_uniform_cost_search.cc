@@ -39,7 +39,7 @@ void SymbolicUniformCostSearch::initialize() {
 
     if (fw && bw) {
         search = unique_ptr<BidirectionalSearch>(new BidirectionalSearch(
-                                                          this, searchParams, move(fw_search), move(bw_search)));
+                                                     this, searchParams, move(fw_search), move(bw_search)));
     } else {
         search.reset(fw ? fw_search.release() : bw_search.release());
     }
@@ -67,7 +67,7 @@ static shared_ptr<SearchEngine> _parse_forward_ucs(OptionParser &parser) {
     shared_ptr<symbolic::SymbolicSearch> engine = nullptr;
     if (!parser.dry_run()) {
         engine = make_shared<symbolic::SymbolicUniformCostSearch>(opts, true,
-                                                                       false);
+                                                                  false);
         cout << "Symbolic Forward Uniform Cost Search" << endl;
     }
 
@@ -84,7 +84,7 @@ static shared_ptr<SearchEngine> _parse_backward_ucs(OptionParser &parser) {
     shared_ptr<symbolic::SymbolicSearch> engine = nullptr;
     if (!parser.dry_run()) {
         engine = make_shared<symbolic::SymbolicUniformCostSearch>(opts, false,
-                                                                       true);
+                                                                  true);
         cout << "Symbolic Backward Uniform Cost Search" << endl;
     }
 

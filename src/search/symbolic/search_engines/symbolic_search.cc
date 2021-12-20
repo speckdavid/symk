@@ -90,8 +90,8 @@ SearchStatus SymbolicSearch::step() {
         cout << "BOUND: " << lower_bound << " < " << upper_bound << flush;
 
         cout << " [" << solution_registry.get_num_found_plans() << "/"
-                  << plan_data_base->get_num_desired_plans() << " plans]"
-                  << flush;
+             << plan_data_base->get_num_desired_plans() << " plans]"
+             << flush;
         cout << ", total time: " << utils::g_timer << endl;
     }
     lower_bound_increased = false;

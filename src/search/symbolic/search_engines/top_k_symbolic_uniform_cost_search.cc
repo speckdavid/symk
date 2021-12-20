@@ -42,7 +42,7 @@ void TopkSymbolicUniformCostSearch::initialize() {
 
     if (fw && bw) {
         search = unique_ptr<BidirectionalSearch>(new BidirectionalSearch(
-                                                          this, searchParams, move(fw_search), move(bw_search)));
+                                                     this, searchParams, move(fw_search), move(bw_search)));
     } else {
         search.reset(fw ? fw_search.release() : bw_search.release());
     }
@@ -109,7 +109,7 @@ _parse_bidirectional_ucs(OptionParser &parser) {
         engine = make_shared<symbolic::TopkSymbolicUniformCostSearch>(
             opts, true, true);
         cout << "Top-k Symbolic Bidirectional Uniform Cost Search"
-                  << endl;
+             << endl;
     }
 
     return engine;
