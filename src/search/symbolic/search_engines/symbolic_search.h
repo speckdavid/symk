@@ -77,6 +77,8 @@ public:
 
     virtual void print_statistics() const {}
 
+    virtual void save_plan_if_necessary() override;
+
     static void add_options_to_parser(OptionParser &parser);
 };
 }

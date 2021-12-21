@@ -34,7 +34,6 @@ SymbolicSearch::SymbolicSearch(const options::Options &opts)
       min_g(0),
       plan_data_base(opts.get<shared_ptr<PlanDataBase>>("plan_selection")),
       solution_registry() {
-    save_plans = false; // we handle plans seperat
     cout << endl;
     mgrParams.print_options();
     cout << endl;
@@ -128,6 +127,13 @@ void SymbolicSearch::new_solution(const SymSolutionCut &sol) {
     if (!solution_registry.found_all_plans()) {
         solution_registry.register_solution(sol);
         upper_bound = min(upper_bound, sol.get_f());
+    }
+}
+
+void SymbolicSearch::save_plan_if_necessary() {
+    if (found_solution()) {
+        utils::g_log << "Best plan:" << endl;
+        plan_manager.dump_plan(get_plan(), task_proxy);
     }
 }
 

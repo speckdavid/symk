@@ -37,7 +37,6 @@ class SearchEngine {
     Plan plan;
 protected:
     bool solution_found;
-    bool save_plans;
     // Hold a reference to the task implementation and pass it to objects that
     // need it.
     const std::shared_ptr<AbstractTask> task;
