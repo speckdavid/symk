@@ -3,10 +3,12 @@
 #include "task_proxy.h"
 
 #include "task_utils/task_properties.h"
+#include "utils/logging.h"
 
 #include <fstream>
 #include <iostream>
 #include <sstream>
+
 
 using namespace std;
 
@@ -22,19 +24,18 @@ int calculate_plan_cost(const Plan &plan, const TaskProxy &task_proxy) {
 PlanManager::PlanManager()
     : plan_filename("sas_plan"),
       num_previously_generated_plans(0),
-      is_part_of_anytime_portfolio(false) {}
+      is_part_of_anytime_portfolio(false) {
+}
 
 void PlanManager::set_plan_filename(const string &plan_filename_) {
     plan_filename = plan_filename_;
 }
 
-void PlanManager::set_num_previously_generated_plans(
-    int num_previously_generated_plans_) {
+void PlanManager::set_num_previously_generated_plans(int num_previously_generated_plans_) {
     num_previously_generated_plans = num_previously_generated_plans_;
 }
 
-void PlanManager::set_is_part_of_anytime_portfolio(
-    bool is_part_of_anytime_portfolio_) {
+void PlanManager::set_is_part_of_anytime_portfolio(bool is_part_of_anytime_portfolio_) {
     is_part_of_anytime_portfolio = is_part_of_anytime_portfolio_;
 }
 
@@ -69,7 +70,7 @@ void PlanManager::save_plan(const Plan &plan, const TaskProxy &task_proxy,
     OperatorsProxy operators = task_proxy.get_operators();
     for (OperatorID op_id : plan) {
         if (dump_plan) {
-            cout << operators[op_id].get_name() << " (" << operators[op_id].get_cost()
+            utils::g_log << operators[op_id].get_name() << " (" << operators[op_id].get_cost()
                  << ")" << endl;
         }
         outfile << "(" << operators[op_id].get_name() << ")" << endl;
@@ -80,8 +81,8 @@ void PlanManager::save_plan(const Plan &plan, const TaskProxy &task_proxy,
             << (is_unit_cost ? "unit cost" : "general cost") << ")" << endl;
     outfile.close();
     if (dump_plan) {
-        cout << "Plan length: " << plan.size() << " step(s)." << endl;
-        cout << "Plan cost: " << plan_cost << endl;
+        utils::g_log << "Plan length: " << plan.size() << " step(s)." << endl;
+        utils::g_log << "Plan cost: " << plan_cost << endl;
     }
     ++num_previously_generated_plans;
 }

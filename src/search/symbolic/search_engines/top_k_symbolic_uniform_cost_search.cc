@@ -59,7 +59,7 @@ void TopkSymbolicUniformCostSearch::new_solution(const SymSolutionCut &sol) {
         lower_bound = numeric_limits<int>::max();
     }
 }
-} // namespace symbolic
+}
 
 static shared_ptr<SearchEngine> _parse_forward_ucs(OptionParser &parser) {
     parser.document_synopsis("Top-k Symbolic Forward Uniform Cost Search", "");
@@ -72,7 +72,7 @@ static shared_ptr<SearchEngine> _parse_forward_ucs(OptionParser &parser) {
     if (!parser.dry_run()) {
         engine = make_shared<symbolic::TopkSymbolicUniformCostSearch>(
             opts, true, false);
-        cout << "Top-k Symbolic Forward Uniform Cost Search" << endl;
+        utils::g_log << "Top-k Symbolic Forward Uniform Cost Search" << endl;
     }
 
     return engine;
@@ -89,7 +89,7 @@ static shared_ptr<SearchEngine> _parse_backward_ucs(OptionParser &parser) {
     if (!parser.dry_run()) {
         engine = make_shared<symbolic::TopkSymbolicUniformCostSearch>(
             opts, false, true);
-        cout << "Top-k Symbolic Backward Uniform Cost Search" << endl;
+        utils::g_log << "Top-k Symbolic Backward Uniform Cost Search" << endl;
     }
 
     return engine;
@@ -108,7 +108,7 @@ _parse_bidirectional_ucs(OptionParser &parser) {
     if (!parser.dry_run()) {
         engine = make_shared<symbolic::TopkSymbolicUniformCostSearch>(
             opts, true, true);
-        cout << "Top-k Symbolic Bidirectional Uniform Cost Search"
+        utils::g_log << "Top-k Symbolic Bidirectional Uniform Cost Search"
              << endl;
     }
 

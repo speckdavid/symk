@@ -54,9 +54,13 @@ void PlanDataBase::dump_first_accepted_plan() const {
                        state_registry->get_task_proxy());
 }
 
+const Plan& PlanDataBase::get_first_accepted_plan() const {
+    return first_accepted_plan;
+}
+
 void PlanDataBase::print_options() const {
-    cout << "Plan Selector: " << tag() << endl;
-    cout << "Plan files: " << plan_mgr.get_plan_filename() << endl;
+    utils::g_log << "Plan Selector: " << tag() << endl;
+    utils::g_log << "Plan files: " << plan_mgr.get_plan_filename() << endl;
 }
 
 size_t PlanDataBase::different(const vector<Plan> &plans,

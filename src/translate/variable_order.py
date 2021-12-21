@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from collections import defaultdict, deque
 from itertools import chain
 import heapq
@@ -8,8 +6,7 @@ import sccs
 
 DEBUG = False
 
-
-class CausalGraph(object):
+class CausalGraph:
     """Weighted causal graph used for defining a variable order.
 
     The causal graph only contains pre->eff edges (in contrast to the
@@ -28,7 +25,7 @@ class CausalGraph(object):
 
     def __init__(self, sas_task):
         self.weighted_graph = defaultdict(lambda: defaultdict(int))
-        # var_no -> (var_no -> number)
+        ## var_no -> (var_no -> number)
         self.predecessor_graph = defaultdict(set)
         self.ordering = []
 
@@ -45,11 +42,11 @@ class CausalGraph(object):
         return self.ordering
 
     def weight_graph_from_ops(self, operators):
-        # A source variable can be processed several times. This was
-        # probably not intended originally but in experiments (cf.
-        # issue26) it performed better than the (clearer) weighting
-        # described in the Fast Downward paper (which would require
-        # a more complicated implementation).
+        ### A source variable can be processed several times. This was
+        ### probably not intended originally but in experiments (cf.
+        ### issue26) it performed better than the (clearer) weighting
+        ### described in the Fast Downward paper (which would require
+        ### a more complicated implementation).
         for op in operators:
             source_vars = [var for (var, value) in op.prevail]
             for var, pre, _, _ in op.pre_post:
@@ -117,7 +114,7 @@ class CausalGraph(object):
                 stack.extend(pred for pred in self.predecessor_graph[n])
 
 
-class MaxDAG(object):
+class MaxDAG:
     """Defines a variable ordering for a SCC of the (weighted) causal
     graph.
 
@@ -153,13 +150,12 @@ class MaxDAG(object):
             min_key = weights[0]
             min_elem = None
             entries = weight_to_nodes[min_key]
-            while (entries and
-                   (min_elem is None or min_elem in done or
-                    min_key > incoming_weights[min_elem])):
+            while entries and (min_elem is None or min_elem in done or
+                               min_key > incoming_weights[min_elem]):
                 min_elem = entries.popleft()
             if not entries:
                 del weight_to_nodes[min_key]
-                heapq.heappop(weights)  # remove min_key from heap
+                heapq.heappop(weights) # remove min_key from heap
             if min_elem is None or min_elem in done:
                 # since we use lazy deletion from the heap weights,
                 # there can be weights with a "done" entry in
@@ -183,9 +179,8 @@ class MaxDAG(object):
         return result
 
 
-class VariableOrder(object):
+class VariableOrder:
     """Apply a given variable order to a SAS task."""
-
     def __init__(self, ordering):
         """Ordering is a list of variable numbers in the desired order.
 
@@ -193,7 +188,7 @@ class VariableOrder(object):
         from the task.
         """
         self.ordering = ordering
-        self.new_var = dict((v, i) for i, v in enumerate(ordering))
+        self.new_var = {v: i for i, v in enumerate(ordering)}
 
     def apply_to_task(self, sas_task):
         self._apply_to_variables(sas_task.variables)
@@ -230,7 +225,7 @@ class VariableOrder(object):
         for group in mutexes:
             facts = [(self.new_var[var], val) for var, val in group.facts
                      if var in self.new_var]
-            if facts and len(set(var for var, _ in facts)) > 1:
+            if facts and len({var for var, _ in facts}) > 1:
                 group.facts = facts
                 new_mutexes.append(group)
         print("%s of %s mutex groups necessary." % (len(new_mutexes),

@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import print_function
-
 import os
 
 from .util import DRIVER_DIR
@@ -93,13 +90,11 @@ lazy(alt([single(sum([g(),weight(hff,2)])),
      preferred=[hcea,hgc],reopen_closed=true,cost_type=one)
 ],repeat_last=true,continue_on_fail=true)"""]
 
-
 def _get_lama(**kwargs):
     return [
         "--if-unit-cost",
         "--evaluator",
-        "hlm=lmcount(lm_rhw(reasonable_orders=true),pref={pref})".format(
-            **kwargs),
+        "hlm=lmcount(lm_rhw(reasonable_orders=true),pref={pref})".format(**kwargs),
         "--evaluator", "hff=ff()",
         "--search", """iterated([
                          lazy_greedy([hff,hlm],preferred=[hff,hlm]),
@@ -110,12 +105,10 @@ def _get_lama(**kwargs):
                          ],repeat_last=true,continue_on_fail=true)""",
         "--if-non-unit-cost",
         "--evaluator",
-        "hlm1=lmcount(lm_rhw(reasonable_orders=true),transform=adapt_costs(one),pref={pref})".format(
-            **kwargs),
+        "hlm1=lmcount(lm_rhw(reasonable_orders=true),transform=adapt_costs(one),pref={pref})".format(**kwargs),
         "--evaluator", "hff1=ff(transform=adapt_costs(one))",
         "--evaluator",
-        "hlm2=lmcount(lm_rhw(reasonable_orders=true),transform=adapt_costs(plusone),pref={pref})".format(
-            **kwargs),
+        "hlm2=lmcount(lm_rhw(reasonable_orders=true),transform=adapt_costs(plusone),pref={pref})".format(**kwargs),
         "--evaluator", "hff2=ff(transform=adapt_costs(plusone))",
         "--search", """iterated([
                          lazy_greedy([hff1,hlm1],preferred=[hff1,hlm1],
@@ -127,10 +120,9 @@ def _get_lama(**kwargs):
                          lazy_wastar([hff2,hlm2],preferred=[hff2,hlm2],w=2),
                          lazy_wastar([hff2,hlm2],preferred=[hff2,hlm2],w=1)
                          ],repeat_last=true,continue_on_fail=true)""",
+        # Append --always to be on the safe side if we want to append
+        # additional options later.
         "--always"]
-    # Append --always to be on the safe side if we want to append
-    # additional options later.
-
 
 ALIASES["seq-sat-lama-2011"] = _get_lama(pref="true")
 ALIASES["lama"] = _get_lama(pref="false")
@@ -160,7 +152,7 @@ for portfolio in os.listdir(PORTFOLIO_DIR):
 
 
 def show_aliases():
-    for alias in sorted(ALIASES.keys() + PORTFOLIOS.keys()):
+    for alias in sorted(list(ALIASES) + list(PORTFOLIOS)):
         print(alias)
 
 

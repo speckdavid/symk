@@ -1,21 +1,16 @@
-from __future__ import print_function
-
 import sys
 
 import pddl
 import pddl_to_prolog
 
-
-class OccurrencesTracker(object):
+class OccurrencesTracker:
     """Keeps track of the number of times each variable appears
     in a list of symbolic atoms."""
-
     def __init__(self, rule):
         self.occurrences = {}
         self.update(rule.effect, +1)
         for cond in rule.conditions:
             self.update(cond, +1)
-
     def update(self, symatom, delta):
         for var in symatom.args:
             if var[0] == "?":
@@ -25,30 +20,24 @@ class OccurrencesTracker(object):
                 assert self.occurrences[var] >= 0
                 if not self.occurrences[var]:
                     del self.occurrences[var]
-
     def variables(self):
         return set(self.occurrences)
 
-
-class CostMatrix(object):
+class CostMatrix:
     def __init__(self, joinees):
         self.joinees = []
         self.cost_matrix = []
         for joinee in joinees:
             self.add_entry(joinee)
-
     def add_entry(self, joinee):
-        new_row = [self.compute_join_cost(joinee, other)
-                   for other in self.joinees]
+        new_row = [self.compute_join_cost(joinee, other) for other in self.joinees]
         self.cost_matrix.append(new_row)
         self.joinees.append(joinee)
-
     def delete_entry(self, index):
         for row in self.cost_matrix[index + 1:]:
             del row[index]
         del self.cost_matrix[index]
         del self.joinees[index]
-
     def find_min_pair(self):
         assert len(self.joinees) >= 2
         min_cost = (sys.maxsize, sys.maxsize)
@@ -58,7 +47,6 @@ class CostMatrix(object):
                     min_cost = entry
                     left_index, right_index = i, j
         return left_index, right_index
-
     def remove_min_pair(self):
         left_index, right_index = self.find_min_pair()
         left, right = self.joinees[left_index], self.joinees[right_index]
@@ -66,7 +54,6 @@ class CostMatrix(object):
         self.delete_entry(left_index)
         self.delete_entry(right_index)
         return (left, right)
-
     def compute_join_cost(self, left_joinee, right_joinee):
         left_vars = pddl_to_prolog.get_variables([left_joinee])
         right_vars = pddl_to_prolog.get_variables([right_joinee])
@@ -76,28 +63,23 @@ class CostMatrix(object):
         return (len(left_vars) - len(common_vars),
                 len(right_vars) - len(common_vars),
                 -len(common_vars))
-
     def can_join(self):
         return len(self.joinees) >= 2
 
-
-class ResultList(object):
+class ResultList:
     def __init__(self, rule, name_generator):
         self.final_effect = rule.effect
         self.result = []
         self.name_generator = name_generator
-
     def get_result(self):
         self.result[-1].effect = self.final_effect
         return self.result
-
     def add_rule(self, type, conditions, effect_vars):
         effect = pddl.Atom(next(self.name_generator), effect_vars)
         rule = pddl_to_prolog.Rule(conditions, effect)
         rule.type = type
         self.result.append(rule)
         return rule.effect
-
 
 def greedy_join(rule, name_generator):
     assert len(rule.conditions) >= 2
@@ -117,13 +99,12 @@ def greedy_join(rule, name_generator):
             joinee_vars = set(joinee.args)
             retained_vars = joinee_vars & (effect_vars | common_vars)
             if retained_vars != joinee_vars:
-                joinees[i] = result.add_rule(
-                    "project", [joinee], sorted(retained_vars))
+                joinees[i] = result.add_rule("project", [joinee], sorted(retained_vars))
         joint_condition = result.add_rule("join", joinees, sorted(effect_vars))
         cost_matrix.add_entry(joint_condition)
         occurrences.update(joint_condition, +1)
 
     # assert occurrences.variables() == set(rule.effect.args)
     # for var in set(rule.effect.args):
-    #  assert occurrences.occurrences[var] == 2 * rule.effect.args.count(var)
+    #     assert occurrences.occurrences[var] == 2 * rule.effect.args.count(var)
     return result.get_result()

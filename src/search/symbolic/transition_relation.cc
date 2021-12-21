@@ -1,6 +1,7 @@
 #include "transition_relation.h"
 
 #include "../task_proxy.h"
+#include "../utils/logging.h"
 #include "../utils/timer.h"
 #include "original_state_space.h"
 #include "sym_state_space_manager.h"
@@ -73,7 +74,7 @@ void TransitionRelation::init() {
         counter++;
     }
     if (tBDD.IsZero()) {
-        cout << "Operator is empty: " << op.get_name() << endl;
+        utils::g_log << "Operator is empty: " << op.get_name() << endl;
     }
 
     sort(effVars.begin(), effVars.end());
@@ -137,12 +138,12 @@ BDD TransitionRelation::preimage(const BDD &from, int maxNodes) const {
 void TransitionRelation::merge(const TransitionRelation &t2, int maxNodes) {
     assert(cost == t2.cost);
     if (cost != t2.cost) {
-        cout << "Error: merging transitions with different cost: " << cost << " "
+        cerr << "Error: merging transitions with different cost: " << cost << " "
              << t2.cost << endl;
         utils::exit_with(utils::ExitCode::SEARCH_CRITICAL_ERROR);
     }
 
-    //  cout << "set_union" << endl;
+    //  utils::g_log << "set_union" << endl;
     // Attempt to generate the new tBDD
     vector<int> newEffVars;
     set_union(effVars.begin(), effVars.end(), t2.effVars.begin(),
@@ -151,7 +152,7 @@ void TransitionRelation::merge(const TransitionRelation &t2, int maxNodes) {
     BDD newTBDD = tBDD;
     BDD newTBDD2 = t2.tBDD;
 
-    //    cout << "Eff vars" << endl;
+    //    utils::g_log << "Eff vars" << endl;
     vector<int>::const_iterator var1 = effVars.begin();
     vector<int>::const_iterator var2 = t2.effVars.begin();
     for (vector<int>::const_iterator var = newEffVars.begin();

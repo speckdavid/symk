@@ -3,12 +3,12 @@
 #include "search_engine.h"
 
 #include "options/registries.h"
-#include "task_utils/task_properties.h"
 #include "tasks/root_task.h"
+#include "task_utils/task_properties.h"
+#include "utils/logging.h"
 #include "utils/system.h"
 #include "utils/timer.h"
 
-#include <chrono>
 #include <iostream>
 #include <sys/resource.h>
 
@@ -19,15 +19,15 @@ int main(int argc, const char **argv) {
     utils::register_event_handlers();
 
     if (argc < 2) {
-        cout << usage(argv[0]) << endl;
+        utils::g_log << usage(argv[0]) << endl;
         utils::exit_with(ExitCode::SEARCH_INPUT_ERROR);
     }
 
     bool unit_cost = false;
     if (static_cast<string>(argv[1]) != "--help") {
-        cout << "reading input... [t=" << utils::g_timer << "]" << endl;
+        utils::g_log << "reading input..." << endl;
         tasks::read_root_task(cin);
-        cout << "done reading input! [t=" << utils::g_timer << "]" << endl;
+        utils::g_log << "done reading input!" << endl;
         TaskProxy task_proxy(*tasks::g_root_task);
         unit_cost = task_properties::is_unit_cost(task_proxy);
     }
@@ -45,7 +45,7 @@ int main(int argc, const char **argv) {
             if (result != 0) {
                 cerr << "setrlimit returned result = " << result << endl;
             } else {
-                cout << "setrlimit (stack size) to " << kStackSize / 1024 / 1024
+                utils::g_log << "setrlimit (stack size) to " << kStackSize / 1024 / 1024
                      << "MB" << endl;
             }
         }
@@ -72,24 +72,19 @@ int main(int argc, const char **argv) {
         utils::exit_with(ExitCode::SEARCH_INPUT_ERROR);
     }
 
-    chrono::steady_clock::time_point wall_begin = chrono::steady_clock::now();
     utils::Timer search_timer;
     engine->search();
     search_timer.stop();
-    chrono::steady_clock::time_point wall_end = chrono::steady_clock::now();
     utils::g_timer.stop();
 
     engine->save_plan_if_necessary();
     engine->print_statistics();
-    cout << "Search time: " << search_timer << endl;
-    cout << "Search-Wall time: "
-         << chrono::duration_cast<chrono::microseconds>(wall_end - wall_begin)
-        .count() / 1000000.0 << "s" << endl;
-    cout << "Total time: " << utils::g_timer << endl;
+    utils::g_log << "Search time: " << search_timer << endl;
+    utils::g_log << "Total time: " << utils::g_timer << endl;
 
-    if (engine->found_solution()) {
-        utils::exit_with(ExitCode::SUCCESS);
-    } else {
-        utils::exit_with(ExitCode::SEARCH_UNSOLVED_INCOMPLETE);
-    }
+    ExitCode exitcode = engine->found_solution()
+        ? ExitCode::SUCCESS
+        : ExitCode::SEARCH_UNSOLVED_INCOMPLETE;
+    utils::report_exit_code_reentrant(exitcode);
+    return static_cast<int>(exitcode);
 }

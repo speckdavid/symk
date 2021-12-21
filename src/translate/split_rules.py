@@ -7,11 +7,9 @@ import graph
 import greedy_join
 import pddl
 
-
 def get_connected_conditions(conditions):
     agraph = graph.Graph(conditions)
-    var_to_conditions = dict([(var, [])
-                              for var in get_variables(conditions)])
+    var_to_conditions = {var: [] for var in get_variables(conditions)}
     for cond in conditions:
         for var in cond.args:
             if var[0] == "?":
@@ -23,14 +21,12 @@ def get_connected_conditions(conditions):
             agraph.connect(conds[0], cond)
     return sorted(map(sorted, agraph.connected_components()))
 
-
 def project_rule(rule, conditions, name_generator):
     predicate = next(name_generator)
     effect_variables = set(rule.effect.args) & get_variables(conditions)
     effect = pddl.Atom(predicate, sorted(effect_variables))
     projected_rule = Rule(conditions, effect)
     return projected_rule
-
 
 def split_rule(rule, name_generator):
     important_conditions, trivial_conditions = [], []
@@ -55,8 +51,8 @@ def split_rule(rule, name_generator):
     for proj_rule in projected_rules:
         result += split_into_binary_rules(proj_rule, name_generator)
 
-    conditions = [proj_rule.effect for proj_rule in projected_rules] + \
-        trivial_conditions
+    conditions = ([proj_rule.effect for proj_rule in projected_rules] +
+                  trivial_conditions)
     combining_rule = Rule(conditions, rule.effect)
     if len(conditions) >= 2:
         combining_rule.type = "product"
@@ -64,7 +60,6 @@ def split_rule(rule, name_generator):
         combining_rule.type = "project"
     result.append(combining_rule)
     return result
-
 
 def split_into_binary_rules(rule, name_generator):
     if len(rule.conditions) <= 1:

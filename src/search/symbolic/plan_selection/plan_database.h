@@ -61,6 +61,8 @@ public:
 
     void dump_first_accepted_plan() const;
 
+    const Plan& get_first_accepted_plan() const;
+
     double get_first_plan_cost() const {return first_accepted_plan_cost;}
 
     virtual void print_options() const;

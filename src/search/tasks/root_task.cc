@@ -3,7 +3,6 @@
 #include "../option_parser.h"
 #include "../plugin.h"
 #include "../state_registry.h"
-#include "../mutex_group.h"
 
 #include "../utils/collections.h"
 #include "../utils/timer.h"
@@ -14,6 +13,7 @@
 #include <set>
 #include <unordered_set>
 #include <vector>
+
 
 using namespace std;
 using utils::ExitCode;
@@ -32,12 +32,14 @@ struct ExplicitVariable {
     explicit ExplicitVariable(istream &in);
 };
 
+
 struct ExplicitEffect {
     FactPair fact;
     vector<FactPair> conditions;
 
     ExplicitEffect(int var, int value, vector<FactPair> &&conditions);
 };
+
 
 struct ExplicitOperator {
     vector<FactPair> preconditions;
@@ -50,6 +52,7 @@ struct ExplicitOperator {
     void read_pre_post(istream &in);
     ExplicitOperator(istream &in, bool is_an_axiom, bool use_metric);
 };
+
 
 class RootTask : public AbstractTask {
     vector<ExplicitVariable> variables;
@@ -108,6 +111,7 @@ public:
         vector<int> &values,
         const AbstractTask *ancestor_task) const override;
 };
+
 
 static void check_fact(const FactPair &fact, const vector<ExplicitVariable> &variables) {
     if (!utils::in_bounds(fact.var, variables)) {
@@ -174,10 +178,12 @@ ExplicitVariable::ExplicitVariable(istream &in) {
     check_magic(in, "end_variable");
 }
 
+
 ExplicitEffect::ExplicitEffect(
     int var, int value, vector<FactPair> &&conditions)
     : fact(var, value), conditions(move(conditions)) {
 }
+
 
 void ExplicitOperator::read_pre_post(istream &in) {
     vector<FactPair> conditions = read_facts(in);
@@ -538,4 +544,4 @@ static shared_ptr<AbstractTask> _parse(OptionParser &parser) {
 }
 
 static Plugin<AbstractTask> _plugin("no_transform", _parse);
-} // namespace tasks
+}

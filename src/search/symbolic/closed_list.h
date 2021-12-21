@@ -29,23 +29,22 @@ private:
 
 public:
     ClosedList();
-    virtual ~ClosedList() {}
     void init(SymStateSpaceManager *manager);
     void init(SymStateSpaceManager *manager, const ClosedList &other);
 
-    void insert(int h, const BDD &S);
+    void insert(int h, BDD S);
 
     BDD getPartialClosed(int upper_bound) const;
 
-    virtual SymSolutionCut getCheapestCut(const BDD &states, int g,
+    SymSolutionCut getCheapestCut(BDD states, int g,
                                           bool fw) const;
 
-    virtual std::vector<SymSolutionCut>
-    getAllCuts(const BDD &states, int g, bool fw, int lower_bound) const;
+    std::vector<SymSolutionCut>
+    getAllCuts(BDD states, int g, bool fw, int lower_bound) const;
 
     inline BDD getClosed() const {return closedTotal;}
 
-    virtual BDD notClosed() const {return !closedTotal;}
+    BDD notClosed() const {return !closedTotal;}
 
     inline std::map<int, BDD> getClosedList() const {return closed;}
 
@@ -74,7 +73,7 @@ public:
         return zeroCostClosed.at(h).size();
     }
 
-    inline size_t get_zero_cut(int h, const BDD &bdd) const {
+    inline size_t get_zero_cut(int h, BDD bdd) const {
         size_t i = 0;
         if (get_num_zero_closed_layers(h)) {
             for (; i < zeroCostClosed.at(h).size(); i++) {

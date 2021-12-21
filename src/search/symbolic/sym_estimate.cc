@@ -5,6 +5,7 @@
 
 #include "sym_params_search.h"
 #include "sym_utils.h"
+#include "../utils/logging.h"
 
 using namespace std;
 
@@ -51,7 +52,7 @@ void SymStepCostEstimation::update_data(long key, Estimation est) {
 
 void SymStepCostEstimation::stepTaken(double time, double nodes) {
 #ifdef DEBUG_ESTIMATES
-    cout << "== STEP TAKEN: " << time << ", " << nodes << endl;
+    utils::g_log << "== STEP TAKEN: " << time << ", " << nodes << endl;
 #endif
     update_data(
         nextStepNodes,
@@ -62,7 +63,7 @@ void SymStepCostEstimation::stepTaken(double time, double nodes) {
 // Sets the nodes of next iteration and recalculate estimations
 void SymStepCostEstimation::nextStep(double nodes) {
 #ifdef DEBUG_ESTIMATES
-    cout << "== NEXT STEP: " << nodes << " " << *this << " to ";
+    utils::g_log << "== NEXT STEP: " << nodes << " " << *this << " to ";
 #endif
     nextStepNodes = nodes;
 
@@ -108,9 +109,9 @@ void SymStepCostEstimation::nextStep(double nodes) {
 
     estimation = Estimation(estimatedTime, estimatedNodes);
 #ifdef DEBUG_ESTIMATES
-    cout << *this << endl;
+    utils::g_log << *this << endl;
     if (this->nodes() <= 0) {
-        cout << "ERROR: estimated nodes is lower than 0 after nextStep" << endl;
+        utils::g_log << "ERROR: estimated nodes is lower than 0 after nextStep" << endl;
         utils::exit_with(utils::ExitCode::CRITICAL_ERROR);
     }
 #endif
@@ -119,7 +120,7 @@ void SymStepCostEstimation::nextStep(double nodes) {
 void SymStepCostEstimation::violated(double time_ellapsed, double time_limit,
                                      double node_limit) {
 #ifdef DEBUG_ESTIMATES
-    cout << "== VIOLATED " << *this << ": " << time_ellapsed << " " << time_limit
+    utils::g_log << "== VIOLATED " << *this << ": " << time_ellapsed << " " << time_limit
          << " " << node_limit << ", ";
 #endif
     estimation.time = param_penalty_time_estimation_sum +
@@ -135,7 +136,7 @@ void SymStepCostEstimation::violated(double time_ellapsed, double time_limit,
 
     update_data(nextStepNodes, estimation);
 #ifdef DEBUG_ESTIMATES
-    cout << *this << endl;
+    utils::g_log << *this << endl;
 #endif
 }
 
@@ -163,12 +164,12 @@ void SymStepCostEstimation::write(ofstream &file) const {
 void SymStepCostEstimation::read(ifstream &file) {
     string line;
     getline(file, line);
-    cout << "ESTIMATE PARSE: " << line << endl;
+    utils::g_log << "ESTIMATE PARSE: " << line << endl;
     nextStepNodes = getData<long>(line, "", "=");
     estimation = Estimation(getData<double>(line, ">", ","),
                             getData<double>(line, ",", ""));
     while (getline(file, line) && !line.empty()) {
-        cout << "ESTIMATE PARSE: " << line << endl;
+        utils::g_log << "ESTIMATE PARSE: " << line << endl;
         data[getData<long>(line, "", "=")] = Estimation(
             getData<double>(line, ">", ","), getData<double>(line, ",", ""));
     }

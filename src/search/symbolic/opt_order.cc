@@ -3,6 +3,7 @@
 #include "../task_proxy.h"
 #include "../task_utils/causal_graph.h"
 #include "../tasks/root_task.h"
+#include "../utils/logging.h"
 #include "../utils/timer.h"
 
 #include <ostream>
@@ -35,13 +36,13 @@ void InfluenceGraph::compute_gamer_ordering(
 
     ig_partitions.get_ordering(var_order);
 
-    // cout << "Var ordering: ";
-    // for(int v : var_order) cout << v << " ";
-    // cout  << endl;
+    // utils::g_log << "Var ordering: ";
+    // for(int v : var_order) utils::g_log << v << " ";
+    // utils::g_log  << endl;
 }
 
 void InfluenceGraph::get_ordering(vector<int> &ordering) const {
-    cout << "Optimizing variable ordering..." << flush;
+    utils::g_log << "Optimizing variable ordering..." << flush;
     utils::Timer timer;
     double value_optimization_function =
         optimize_variable_ordering_gamer(ordering, 50000);
@@ -56,7 +57,7 @@ void InfluenceGraph::get_ordering(vector<int> &ordering) const {
             ordering.swap(new_order);
         }
     }
-    cout << "done!" << " [t=" << timer << "]" << endl;
+    utils::g_log << "done!" << " [t=" << timer << "]" << endl;
 }
 
 void InfluenceGraph::randomize(vector<int> &ordering,
@@ -119,14 +120,14 @@ double InfluenceGraph::optimize_variable_ordering_gamer(vector<int> &order,
 
             /*if(totalDistance != compute_function(order)){
               cerr << "Error computing total distance: " << totalDistance << " " <<
-            compute_function(order) << endl; exit(-1); }else{ cout << "Bien: " <<
+            compute_function(order) << endl; exit(-1); }else{ utils::g_log << "Bien: " <<
             totalDistance << endl;
             }*/
         } else {
             totalDistance = oldTotalDistance;
         }
     }
-    //  cout << "Total distance: " << totalDistance << endl;
+    //  utils::g_log << "Total distance: " << totalDistance << endl;
     return totalDistance;
 }
 
@@ -193,13 +194,13 @@ void InfluenceGraph::optimize_variable_ordering_gamer(
 
             /*if(totalDistance != compute_function(order)){
               cerr << "Error computing total distance: " << totalDistance << " " <<
-            compute_function(order) << endl; exit(-1); }else{ cout << "Bien: " <<
+            compute_function(order) << endl; exit(-1); }else{ utils::g_log << "Bien: " <<
             totalDistance << endl;
             }*/
         } else {
             totalDistance = oldTotalDistance;
         }
     }
-    //  cout << "Total distance: " << totalDistance << endl;
+    //  utils::g_log << "Total distance: " << totalDistance << endl;
 }
 } // namespace symbolic

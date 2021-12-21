@@ -75,6 +75,8 @@ public:
 
     virtual void new_solution(const SymSolutionCut &sol);
 
+    virtual void print_statistics() const {}
+
     static void add_options_to_parser(OptionParser &parser);
 };
 }

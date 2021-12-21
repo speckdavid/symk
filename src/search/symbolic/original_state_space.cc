@@ -1,10 +1,12 @@
 #include "original_state_space.h"
 
+#include "sym_axiom/sym_axiom_compilation.h"
+
 #include "../abstract_task.h"
 #include "../mutex_group.h"
 #include "../tasks/sdac_task.h"
 #include "../task_utils/task_properties.h"
-#include "sym_axiom/sym_axiom_compilation.h"
+#include "../utils/logging.h"
 
 #include <algorithm>
 #include <limits>
@@ -58,7 +60,7 @@ void OriginalStateSpace::create_single_trs() {
 void OriginalStateSpace::create_single_sdac_trs(
     shared_ptr<extra_tasks::SdacTask> sdac_task, bool fast_creation) {
     if (!fast_creation) {
-        cout << "Normal SDAC TR generation." << endl;
+        utils::g_log << "Normal SDAC TR generation." << endl;
         for (int i = 0; i < sdac_task->get_num_operators(); i++) {
             int cost = sdac_task->get_operator_cost(i, false);
             indTRs[cost].emplace_back(vars, OperatorID(i), sdac_task);
@@ -67,7 +69,7 @@ void OriginalStateSpace::create_single_sdac_trs(
             indTRs[cost].back().add_condition(sdac_task->get_operator_cost_condition(i, false));
         }
     } else {
-        cout << "Fast SDAC TR generation." << endl;
+        utils::g_log << "Fast SDAC TR generation." << endl;
         // Generate template TRs
         vector<TransitionRelation> look_up;
         int last_parent_id = -1;

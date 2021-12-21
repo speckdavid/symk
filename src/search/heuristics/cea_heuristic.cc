@@ -7,6 +7,7 @@
 #include "../plugin.h"
 
 #include "../task_utils/task_properties.h"
+#include "../utils/logging.h"
 
 #include <cassert>
 #include <limits>
@@ -133,7 +134,7 @@ LocalProblem *ContextEnhancedAdditiveHeuristic::build_problem_for_variable(
     int var_no) const {
     LocalProblem *problem = new LocalProblem;
 
-    DomainTransitionGraph *dtg = transition_graphs[var_no];
+    DomainTransitionGraph *dtg = transition_graphs[var_no].get();
 
     problem->context_variables = &dtg->local_to_global_child;
 
@@ -413,7 +414,7 @@ ContextEnhancedAdditiveHeuristic::ContextEnhancedAdditiveHeuristic(
     const Options &opts)
     : Heuristic(opts),
       min_action_cost(task_properties::get_min_operator_cost(task_proxy)) {
-    cout << "Initializing context-enhanced additive heuristic..." << endl;
+    utils::g_log << "Initializing context-enhanced additive heuristic..." << endl;
 
     DTGFactory factory(task_proxy, true, [](int, int) {return false;});
     transition_graphs = factory.build_dtgs();
@@ -436,8 +437,6 @@ ContextEnhancedAdditiveHeuristic::~ContextEnhancedAdditiveHeuristic() {
 
     for (LocalProblem *problem : local_problems)
         delete problem;
-    for (DomainTransitionGraph *dtg : transition_graphs)
-        delete dtg;
 }
 
 bool ContextEnhancedAdditiveHeuristic::dead_ends_are_reliable() const {

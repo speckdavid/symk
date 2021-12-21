@@ -5,6 +5,8 @@
 #include <cassert>
 #include <map>
 
+#include <iostream>
+
 namespace symbolic {
 class SymStateSpaceManager;
 class Frontier;

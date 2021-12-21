@@ -1,6 +1,7 @@
 #include "sym_params_search.h"
 
 #include "../option_parser.h"
+#include "../utils/logging.h"
 #include "../utils/timer.h"
 
 using options::Options;
@@ -37,23 +38,23 @@ SymParamsSearch::SymParamsSearch(const Options &opts)
       debug(opts.get<bool>("debug")) {}
 
 void SymParamsSearch::print_options() const {
-    cout << "Disj(nodes=" << max_disj_nodes << ")" << endl;
-    cout << "Estimation: min_time(" << min_estimation_time << ")"
+    utils::g_log << "Disj(nodes=" << max_disj_nodes << ")" << endl;
+    utils::g_log << "Estimation: min_time(" << min_estimation_time << ")"
          << " time_penalty +(" << penalty_time_estimation_sum << ")"
          << "*(" << penalty_time_estimation_mult << ")"
          << " nodes_penalty +(" << penalty_nodes_estimation_sum << ")"
          << "*(" << penalty_nodes_estimation_mult << ")" << endl;
-    cout << "MaxStep(time=" << maxStepTime << ", nodes=" << maxStepNodes
+    utils::g_log << "MaxStep(time=" << maxStepTime << ", nodes=" << maxStepNodes
          << ", nodes_per_planning_second=" << maxStepNodesPerPlanningSecond << ")"
          << endl;
-    cout << "Ratio useful: " << ratioUseful << endl;
-    cout << "   Min alloted time: " << minAllotedTime
+    utils::g_log << "Ratio useful: " << ratioUseful << endl;
+    utils::g_log << "Min alloted time: " << minAllotedTime
          << " nodes: " << minAllotedNodes << endl;
-    cout << "   Max alloted time: " << maxAllotedTime
+    utils::g_log << "Max alloted time: " << maxAllotedTime
          << " nodes: " << maxAllotedNodes << endl;
-    cout << "   Mult alloted time: " << ratioAllotedTime
+    utils::g_log << "Mult alloted time: " << ratioAllotedTime
          << " nodes: " << ratioAllotedNodes << endl;
-    cout << "   Ratio after relax: " << ratioAfterRelax << endl;
+    utils::g_log << "Ratio after relax: " << ratioAfterRelax << endl;
 }
 
 void SymParamsSearch::add_options_to_parser(OptionParser &parser,

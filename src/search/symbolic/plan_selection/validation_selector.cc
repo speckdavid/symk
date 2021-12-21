@@ -19,7 +19,7 @@ void ValidationSelector::add_plan(const Plan &plan) {
             save_accepted_plan(plan);
         } else {
             save_rejected_plan(plan);
-            // cout << "Rejected: " << num_rejected_plans << endl;
+            // utils::g_log << "Rejected: " << num_rejected_plans << endl;
         }
     }
 }

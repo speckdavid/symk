@@ -13,7 +13,6 @@ class PlanManager {
     std::string plan_filename;
     int num_previously_generated_plans;
     bool is_part_of_anytime_portfolio;
-
 public:
     PlanManager();
 

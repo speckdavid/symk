@@ -21,8 +21,8 @@ using namespace std;
 namespace merge_and_shrink {
 MergeTreeFactoryLinear::MergeTreeFactoryLinear(const options::Options &options)
     : MergeTreeFactory(options),
-      variable_order_type(static_cast<variable_order_finder::VariableOrderType>(
-                              options.get_enum("variable_order"))) {
+      variable_order_type(
+          options.get<variable_order_finder::VariableOrderType>("variable_order")) {
 }
 
 unique_ptr<MergeTree> MergeTreeFactoryLinear::compute_merge_tree(
@@ -117,7 +117,7 @@ void MergeTreeFactoryLinear::add_options_to_parser(
     merge_strategies.push_back("RANDOM");
     merge_strategies.push_back("LEVEL");
     merge_strategies.push_back("REVERSE_LEVEL");
-    parser.add_enum_option(
+    parser.add_enum_option<variable_order_finder::VariableOrderType>(
         "variable_order", merge_strategies,
         "the order in which atomic transition systems are merged",
         "CG_GOAL_LEVEL");
@@ -128,13 +128,14 @@ static shared_ptr<MergeTreeFactory> _parse(options::OptionParser &parser) {
     parser.document_synopsis(
         "Linear merge trees",
         "These merge trees implement several linear merge orders, which "
-        "are described in the paper:" + utils::format_paper_reference(
+        "are described in the paper:" + utils::format_conference_reference(
             {"Malte Helmert", "Patrik Haslum", "Joerg Hoffmann"},
             "Flexible Abstraction Heuristics for Optimal Sequential Planning",
             "https://ai.dmi.unibas.ch/papers/helmert-et-al-icaps2007.pdf",
             "Proceedings of the Seventeenth International Conference on"
             " Automated Planning and Scheduling (ICAPS 2007)",
             "176-183",
+            "AAAI Press",
             "2007"));
     options::Options opts = parser.parse();
     if (parser.dry_run())

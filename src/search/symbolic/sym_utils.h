@@ -31,7 +31,7 @@ T getData(std::string line, const std::string &separator,
     std::stringstream ss;
     ss << line;
     if (!(ss >> res)) {
-        std::cout << std::endl << "ERROR, could not parse: " << line << std::endl;
+        std::cerr << std::endl << "ERROR, could not parse: " << line << std::endl;
         utils::exit_with(utils::ExitCode::SEARCH_CRITICAL_ERROR);
     }
     return res;
@@ -53,7 +53,7 @@ void mergeAux(std::vector<T> &elems, FunctionMerge f, int maxTime,
         return;
     }
     utils::Timer merge_timer;
-    //  cout << "Merging " << elems.size() << ", maxSize: " << maxSize << endl;
+    //  utils::g_log << "Merging " << elems.size() << ", maxSize: " << maxSize << endl;
 
     // Merge Elements
     std::vector<T> aux;
@@ -68,7 +68,7 @@ void mergeAux(std::vector<T> &elems, FunctionMerge f, int maxTime,
             }
             elems.erase(elems.end() - 1);
         }
-        //    cout << "Iteration: " << elems.size() << endl;
+        //    utils::g_log << "Iteration: " << elems.size() << endl;
         for (size_t i = 1; i < elems.size(); i += 2) {
             try {
                 T res = f(elems[i - 1], elems[i], maxSize);
@@ -86,7 +86,7 @@ void mergeAux(std::vector<T> &elems, FunctionMerge f, int maxTime,
         aux.swap(elems);
         std::vector<T>().swap(aux);
     }
-    //  cout << "Finished: " << elems.size() << endl;
+    //  utils::g_log << "Finished: " << elems.size() << endl;
     if (!elems.empty()) {
         result.insert(result.end(), elems.begin(), elems.end());
     }
@@ -99,7 +99,7 @@ void mergeAux(std::vector<T> &elems, FunctionMerge f, int maxTime,
       elems.push_back(aux[i]);
       }*/
 
-    //  cout << "Merged to " << elems.size() << ". Took "<< merge_timer << "
+    //  utils::g_log << "Merged to " << elems.size() << ". Took "<< merge_timer << "
     //  seconds" << endl;
 }
 

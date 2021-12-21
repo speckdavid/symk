@@ -13,7 +13,7 @@ void SymSolutionRegistry::add_plan(const Plan &plan) const {
         pair<int, int> zero_cost_op_seq =
             plan_data_base->get_first_zero_cost_loop(plan);
         Plan cur_plan = plan;
-        cout << "Zero cost loop detected!" << endl;
+        utils::g_log << "Zero cost loop detected!" << endl;
         while (!plan_data_base->found_enough_plans()) {
             cur_plan.insert(cur_plan.begin() + zero_cost_op_seq.first,
                             plan.begin() + zero_cost_op_seq.first,
@@ -56,7 +56,7 @@ void SymSolutionRegistry::extract_all_plans(SymSolutionCut &sym_cut, bool fw,
 
 void SymSolutionRegistry::extract_all_cost_plans(SymSolutionCut &sym_cut,
                                                  bool fw, Plan &plan) {
-    // cout << sym_cut << endl;
+    // utils::g_log << sym_cut << endl;
     if (sym_cut.get_g() == 0 && sym_cut.get_h() == 0) {
         add_plan(plan);
         return;

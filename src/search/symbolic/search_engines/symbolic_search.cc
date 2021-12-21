@@ -35,19 +35,25 @@ SymbolicSearch::SymbolicSearch(const options::Options &opts)
       plan_data_base(opts.get<shared_ptr<PlanDataBase>>("plan_selection")),
       solution_registry() {
     save_plans = false; // we handle plans seperat
+    cout << endl;
     mgrParams.print_options();
+    cout << endl;
     searchParams.print_options();
+    cout << endl;
     vars->init();
+    cout << endl;
 }
 
 void SymbolicSearch::initialize() {
     plan_data_base->print_options();
+    cout << endl;
 
     if (task_properties::has_sdac_cost_operator(task_proxy)) {
-        cout << "Creating sdac task..." << endl;
+        utils::g_log << "Creating sdac task..." << endl;
         search_task = make_shared<extra_tasks::SdacTask>(task, vars.get());
-        cout << "#Operators with sdac: " << task->get_num_operators() << endl;
-        cout << "#Operators without sdac: " << search_task->get_num_operators() << endl;
+        utils::g_log << "#Operators with sdac: " << task->get_num_operators() << endl;
+        utils::g_log << "#Operators without sdac: " << search_task->get_num_operators() << endl;
+        cout << endl;
     }
 
     plan_data_base->init(vars, search_task, get_plan_manager());
@@ -87,18 +93,18 @@ SearchStatus SymbolicSearch::step() {
     }
 
     if (lower_bound_increased) {
-        cout << "BOUND: " << lower_bound << " < " << upper_bound << flush;
+        utils::g_log << "BOUND: " << lower_bound << " < " << upper_bound << flush;
 
-        cout << " [" << solution_registry.get_num_found_plans() << "/"
+        utils::g_log << " [" << solution_registry.get_num_found_plans() << "/"
              << plan_data_base->get_num_desired_plans() << " plans]"
              << flush;
-        cout << ", total time: " << utils::g_timer << endl;
+        utils::g_log << ", total time: " << utils::g_timer << endl;
     }
     lower_bound_increased = false;
 
     if (cur_status == SOLVED) {
-        cout << "Best plan:" << endl;
-        plan_data_base->dump_first_accepted_plan();
+        set_plan(plan_data_base->get_first_accepted_plan());
+        cout << endl;
         return cur_status;
     }
     if (cur_status == FAILED) {

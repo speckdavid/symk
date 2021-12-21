@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from collections import defaultdict
 import itertools
 
@@ -14,7 +12,6 @@ import tools
 #
 # we currently keep the assumption that each predicate occurs at most once
 # in every invariant.
-
 
 def invert_list(alist):
     result = defaultdict(list)
@@ -31,7 +28,7 @@ def instantiate_factored_mapping(pairs):
 
 def find_unique_variables(action, invariant):
     # find unique names for invariant variables
-    params = set([p.name for p in action.parameters])
+    params = {p.name for p in action.parameters}
     for eff in action.effects:
         params.update([p.name for p in eff.parameters])
     inv_vars = []
@@ -49,8 +46,7 @@ def get_literals(condition):
     if isinstance(condition, pddl.Literal):
         yield condition
     elif isinstance(condition, pddl.Conjunction):
-        for literal in condition.parts:
-            yield literal
+        yield from condition.parts
 
 
 def ensure_conjunction_sat(system, *parts):
@@ -62,7 +58,7 @@ def ensure_conjunction_sat(system, *parts):
     pos = defaultdict(set)
     neg = defaultdict(set)
     for literal in itertools.chain(*parts):
-        if literal.predicate == "=":  # use (in)equalities in conditions
+        if literal.predicate == "=": # use (in)equalities in conditions
             if literal.negated:
                 n = constraints.NegativeClause([literal.args])
                 system.add_negative_clause(n)
@@ -100,7 +96,7 @@ def ensure_inequality(system, literal1, literal2):
        literal instantiations are not equal (ignoring whether one is negated and
        the other is not)"""
     if (literal1.predicate == literal2.predicate and
-            literal1.args):
+        literal1.args):
         parts = list(zip(literal1.args, literal2.args))
         system.add_negative_clause(constraints.NegativeClause(parts))
 
@@ -182,8 +178,7 @@ class InvariantPart:
                     omitted = key
                 else:
                     new_order[value] = key
-            result.append(InvariantPart(
-                other_literal.predicate, new_order, omitted))
+            result.append(InvariantPart(other_literal.predicate, new_order, omitted))
         return result
 
     def matches(self, other, own_literal, other_literal):
@@ -199,9 +194,8 @@ class Invariant:
 
     def __init__(self, parts):
         self.parts = frozenset(parts)
-        self.predicates = set([part.predicate for part in parts])
-        self.predicate_to_part = dict(
-            [(part.predicate, part) for part in parts])
+        self.predicates = {part.predicate for part in parts}
+        self.predicate_to_part = {part.predicate: part for part in parts}
         assert len(self.parts) == len(self.predicates)
 
     def __eq__(self, other):
@@ -308,8 +302,7 @@ class Invariant:
             if len(params) > 1:
                 for (n1, n2) in itertools.combinations(params, 2):
                     if mapping.get(n1, n1) != mapping.get(n2, n2):
-                        negative_clause = constraints.NegativeClause([
-                                                                     (n1, n2)])
+                        negative_clause = constraints.NegativeClause([(n1, n2)])
                         system.add_negative_clause(negative_clause)
             minimal_renamings.append(system)
         return minimal_renamings
@@ -327,8 +320,8 @@ class Invariant:
             lhs_by_pred[lit.predicate].append(lit)
 
         for del_effect in del_effects:
-            minimal_renamings = self.unbalanced_renamings(del_effect, add_effect,
-                                                          inv_vars, lhs_by_pred, minimal_renamings)
+            minimal_renamings = self.unbalanced_renamings(
+                del_effect, add_effect, inv_vars, lhs_by_pred, minimal_renamings)
             if not minimal_renamings:
                 return False
 
@@ -346,8 +339,8 @@ class Invariant:
                                                    del_eff.literal):
                     enqueue_func(Invariant(self.parts.union((match,))))
 
-    def unbalanced_renamings(self, del_effect, add_effect,
-                             inv_vars, lhs_by_pred, unbalanced_renamings):
+    def unbalanced_renamings(self, del_effect, add_effect, inv_vars,
+                             lhs_by_pred, unbalanced_renamings):
         """returns the renamings from unbalanced renamings for which
            the del_effect does not balance the add_effect."""
 
@@ -412,8 +405,7 @@ class Invariant:
                 if match.negated != literal.negated:
                     continue
                 else:
-                    a = constraints.Assignment(
-                        list(zip(literal.args, match.args)))
+                    a = constraints.Assignment(list(zip(literal.args, match.args)))
                     poss_assignments.append(a)
             if not poss_assignments:
                 return None

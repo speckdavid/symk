@@ -68,7 +68,7 @@ static shared_ptr<SearchEngine> _parse_forward_ucs(OptionParser &parser) {
     if (!parser.dry_run()) {
         engine = make_shared<symbolic::SymbolicUniformCostSearch>(opts, true,
                                                                   false);
-        cout << "Symbolic Forward Uniform Cost Search" << endl;
+        utils::g_log << "Symbolic Forward Uniform Cost Search" << endl;
     }
 
     return engine;
@@ -85,7 +85,7 @@ static shared_ptr<SearchEngine> _parse_backward_ucs(OptionParser &parser) {
     if (!parser.dry_run()) {
         engine = make_shared<symbolic::SymbolicUniformCostSearch>(opts, false,
                                                                   true);
-        cout << "Symbolic Backward Uniform Cost Search" << endl;
+        utils::g_log << "Symbolic Backward Uniform Cost Search" << endl;
     }
 
     return engine;
@@ -103,7 +103,7 @@ _parse_bidirectional_ucs(OptionParser &parser) {
     if (!parser.dry_run()) {
         engine =
             make_shared<symbolic::SymbolicUniformCostSearch>(opts, true, true);
-        cout << "Symbolic Bidirectional Uniform Cost Search" << endl;
+        utils::g_log << "Symbolic Bidirectional Uniform Cost Search" << endl;
     }
 
     return engine;

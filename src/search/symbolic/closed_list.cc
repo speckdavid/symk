@@ -32,7 +32,7 @@ void ClosedList::init(SymStateSpaceManager *manager, const ClosedList &other) {
     closed[0] = closedTotal;
 }
 
-void ClosedList::insert(int h, const BDD &S) {
+void ClosedList::insert(int h, BDD S) {
     if (closed.count(h)) {
         closed[h] += S;
     } else {
@@ -56,7 +56,7 @@ BDD ClosedList::getPartialClosed(int upper_bound) const {
     return res;
 }
 
-SymSolutionCut ClosedList::getCheapestCut(const BDD &states, int g,
+SymSolutionCut ClosedList::getCheapestCut(BDD states, int g,
                                           bool fw) const {
     BDD cut_candidate = states * closedTotal;
     if (cut_candidate.IsZero()) {
@@ -80,7 +80,7 @@ SymSolutionCut ClosedList::getCheapestCut(const BDD &states, int g,
     return SymSolutionCut();
 }
 
-vector<SymSolutionCut> ClosedList::getAllCuts(const BDD &states, int g,
+vector<SymSolutionCut> ClosedList::getAllCuts(BDD states, int g,
                                               bool fw,
                                               int lower_bound) const {
     vector<SymSolutionCut> result;
@@ -96,7 +96,7 @@ vector<SymSolutionCut> ClosedList::getAllCuts(const BDD &states, int g,
                 continue;
             }
 
-            // cout << "Check cut of g=" << g << " with h=" << h << endl;
+            // utils::g_log << "Check cut of g=" << g << " with h=" << h << endl;
             BDD cut = closedH.second * cut_candidate;
             if (!cut.IsZero()) {
                 if (fw) {

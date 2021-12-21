@@ -46,9 +46,9 @@ option(
   TRUE)
 
 if(PLUGIN_LP_SOLVER_ENABLED AND USE_LP)
-    find_package(OSI OPTIONAL_COMPONENTS Cpx Clp Grb)
-    if(OSI_FOUND AND (OSI_Cpx_FOUND OR OSI_Clp_FOUND OR OSI_Grb_FOUND))
-        foreach(SOLVER Cpx Clp Grb)
+    find_package(OSI OPTIONAL_COMPONENTS Cpx Clp Grb Spx)
+    if(OSI_FOUND AND (OSI_Cpx_FOUND OR OSI_Clp_FOUND OR OSI_Grb_FOUND OR OSI_Spx_FOUND))
+        foreach(SOLVER Cpx Clp Grb Spx)
             if(OSI_${SOLVER}_FOUND)
                 string(TOUPPER ${SOLVER} TMP_SOLVER_UPPER_CASE)
                 mark_as_advanced(TMP_SOLVER_UPPER_CASE)
@@ -62,6 +62,12 @@ if(PLUGIN_LP_SOLVER_ENABLED AND USE_LP)
         add_definitions("-D USE_LP")
         include_directories(${OSI_INCLUDE_DIRS})
         target_link_libraries(downward ${OSI_LIBRARIES})
+
+        find_package(ZLIB REQUIRED)
+        if(ZLIB_FOUND)
+            include_directories(${ZLIB_INCLUDE_DIRS})
+            target_link_libraries(downward ${ZLIB_LIBRARIES})
+        endif()
     endif()
 
     if(OSI_Cpx_FOUND AND CPLEX_RUNTIME_LIBRARY)
@@ -73,6 +79,14 @@ if(PLUGIN_LP_SOLVER_ENABLED AND USE_LP)
     endif()
 endif()
 
+### Link Libraries
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    set(CUDD_CXX_FLAGS "${CMAKE_CXX_FLAGS_DEBUG}")
+elseif(${CMAKE_BUILD_TYPE} STREQUAL "Release")
+    set(CUDD_CXX_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
+else()
+    message(FATAL_ERROR, "Could not determine build type.")
+endif()
 include(ExternalProject)
 
 ### Boost
@@ -89,7 +103,7 @@ if(${CMAKE_SIZEOF_VOID_P} EQUAL 4)
     ExternalProject_add(
         libcudd
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/
-        CONFIGURE_COMMAND autoreconf ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/ && ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/configure --enable-obj --enable-silent-rules "CFLAGS=-m32 -g -O3 -w" "CXXFLAGS=-m32 -std=c++0x -g -O3" "LDFLAGS=-m32"
+	CONFIGURE_COMMAND autoreconf ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/ && ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/configure --enable-obj --enable-silent-rules "CFLAGS=-m32 -g -O3 -w" "CXXFLAGS=-m32 -std=c++0x -g ${CUDD_CXX_FLAGS}" "LDFLAGS=-m32"
         BUILD_COMMAND make
         INSTALL_COMMAND ""
         BUILD_IN_SOURCE 0
@@ -99,7 +113,7 @@ elseif(${CMAKE_SIZEOF_VOID_P} EQUAL 8)
     ExternalProject_add(
         libcudd
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/
-        CONFIGURE_COMMAND autoreconf ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/ && ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/configure --enable-obj --enable-silent-rules "CFLAGS=-m64 -g -O3 -w" "CXXFLAGS=-m64 -std=c++0x -g -O3" "LDFLAGS=-m64"
+        CONFIGURE_COMMAND autoreconf ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/ && ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/configure --enable-obj --enable-silent-rules "CFLAGS=-m64 -g -O3 -w" "CXXFLAGS=-m64 -std=c++0x -g ${CUDD_CXX_FLAGS}" "LDFLAGS=-m64"
         BUILD_COMMAND make
         INSTALL_COMMAND ""
         BUILD_IN_SOURCE 0

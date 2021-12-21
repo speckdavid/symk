@@ -2,6 +2,7 @@
 #define SYMBOLIC_SYM_BUCKET_H
 
 #include "cuddObj.hh"
+
 #include <vector>
 
 namespace symbolic {

@@ -52,7 +52,7 @@ class CausalGraph;
 
       TaskProxy task_proxy(*g_root_task());
       for (OperatorProxy op : task->get_operators())
-          cout << op.get_name() << endl;
+          utils::g_log << op.get_name() << endl;
 
   Since proxy classes only store a reference to the AbstractTask and
   some indices, they can be copied cheaply.
@@ -584,6 +584,7 @@ public:
 
     State &operator=(State &&other) {
         if (this != &other) {
+            task = other.task;
             values = std::move(other.values);
             other.task = nullptr;
         }

@@ -9,9 +9,9 @@ using namespace std;
 namespace symbolic {
 BidirectionalSearch::BidirectionalSearch(SymbolicSearch *eng,
                                          const SymParamsSearch &params,
-                                         unique_ptr<UniformCostSearch> _fw,
-                                         unique_ptr<UniformCostSearch> _bw)
-    : SymSearch(eng, params), fw(move(_fw)), bw(move(_bw)) {
+                                         shared_ptr<UniformCostSearch> _fw,
+                                         shared_ptr<UniformCostSearch> _bw)
+    : SymSearch(eng, params), fw(_fw), bw(_bw) {
     assert(fw->getStateSpace() == bw->getStateSpace());
     mgr = fw->getStateSpaceShared();
 }

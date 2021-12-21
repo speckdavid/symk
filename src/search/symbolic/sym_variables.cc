@@ -4,6 +4,7 @@
 #include "../options/option_parser.h"
 #include "../options/options.h"
 #include "../task_utils/task_properties.h"
+#include "../utils/logging.h"
 #include "opt_order.h"
 #include "sym_axiom/sym_axiom_compilation.h"
 
@@ -17,7 +18,7 @@ using options::Options;
 
 namespace symbolic {
 void exceptionError(string /*message*/) {
-    // cout << message << endl;
+    // utils::g_log << message << endl;
     throw BDDError();
 }
 
@@ -27,8 +28,7 @@ SymVariables::SymVariables(const Options &opts,
       cudd_init_nodes(16000000L), cudd_init_cache_size(16000000L),
       cudd_init_available_memory(0L),
       gamer_ordering(opts.get<bool>("gamer_ordering")),
-      ax_comp(make_shared<SymAxiomCompilation>(
-                  shared_ptr<SymVariables>(this), task)) {}
+      ax_comp(make_shared<SymAxiomCompilation>(this, task)) {}
 
 void SymVariables::init() {
     vector<int> var_order;
@@ -39,10 +39,10 @@ void SymVariables::init() {
             var_order.push_back(i);
         }
     }
-    cout << "Sym variable order: ";
+    utils::g_log << "Sym variable order: ";
     for (int v : var_order)
-        cout << v << " ";
-    cout << endl;
+        utils::g_log << v << " ";
+    utils::g_log << endl;
 
     init(var_order);
 }
@@ -51,7 +51,7 @@ void SymVariables::init() {
 // symbolic_search structures
 
 void SymVariables::init(const vector<int> &v_order) {
-    cout << "Initializing Symbolic Variables" << endl;
+    utils::g_log << "Initializing Symbolic Variables" << endl;
     var_order = vector<int>(v_order);
     int num_fd_vars = var_order.size();
 
@@ -70,21 +70,21 @@ void SymVariables::init(const vector<int> &v_order) {
             _numBDDVars += 2;
         }
     }
-    cout << "Num variables: " << var_order.size() << " => " << numBDDVars << endl;
+    utils::g_log << "Num variables: " << var_order.size() << " => " << numBDDVars << endl;
 
     // Initialize manager
-    cout << "Initialize Symbolic Manager(" << _numBDDVars << ", "
+    utils::g_log << "Initialize Symbolic Manager(" << _numBDDVars << ", "
          << cudd_init_nodes / _numBDDVars << ", " << cudd_init_cache_size << ", "
          << cudd_init_available_memory << ")" << endl;
-    manager = unique_ptr<Cudd>(
+    manager = 
         new Cudd(_numBDDVars, 0, cudd_init_nodes / _numBDDVars,
-                 cudd_init_cache_size, cudd_init_available_memory));
+                 cudd_init_cache_size, cudd_init_available_memory);
 
     manager->setHandler(exceptionError);
     manager->setTimeoutHandler(exceptionError);
     manager->setNodesExceededHandler(exceptionError);
 
-    cout << "Generating binary variables" << endl;
+    utils::g_log << "Generating binary variables" << endl;
     // Generate binary_variables
     for (int i = 0; i < _numBDDVars; i++) {
         variables.push_back(manager->bddVar(i));
@@ -114,13 +114,13 @@ void SymVariables::init(const vector<int> &v_order) {
 
     binState.resize(_numBDDVars, 0);
 
-    cout << "Symbolic Variables... Done." << endl;
+    utils::g_log << "Symbolic Variables... Done." << endl;
 
     if (task_properties::has_axioms(task_proxy)) {
-        cout << "Creating Primary Representation for Derived Predicates..."
+        utils::g_log << "Creating Primary Representation for Derived Predicates..."
              << endl;
         ax_comp->init_axioms();
-        cout << "Primary Representation... Done!" << endl;
+        utils::g_log << "Primary Representation... Done!" << endl;
     }
 }
 
@@ -238,7 +238,7 @@ void SymVariables::to_dot(const ADD &add,
 
 
 void SymVariables::print_options() const {
-    cout << "CUDD Init: nodes=" << cudd_init_nodes
+    utils::g_log << "CUDD Init: nodes=" << cudd_init_nodes
          << " cache=" << cudd_init_cache_size
          << " max_memory=" << cudd_init_available_memory
          << " ordering: " << (gamer_ordering ? "gamer" : "fd") << endl;

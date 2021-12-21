@@ -13,7 +13,7 @@ TopqSymbolicUniformCostSearch::TopqSymbolicUniformCostSearch(
     const options::Options &opts, bool fw, bool bw)
     : TopkSymbolicUniformCostSearch(opts, fw, bw),
       quality_multiplier(opts.get<double>("quality")) {
-    cout << "Quality: " << quality_multiplier << endl;
+    utils::g_log << "Quality: " << quality_multiplier << endl;
 }
 
 void TopqSymbolicUniformCostSearch::new_solution(const SymSolutionCut &sol) {
@@ -21,7 +21,7 @@ void TopqSymbolicUniformCostSearch::new_solution(const SymSolutionCut &sol) {
           lower_bound > get_quality_bound())) {
         solution_registry.register_solution(sol);
         if (get_quality_bound() < numeric_limits<double>::infinity()) {
-            // cout << "Quality bound: " << get_quality_bound() << endl;
+            // utils::g_log << "Quality bound: " << get_quality_bound() << endl;
             upper_bound = min((double)upper_bound, get_quality_bound() + 1);
         }
     } else {
@@ -62,18 +62,18 @@ SearchStatus TopqSymbolicUniformCostSearch::step() {
     }
 
     if (lower_bound_increased) {
-        cout << "BOUND: " << lower_bound << " < " << upper_bound << flush;
+        utils::g_log << "BOUND: " << lower_bound << " < " << upper_bound << flush;
 
-        cout << " [" << solution_registry.get_num_found_plans() << "/"
+        utils::g_log << " [" << solution_registry.get_num_found_plans() << "/"
              << plan_data_base->get_num_desired_plans() << " plans]"
              << flush;
-        cout << ", total time: " << utils::g_timer << endl;
+        utils::g_log << ", total time: " << utils::g_timer << endl;
     }
     lower_bound_increased = false;
 
     if (cur_status == SOLVED) {
-        cout << "Best plan:" << endl;
-        plan_data_base->dump_first_accepted_plan();
+        set_plan(plan_data_base->get_first_accepted_plan());
+        cout << endl;
         return cur_status;
     }
     if (cur_status == FAILED) {
@@ -105,7 +105,7 @@ static shared_ptr<SearchEngine> _parse_forward_ucs(OptionParser &parser) {
     if (!parser.dry_run()) {
         engine = make_shared<symbolic::TopqSymbolicUniformCostSearch>(
             opts, true, false);
-        cout << "Top-q Symbolic Forward Uniform Cost Search" << endl;
+        utils::g_log << "Top-q Symbolic Forward Uniform Cost Search" << endl;
     }
 
     return engine;
@@ -123,7 +123,7 @@ static shared_ptr<SearchEngine> _parse_backward_ucs(OptionParser &parser) {
     if (!parser.dry_run()) {
         engine = make_shared<symbolic::TopqSymbolicUniformCostSearch>(
             opts, false, true);
-        cout << "Top-q Symbolic Backward Uniform Cost Search" << endl;
+        utils::g_log << "Top-q Symbolic Backward Uniform Cost Search" << endl;
     }
 
     return engine;
@@ -143,7 +143,7 @@ _parse_bidirectional_ucs(OptionParser &parser) {
     if (!parser.dry_run()) {
         engine = make_shared<symbolic::TopqSymbolicUniformCostSearch>(
             opts, true, true);
-        cout << "Top-q Symbolic Bidirectional Uniform Cost Search"
+        utils::g_log << "Top-q Symbolic Bidirectional Uniform Cost Search"
              << endl;
     }
 

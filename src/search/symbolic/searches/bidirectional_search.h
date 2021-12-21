@@ -7,15 +7,15 @@
 namespace symbolic {
 class BidirectionalSearch : public SymSearch {
 private:
-    std::unique_ptr<UniformCostSearch> fw, bw;
+    std::shared_ptr<UniformCostSearch> fw, bw;
 
     // Returns the best direction to search the bd exp
     UniformCostSearch *selectBestDirection() const;
 
 public:
     BidirectionalSearch(SymbolicSearch *eng, const SymParamsSearch &params,
-                        std::unique_ptr<UniformCostSearch> fw,
-                        std::unique_ptr<UniformCostSearch> bw);
+                        std::shared_ptr<UniformCostSearch> fw,
+                        std::shared_ptr<UniformCostSearch> bw);
 
     virtual bool finished() const override;
 
