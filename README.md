@@ -20,8 +20,8 @@ Main source:
 ```
 
 Based on:
- - Fast Downward: http://www.fast-downward.org/ (20.06):q
- - Symbolic Fast Downward: https://fai.cs.uni-saarland.de/torralba/software.html
+ - Fast Downward: http://www.fast-downward.org/ (20.06)
+ - Symbolic Fast Downward: https://people.cs.aau.dk/~alto/software.html
  
 ## Dependencies
 Currently we only support Linux systems. The following should install all necessary dependencies.
