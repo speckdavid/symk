@@ -20,7 +20,7 @@ Main source:
 ```
 
 Based on:
- - Fast Downward: http://www.fast-downward.org/
+ - Fast Downward: http://www.fast-downward.org/ (20.06):q
  - Symbolic Fast Downward: https://fai.cs.uni-saarland.de/torralba/software.html
  
 ## Dependencies
