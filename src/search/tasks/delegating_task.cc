@@ -39,6 +39,10 @@ int DelegatingTask::get_operator_cost(int index, bool is_axiom) const {
     return parent->get_operator_cost(index, is_axiom);
 }
 
+string DelegatingTask::get_operator_cost_function(int index, bool is_axiom) const {
+    return parent->get_operator_cost_function(index, is_axiom);
+}
+
 string DelegatingTask::get_operator_name(int index, bool is_axiom) const {
     return parent->get_operator_name(index, is_axiom);
 }
@@ -100,9 +104,9 @@ vector<int> DelegatingTask::get_initial_state_values() const {
     return parent->get_initial_state_values();
 }
 
- vector<MutexGroup> DelegatingTask::get_mutex_groups() const {
-     return parent->get_mutex_groups();
- }
+vector<MutexGroup> DelegatingTask::get_mutex_groups() const {
+    return parent->get_mutex_groups();
+}
 
 void DelegatingTask::convert_state_values(
     vector<int> &values, const AbstractTask *ancestor_task) const {

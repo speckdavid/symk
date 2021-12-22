@@ -11,29 +11,25 @@
 // with the order in the xxxValues vector
 
 namespace symbolic {
-
 enum class MutexType {
-  MUTEX_NOT,
-  MUTEX_AND,
-  MUTEX_EDELETION,
-  /*MUTEX_RESTRICT, MUTEX_NPAND, MUTEX_CONSTRAIN, MUTEX_LICOMP*/
+    MUTEX_NOT,
+    MUTEX_AND,
+    MUTEX_EDELETION,
 };
 std::ostream &operator<<(std::ostream &os, const MutexType &m);
 extern const std::vector<std::string> MutexTypeValues;
 
-enum class Dir { FW, BW, BIDIR };
+enum class Dir {FW, BW, BIDIR};
 std::ostream &operator<<(std::ostream &os, const Dir &dir);
 extern const std::vector<std::string> DirValues;
 
 // We use this enumerate to know why the current operation was truncated
 enum class TruncatedReason {
-  FILTER_MUTEX,
-  MERGE_BUCKET,
-  MERGE_BUCKET_COST,
-  IMAGE_ZERO,
-  IMAGE_COST
+    FILTER_MUTEX,
+    MERGE_BUCKET,
+    MERGE_BUCKET_COST,
+    IMAGE_ZERO,
+    IMAGE_COST
 };
-// std::ostream &operator<<(std::ostream &os, const TruncatedReason &dir);
-
-} // namespace symbolic
+}
 #endif

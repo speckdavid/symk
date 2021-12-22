@@ -6,6 +6,8 @@
 #include "../plugin.h"
 #include "../task_proxy.h"
 
+#include "../utils/logging.h"
+
 #include <vector>
 using namespace std;
 
@@ -21,7 +23,7 @@ LandmarkFactoryRpgExhaust::LandmarkFactoryRpgExhaust(const Options &opts)
 void LandmarkFactoryRpgExhaust::generate_landmarks(
     const shared_ptr<AbstractTask> &task, Exploration &exploration) {
     TaskProxy task_proxy(*task);
-    cout << "Generating landmarks by testing all facts with RPG method" << endl;
+    utils::g_log << "Generating landmarks by testing all facts with RPG method" << endl;
 
     // insert goal landmarks and mark them as goals
     for (FactProxy goal : task_proxy.get_goals()) {
@@ -34,16 +36,11 @@ void LandmarkFactoryRpgExhaust::generate_landmarks(
         for (int value = 0; value < var.get_domain_size(); ++value) {
             const FactPair lm(var.get_id(), value);
             if (!lm_graph->simple_landmark_exists(lm)) {
-                LandmarkNode *new_lm = &lm_graph->landmark_add_simple(lm);
-                if (initial_state[lm.var].get_value() != lm.value &&
-                    relaxed_task_solvable(task_proxy, exploration, true, new_lm)) {
-                    assert(lm_graph->landmark_exists(lm));
-                    LandmarkNode *node;
-                    if (lm_graph->simple_landmark_exists(lm))
-                        node = &lm_graph->get_simple_lm_node(lm);
-                    else
-                        node = &lm_graph->get_disj_lm_node(lm);
-                    lm_graph->rm_landmark_node(node);
+                vector<FactPair> facts = {lm};
+                LandmarkNode node(facts, false);
+                if (initial_state[lm.var].get_value() == lm.value ||
+                    !relaxed_task_solvable(task_proxy, exploration, true, &node)) {
+                    lm_graph->landmark_add_simple(lm);
                 }
             }
         }

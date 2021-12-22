@@ -7,6 +7,7 @@
 #include "../plugin.h"
 #include "../task_proxy.h"
 
+#include "../utils/logging.h"
 #include "../utils/system.h"
 
 #include <cassert>
@@ -231,7 +232,7 @@ void LandmarkFactoryRpgSasp::found_disj_lm_and_order(
     State initial_state = task_proxy.get_initial_state();
     for (const FactPair &lm : a) {
         if (initial_state[lm.var].get_value() == lm.value) {
-            //cout << endl << "not adding LM that's true in initial state: "
+            //utils::g_log << endl << "not adding LM that's true in initial state: "
             //<< g_variable_name[it->first] << " -> " << it->second << endl;
             return;
         }
@@ -413,7 +414,7 @@ void LandmarkFactoryRpgSasp::compute_disjunctive_preconditions(
 void LandmarkFactoryRpgSasp::generate_landmarks(
     const shared_ptr<AbstractTask> &task, Exploration &exploration) {
     TaskProxy task_proxy(*task);
-    cout << "Generating landmarks using the RPG/SAS+ approach\n";
+    utils::g_log << "Generating landmarks using the RPG/SAS+ approach\n";
     build_dtg_successors(task_proxy);
     build_disjunction_classes(task_proxy);
 
@@ -581,7 +582,7 @@ void LandmarkFactoryRpgSasp::find_forward_orders(const VariablesProxy &variables
 }
 
 void LandmarkFactoryRpgSasp::add_lm_forward_orders() {
-    for (LandmarkNode *node : lm_graph->get_nodes()) {
+    for (auto &node : lm_graph->get_nodes()) {
         for (const auto &node2_pair : node->forward_orders) {
             if (lm_graph->simple_landmark_exists(node2_pair)) {
                 LandmarkNode &node2 = lm_graph->get_simple_lm_node(node2_pair);

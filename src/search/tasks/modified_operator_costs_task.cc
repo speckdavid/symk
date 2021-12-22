@@ -20,4 +20,8 @@ int ModifiedOperatorCostsTask::get_operator_cost(int index, bool is_axiom) const
         return parent->get_operator_cost(index, is_axiom);
     return operator_costs[index];
 }
+
+string ModifiedOperatorCostsTask::get_operator_cost_function(int index, bool is_axiom) const {
+    return to_string(get_operator_cost(index, is_axiom));
+}
 }

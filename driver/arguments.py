@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import argparse
 import os.path
 import re
@@ -79,7 +77,6 @@ EXAMPLES = [
 
 EPILOG = """component options:
   --translate-options OPTION1 OPTION2 ...
-  --preprocess-options OPTION1 OPTION2 ...
   --search-options OPTION1 OPTION2 ...
                         pass OPTION1 OPTION2 ... to specified planner component
                         (default: pass component options to search)
@@ -357,6 +354,9 @@ def parse_args():
         action="help", default=argparse.SUPPRESS,
         help="show this help message and exit")
     help_options.add_argument(
+        "-v", "--version", action="store_true",
+        help="print version number and exit")
+    help_options.add_argument(
         "--show-aliases", action="store_true",
         help="show the known aliases (see --alias) and exit")
 
@@ -434,7 +434,6 @@ def parse_args():
         "--cleanup", action="store_true",
         help="clean up temporary files (translator output and plan files) and exit")
 
-
     parser.add_argument(
         "planner_args", nargs=argparse.REMAINDER,
         help="file names and options passed on to planner components")
@@ -491,7 +490,7 @@ def parse_args():
         print_usage_and_exit_with_driver_input_error(
             parser, "--portfolio-single_plan may only be used for portfolios.")
 
-    if not args.show_aliases and not args.cleanup:
+    if not args.version and not args.show_aliases and not args.cleanup:
         _set_components_and_inputs(parser, args)
         if "translate" not in args.components or "search" not in args.components:
             args.keep_sas_file = True

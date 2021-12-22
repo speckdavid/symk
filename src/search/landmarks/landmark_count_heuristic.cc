@@ -14,6 +14,7 @@
 #include "../task_utils/task_properties.h"
 #include "../tasks/cost_adapted_task.h"
 #include "../tasks/root_task.h"
+#include "../utils/logging.h"
 #include "../utils/markup.h"
 #include "../utils/memory.h"
 #include "../utils/system.h"
@@ -37,7 +38,7 @@ LandmarkCountHeuristic::LandmarkCountHeuristic(const options::Options &opts)
           (!task_properties::has_axioms(task_proxy) &&
            (!task_properties::has_conditional_effects(task_proxy) || conditional_effects_supported))),
       successor_generator(nullptr) {
-    cout << "Initializing landmarks count heuristic..." << endl;
+    utils::g_log << "Initializing landmarks count heuristic..." << endl;
 
     /*
       Actually, we should like to test if this is the root task or a
@@ -73,7 +74,7 @@ LandmarkCountHeuristic::LandmarkCountHeuristic(const options::Options &opts)
             lm_cost_assignment = utils::make_unique_ptr<LandmarkEfficientOptimalSharedCostAssignment>(
                 task_properties::get_operator_costs(task_proxy),
                 *lgraph,
-                static_cast<lp::LPSolverType>(opts.get_enum("lpsolver")));
+                opts.get<lp::LPSolverType>("lpsolver"));
         } else {
             lm_cost_assignment = utils::make_unique_ptr<LandmarkUniformSharedCostAssignment>(
                 task_properties::get_operator_costs(task_proxy),
@@ -248,40 +249,44 @@ static shared_ptr<Heuristic> _parse(OptionParser &parser) {
     parser.document_synopsis(
         "Landmark-count heuristic",
         "For the inadmissible variant see the papers" +
-        utils::format_paper_reference(
+        utils::format_conference_reference(
             {"Silvia Richter", "Malte Helmert", "Matthias Westphal"},
             "Landmarks Revisited",
             "https://ai.dmi.unibas.ch/papers/richter-et-al-aaai2008.pdf",
             "Proceedings of the 23rd AAAI Conference on Artificial "
             "Intelligence (AAAI 2008)",
             "975-982",
-            "AAAI Press 2008") +
+            "AAAI Press",
+            "2008") +
         "and" +
-        utils::format_paper_reference(
+        utils::format_journal_reference(
             {"Silvia Richter", "Matthias Westphal"},
             "The LAMA Planner: Guiding Cost-Based Anytime Planning with Landmarks",
             "http://www.aaai.org/Papers/JAIR/Vol39/JAIR-3903.pdf",
-            "Journal of Artificial Intelligence Research 39",
+            "Journal of Artificial Intelligence Research",
+            "39",
             "127-177",
-            "AAAI Press 2010") +
+            "2010") +
         "For the admissible variant see the papers" +
-        utils::format_paper_reference(
+        utils::format_conference_reference(
             {"Erez Karpas", "Carmel Domshlak"},
             "Cost-Optimal Planning with Landmarks",
             "https://www.ijcai.org/Proceedings/09/Papers/288.pdf",
             "Proceedings of the 21st International Joint Conference on "
             "Artificial Intelligence (IJCAI 2009)",
             "1728-1733",
-            "AAAI Press 2009") +
+            "AAAI Press",
+            "2009") +
         "and" +
-        utils::format_paper_reference(
+        utils::format_conference_reference(
             {"Emil Keyder and Silvia Richter and Malte Helmert"},
             "Sound and Complete Landmarks for And/Or Graphs",
             "https://ai.dmi.unibas.ch/papers/keyder-et-al-ecai2010.pdf",
             "Proceedings of the 19th European Conference on Artificial "
             "Intelligence (ECAI 2010)",
             "335-340",
-            "IOS Press 2010"));
+            "IOS Press",
+            "2010"));
 
     parser.document_note(
         "Optimal search",

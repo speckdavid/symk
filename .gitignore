@@ -1,9 +1,12 @@
-*.pyc
-*.o
-*~
-
-builds/
-
+__pycache__/
+/output.sas
+/sas_plan
+/sas_plan.*
+/builds/
+/experiments/issue*/.venv/
+/experiments/issue*/data/
+/misc/.tox/
+/misc/autodoc/downward-xmlrpc.secret
 
 # CUDD
 src/dd_libs/cudd-3.0.0/autom4te.cache/

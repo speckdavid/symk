@@ -4,18 +4,16 @@
 #include "plan_database.h"
 
 namespace symbolic {
-
 class TopKEvenSelector : public PlanDataBase {
 public:
-  TopKEvenSelector(const options::Options &opts);
+    TopKEvenSelector(const options::Options &opts);
 
-  ~TopKEvenSelector(){};
+    ~TopKEvenSelector() {}
 
-  void add_plan(const Plan &plan) override;
+    void add_plan(const Plan &plan) override;
 
-  std::string tag() const override { return "Top-K (even plan length)"; }
+    std::string tag() const override {return "Top-K (even plan length)";}
 };
+}
 
-} // namespace symbolic
-
-#endif /* SYMBOLIC_TOP_K_EVEN_SELECTOR_H */
+#endif

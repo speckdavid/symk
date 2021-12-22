@@ -30,53 +30,53 @@ class SymParamsSearch;
  */
 class Estimation {
 public:
-  double time;
-  double nodes;
-  Estimation(double t = 1, double n = 1) : time(t), nodes(n) {}
+    double time;
+    double nodes;
+    Estimation(double t = 1, double n = 1) : time(t), nodes(n) {}
 
-  friend std::ostream &operator<<(std::ostream &os, const Estimation &est);
+    friend std::ostream &operator<<(std::ostream &os, const Estimation &est);
 };
 
 class SymStepCostEstimation {
-  // Parameters for the estimation
-  double param_min_estimation_time;
-  double param_penalty_time_estimation_sum, param_penalty_time_estimation_mult;
-  double param_penalty_nodes_estimation_sum,
-      param_penalty_nodes_estimation_mult;
+    // Parameters for the estimation
+    double param_min_estimation_time;
+    double param_penalty_time_estimation_sum, param_penalty_time_estimation_mult;
+    double param_penalty_nodes_estimation_sum,
+           param_penalty_nodes_estimation_mult;
 
-  long nextStepNodes;              // Nodes of the step to be estimated
-  Estimation estimation;           // Current estimation of next step
-  std::map<long, Estimation> data; // Data about time estimations (time, nodes)
+    long nextStepNodes;            // Nodes of the step to be estimated
+    Estimation estimation;         // Current estimation of next step
+    std::map<long, Estimation> data; // Data about time estimations (time, nodes)
 
-  void update_data(long key, Estimation value);
+    void update_data(long key, Estimation value);
 
 public:
-  SymStepCostEstimation(const SymParamsSearch &p);
-  ~SymStepCostEstimation() {}
+    SymStepCostEstimation(const SymParamsSearch &p);
+    ~SymStepCostEstimation() {}
 
-  void stepTaken(
-      double time,
-      double nodes); // Called after any step, telling how much time was spent
-  void nextStep(double nodes); // Called before any step, telling number of
-                               // nodes to expand
+    void stepTaken(
+        double time,
+        double nodes); // Called after any step, telling how much time was spent
+    void nextStep(double nodes); // Called before any step, telling number of
+                                 // nodes to expand
 
-  // Recompute the estimation if it has been exceeded
-  void violated(double time_ellapsed, double time_limit, double node_limit);
+    // Recompute the estimation if it has been exceeded
+    void violated(double time_ellapsed, double time_limit, double node_limit);
 
-  void recalculate(const SymStepCostEstimation &o, long nodes);
+    void recalculate(const SymStepCostEstimation &o, long nodes);
 
-  inline long time() const { return estimation.time; }
+    inline long time() const {return estimation.time;}
 
-  inline long nodes() const { return estimation.nodes; }
+    inline long nodes() const {return estimation.nodes;}
 
-  inline long nextNodes() const { return nextStepNodes; }
+    inline long nextNodes() const {return nextStepNodes;}
 
-  inline void violated_nodes(long nodes) { violated(0, 1, nodes); }
+    inline void violated_nodes(long nodes) {violated(0, 1, nodes);}
 
-  friend std::ostream &operator<<(std::ostream &os,
-                                  const SymStepCostEstimation &est);
-  void write(std::ofstream &file) const;
-  void read(std::ifstream &file);
+    friend std::ostream &operator<<(std::ostream &os,
+                                    const SymStepCostEstimation &est);
+    void write(std::ofstream &file) const;
+    void read(std::ifstream &file);
 };
-} // namespace symbolic
+}
 #endif

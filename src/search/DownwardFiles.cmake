@@ -136,6 +136,13 @@ fast_downward_plugin(
 )
 
 fast_downward_plugin(
+    NAME BEST_FIRST_OPEN_LIST
+    HELP "Open list that selects the best element according to a single evaluation function"
+    SOURCES
+        open_lists/best_first_open_list
+)
+
+fast_downward_plugin(
     NAME EPSILON_GREEDY_OPEN_LIST
     HELP "Open list that chooses an entry randomly with probability epsilon"
     SOURCES
@@ -147,13 +154,6 @@ fast_downward_plugin(
     HELP "Pareto open list"
     SOURCES
         open_lists/pareto_open_list
-)
-
-fast_downward_plugin(
-    NAME STANDARD_SCALAR_OPEN_LIST
-    HELP "Standard scalar open list"
-    SOURCES
-        open_lists/standard_scalar_open_list
 )
 
 fast_downward_plugin(
@@ -323,6 +323,14 @@ fast_downward_plugin(
 )
 
 fast_downward_plugin(
+    NAME STUBBORN_SETS_ATOM_CENTRIC
+    HELP "Atom-centric stubborn sets"
+    SOURCES
+        pruning/stubborn_sets_atom_centric
+    DEPENDS STUBBORN_SETS
+)
+
+fast_downward_plugin(
     NAME STUBBORN_SETS_SIMPLE
     HELP "Stubborn sets simple"
     SOURCES
@@ -343,7 +351,7 @@ fast_downward_plugin(
     HELP "Basic classes used for all search engines"
     SOURCES
         search_engines/search_common
-    DEPENDS ALTERNATION_OPEN_LIST G_EVALUATOR STANDARD_SCALAR_OPEN_LIST SUM_EVALUATOR TIEBREAKING_OPEN_LIST WEIGHTED_EVALUATOR
+    DEPENDS ALTERNATION_OPEN_LIST G_EVALUATOR BEST_FIRST_OPEN_LIST SUM_EVALUATOR TIEBREAKING_OPEN_LIST WEIGHTED_EVALUATOR
     DEPENDENCY_ONLY
 )
 
@@ -609,9 +617,9 @@ fast_downward_plugin(
         cegar/abstract_state
         cegar/additive_cartesian_heuristic
         cegar/cartesian_heuristic_function
+        cegar/cartesian_set
         cegar/cegar
         cegar/cost_saturation
-        cegar/domains
         cegar/refinement_hierarchy
         cegar/split_selector
         cegar/subtask_generators
@@ -646,7 +654,6 @@ fast_downward_plugin(
         merge_and_shrink/merge_selector
         merge_and_shrink/merge_selector_score_based_filtering
         merge_and_shrink/merge_strategy
-        merge_and_shrink/merge_strategy_aliases
         merge_and_shrink/merge_strategy_factory
         merge_and_shrink/merge_strategy_factory_precomputed
         merge_and_shrink/merge_strategy_factory_sccs
@@ -708,21 +715,23 @@ fast_downward_plugin(
         pdbs/dominance_pruning
         pdbs/incremental_canonical_pdbs
         pdbs/match_tree
-        pdbs/max_additive_pdb_sets
         pdbs/max_cliques
+        pdbs/pattern_cliques
         pdbs/pattern_collection_information
-        pdbs/pattern_database
         pdbs/pattern_collection_generator_combo
         pdbs/pattern_collection_generator_genetic
         pdbs/pattern_collection_generator_hillclimbing
         pdbs/pattern_collection_generator_manual
         pdbs/pattern_collection_generator_systematic
+        pdbs/pattern_database
         pdbs/pattern_generator_greedy
         pdbs/pattern_generator_manual
         pdbs/pattern_generator
+        pdbs/pattern_information
         pdbs/pdb_heuristic
         pdbs/plugin_group
         pdbs/types
+        pdbs/utils
         pdbs/validation
         pdbs/zero_one_pdbs
         pdbs/zero_one_pdbs_heuristic
@@ -752,6 +761,18 @@ fast_downward_plugin(
     SOURCES
         algorithms/sccs
     DEPENDENCY_ONLY
+)
+
+fast_downward_plugin(
+    NAME SDAC
+    HELP "Plugin containing the base state-dependant action costs."
+    SOURCES
+        sdac_parser/globals
+        sdac_parser/parser
+        sdac_parser/catamorph/factories
+        sdac_parser/catamorph/expression
+        sdac_parser/string_utils
+        tasks/sdac_task
 )
 
 fast_downward_plugin(
@@ -786,7 +807,10 @@ fast_downward_plugin(
         symbolic/plan_selection/top_k_even_selector
         symbolic/plan_selection/simple_selector
         symbolic/plan_selection/unordered_selector
+        symbolic/plan_selection/validation_selector
         symbolic/sym_axiom/sym_axiom_compilation
+        symbolic/sym_function_creator
+        DEPENDS SDAC
 )
 
 fast_downward_add_plugin_sources(PLANNER_SOURCES)

@@ -1,15 +1,16 @@
 #ifndef SYMBOLIC_SEARCH_ENGINES_SYMBOLIC_SEARCH_H
 #define SYMBOLIC_SEARCH_ENGINES_SYMBOLIC_SEARCH_H
 
-#include <memory>
-#include <vector>
 
-#include "../../option_parser.h"
 #include "../plan_reconstruction/sym_solution_registry.h"
 #include "../search_engine.h"
 #include "../sym_enums.h"
 #include "../sym_params_search.h"
 #include "../sym_state_space_manager.h"
+#include "../../option_parser.h"
+
+#include <memory>
+#include <vector>
 
 namespace options {
 class Options;
@@ -24,52 +25,62 @@ class SymVariables;
 class SymbolicSearch : public SearchEngine {
 private:
 protected:
-  // Symbolic manager to perform bdd operations
-  std::shared_ptr<SymStateSpaceManager> mgr;
+    // Hold a reference to the task implementation and pass it to objects that
+    // need it.
+    const std::shared_ptr<AbstractTask> task;
+    std::shared_ptr<AbstractTask> search_task;
+    // Use task_proxy to access task information.
+    TaskProxy task_proxy;
 
-  std::unique_ptr<SymSearch> search;
+    // Symbolic manager to perform bdd operations
+    std::shared_ptr<SymStateSpaceManager> mgr;
 
-  std::shared_ptr<SymVariables> vars; // The symbolic variables are declared
+    std::unique_ptr<SymSearch> search;
 
-  SymParamsMgr mgrParams; // Parameters for SymStateSpaceManager configuration.
-  SymParamsSearch searchParams; // Parameters to search the original state space
+    std::shared_ptr<SymVariables> vars; // The symbolic variables are declared
 
-  int step_num;
-  bool lower_bound_increased;
-  int lower_bound; // Lower bound of search (incl. min-action costs)
-  int upper_bound; // Upper bound of search (not use by top_k)
-  int min_g;       // min g costs of open lists
+    SymParamsMgr mgrParams; // Parameters for SymStateSpaceManager configuration.
+    SymParamsSearch searchParams; // Parameters to search the original state space
 
-  std::shared_ptr<PlanDataBase> plan_data_base;
-  SymSolutionRegistry solution_registry; // Solution registry
-  
-  virtual void initialize() override;
+    int step_num;
+    bool lower_bound_increased;
+    int lower_bound; // Lower bound of search (incl. min-action costs)
+    int upper_bound; // Upper bound of search (not use by top_k)
+    int min_g;     // min g costs of open lists
 
-  virtual SearchStatus step() override;
+    std::shared_ptr<PlanDataBase> plan_data_base;
+    SymSolutionRegistry solution_registry; // Solution registry
+
+    virtual void initialize() override;
+
+    virtual SearchStatus step() override;
 
 public:
-  SymbolicSearch(const options::Options &opts);
-  virtual ~SymbolicSearch() = default;
+    SymbolicSearch(const options::Options &opts);
+    virtual ~SymbolicSearch() = default;
 
-  virtual void setLowerBound(int lower);
+    virtual void setLowerBound(int lower);
 
-  virtual void setMinG(int g) { min_g = std::max(g, min_g); }
+    virtual void setMinG(int g) {min_g = std::max(g, min_g);}
 
-  virtual bool solved() const { return lower_bound >= upper_bound; }
+    virtual bool solved() const {return lower_bound >= upper_bound;}
 
-  virtual int getLowerBound() const { return lower_bound; }
+    virtual int getLowerBound() const {return lower_bound;}
 
-  virtual int getMinG() const { return min_g; }
+    virtual int getMinG() const {return min_g;}
 
-  virtual BDD get_states_on_goal_paths() const {
-    return solution_registry.get_states_on_goal_paths();
-  }
+    virtual BDD get_states_on_goal_paths() const {
+        return solution_registry.get_states_on_goal_paths();
+    }
 
-  virtual void new_solution(const SymSolutionCut &sol);
+    virtual void new_solution(const SymSolutionCut &sol);
 
-  static void add_options_to_parser(OptionParser &parser);
+    virtual void print_statistics() const {}
+
+    virtual void save_plan_if_necessary() override;
+
+    static void add_options_to_parser(OptionParser &parser);
 };
-
-} // namespace symbolic
+}
 
 #endif

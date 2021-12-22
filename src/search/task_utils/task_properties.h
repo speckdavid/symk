@@ -67,6 +67,7 @@ extern bool has_conditional_effects(TaskProxy task);
 extern void verify_no_conditional_effects(TaskProxy task);
 
 extern bool has_zero_cost_operator(TaskProxy task);
+extern bool has_sdac_cost_operator(TaskProxy task);
 
 extern void verify_no_zero_cost_operator(TaskProxy task_proxy);
 

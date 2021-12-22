@@ -67,6 +67,7 @@ public:
     virtual bool are_facts_mutex(const FactPair &fact1, const FactPair &fact2) const = 0;
 
     virtual int get_operator_cost(int index, bool is_axiom) const = 0;
+    virtual std::string get_operator_cost_function(int index, bool is_axiom) const = 0;
     virtual std::string get_operator_name(int index, bool is_axiom) const = 0;
     virtual int get_num_operators() const = 0;
     virtual int get_num_operator_preconditions(int index, bool is_axiom) const = 0;
