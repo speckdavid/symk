@@ -188,7 +188,7 @@ void SimpleSymSolutionRegistry::extract_all_zero_plans(
 }
 
 bool SimpleSymSolutionRegistry::reconstruct_cost_action(
-    SimpleSymSolutionCut &cur_cut, bool fw, std::shared_ptr<ClosedList> closed,
+    SimpleSymSolutionCut &cur_cut, bool fw, shared_ptr<ClosedList> closed,
     const Plan &plan) {
     int cur_cost = fw ? cur_cut.get_g() : cur_cut.get_h();
     bool some_action_found = false;
@@ -261,7 +261,7 @@ bool SimpleSymSolutionRegistry::reconstruct_cost_action(
 }
 
 bool SimpleSymSolutionRegistry::reconstruct_zero_action(
-    SimpleSymSolutionCut &cur_cut, bool fw, std::shared_ptr<ClosedList> closed,
+    SimpleSymSolutionCut &cur_cut, bool fw, shared_ptr<ClosedList> closed,
     const Plan &plan) {
     int cur_cost = fw ? cur_cut.get_g() : cur_cut.get_h();
     BDD cur_states = cur_cut.get_cut();

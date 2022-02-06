@@ -138,7 +138,7 @@ State SymVariables::getStateFrom(const BDD &bdd) const {
             }
         }
     }
-    return State(*tasks::g_root_task, std::move(vals));
+    return State(*tasks::g_root_task, move(vals));
 }
 
 BDD SymVariables::getStateBDD(const vector<int> &state) const {

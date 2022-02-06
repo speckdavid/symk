@@ -67,9 +67,9 @@ void SymbolicSearch::initialize() {
             (num_states - 1) *
             task_properties::get_max_operator_cost(task_proxy);
 
-        utils::g_log << "Plan Reconstruction: Simple (without loops)" << std::endl;
-        utils::g_log << "Maximal plan cost: " << max_plan_cost << std::endl;
-        upper_bound = std::min((double)upper_bound, max_plan_cost + 1);
+        utils::g_log << "Plan Reconstruction: Simple (without loops)" << endl;
+        utils::g_log << "Maximal plan cost: " << max_plan_cost << endl;
+        upper_bound = min((double)upper_bound, max_plan_cost + 1);
         solution_registry = make_shared<SimpleSymSolutionRegistry>();
         cout << endl;
     }
