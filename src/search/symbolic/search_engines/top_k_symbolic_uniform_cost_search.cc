@@ -37,7 +37,7 @@ void TopkSymbolicUniformCostSearch::initialize() {
         bw_search->init(mgr, false, fw_search.get());
     }
 
-    solution_registry.init(vars, fw_search.get(), bw_search.get(), plan_data_base,
+    solution_registry->init(vars, fw_search.get(), bw_search.get(), plan_data_base,
                            false);
 
     if (fw && bw) {
@@ -53,8 +53,8 @@ TopkSymbolicUniformCostSearch::TopkSymbolicUniformCostSearch(
     : SymbolicUniformCostSearch(opts, fw, bw) {}
 
 void TopkSymbolicUniformCostSearch::new_solution(const SymSolutionCut &sol) {
-    if (!solution_registry.found_all_plans()) {
-        solution_registry.register_solution(sol);
+    if (!solution_registry->found_all_plans()) {
+        solution_registry->register_solution(sol);
     } else {
         lower_bound = numeric_limits<int>::max();
     }

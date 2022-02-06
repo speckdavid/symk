@@ -124,6 +124,23 @@ void SymVariables::init(const vector<int> &v_order) {
     }
 }
 
+State SymVariables::getStateFrom(const BDD &bdd) const {
+    vector<int> vals;
+    BDD current = bdd;
+    for (int var = 0; var < tasks::g_root_task->get_num_variables(); var++) {
+        for (int val = 0; val < tasks::g_root_task->get_variable_domain_size(var);
+             val++) {
+            BDD aux = current * preconditionBDDs[var][val];
+            if (!aux.IsZero()) {
+                current = aux;
+                vals.push_back(val);
+                break;
+            }
+        }
+    }
+    return State(*tasks::g_root_task, std::move(vals));
+}
+
 BDD SymVariables::getStateBDD(const vector<int> &state) const {
     BDD res = oneBDD();
     for (int i = var_order.size() - 1; i >= 0; i--) {

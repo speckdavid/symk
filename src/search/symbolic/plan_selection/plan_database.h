@@ -59,6 +59,8 @@ public:
 
     BDD get_final_state(const Plan &plan) const;
 
+    BDD states_on_path(const Plan &plan);
+
     void dump_first_accepted_plan() const;
 
     const Plan& get_first_accepted_plan() const;
@@ -105,7 +107,6 @@ protected:
     std::vector<Plan> get_accepted_plans() const;
 
     size_t different(const std::vector<Plan> &plans, const Plan &plan) const;
-    BDD states_on_path(const Plan &plan);
     size_t get_hash_value(const Plan &plan) const;
 };
 } // namespace symbolic

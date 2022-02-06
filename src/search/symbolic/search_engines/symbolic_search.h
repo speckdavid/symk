@@ -49,7 +49,8 @@ protected:
     int min_g;     // min g costs of open lists
 
     std::shared_ptr<PlanDataBase> plan_data_base;
-    SymSolutionRegistry solution_registry; // Solution registry
+    std::shared_ptr<SymSolutionRegistry> solution_registry; // Solution registry
+    bool simple;
 
     virtual void initialize() override;
 
@@ -70,7 +71,7 @@ public:
     virtual int getMinG() const {return min_g;}
 
     virtual BDD get_states_on_goal_paths() const {
-        return solution_registry.get_states_on_goal_paths();
+        return solution_registry->get_states_on_goal_paths();
     }
 
     virtual void new_solution(const SymSolutionCut &sol);

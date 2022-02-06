@@ -34,7 +34,7 @@ void SymbolicUniformCostSearch::initialize() {
         bw_search->init(mgr, false, fw_search.get());
     }
 
-    solution_registry.init(vars, fw_search.get(), bw_search.get(), plan_data_base,
+    solution_registry->init(vars, fw_search.get(), bw_search.get(), plan_data_base,
                            true);
 
     if (fw && bw) {
@@ -50,8 +50,8 @@ SymbolicUniformCostSearch::SymbolicUniformCostSearch(
     : SymbolicSearch(opts), fw(fw), bw(bw) {}
 
 void SymbolicUniformCostSearch::new_solution(const SymSolutionCut &sol) {
-    if (!solution_registry.found_all_plans() && sol.get_f() < upper_bound) {
-        solution_registry.register_solution(sol);
+    if (!solution_registry->found_all_plans() && sol.get_f() < upper_bound) {
+        solution_registry->register_solution(sol);
         upper_bound = sol.get_f();
     }
 }

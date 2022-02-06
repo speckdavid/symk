@@ -28,9 +28,9 @@ protected:
 
     bool task_has_zero_costs() const {return trs.count(0) > 0;}
 
-    void reconstruct_plans(const SymSolutionCut &cut);
+    virtual void add_plan(const Plan &plan) const;
 
-    void add_plan(const Plan &plan) const;
+    virtual void reconstruct_plans(const SymSolutionCut &cut);
 
     // Extracts all plans by a DFS, we copy the current plan suffix by every
     // recusive call which is why we don't use any reference for plan
@@ -52,6 +52,7 @@ protected:
 
 public:
     SymSolutionRegistry();
+    virtual ~SymSolutionRegistry() = default;
 
     void init(std::shared_ptr<SymVariables> sym_vars,
               UniformCostSearch *fwd_search, UniformCostSearch *bwd_search,

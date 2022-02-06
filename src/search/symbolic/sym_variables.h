@@ -88,7 +88,11 @@ public:
         return ax_comp;
     }
 
-    // State getStateFrom(const BDD & bdd) const;
+    double numStates(const BDD &bdd) const {
+        return bdd.CountMinterm(numBDDVars);
+    }
+
+    State getStateFrom(const BDD &bdd) const;
     BDD getStateBDD(const std::vector<int> &state) const;
     BDD getStateBDD(const GlobalState &state) const;
 

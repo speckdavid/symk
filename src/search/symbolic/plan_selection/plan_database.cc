@@ -82,6 +82,16 @@ size_t PlanDataBase::different(const vector<Plan> &plans,
     return true;
 }
 
+BDD PlanDataBase::get_final_state(const Plan &plan) const {
+    GlobalState cur = state_registry->get_initial_state();
+    for (auto &op : plan) {
+        cur = state_registry->get_successor_state(
+            cur,
+            state_registry->get_task_proxy().get_operators()[op]);
+    }
+    return sym_vars->getStateBDD(cur);
+}
+
 BDD PlanDataBase::states_on_path(const Plan &plan) {
     GlobalState cur = state_registry->get_initial_state();
     BDD path_states = sym_vars->getStateBDD(cur);
@@ -92,16 +102,6 @@ BDD PlanDataBase::states_on_path(const Plan &plan) {
         path_states += sym_vars->getStateBDD(cur);
     }
     return path_states;
-}
-
-BDD PlanDataBase::get_final_state(const Plan &plan) const {
-    GlobalState cur = state_registry->get_initial_state();
-    for (auto &op : plan) {
-        cur = state_registry->get_successor_state(
-            cur,
-            state_registry->get_task_proxy().get_operators()[op]);
-    }
-    return sym_vars->getStateBDD(cur);
 }
 
 // Hashes a vector of ints (= a plan)
