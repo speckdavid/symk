@@ -34,12 +34,17 @@ OriginalStateSpace::OriginalStateSpace(
 
     init_mutex(task->get_mutex_groups());
     shared_ptr<extra_tasks::SdacTask> sdac_task = dynamic_pointer_cast<extra_tasks::SdacTask>(task);
+    utils::g_log << "Creating transition relations..." << flush;
     if (sdac_task == nullptr) {
         create_single_trs();
     } else {
         create_single_sdac_trs(sdac_task, p.fast_sdac_generation);
     }
+    utils::g_log << "Done!" << endl;
+    utils::g_log << "Merging transition relations..." << flush;
     init_transitions(indTRs);
+    utils::g_log << "Done!" << endl;
+    cout << endl;
 }
 
 void OriginalStateSpace::create_single_trs() {
