@@ -38,7 +38,7 @@ void TopkSymbolicUniformCostSearch::initialize() {
     }
 
     solution_registry->init(vars, fw_search.get(), bw_search.get(), plan_data_base,
-                           false);
+                            false);
 
     if (fw && bw) {
         search = unique_ptr<BidirectionalSearch>(new BidirectionalSearch(
@@ -109,7 +109,7 @@ _parse_bidirectional_ucs(OptionParser &parser) {
         engine = make_shared<symbolic::TopkSymbolicUniformCostSearch>(
             opts, true, true);
         utils::g_log << "Top-k Symbolic Bidirectional Uniform Cost Search"
-             << endl;
+                     << endl;
     }
 
     return engine;

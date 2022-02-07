@@ -65,8 +65,8 @@ SearchStatus TopqSymbolicUniformCostSearch::step() {
         utils::g_log << "BOUND: " << lower_bound << " < " << upper_bound << flush;
 
         utils::g_log << " [" << solution_registry->get_num_found_plans() << "/"
-             << plan_data_base->get_num_desired_plans() << " plans]"
-             << flush;
+                     << plan_data_base->get_num_desired_plans() << " plans]"
+                     << flush;
         utils::g_log << ", total time: " << utils::g_timer << endl;
     }
     lower_bound_increased = false;
@@ -144,7 +144,7 @@ _parse_bidirectional_ucs(OptionParser &parser) {
         engine = make_shared<symbolic::TopqSymbolicUniformCostSearch>(
             opts, true, true);
         utils::g_log << "Top-q Symbolic Bidirectional Uniform Cost Search"
-             << endl;
+                     << endl;
     }
 
     return engine;

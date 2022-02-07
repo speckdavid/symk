@@ -121,7 +121,7 @@ void SymStepCostEstimation::violated(double time_ellapsed, double time_limit,
                                      double node_limit) {
 #ifdef DEBUG_ESTIMATES
     utils::g_log << "== VIOLATED " << *this << ": " << time_ellapsed << " " << time_limit
-         << " " << node_limit << ", ";
+                 << " " << node_limit << ", ";
 #endif
     estimation.time = param_penalty_time_estimation_sum +
         max<double>(estimation.time, time_ellapsed) *

@@ -71,7 +71,7 @@ void PlanManager::save_plan(const Plan &plan, const TaskProxy &task_proxy,
     for (OperatorID op_id : plan) {
         if (dump_plan) {
             utils::g_log << operators[op_id].get_name() << " (" << operators[op_id].get_cost()
-                 << ")" << endl;
+                         << ")" << endl;
         }
         outfile << "(" << operators[op_id].get_name() << ")" << endl;
     }

@@ -37,7 +37,7 @@ public:
     BDD getPartialClosed(int upper_bound) const;
 
     SymSolutionCut getCheapestCut(BDD states, int g,
-                                          bool fw) const;
+                                  bool fw) const;
 
     std::vector<SymSolutionCut>
     getAllCuts(BDD states, int g, bool fw, int lower_bound) const;

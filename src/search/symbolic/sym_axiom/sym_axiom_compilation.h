@@ -11,7 +11,7 @@ class SymVariables;
 
 class SymAxiomCompilation {
 public:
-    // We need to use a raw pointer of sym_vars. Otherwise we get a cylic pointer 
+    // We need to use a raw pointer of sym_vars. Otherwise we get a cylic pointer
     // issue as SymAxiomComplation only lives in SymVariables
     SymAxiomCompilation(SymVariables *sym_vars, const std::shared_ptr<AbstractTask> &task);
 
@@ -29,7 +29,7 @@ public:
     BDD get_primary_representation(int var, int val) const;
 
 protected:
-    SymVariables* sym_vars; // For axiom creation
+    SymVariables *sym_vars; // For axiom creation
     TaskProxy task_proxy;
     std::vector<int> axiom_body_layer;
     std::map<int, BDD> primary_representations;

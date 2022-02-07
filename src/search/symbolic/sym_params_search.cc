@@ -40,20 +40,20 @@ SymParamsSearch::SymParamsSearch(const Options &opts)
 void SymParamsSearch::print_options() const {
     utils::g_log << "Disj(nodes=" << max_disj_nodes << ")" << endl;
     utils::g_log << "Estimation: min_time(" << min_estimation_time << ")"
-         << " time_penalty +(" << penalty_time_estimation_sum << ")"
-         << "*(" << penalty_time_estimation_mult << ")"
-         << " nodes_penalty +(" << penalty_nodes_estimation_sum << ")"
-         << "*(" << penalty_nodes_estimation_mult << ")" << endl;
+                 << " time_penalty +(" << penalty_time_estimation_sum << ")"
+                 << "*(" << penalty_time_estimation_mult << ")"
+                 << " nodes_penalty +(" << penalty_nodes_estimation_sum << ")"
+                 << "*(" << penalty_nodes_estimation_mult << ")" << endl;
     utils::g_log << "MaxStep(time=" << maxStepTime << ", nodes=" << maxStepNodes
-         << ", nodes_per_planning_second=" << maxStepNodesPerPlanningSecond << ")"
-         << endl;
+                 << ", nodes_per_planning_second=" << maxStepNodesPerPlanningSecond << ")"
+                 << endl;
     utils::g_log << "Ratio useful: " << ratioUseful << endl;
     utils::g_log << "Min alloted time: " << minAllotedTime
-         << " nodes: " << minAllotedNodes << endl;
+                 << " nodes: " << minAllotedNodes << endl;
     utils::g_log << "Max alloted time: " << maxAllotedTime
-         << " nodes: " << maxAllotedNodes << endl;
+                 << " nodes: " << maxAllotedNodes << endl;
     utils::g_log << "Mult alloted time: " << ratioAllotedTime
-         << " nodes: " << ratioAllotedNodes << endl;
+                 << " nodes: " << ratioAllotedNodes << endl;
     utils::g_log << "Ratio after relax: " << ratioAfterRelax << endl;
 }
 

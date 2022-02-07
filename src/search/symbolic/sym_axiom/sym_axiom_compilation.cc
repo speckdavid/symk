@@ -12,7 +12,7 @@ namespace symbolic {
 using namespace std;
 
 SymAxiomCompilation::SymAxiomCompilation(
-    SymVariables* sym_vars,
+    SymVariables *sym_vars,
     const shared_ptr<AbstractTask> &task)
     : sym_vars(sym_vars), task_proxy(*task) {}
 
@@ -69,7 +69,7 @@ void SymAxiomCompilation::init_axioms() {
     create_primary_representations();
 
     utils::g_log << fixed << "Symbolic Axiom initialization: " << timer
-         << endl;
+                 << endl;
 }
 
 BDD SymAxiomCompilation::get_compilied_init_state() const {

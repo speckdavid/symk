@@ -50,7 +50,7 @@ class SymVariables {
     const long cudd_init_available_memory; // Maximum available memory (bytes)
     const bool gamer_ordering;
 
-    Cudd* manager; // manager associated with this symbolic search
+    Cudd *manager; // manager associated with this symbolic search
     std::shared_ptr<SymAxiomCompilation> ax_comp; // used for axioms
 
     int numBDDVars; // Number of binary variables (just one set, the total number

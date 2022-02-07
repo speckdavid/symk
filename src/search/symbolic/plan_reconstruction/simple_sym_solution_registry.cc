@@ -33,7 +33,7 @@ void SimpleSymSolutionRegistry::reconstruct_plans(
                                !fw_search->getClosedShared()->get_start_states());
         new_simple_cut.set_visited_states(new_simple_cut.get_cut());
     }
-    
+
     if (fw_search) {
         double nr_states = sym_vars->numStates(new_simple_cut.get_cut());
         if (nr_states <= 1) {
@@ -64,8 +64,7 @@ void SimpleSymSolutionRegistry::extract_all_plans(SimpleSymSolutionCut &sym_cut,
 
 void SimpleSymSolutionRegistry::extract_all_cost_plans(
     SimpleSymSolutionCut &simple_cut, bool fw, Plan &plan) {
-    if (simple_cut.get_g() == 0 && simple_cut.get_h() == 0)
-    {
+    if (simple_cut.get_g() == 0 && simple_cut.get_h() == 0) {
         add_plan(plan);
         return;
     }

@@ -54,7 +54,7 @@ void PlanDataBase::dump_first_accepted_plan() const {
                        state_registry->get_task_proxy());
 }
 
-const Plan& PlanDataBase::get_first_accepted_plan() const {
+const Plan &PlanDataBase::get_first_accepted_plan() const {
     return first_accepted_plan;
 }
 

@@ -182,7 +182,7 @@ SymParamsMgr::SymParamsMgr(const options::Options &opts,
          || task_properties::has_sdac_cost_operator(TaskProxy(*task)))) {
         utils::g_log << "Mutex type changed to mutex_and because the domain has "
             "conditional effects, axioms and/or sdac."
-             << endl;
+                     << endl;
         mutex_type = MutexType::MUTEX_AND;
     }
 }
@@ -190,9 +190,9 @@ SymParamsMgr::SymParamsMgr(const options::Options &opts,
 void SymParamsMgr::print_options() const {
     utils::g_log << "TR(time=" << max_tr_time << ", nodes=" << max_tr_size << ")" << endl;
     utils::g_log << "Mutex(time=" << max_mutex_time << ", nodes=" << max_mutex_size
-         << ", type=" << mutex_type << ")" << endl;
+                 << ", type=" << mutex_type << ")" << endl;
     utils::g_log << "Aux(time=" << max_aux_time << ", nodes=" << max_aux_nodes << ")"
-         << endl;
+                 << endl;
 }
 
 void SymParamsMgr::add_options_to_parser(options::OptionParser &parser) {
@@ -202,7 +202,7 @@ void SymParamsMgr::add_options_to_parser(options::OptionParser &parser) {
                            "60000");
 
     parser.add_enum_option<MutexType>("mutex_type", MutexTypeValues, "mutex type",
-                           "MUTEX_EDELETION");
+                                      "MUTEX_EDELETION");
 
     parser.add_option<int>("max_mutex_size", "maximum size of mutex BDDs",
                            "100000");

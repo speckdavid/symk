@@ -35,7 +35,7 @@ void SymbolicUniformCostSearch::initialize() {
     }
 
     solution_registry->init(vars, fw_search.get(), bw_search.get(), plan_data_base,
-                           true);
+                            true);
 
     if (fw && bw) {
         search = unique_ptr<BidirectionalSearch>(new BidirectionalSearch(

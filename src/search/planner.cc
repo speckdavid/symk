@@ -46,7 +46,7 @@ int main(int argc, const char **argv) {
                 cerr << "setrlimit returned result = " << result << endl;
             } else {
                 utils::g_log << "setrlimit (stack size) to " << kStackSize / 1024 / 1024
-                     << "MB" << endl;
+                             << "MB" << endl;
             }
         }
     }

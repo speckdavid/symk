@@ -74,9 +74,9 @@ void SymVariables::init(const vector<int> &v_order) {
 
     // Initialize manager
     utils::g_log << "Initialize Symbolic Manager(" << _numBDDVars << ", "
-         << cudd_init_nodes / _numBDDVars << ", " << cudd_init_cache_size << ", "
-         << cudd_init_available_memory << ")" << endl;
-    manager = 
+                 << cudd_init_nodes / _numBDDVars << ", " << cudd_init_cache_size << ", "
+                 << cudd_init_available_memory << ")" << endl;
+    manager =
         new Cudd(_numBDDVars, 0, cudd_init_nodes / _numBDDVars,
                  cudd_init_cache_size, cudd_init_available_memory);
 
@@ -118,7 +118,7 @@ void SymVariables::init(const vector<int> &v_order) {
 
     if (task_properties::has_axioms(task_proxy)) {
         utils::g_log << "Creating Primary Representation for Derived Predicates..."
-             << endl;
+                     << endl;
         ax_comp->init_axioms();
         utils::g_log << "Primary Representation... Done!" << endl;
     }
@@ -256,9 +256,9 @@ void SymVariables::to_dot(const ADD &add,
 
 void SymVariables::print_options() const {
     utils::g_log << "CUDD Init: nodes=" << cudd_init_nodes
-         << " cache=" << cudd_init_cache_size
-         << " max_memory=" << cudd_init_available_memory
-         << " ordering: " << (gamer_ordering ? "gamer" : "fd") << endl;
+                 << " cache=" << cudd_init_cache_size
+                 << " max_memory=" << cudd_init_available_memory
+                 << " ordering: " << (gamer_ordering ? "gamer" : "fd") << endl;
 }
 
 void SymVariables::add_options_to_parser(options::OptionParser &parser) {

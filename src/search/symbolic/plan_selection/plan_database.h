@@ -50,7 +50,7 @@ public:
         return num_accepted_plans >= num_desired_plans;
     }
 
-    virtual bool reconstruct_solutions(const SymSolutionCut& /*cut*/) const {
+    virtual bool reconstruct_solutions(const SymSolutionCut & /*cut*/) const {
         return !found_enough_plans();
     }
 
