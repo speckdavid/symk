@@ -5,6 +5,8 @@
 #include "../../plugin.h"
 #include "../sym_variables.h"
 
+#include "../plan_reconstruction/sym_solution_cut.h"
+
 #include <memory>
 #include <unordered_map>
 
@@ -48,6 +50,10 @@ public:
         return num_accepted_plans >= num_desired_plans;
     }
 
+    virtual bool reconstruct_solutions(const SymSolutionCut& /*cut*/) const {
+        return !found_enough_plans();
+    }
+
     BDD get_states_accepted_goal_path() const {
         return anytime_completness ? states_accepted_goal_paths
                : sym_vars->oneBDD();
@@ -63,7 +69,7 @@ public:
 
     void dump_first_accepted_plan() const;
 
-    const Plan& get_first_accepted_plan() const;
+    const Plan &get_first_accepted_plan() const;
 
     double get_first_plan_cost() const {return first_accepted_plan_cost;}
 

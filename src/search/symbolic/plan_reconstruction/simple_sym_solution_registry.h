@@ -28,10 +28,10 @@ protected:
     void extract_all_cost_plans(SimpleSymSolutionCut &simple_cut, bool fw, Plan &plan);
     void extract_all_zero_plans(SimpleSymSolutionCut &sym_cut, bool fw, Plan &plan);
 
-    bool reconstruct_cost_action(SimpleSymSolutionCut &simple_cut, bool fw,
+    void reconstruct_cost_action(SimpleSymSolutionCut &simple_cut, bool fw,
                                  std::shared_ptr<ClosedList> closed,
                                  const Plan &plan);
-    bool reconstruct_zero_action(SimpleSymSolutionCut &sym_cut, bool fw,
+    void reconstruct_zero_action(SimpleSymSolutionCut &sym_cut, bool fw,
                                  std::shared_ptr<ClosedList> closed,
                                  const Plan &plan);
     void extract_one_by_one(BDD states, BDD &visited,

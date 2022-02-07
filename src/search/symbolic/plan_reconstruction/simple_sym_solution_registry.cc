@@ -33,20 +33,7 @@ void SimpleSymSolutionRegistry::reconstruct_plans(
                                !fw_search->getClosedShared()->get_start_states());
         new_simple_cut.set_visited_states(new_simple_cut.get_cut());
     }
-    if (single_goal) {
-        // check the initial state for goal condition in fw reconstruction
-        if (!fw_search && bw_search &&
-            !(sym_cut.get_cut() * bw_search->getStateSpace()->getGoal()).IsZero()) {
-            add_plan(plan);
-            return; // no more single-goal plans possible
-        }
-        // early pruning possible for cost actions
-        if (fw_search && bw_search && (new_simple_cut.get_h() > 0)) {
-            new_simple_cut.set_cut(new_simple_cut.get_cut() *
-                                   !fw_search->getStateSpace()->getGoal());
-            new_simple_cut.set_visited_states(new_simple_cut.get_cut());
-        }
-    }
+    
     if (fw_search) {
         double nr_states = sym_vars->numStates(new_simple_cut.get_cut());
         if (nr_states <= 1) {
@@ -65,7 +52,7 @@ void SimpleSymSolutionRegistry::extract_all_plans(SimpleSymSolutionCut &sym_cut,
                                                   bool fw, Plan plan) {
     // From here on sym_cut contains only one state! (made sure by
     // extract_one_by_one in fw search)
-    if (plan_data_base->found_enough_plans()) {
+    if (!plan_data_base->reconstruct_solutions(sym_cut)) {
         return;
     }
     if (!task_has_zero_costs()) {
@@ -77,7 +64,8 @@ void SimpleSymSolutionRegistry::extract_all_plans(SimpleSymSolutionCut &sym_cut,
 
 void SimpleSymSolutionRegistry::extract_all_cost_plans(
     SimpleSymSolutionCut &simple_cut, bool fw, Plan &plan) {
-    if (simple_cut.get_g() == 0 && simple_cut.get_h() == 0) {
+    if (simple_cut.get_g() == 0 && simple_cut.get_h() == 0)
+    {
         add_plan(plan);
         return;
     }
@@ -90,14 +78,10 @@ void SimpleSymSolutionRegistry::extract_all_cost_plans(
         } else {
             // The left part of plan is complete, but the right hand side is missing.
             BDD resulting_state = plan_data_base->get_final_state(plan);
-            if (single_goal) {
-                resulting_state *= !fw_search->getStateSpace()->getGoal();
-                if (resulting_state.IsZero()) {
-                    add_plan(plan);
-                    return;
-                }
-            }
-            SimpleSymSolutionCut new_cut(0, simple_cut.get_h(), resulting_state,
+
+            SimpleSymSolutionCut new_cut(0, simple_cut.get_h(),
+                                         resulting_state,
+                                         simple_cut.get_sol_cost(),
                                          get_visited_states(plan));
             reconstruct_cost_action(new_cut, false, bw_search->getClosedShared(),
                                     plan);
@@ -135,12 +119,13 @@ void SimpleSymSolutionRegistry::extract_all_zero_plans(
                 // bw_start_states == goals, so no intersection with goals necessary
                 if (!intersection.IsZero()) {
                     add_plan(plan);
-                    if (plan_data_base->found_enough_plans() || single_goal) {
+                    if (!plan_data_base->reconstruct_solutions(simple_cut)) {
                         return;
                     }
                 }
                 SimpleSymSolutionCut new_simple_cut(
-                    0, simple_cut.get_h(), resulting_state, get_visited_states(plan));
+                    0, simple_cut.get_h(), resulting_state,
+                    simple_cut.get_sol_cost(), get_visited_states(plan));
                 reconstruct_zero_action(new_simple_cut, false,
                                         bw_search->getClosedShared(), plan);
             }
@@ -151,7 +136,7 @@ void SimpleSymSolutionRegistry::extract_all_zero_plans(
                 bw_search->getClosedShared()->get_start_states();
             if (!intersection.IsZero()) {
                 add_plan(plan);
-                if (plan_data_base->found_enough_plans()) {
+                if (!plan_data_base->reconstruct_solutions(simple_cut)) {
                     return;
                 }
             }
@@ -167,9 +152,12 @@ void SimpleSymSolutionRegistry::extract_all_zero_plans(
                 intersection = simple_cut.get_cut() *
                     fw_search->getClosedShared()->get_start_states();
                 if (!intersection.IsZero()) {
-                    SimpleSymSolutionCut new_simple_cut(0, simple_cut.get_h(),
-                                                        plan_data_base->get_final_state(plan),
-                                                        get_visited_states(plan));
+                    SimpleSymSolutionCut new_simple_cut(
+                        0,
+                        simple_cut.get_h(),
+                        plan_data_base->get_final_state(plan),
+                        simple_cut.get_sol_cost(),
+                        get_visited_states(plan));
                     reconstruct_cost_action(new_simple_cut, false,
                                             bw_search->getClosedShared(), plan);
                     reconstruct_zero_action(new_simple_cut, false,
@@ -187,11 +175,10 @@ void SimpleSymSolutionRegistry::extract_all_zero_plans(
     }
 }
 
-bool SimpleSymSolutionRegistry::reconstruct_cost_action(
+void SimpleSymSolutionRegistry::reconstruct_cost_action(
     SimpleSymSolutionCut &cur_cut, bool fw, shared_ptr<ClosedList> closed,
     const Plan &plan) {
     int cur_cost = fw ? cur_cut.get_g() : cur_cut.get_h();
-    bool some_action_found = false;
 
     for (auto key : trs) {
         int new_cost = cur_cost - key.first;
@@ -213,7 +200,8 @@ bool SimpleSymSolutionRegistry::reconstruct_cost_action(
 
             Plan new_plan = plan;
             SimpleSymSolutionCut new_simple_cut(
-                0, 0, succ_states, cur_cut.get_visited_states() + succ_states);
+                0, 0, succ_states, cur_cut.get_sol_cost(),
+                cur_cut.get_visited_states() + succ_states);
             if (fw) {
                 new_plan.insert(new_plan.begin(), *(tr.getOpsIds().begin()));
                 new_simple_cut.set_g(new_cost);
@@ -224,22 +212,6 @@ bool SimpleSymSolutionRegistry::reconstruct_cost_action(
                 new_simple_cut.set_h(new_cost);
             }
 
-            if (single_goal) {
-                BDD goals = fw ? fw_search->getStateSpace()->getGoal()
-                    : bw_search->getStateSpace()->getGoal();
-                succ_states *= !goals;
-                if (succ_states.IsZero()) {
-                    if (!fw) {
-                        add_plan(new_plan);
-                        if (plan_data_base->found_enough_plans()) {
-                            return true;
-                        }
-                    }
-                    continue;
-                }
-            }
-
-            some_action_found = true;
             if (fw) {
                 double nr_states = sym_vars->numStates(succ_states);
                 if (nr_states <= 1) {
@@ -252,21 +224,19 @@ bool SimpleSymSolutionRegistry::reconstruct_cost_action(
                 extract_all_plans(new_simple_cut, false, new_plan);
             }
 
-            if (plan_data_base->found_enough_plans()) {
-                return true;
+            if (!plan_data_base->reconstruct_solutions(new_simple_cut)) {
+                return;
             }
         }
     }
-    return some_action_found;
 }
 
-bool SimpleSymSolutionRegistry::reconstruct_zero_action(
+void SimpleSymSolutionRegistry::reconstruct_zero_action(
     SimpleSymSolutionCut &cur_cut, bool fw, shared_ptr<ClosedList> closed,
     const Plan &plan) {
     int cur_cost = fw ? cur_cut.get_g() : cur_cut.get_h();
     BDD cur_states = cur_cut.get_cut();
 
-    bool some_action_found = false;
     BDD succ_states;
     for (size_t newSteps0 = 0;
          newSteps0 < closed->get_num_zero_closed_layers(cur_cost); newSteps0++) {
@@ -289,6 +259,7 @@ bool SimpleSymSolutionRegistry::reconstruct_zero_action(
             Plan new_plan = plan;
             SimpleSymSolutionCut new_simple_cut(
                 cur_cut.get_g(), cur_cut.get_h(), succ_states,
+                cur_cut.get_sol_cost(),
                 cur_cut.get_visited_states() + succ_states);
             if (fw) {
                 new_plan.insert(new_plan.begin(), *(tr.getOpsIds().begin()));
@@ -296,22 +267,6 @@ bool SimpleSymSolutionRegistry::reconstruct_zero_action(
                 new_plan.push_back(*(tr.getOpsIds().begin()));
             }
 
-            if (single_goal) {
-                BDD goals = fw ? fw_search->getStateSpace()->getGoal()
-                    : bw_search->getStateSpace()->getGoal();
-                succ_states *= !goals;
-                if (succ_states.IsZero()) {
-                    if (!fw) {
-                        add_plan(new_plan);
-                        if (plan_data_base->found_enough_plans()) {
-                            return true;
-                        }
-                    }
-                    continue;
-                }
-            }
-
-            some_action_found = true;
             if (fw) {
                 double nr_states = sym_vars->numStates(succ_states);
                 if (nr_states <= 1) {
@@ -324,12 +279,11 @@ bool SimpleSymSolutionRegistry::reconstruct_zero_action(
                 extract_all_plans(new_simple_cut, false, new_plan);
             }
 
-            if (plan_data_base->found_enough_plans()) {
-                return true;
+            if (!plan_data_base->reconstruct_solutions(new_simple_cut)) {
+                return;
             }
         }
     }
-    return some_action_found;
 }
 
 /**
@@ -340,7 +294,7 @@ bool SimpleSymSolutionRegistry::reconstruct_zero_action(
 void SimpleSymSolutionRegistry::extract_one_by_one(
     BDD states, BDD &visited, SimpleSymSolutionCut &simple_cut, Plan &plan) {
     BDD remaining = states;
-    while (!remaining.IsZero() and !plan_data_base->found_enough_plans()) {
+    while (!remaining.IsZero() && plan_data_base->reconstruct_solutions(simple_cut)) {
         State next_state = sym_vars->getStateFrom(remaining);
         BDD next_state_bdd = sym_vars->getStateBDD(next_state.get_values());
         simple_cut.set_cut(next_state_bdd); // Only one single state!

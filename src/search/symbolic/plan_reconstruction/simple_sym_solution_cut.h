@@ -16,7 +16,7 @@ protected:
 
 public:
     SimpleSymSolutionCut(); // dummy for no solution
-    SimpleSymSolutionCut(int g, int h, BDD cut, BDD visited_states);
+    SimpleSymSolutionCut(int g, int h, BDD cut, int sol_cost, BDD visited_states);
     SimpleSymSolutionCut(SymSolutionCut cut, BDD visited_states);
 
     BDD get_visited_states() const;

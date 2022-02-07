@@ -42,11 +42,10 @@ protected:
     void extract_all_cost_plans(SymSolutionCut &sym_cut, bool fw, Plan &plan);
     void extract_all_zero_plans(SymSolutionCut &sym_cut, bool fw, Plan &plan);
 
-    // Return wether a zero cost reconstruction step was necessary
-    bool reconstruct_zero_action(SymSolutionCut &sym_cut, bool fw,
+    void reconstruct_zero_action(SymSolutionCut &sym_cut, bool fw,
                                  std::shared_ptr<ClosedList> closed,
                                  const Plan &plan);
-    bool reconstruct_cost_action(SymSolutionCut &sym_cut, bool fw,
+    void reconstruct_cost_action(SymSolutionCut &sym_cut, bool fw,
                                  std::shared_ptr<ClosedList> closed,
                                  const Plan &plan);
 

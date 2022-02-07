@@ -69,9 +69,9 @@ SymSolutionCut ClosedList::getCheapestCut(BDD states, int g,
         BDD cut = closedH.second * cut_candidate;
         if (!cut.IsZero()) {
             if (fw) {
-                return SymSolutionCut(g, h, cut);
+                return SymSolutionCut(g, h, cut, g+h);
             } else {
-                return SymSolutionCut(h, g, cut);
+                return SymSolutionCut(h, g, cut, g+h);
             }
         }
     }
@@ -100,9 +100,9 @@ vector<SymSolutionCut> ClosedList::getAllCuts(BDD states, int g,
             BDD cut = closedH.second * cut_candidate;
             if (!cut.IsZero()) {
                 if (fw) {
-                    result.emplace_back(g, h, cut);
+                    result.emplace_back(g, h, cut, g+h);
                 } else {
-                    result.emplace_back(h, g, cut);
+                    result.emplace_back(h, g, cut, g+h);
                 }
             }
         }

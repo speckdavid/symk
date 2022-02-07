@@ -43,7 +43,7 @@ void SymSolutionRegistry::reconstruct_plans(const SymSolutionCut &cut) {
 
 void SymSolutionRegistry::extract_all_plans(SymSolutionCut &sym_cut, bool fw,
                                             Plan plan) {
-    if (plan_data_base->found_enough_plans()) {
+    if (!plan_data_base->reconstruct_solutions(sym_cut)) {
         return;
     }
 
@@ -68,7 +68,9 @@ void SymSolutionRegistry::extract_all_cost_plans(SymSolutionCut &sym_cut,
             reconstruct_cost_action(sym_cut, true, fw_search->getClosedShared(),
                                     plan);
         } else {
-            SymSolutionCut new_cut(0, sym_cut.get_h(), plan_data_base->get_final_state(plan));
+            SymSolutionCut new_cut(0, sym_cut.get_h(),
+                                   plan_data_base->get_final_state(plan),
+                                   sym_cut.get_sol_cost());
             reconstruct_cost_action(new_cut, false, bw_search->getClosedShared(),
                                     plan);
         }
@@ -88,7 +90,7 @@ void SymSolutionRegistry::extract_all_zero_plans(SymSolutionCut &sym_cut,
                 sym_cut.get_cut() * fw_search->getClosedShared()->get_start_states();
             if (!intersection.IsZero()) {
                 add_plan(plan);
-                if (plan_data_base->found_enough_plans()) {
+                if (!plan_data_base->reconstruct_solutions(sym_cut)) {
                     return;
                 }
             }
@@ -98,13 +100,15 @@ void SymSolutionRegistry::extract_all_zero_plans(SymSolutionCut &sym_cut,
             intersection =
                 sym_cut.get_cut() * fw_search->getClosedShared()->get_start_states();
             if (!intersection.IsZero()) {
-                SymSolutionCut new_cut(0, sym_cut.get_h(), plan_data_base->get_final_state(plan));
+                SymSolutionCut new_cut(0, sym_cut.get_h(),
+                                       plan_data_base->get_final_state(plan),
+                                       sym_cut.get_sol_cost());
 
                 intersection = new_cut.get_cut() *
                     bw_search->getClosedShared()->get_start_states();
                 if (!intersection.IsZero()) {
                     add_plan(plan);
-                    if (plan_data_base->found_enough_plans()) {
+                    if (!plan_data_base->reconstruct_solutions(sym_cut)) {
                         return;
                     }
                 }
@@ -118,7 +122,7 @@ void SymSolutionRegistry::extract_all_zero_plans(SymSolutionCut &sym_cut,
                 sym_cut.get_cut() * bw_search->getClosedShared()->get_start_states();
             if (!intersection.IsZero()) {
                 add_plan(plan);
-                if (plan_data_base->found_enough_plans()) {
+                if (!plan_data_base->reconstruct_solutions(sym_cut)) {
                     return;
                 }
             }
@@ -135,7 +139,7 @@ void SymSolutionRegistry::extract_all_zero_plans(SymSolutionCut &sym_cut,
                 intersection = sym_cut.get_cut() *
                     fw_search->getClosedShared()->get_start_states();
                 if (!intersection.IsZero()) {
-                    SymSolutionCut new_cut(0, sym_cut.get_h(), plan_data_base->get_final_state(plan));
+                    SymSolutionCut new_cut(0, sym_cut.get_h(), plan_data_base->get_final_state(plan), sym_cut.get_sol_cost());
                     reconstruct_cost_action(new_cut, false, bw_search->getClosedShared(),
                                             plan);
                     reconstruct_zero_action(new_cut, false, bw_search->getClosedShared(),
@@ -153,13 +157,12 @@ void SymSolutionRegistry::extract_all_zero_plans(SymSolutionCut &sym_cut,
     }
 }
 
-bool SymSolutionRegistry::reconstruct_zero_action(
+void SymSolutionRegistry::reconstruct_zero_action(
     SymSolutionCut &sym_cut, bool fw, shared_ptr<ClosedList> closed,
     const Plan &plan) {
     int cur_cost = fw ? sym_cut.get_g() : sym_cut.get_h();
     BDD cut = sym_cut.get_cut();
 
-    bool some_action_found = false;
     BDD succ;
     for (size_t newSteps0 = 0;
          newSteps0 < closed->get_num_zero_closed_layers(cur_cost); newSteps0++) {
@@ -172,29 +175,27 @@ bool SymSolutionRegistry::reconstruct_zero_action(
             BDD intersection = succ * closed->get_zero_closed_at(cur_cost, newSteps0);
             if (!intersection.IsZero()) {
                 Plan new_plan = plan;
-                some_action_found = true;
                 if (fw) {
                     new_plan.insert(new_plan.begin(), *(tr.getOpsIds().begin()));
                 } else {
                     new_plan.push_back(*(tr.getOpsIds().begin()));
                 }
-                SymSolutionCut new_cut(sym_cut.get_g(), sym_cut.get_h(), intersection);
+                SymSolutionCut new_cut(sym_cut.get_g(), sym_cut.get_h(),
+                                       intersection, sym_cut.get_sol_cost());
                 extract_all_plans(new_cut, fw, new_plan);
 
-                if (plan_data_base->found_enough_plans()) {
-                    return true;
+                if (!plan_data_base->reconstruct_solutions(new_cut)) {
+                    return;
                 }
             }
         }
     }
-    return some_action_found;
 }
 
-bool SymSolutionRegistry::reconstruct_cost_action(
+void SymSolutionRegistry::reconstruct_cost_action(
     SymSolutionCut &sym_cut, bool fw, shared_ptr<ClosedList> closed,
     const Plan &plan) {
     int cur_cost = fw ? sym_cut.get_g() : sym_cut.get_h();
-    bool some_action_found = false;
 
     for (auto key : trs) {
         int new_cost = cur_cost - key.first;
@@ -209,8 +210,7 @@ bool SymSolutionRegistry::reconstruct_cost_action(
                 continue;
             }
             Plan new_plan = plan;
-            some_action_found = true;
-            SymSolutionCut new_cut(0, 0, intersection);
+            SymSolutionCut new_cut(0, 0, intersection, sym_cut.get_sol_cost());
             if (fw) {
                 new_plan.insert(new_plan.begin(), *(tr.getOpsIds().begin()));
                 new_cut.set_g(new_cost);
@@ -222,12 +222,11 @@ bool SymSolutionRegistry::reconstruct_cost_action(
             }
             extract_all_plans(new_cut, fw, new_plan);
 
-            if (plan_data_base->found_enough_plans()) {
-                return true;
+            if (!plan_data_base->reconstruct_solutions(new_cut)) {
+                return;
             }
         }
     }
-    return some_action_found;
 }
 
 ////// Plan registry
@@ -284,8 +283,8 @@ void SymSolutionRegistry::construct_cheaper_solutions(int bound) {
     bool bound_used = false;
     int min_plan_bound = numeric_limits<int>::max();
 
-    while (sym_cuts.size() > 0 && sym_cuts.at(0).get_f() < bound &&
-           !found_all_plans()) {
+    while (sym_cuts.size() > 0 && sym_cuts.at(0).get_f() < bound
+           && !found_all_plans()) {
         // Ignore cuts with costs smaller than the proven cost bound
         // This occurs only in bidirectional search
         if (sym_cuts.at(0).get_f() < plan_cost_bound) {
@@ -293,6 +292,7 @@ void SymSolutionRegistry::construct_cheaper_solutions(int bound) {
         } else {
             min_plan_bound = min(min_plan_bound, sym_cuts.at(0).get_f());
             bound_used = true;
+
             reconstruct_plans(sym_cuts[0]);
             sym_cuts.erase(sym_cuts.begin());
         }
