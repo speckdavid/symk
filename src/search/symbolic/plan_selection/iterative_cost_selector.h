@@ -13,6 +13,10 @@ public:
     IterativeCostSelector(const options::Options &opts);
     ~IterativeCostSelector() {}
 
+    virtual void init(std::shared_ptr<SymVariables> sym_vars,
+                      const std::shared_ptr<AbstractTask> &task,
+                      PlanManager &plan_manager);
+
     virtual bool reconstruct_solutions(const SymSolutionCut &cut) const override;
     virtual void add_plan(const Plan &plan) override;
 
