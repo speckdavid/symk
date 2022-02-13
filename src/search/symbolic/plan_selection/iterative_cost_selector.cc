@@ -31,7 +31,6 @@ bool IterativeCostSelector::reconstruct_solutions(
     return !found_enough_plans();
 }
 
-
 void IterativeCostSelector::add_plan(const Plan &plan) {
     int cur_plan_cost = calculate_plan_cost(plan, state_registry->get_task_proxy());
 

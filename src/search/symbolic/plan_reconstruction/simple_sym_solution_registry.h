@@ -14,8 +14,7 @@ using namespace std;
 
 namespace symbolic {
 class SimpleSymSolutionRegistry : public SymSolutionRegistry {
-private:
-    bool single_goal;
+
 protected:
     BDD get_visited_states(const Plan &plan) const;
 
@@ -38,8 +37,7 @@ protected:
                             SimpleSymSolutionCut &simple_cut, Plan &plan);
 
 public:
-    SimpleSymSolutionRegistry(bool single_goal = false) : SymSolutionRegistry(),
-                                                          single_goal(single_goal) {}
+    SimpleSymSolutionRegistry() : SymSolutionRegistry() {}
     ~SimpleSymSolutionRegistry() = default;
 };
 } // namespace symbolic
