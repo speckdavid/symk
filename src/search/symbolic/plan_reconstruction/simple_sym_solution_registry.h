@@ -14,7 +14,6 @@ using namespace std;
 
 namespace symbolic {
 class SimpleSymSolutionRegistry : public SymSolutionRegistry {
-
 protected:
     BDD get_visited_states(const Plan &plan) const;
 
