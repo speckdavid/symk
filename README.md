@@ -80,7 +80,7 @@ $ ./fast-downward.py domain.pddl problem.pddl --search "symq-bw(plan_selection=t
 ```
 
 ## Simple/Loopless Planning
-It is possible to generate simple/loopless plans, i.e., plans that visit at least one state more than once. In general, the option to consider and generate only simple plans can be combined with any Sym-k search engine and with different plan selectors by setting the "simple" parameter to true. See the following two examples and our [ICAPS 2022 Paper](https://gki.informatik.uni-freiburg.de/papers/vontschammer-etal-icaps2022.pdf).
+It is possible to generate simple/loopless plans, i.e., plans that do not visit any state more than once. In general, the option to consider and generate only simple plans can be combined with any Sym-k search engine and with different plan selectors by setting the "simple" parameter to true. See the following two examples and our [ICAPS 2022 Paper](https://gki.informatik.uni-freiburg.de/papers/vontschammer-etal-icaps2022.pdf).
 
 ```console
 $ ./fast-downward.py domain.pddl problem.pddl --search "symk-bd(simple=true,plan_selection=top_k(num_plans=**k**))"
