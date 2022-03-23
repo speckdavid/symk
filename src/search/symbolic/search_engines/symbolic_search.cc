@@ -153,7 +153,11 @@ void SymbolicSearch::new_solution(const SymSolutionCut &sol) {
 void SymbolicSearch::save_plan_if_necessary() {
     if (found_solution()) {
         utils::g_log << "Best plan:" << endl;
-        plan_manager.dump_plan(get_plan(), task_proxy);
+        if (task_properties::has_sdac_cost_operator(task_proxy)) {
+            plan_manager.dump_plan(get_plan(), TaskProxy(*search_task));
+        } else {
+            plan_manager.dump_plan(get_plan(), task_proxy);
+        }
     }
 }
 
