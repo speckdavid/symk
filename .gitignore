@@ -13,3 +13,5 @@ src/dd_libs/cudd-3.0.0/autom4te.cache/
 src/dd_libs/cudd-3.0.0/Makefile.in
 src/dd_libs/cudd-3.0.0/aclocal.m4
 src/dd_libs/cudd-3.0.0/configure
+src/dd_libs/cudd-3.0.0/config.h.in
+src/dd_libs/cudd-3.0.0/config.h.in~
