@@ -1,9 +1,11 @@
 #include "reconstruction_node.h"
 
+#include "../../utils/logging.h"
+
 using namespace std;
 
 namespace symbolic {
-ReconstructionNode::ReconstructionNode(int g, int h, BDD states, bool fwd_phase) :
+ReconstructionNode::ReconstructionNode(int g, int h, BDD states, bool fwd_phase, int plan_length) :
     g(g),
     h(h),
     states(states),
@@ -11,7 +13,8 @@ ReconstructionNode::ReconstructionNode(int g, int h, BDD states, bool fwd_phase)
     predecessor(nullptr),
     successor(nullptr),
     to_predecessor_op(OperatorID::no_operator),
-    to_successor_op(OperatorID::no_operator) {}
+    to_successor_op(OperatorID::no_operator),
+    plan_length(plan_length) {}
 
 shared_ptr<ReconstructionNode> ReconstructionNode::get_successor() const {
     return successor;
@@ -19,6 +22,22 @@ shared_ptr<ReconstructionNode> ReconstructionNode::get_successor() const {
 
 shared_ptr<ReconstructionNode> ReconstructionNode::get_predecessor() const {
     return predecessor;
+}
+
+shared_ptr<ReconstructionNode> ReconstructionNode::get_origin_predecessor() const {
+    auto cur = make_shared<ReconstructionNode>(*this);
+    while (cur->get_predecessor()) {
+        cur = cur->get_predecessor();
+    }
+    return cur;
+}
+
+shared_ptr<ReconstructionNode> ReconstructionNode::get_origin_successor() const {
+    auto cur = make_shared<ReconstructionNode>(*this);
+    while (cur->get_successor()) {
+        cur = cur->get_successor();
+    }
+    return cur;
 }
 
 OperatorID ReconstructionNode::get_to_predecessor_op() const {
@@ -54,18 +73,20 @@ void ReconstructionNode::get_plan(Plan &plan) const {
     // assert(this->get_f() == 0);
     shared_ptr<ReconstructionNode> cur_node = make_shared<ReconstructionNode>(*this);
 
+    Plan suffix_plan;
     while (cur_node->get_successor()) {
         assert(cur_node->get_to_successor_op() != OperatorID::no_operator);
-        plan.push_back(cur_node->get_to_successor_op());
+        suffix_plan.push_back(cur_node->get_to_successor_op());
         cur_node = cur_node->get_successor();
     }
-
-    reverse(plan.begin(), plan.end());
+    reverse(suffix_plan.begin(), suffix_plan.end());
 
     while (cur_node->get_predecessor()) {
         assert(cur_node->get_to_predecessor_op() != OperatorID::no_operator);
         plan.push_back(cur_node->get_to_predecessor_op());
         cur_node = cur_node->get_predecessor();
     }
+    plan.insert(plan.end(), suffix_plan.begin(), suffix_plan.end());
+    assert(plan.size() == get_plan_length());
 }
 }

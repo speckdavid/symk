@@ -12,22 +12,21 @@
 #include "../../state_registry.h"
 #include "../../task_proxy.h"
 
-#include "../../algorithms/priority_queues.h"
-
-using namespace std;
-
 namespace symbolic {
-
 class SimpleSymSolutionRegistry : public SymSolutionRegistry {
 protected:
 
-    priority_queues::AdaptiveQueue<ReconstructionNode> queue;
+    // We would like to use the prio queue implemented in FD but it requires 
+    // integer values as prio and we have a more complex comparision
+    std::priority_queue<ReconstructionNode, std::vector<ReconstructionNode>, CompareReconstructionNodes> queue;
 
     void add_plan(const Plan &plan) const override;
 
     virtual void reconstruct_plans(const SymSolutionCut &sym_cut) override;
 
     void expand_cost_actions(const ReconstructionNode &node);
+
+    bool swap_to_bwd_phase(const ReconstructionNode &node) const;
 
 public:
     SimpleSymSolutionRegistry() : SymSolutionRegistry() {}

@@ -6,6 +6,14 @@
 
 using namespace std;
 
+
+// TODOs: 1. We want to pass all sym_cuts with the same cost we have at once and add them to 
+// the queue. And especially we want to do that fist when we have all to be able to sort them by
+// lenght.
+// However: this might detoriate our performance a bit
+// 2. We might can ignore symetric sym_cuts: e.g, {g=11,h=0} and {g=0,h=11}...
+
+
 namespace symbolic {
 void SimpleSymSolutionRegistry::add_plan(const Plan &plan) const {
     plan_data_base->add_plan(plan);
@@ -17,15 +25,22 @@ void SimpleSymSolutionRegistry::reconstruct_plans(
     assert(fw_search || sym_cut.get_g() == 0);
     assert(bw_search || sym_cut.get_h() == 0);
 
-    int cur_f = sym_cut.get_f();
-    ReconstructionNode cur_node(sym_cut.get_g(), sym_cut.get_h(), sym_cut.get_cut(),
-                                fw_search != nullptr);
-    queue.push(cur_node.get_f(), cur_node);
+    ReconstructionNode cur_node(sym_cut.get_g(), sym_cut.get_h(),
+                                sym_cut.get_cut(), fw_search != nullptr, 0);
+    queue.push(cur_node);
+
+    // In the bidirectional case we might can directly swap the direction
+    if (swap_to_bwd_phase(cur_node)) {
+        ReconstructionNode bw_node = cur_node;
+        bw_node.set_fwd_phase(false);
+        queue.push(bw_node);
+    }
 
     // While queue is not empty
     while (!queue.empty()) {
-        tie(cur_f, cur_node) = queue.pop();
-        utils::g_log << cur_f << ": " << cur_node << endl;
+        cur_node = queue.top();
+        queue.pop();
+        // utils::g_log << cur_node << endl;
 
         // Check if we have found a solution with this cut
         if (cur_node.is_solution()) {
@@ -42,7 +57,6 @@ void SimpleSymSolutionRegistry::reconstruct_plans(
         }
         expand_cost_actions(cur_node);
     }
-    exit(0);
 }
 
 void SimpleSymSolutionRegistry::expand_cost_actions(const ReconstructionNode &node) {
@@ -57,7 +71,6 @@ void SimpleSymSolutionRegistry::expand_cost_actions(const ReconstructionNode &no
         cur_cost = node.get_h();
         cur_closed_list = bw_search->getClosedShared();
     }
-    cout << "here" << endl;
 
     for (auto key : trs) {
         int new_cost = cur_cost - key.first;
@@ -76,9 +89,8 @@ void SimpleSymSolutionRegistry::expand_cost_actions(const ReconstructionNode &no
             }
 
             auto op_id = *(tr.getOpsIds().begin());
-            ReconstructionNode new_node(-1, -1, intersection, fwd);
+            ReconstructionNode new_node(-1, -1, intersection, fwd, node.get_plan_length() + 1);
             if (fwd) {
-                // TODO check for init state!
                 new_node.set_g(new_cost);
                 new_node.set_h(node.get_h());
                 new_node.set_predecessor(make_shared<ReconstructionNode>(node), op_id);
@@ -87,8 +99,30 @@ void SimpleSymSolutionRegistry::expand_cost_actions(const ReconstructionNode &no
                 new_node.set_h(new_cost);
                 new_node.set_successor(make_shared<ReconstructionNode>(node), op_id);
             }
-            queue.push(new_node.get_f(), new_node);
+
+            // We have sucessfully reconstructed to the initial state
+            if (swap_to_bwd_phase(new_node)) {
+                Plan partial_plan;
+                new_node.get_plan(partial_plan);
+                BDD middle_state = plan_data_base->get_final_state(partial_plan);
+                ReconstructionNode bw_node(0, new_node.get_h(), middle_state,
+                                           false, node.get_plan_length() + 1);
+                bw_node.set_predecessor(make_shared<ReconstructionNode>(node), op_id);
+                queue.push(bw_node);
+
+                // We probably want to do the push below if we have zero cost
+                // and have not simple path pruning
+            } else {
+                queue.push(new_node);
+            }
         }
     }
+}
+
+bool SimpleSymSolutionRegistry::swap_to_bwd_phase(const ReconstructionNode &node) const {
+    return bw_search
+           && node.is_fwd_phase()
+           && node.get_g() == 0
+           && !(node.get_states() * fw_search->getClosedShared()->get_start_states()).IsZero();
 }
 }
