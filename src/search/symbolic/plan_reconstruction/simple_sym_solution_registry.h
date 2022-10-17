@@ -1,39 +1,33 @@
 #ifndef SYMBOLIC_PLAN_RECONSTRUCTION_SIMPLE_SYM_SOLUTION_REGISTRY_H
 #define SYMBOLIC_PLAN_RECONSTRUCTION_SIMPLE_SYM_SOLUTION_REGISTRY_H
 
-#include "../../plan_manager.h"
-#include "../../state_registry.h"
-#include "../../task_proxy.h"
+#include "sym_solution_registry.h"
+#include "reconstruction_node.h"
+
 #include "../plan_selection/plan_database.h"
 #include "../sym_variables.h"
 #include "../transition_relation.h"
-#include "simple_sym_solution_cut.h"
-#include "sym_solution_registry.h"
+
+#include "../../plan_manager.h"
+#include "../../state_registry.h"
+#include "../../task_proxy.h"
+
+#include "../../algorithms/priority_queues.h"
 
 using namespace std;
 
 namespace symbolic {
+
 class SimpleSymSolutionRegistry : public SymSolutionRegistry {
 protected:
-    BDD get_visited_states(const Plan &plan) const;
 
-    virtual void add_plan(const Plan &plan) const override;
+    priority_queues::AdaptiveQueue<ReconstructionNode> queue;
 
-    virtual void reconstruct_plans(const SymSolutionCut &cut) override;
+    void add_plan(const Plan &plan) const override;
 
-    void extract_all_plans(SimpleSymSolutionCut &simple_cut, bool fw, Plan plan);
+    virtual void reconstruct_plans(const SymSolutionCut &sym_cut) override;
 
-    void extract_all_cost_plans(SimpleSymSolutionCut &simple_cut, bool fw, Plan &plan);
-    void extract_all_zero_plans(SimpleSymSolutionCut &sym_cut, bool fw, Plan &plan);
-
-    void reconstruct_cost_action(SimpleSymSolutionCut &simple_cut, bool fw,
-                                 std::shared_ptr<ClosedList> closed,
-                                 const Plan &plan);
-    void reconstruct_zero_action(SimpleSymSolutionCut &sym_cut, bool fw,
-                                 std::shared_ptr<ClosedList> closed,
-                                 const Plan &plan);
-    void extract_one_by_one(BDD states, BDD &visited,
-                            SimpleSymSolutionCut &simple_cut, Plan &plan);
+    void expand_cost_actions(const ReconstructionNode &node);
 
 public:
     SimpleSymSolutionRegistry() : SymSolutionRegistry() {}

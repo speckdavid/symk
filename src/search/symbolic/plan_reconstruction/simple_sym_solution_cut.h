@@ -22,7 +22,6 @@ public:
     BDD get_visited_states() const;
     void set_visited_states(BDD visited_states);
 
-
     friend std::ostream &operator<<(std::ostream &os,
                                     const SimpleSymSolutionCut &sym_cut) {
         return os << "symcut{g=" << sym_cut.get_g() << ", h=" << sym_cut.get_h()
@@ -32,5 +31,5 @@ public:
                   << "}";
     }
 };
-} // namespace symbolic
+}
 #endif

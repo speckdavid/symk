@@ -6,7 +6,10 @@
 using namespace std;
 
 namespace symbolic {
-SymSolutionCut::SymSolutionCut() : g(-1), h(-1), sol_cost(-1) {}
+SymSolutionCut::SymSolutionCut() :
+    g(-1),
+    h(-1),
+    sol_cost(-1) {}
 
 SymSolutionCut::SymSolutionCut(int g, int h, BDD cut, int sol_cost) :
     g(g),
