@@ -56,8 +56,6 @@ public:
     bool is_fwd_phase() const;
     void set_fwd_phase(bool fwd_phase) {this->fwd_phase = fwd_phase;}
 
-    bool is_solution() const;
-
     void get_plan(Plan &plan) const;
 
     friend std::ostream &operator<<(std::ostream &os,
@@ -65,6 +63,7 @@ public:
         return os << "symcut{g=" << node.get_g() << ", h=" << node.get_h()
                   << ", f=" << node.get_f()
                   << ", fwd_phase=" << node.is_fwd_phase()
+                  << ", |plan|=" << node.get_plan_length()
                   << ", nodes=" << node.get_states().nodeCount() << "}";
     }
 };

@@ -7,7 +7,7 @@
 using namespace std;
 
 
-// TODOs: 1. We want to pass all sym_cuts with the same cost we have at once and add them to 
+// TODOs: 1. We want to pass all sym_cuts with the same cost we have at once and add them to
 // the queue. And especially we want to do that fist when we have all to be able to sort them by
 // lenght.
 // However: this might detoriate our performance a bit
@@ -17,16 +17,16 @@ using namespace std;
 namespace symbolic {
 void SimpleSymSolutionRegistry::add_plan(const Plan &plan) const {
     plan_data_base->add_plan(plan);
-    assert(!plan_data_base->has_zero_cost_loop(plan));
+    // assert(!plan_data_base->has_zero_cost_loop(plan));
 }
 
 void SimpleSymSolutionRegistry::reconstruct_plans(
     const SymSolutionCut &sym_cut) {
-    assert(fw_search || sym_cut.get_g() == 0);
-    assert(bw_search || sym_cut.get_h() == 0);
+    assert(fw_closed || sym_cut.get_g() == 0);
+    assert(bw_closed || sym_cut.get_h() == 0);
 
     ReconstructionNode cur_node(sym_cut.get_g(), sym_cut.get_h(),
-                                sym_cut.get_cut(), fw_search != nullptr, 0);
+                                sym_cut.get_cut(), fw_closed != nullptr, 0);
     queue.push(cur_node);
 
     // In the bidirectional case we might can directly swap the direction
@@ -43,7 +43,7 @@ void SimpleSymSolutionRegistry::reconstruct_plans(
         // utils::g_log << cur_node << endl;
 
         // Check if we have found a solution with this cut
-        if (cur_node.is_solution()) {
+        if (is_solution(cur_node)) {
             Plan cur_plan;
             cur_node.get_plan(cur_plan);
             add_plan(cur_plan);
@@ -55,40 +55,39 @@ void SimpleSymSolutionRegistry::reconstruct_plans(
             }
             // continue;
         }
-        expand_cost_actions(cur_node);
+        expand_non_zero_cost_actions(cur_node);
     }
 }
 
-void SimpleSymSolutionRegistry::expand_cost_actions(const ReconstructionNode &node) {
+void SimpleSymSolutionRegistry::expand_non_zero_cost_actions(const ReconstructionNode &node) {
     bool fwd = node.is_fwd_phase();
     int cur_cost;
     shared_ptr<ClosedList> cur_closed_list;
 
     if (fwd) {
         cur_cost = node.get_g();
-        cur_closed_list = fw_search->getClosedShared();
+        cur_closed_list = fw_closed;
     } else {
         cur_cost = node.get_h();
-        cur_closed_list = bw_search->getClosedShared();
+        cur_closed_list = bw_closed;
     }
 
-    for (auto key : trs) {
+    for (auto const &key : trs) {
         int new_cost = cur_cost - key.first;
 
-        // 1. zero cost action are handled differently
-        // 2. new cost can not be negative
-        if (key.first == 0 || new_cost < 0) {
+        // new cost can not be negative
+        if (new_cost < 0) {
             continue;
         }
 
-        for (TransitionRelation &tr : key.second) {
+        for (const TransitionRelation &tr : key.second) {
             BDD succ = fwd ? tr.preimage(node.get_states()) : tr.image(node.get_states());
             BDD intersection = succ * cur_closed_list->get_closed_at(new_cost);
             if (intersection.IsZero()) {
                 continue;
             }
 
-            auto op_id = *(tr.getOpsIds().begin());
+            OperatorID op_id = *(tr.getOpsIds().begin());
             ReconstructionNode new_node(-1, -1, intersection, fwd, node.get_plan_length() + 1);
             if (fwd) {
                 new_node.set_g(new_cost);
@@ -112,6 +111,9 @@ void SimpleSymSolutionRegistry::expand_cost_actions(const ReconstructionNode &no
 
                 // We probably want to do the push below if we have zero cost
                 // and have not simple path pruning
+                if (task_has_zero_costs()) {
+                    queue.push(new_node);
+                }
             } else {
                 queue.push(new_node);
             }
@@ -120,9 +122,19 @@ void SimpleSymSolutionRegistry::expand_cost_actions(const ReconstructionNode &no
 }
 
 bool SimpleSymSolutionRegistry::swap_to_bwd_phase(const ReconstructionNode &node) const {
-    return bw_search
+    return bw_closed
            && node.is_fwd_phase()
            && node.get_g() == 0
-           && !(node.get_states() * fw_search->getClosedShared()->get_start_states()).IsZero();
+           && !(node.get_states() * fw_closed->get_start_states()).IsZero();
+}
+
+bool SimpleSymSolutionRegistry::is_solution(const ReconstructionNode &node) const {
+    if (node.get_f() > 0)
+        return false;
+    if (bw_closed && node.is_fwd_phase())
+        return false;
+    shared_ptr<ClosedList> closed = node.is_fwd_phase() ?
+        fw_closed : bw_closed;
+    return !(node.get_states() * closed->get_start_states()).IsZero();
 }
 }

@@ -19,9 +19,8 @@ protected:
 
     std::vector<SymSolutionCut> sym_cuts; // sorted in ascending order!
 
-    std::shared_ptr<SymVariables> sym_vars;
-    UniformCostSearch *fw_search;
-    UniformCostSearch *bw_search;
+    std::shared_ptr<symbolic::ClosedList> fw_closed;
+    std::shared_ptr<symbolic::ClosedList> bw_closed;
     std::shared_ptr<PlanDataBase> plan_data_base;
     std::map<int, std::vector<TransitionRelation>> trs;
     int plan_cost_bound;
@@ -51,11 +50,14 @@ protected:
 
 public:
     SymSolutionRegistry();
-    virtual ~SymSolutionRegistry() = default;
 
-    void init(std::shared_ptr<SymVariables> sym_vars,
-              UniformCostSearch *fwd_search, UniformCostSearch *bwd_search,
-              std::shared_ptr<PlanDataBase> plan_data_base, bool single_solution);
+    void init(std::shared_ptr<symbolic::ClosedList> fw_closed,
+              std::shared_ptr<symbolic::ClosedList> bw_closed,
+              std::map<int, std::vector<TransitionRelation>> &trs,
+              std::shared_ptr<PlanDataBase> plan_data_base,
+              bool single_solution);
+              
+    virtual ~SymSolutionRegistry() = default;
 
     void register_solution(const SymSolutionCut &solution);
     void construct_cheaper_solutions(int bound);

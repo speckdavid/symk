@@ -64,10 +64,6 @@ bool ReconstructionNode::is_fwd_phase() const {
     return fwd_phase;
 }
 
-bool ReconstructionNode::is_solution() const {
-    return get_f() == 0;
-}
-
 void ReconstructionNode::get_plan(Plan &plan) const {
     assert(plan.empty());
     // assert(this->get_f() == 0);
