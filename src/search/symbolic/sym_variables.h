@@ -54,13 +54,12 @@ class SymVariables {
     std::shared_ptr<SymAxiomCompilation> ax_comp; // used for axioms
 
     int numBDDVars; // Number of binary variables (just one set, the total number
-    // is numBDDVars*3
+    // is numBDDVars*2
     std::vector<BDD> variables; // BDD variables
 
     // The variable order must be complete.
     std::vector<int> var_order; // Variable(FD) order in the BDD
-    std::vector<std::vector<int>> bdd_index_pre, bdd_index_eff,
-                                  bdd_index_abs; // vars(BDD) for each var(FD)
+    std::vector<std::vector<int>> bdd_index_pre, bdd_index_eff; // vars(BDD) for each var(FD)
 
     std::vector<std::vector<BDD>>
     preconditionBDDs;   // BDDs associated with the precondition of a predicate
@@ -71,10 +70,6 @@ class SymVariables {
     std::vector<BDD>
     validValues;   // BDD that represents the valid values of all the variables
     BDD validBDD;  // BDD that represents the valid values of all the variables
-
-    // Vector to store the binary description of an state
-    // Avoid allocating memory during heuristic evaluation
-    std::vector<int> binState;
 
     void init(const std::vector<int> &v_order);
 
@@ -106,10 +101,6 @@ public:
         return bdd_index_eff[variable];
     }
 
-    inline const std::vector<int> &vars_index_abs(int variable) const {
-        return bdd_index_abs[variable];
-    }
-
     inline const BDD &preBDD(int variable, int value) const {
         return preconditionBDDs[variable][value];
     }
@@ -130,12 +121,6 @@ public:
         return getCube(vars, bdd_index_eff);
     }
 
-    inline BDD getCubeAbs(int var) const {return getCube(var, bdd_index_abs);}
-
-    inline BDD getCubeAbs(const std::set<int> &vars) const {
-        return getCube(vars, bdd_index_abs);
-    }
-
     inline const BDD &biimp(int variable) const {return biimpBDDs[variable];}
 
     inline std::vector<BDD> getBDDVarsPre() const {
@@ -146,20 +131,12 @@ public:
         return getBDDVars(var_order, bdd_index_eff);
     }
 
-    inline std::vector<BDD> getBDDVarsAbs() const {
-        return getBDDVars(var_order, bdd_index_abs);
-    }
-
     inline std::vector<BDD> getBDDVarsPre(const std::vector<int> &vars) const {
         return getBDDVars(vars, bdd_index_pre);
     }
 
     inline std::vector<BDD> getBDDVarsEff(const std::vector<int> &vars) const {
         return getBDDVars(vars, bdd_index_eff);
-    }
-
-    inline std::vector<BDD> getBDDVarsAbs(const std::vector<int> &vars) const {
-        return getBDDVars(vars, bdd_index_abs);
     }
 
     inline BDD zeroBDD() const {

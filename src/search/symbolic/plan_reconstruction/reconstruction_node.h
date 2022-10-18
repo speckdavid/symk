@@ -64,38 +64,74 @@ public:
                   << ", f=" << node.get_f()
                   << ", fwd_phase=" << node.is_fwd_phase()
                   << ", |plan|=" << node.get_plan_length()
-                  << ", nodes=" << node.get_states().nodeCount() << "}";
+                  << ", nodes=" << node.get_states().nodeCount()
+                  << "}";
     }
 };
 
-// struct CompareReconstructionNodes {
-// public:
-//     bool operator()(const ReconstructionNode &node1, ReconstructionNode &node2) {
-//         return node2.get_f() < node1.get_f() ||
-//                (node2.get_f() == node1.get_f() && node2.get_g() < node1.get_g());
-//     }
-// };
+// TODO: We can try to de
+// TODO: We necessarily need to select here a reasonable choice:
+// Sort only by cost => sort by f, then g, then plan length
+// Sort by cost then by plan length => sort by plan_length, than f, than g
+// However we can do some tricks: unit costs => simply sort by cost
+// For simple planning we probably also want to take the number of states into account...
 
-// Correct for sorting according to plan cost and than plan length!
+enum class ReconstructionPriority {
+    REMAINING_COST = 0,
+    PLAN_LENGTH = 1
+};
+
 struct CompareReconstructionNodes {
+protected:
+    ReconstructionPriority prio;
 public:
-    bool operator()(const ReconstructionNode &node1, ReconstructionNode &node2) {
-        if (node2.get_plan_length() < node1.get_plan_length()) return true;
-        if (node2.get_plan_length() > node1.get_plan_length()) return false;
+    CompareReconstructionNodes() {}
+    CompareReconstructionNodes(ReconstructionPriority prio) : prio(prio) {}
 
-        return node2.get_f() < node1.get_f() ||
-               (node2.get_f() == node1.get_f() && node2.get_g() < node1.get_g());
+    bool sort_by_remaining_cost(const ReconstructionNode &node1, const ReconstructionNode &node2) {
+        if (node2.get_f() < node1.get_f())
+            return true;
+        if (node2.get_f() > node1.get_f())
+            return false;
+        if (node2.get_g() < node1.get_g())
+            return true;
+        if (node2.get_g() > node1.get_g())
+            return false;
+        if (!node2.is_fwd_phase() && node1.is_fwd_phase())
+            return true;
+        if (node2.is_fwd_phase() && !node1.is_fwd_phase())
+            return false;
+        return node2.get_plan_length() < node1.get_plan_length();
+    }
+
+    bool sort_by_plan_length(const ReconstructionNode &node1, const ReconstructionNode &node2) {
+        if (node2.get_plan_length() < node1.get_plan_length())
+            return true;
+        if (node2.get_plan_length() > node1.get_plan_length())
+            return false;
+        if (node2.get_f() < node1.get_f())
+            return true;
+        if (node2.get_f() > node1.get_f())
+            return false;
+        if (node2.get_g() < node1.get_g())
+            return true;
+        if (node2.get_g() > node1.get_g())
+            return false;
+        return !node2.is_fwd_phase() && node1.is_fwd_phase();
+    }
+
+    bool operator()(const ReconstructionNode &node1, const ReconstructionNode &node2) {
+        switch (prio) {
+        case ReconstructionPriority::REMAINING_COST:
+            return sort_by_remaining_cost(node1, node2);
+        case ReconstructionPriority::PLAN_LENGTH:
+            return sort_by_plan_length(node1, node2);
+        default:
+            utils::exit_with(utils::ExitCode::SEARCH_UNSUPPORTED);
+        }
+        utils::exit_with(utils::ExitCode::SEARCH_UNSUPPORTED);
+        return false;
     }
 };
-
-// struct CompareReconstructionNodes {
-// public:
-//     bool operator()(const ReconstructionNode &node1, ReconstructionNode &node2) {
-
-//         return node2.get_f() < node1.get_f() ||
-//                (node2.get_f() == node1.get_f() && node2.get_g() < node1.get_g()) ||
-//                (node2.get_f() == node1.get_f() && node2.get_g() == node1.get_g() && node2.get_plan_length() < node1.get_plan_length());
-//     }
-// };
 }
 #endif

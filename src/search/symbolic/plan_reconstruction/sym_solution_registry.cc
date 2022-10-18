@@ -13,6 +13,8 @@ void SymSolutionRegistry::add_plan(const Plan &plan) const {
 
 void SymSolutionRegistry::reconstruct_plans(
     const vector<SymSolutionCut> &sym_cuts) {
+    assert(queue.empty());
+
     for (const SymSolutionCut &sym_cut : sym_cuts) {
         assert(fw_closed || sym_cut.get_g() == 0);
         assert(bw_closed || sym_cut.get_h() == 0);
@@ -50,6 +52,7 @@ void SymSolutionRegistry::reconstruct_plans(
         }
         expand_actions(cur_node);
     }
+    assert(queue.empty());
 }
 
 void SymSolutionRegistry::expand_actions(const ReconstructionNode &node) {
@@ -131,17 +134,20 @@ bool SymSolutionRegistry::is_solution(const ReconstructionNode &node) const {
     return !(node.get_states() * closed->get_start_states()).IsZero();
 }
 
-////// Plan registry
-
 SymSolutionRegistry::SymSolutionRegistry()
     : single_solution(true), fw_closed(nullptr),
-      bw_closed(nullptr), plan_data_base(nullptr) {}
+      bw_closed(nullptr), plan_data_base(nullptr) {
+    // If unit costs we simple use sort by remaiing cost
+    queue = ReconstructionQueue(CompareReconstructionNodes(ReconstructionPriority::REMAINING_COST));
+}
 
-void SymSolutionRegistry::init(shared_ptr<symbolic::ClosedList> fw_closed,
+void SymSolutionRegistry::init(std::shared_ptr<SymVariables> sym_vars,
+                               shared_ptr<symbolic::ClosedList> fw_closed,
                                shared_ptr<symbolic::ClosedList> bw_closed,
                                map<int, vector<TransitionRelation>> &trs,
                                shared_ptr<PlanDataBase> plan_data_base,
                                bool single_solution) {
+    this->sym_vars = sym_vars;
     this->plan_data_base = plan_data_base;
     this->fw_closed = fw_closed;
     this->bw_closed = bw_closed;

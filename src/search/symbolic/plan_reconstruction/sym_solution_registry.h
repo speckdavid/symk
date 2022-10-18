@@ -12,23 +12,41 @@
 #include "reconstruction_node.h"
 
 namespace symbolic {
+// We would like to use the prio queue implemented in FD but it requires
+// integer values as prio and we have a more complex comparision
+typedef std::priority_queue<ReconstructionNode, std::vector<ReconstructionNode>, CompareReconstructionNodes> ReconstructionQueue;
+
+enum class PlanPruning {
+    /* Multiple combinable options to specify which plans are allowed to be part of
+    the solution set. The Plan reconstruction will optimize to prune partial plans that
+    can not fullfill the contraints. */
+    SIMPLE = 0,
+    JUSTIFIED = 1
+};
+
+
 class UniformCostSearch;
 class ClosedList;
 
 class SymSolutionRegistry {
 protected:
+    // Pruning techniques
+    bool simple;
+    bool justified;
+
     bool single_solution;
 
     std::map<int, std::vector<SymSolutionCut>> sym_cuts;
 
-    std::shared_ptr<symbolic::ClosedList> fw_closed;
-    std::shared_ptr<symbolic::ClosedList> bw_closed;
+    std::shared_ptr<SymVariables> sym_vars;
+    std::shared_ptr<ClosedList> fw_closed;
+    std::shared_ptr<ClosedList> bw_closed;
     std::shared_ptr<PlanDataBase> plan_data_base;
     std::map<int, std::vector<TransitionRelation>> trs;
 
-    // We would like to use the prio queue implemented in FD but it requires 
+    // We would like to use the prio queue implemented in FD but it requires
     // integer values as prio and we have a more complex comparision
-    std::priority_queue<ReconstructionNode, std::vector<ReconstructionNode>, CompareReconstructionNodes> queue;
+    ReconstructionQueue queue;
 
     void add_plan(const Plan &plan) const;
 
@@ -45,12 +63,13 @@ protected:
 public:
     SymSolutionRegistry();
 
-    void init(std::shared_ptr<symbolic::ClosedList> fw_closed,
+    void init(std::shared_ptr<SymVariables> sym_vars,
+              std::shared_ptr<symbolic::ClosedList> fw_closed,
               std::shared_ptr<symbolic::ClosedList> bw_closed,
               std::map<int, std::vector<TransitionRelation>> &trs,
               std::shared_ptr<PlanDataBase> plan_data_base,
               bool single_solution);
-              
+
     virtual ~SymSolutionRegistry() = default;
 
     void register_solution(const SymSolutionCut &solution);

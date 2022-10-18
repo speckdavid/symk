@@ -39,7 +39,8 @@ void TopkSymbolicUniformCostSearch::initialize() {
 
     auto individual_trs = fw ? fw_search->getStateSpaceShared()->getIndividualTRs() :  bw_search->getStateSpaceShared()->getIndividualTRs();
 
-    solution_registry->init(fw_search ? fw_search->getClosedShared() : nullptr,
+    solution_registry->init(vars,
+                            fw_search ? fw_search->getClosedShared() : nullptr,
                             bw_search ? bw_search->getClosedShared() : nullptr,
                             individual_trs,
                             plan_data_base,

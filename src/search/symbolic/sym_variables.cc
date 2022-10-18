@@ -59,7 +59,6 @@ void SymVariables::init(const vector<int> &v_order) {
     numBDDVars = 0;
     bdd_index_pre = vector<vector<int>>(v_order.size());
     bdd_index_eff = vector<vector<int>>(v_order.size());
-    bdd_index_abs = vector<vector<int>>(v_order.size());
     int _numBDDVars = 0; // numBDDVars;
     for (int var : var_order) {
         int var_len = ceil(log2(task_proxy.get_variables()[var].get_domain_size()));
@@ -111,8 +110,6 @@ void SymVariables::init(const vector<int> &v_order) {
         biimpBDDs[var] =
             createBiimplicationBDD(bdd_index_pre[var], bdd_index_eff[var]);
     }
-
-    binState.resize(_numBDDVars, 0);
 
     utils::g_log << "Symbolic Variables... Done." << endl;
 
