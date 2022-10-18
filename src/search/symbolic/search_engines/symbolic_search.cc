@@ -4,7 +4,6 @@
 #include "../plugin.h"
 
 #include "../original_state_space.h"
-#include "../plan_reconstruction/simple_sym_solution_registry.h"
 #include "../plan_selection/plan_database.h"
 #include "../searches/bidirectional_search.h"
 #include "../searches/top_k_uniform_cost_search.h"
@@ -70,7 +69,6 @@ void SymbolicSearch::initialize() {
         utils::g_log << "Plan Reconstruction: Simple (without loops)" << endl;
         utils::g_log << "Maximal plan cost: " << max_plan_cost << endl;
         upper_bound = min((double)upper_bound, max_plan_cost + 1);
-        solution_registry = make_shared<SimpleSymSolutionRegistry>();
         cout << endl;
     }
 
@@ -84,7 +82,7 @@ SearchStatus SymbolicSearch::step() {
     if (step_num == 0) {
         BDD cut = mgr->getInitialState() * mgr->getGoal();
         if (!cut.IsZero()) {
-            new_solution(SymSolutionCut(0, 0, cut, 0));
+            new_solution(SymSolutionCut(0, 0, cut));
         }
     }
 
@@ -97,7 +95,7 @@ SearchStatus SymbolicSearch::step() {
         solution_found = plan_data_base->get_num_reported_plan() > 0;
         cur_status = solution_found ? SOLVED : FAILED;
     } else {
-        // Bound increade => construct plans
+        // Bound increased => construct plans
         if (lower_bound_increased) {
             solution_registry->construct_cheaper_solutions(lower_bound);
         }

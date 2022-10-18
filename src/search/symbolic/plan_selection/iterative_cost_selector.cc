@@ -23,9 +23,8 @@ void IterativeCostSelector::init(shared_ptr<SymVariables> sym_vars,
     cout << endl;
 }
 
-bool IterativeCostSelector::reconstruct_solutions(
-    const SymSolutionCut &cut) const {
-    if (most_expensive_plan_cost >= cut.get_sol_cost()) {
+bool IterativeCostSelector::reconstruct_solutions(int cost) const {
+    if (most_expensive_plan_cost >= cost) {
         return false;
     }
     return !found_enough_plans();

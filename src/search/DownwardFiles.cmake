@@ -800,8 +800,6 @@ fast_downward_plugin(
         symbolic/search_engines/symbolic_uniform_cost_search
         symbolic/search_engines/top_k_symbolic_uniform_cost_search
         symbolic/search_engines/top_q_symbolic_uniform_cost_search
-        symbolic/plan_reconstruction/simple_sym_solution_cut
-        symbolic/plan_reconstruction/simple_sym_solution_registry
         symbolic/plan_reconstruction/sym_solution_cut
         symbolic/plan_reconstruction/sym_solution_registry
         symbolic/plan_reconstruction/reconstruction_node

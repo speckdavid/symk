@@ -17,7 +17,7 @@ public:
                       const std::shared_ptr<AbstractTask> &task,
                       PlanManager &plan_manager);
 
-    virtual bool reconstruct_solutions(const SymSolutionCut &cut) const override;
+    virtual bool reconstruct_solutions(int cost) const override;
     virtual void add_plan(const Plan &plan) override;
 
     std::string tag() const override {return "Iterative cost selector";}

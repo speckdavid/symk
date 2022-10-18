@@ -76,6 +76,7 @@ public:
 //     }
 // };
 
+// Correct for sorting according to plan cost and than plan length!
 struct CompareReconstructionNodes {
 public:
     bool operator()(const ReconstructionNode &node1, ReconstructionNode &node2) {
@@ -87,5 +88,14 @@ public:
     }
 };
 
+// struct CompareReconstructionNodes {
+// public:
+//     bool operator()(const ReconstructionNode &node1, ReconstructionNode &node2) {
+
+//         return node2.get_f() < node1.get_f() ||
+//                (node2.get_f() == node1.get_f() && node2.get_g() < node1.get_g()) ||
+//                (node2.get_f() == node1.get_f() && node2.get_g() == node1.get_g() && node2.get_plan_length() < node1.get_plan_length());
+//     }
+// };
 }
 #endif

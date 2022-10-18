@@ -9,6 +9,8 @@
 #include "../../state_registry.h"
 #include "../../task_proxy.h"
 
+#include "reconstruction_node.h"
+
 namespace symbolic {
 class UniformCostSearch;
 class ClosedList;
@@ -17,36 +19,28 @@ class SymSolutionRegistry {
 protected:
     bool single_solution;
 
-    std::vector<SymSolutionCut> sym_cuts; // sorted in ascending order!
+    std::map<int, std::vector<SymSolutionCut>> sym_cuts;
 
     std::shared_ptr<symbolic::ClosedList> fw_closed;
     std::shared_ptr<symbolic::ClosedList> bw_closed;
     std::shared_ptr<PlanDataBase> plan_data_base;
     std::map<int, std::vector<TransitionRelation>> trs;
-    int plan_cost_bound;
+
+    // We would like to use the prio queue implemented in FD but it requires 
+    // integer values as prio and we have a more complex comparision
+    std::priority_queue<ReconstructionNode, std::vector<ReconstructionNode>, CompareReconstructionNodes> queue;
+
+    void add_plan(const Plan &plan) const;
+
+    void reconstruct_plans(const std::vector<SymSolutionCut> &sym_cuts);
+
+    void expand_actions(const ReconstructionNode &node);
+
+    bool swap_to_bwd_phase(const ReconstructionNode &node) const;
+
+    bool is_solution(const ReconstructionNode &node) const;
 
     bool task_has_zero_costs() const {return trs.count(0) > 0;}
-
-    virtual void add_plan(const Plan &plan) const;
-
-    virtual void reconstruct_plans(const SymSolutionCut &cut);
-
-    // Extracts all plans by a DFS, we copy the current plan suffix by every
-    // recusive call which is why we don't use any reference for plan
-    // BID: After reconstruction of the forward part we reverse the plan and
-    // call extract_all_plans in bw direction which completes the plan
-    // After completing a plan we store it in found plans!
-    void extract_all_plans(SymSolutionCut &sym_cut, bool fw, Plan plan);
-
-    void extract_all_cost_plans(SymSolutionCut &sym_cut, bool fw, Plan &plan);
-    void extract_all_zero_plans(SymSolutionCut &sym_cut, bool fw, Plan &plan);
-
-    void reconstruct_zero_action(SymSolutionCut &sym_cut, bool fw,
-                                 std::shared_ptr<ClosedList> closed,
-                                 const Plan &plan);
-    void reconstruct_cost_action(SymSolutionCut &sym_cut, bool fw,
-                                 std::shared_ptr<ClosedList> closed,
-                                 const Plan &plan);
 
 public:
     SymSolutionRegistry();
@@ -83,7 +77,7 @@ public:
             cheapest = std::min(cheapest, plan_data_base->get_first_plan_cost());
         }
         if (sym_cuts.size() > 0) {
-            cheapest = std::min(cheapest, (double)sym_cuts.at(0).get_f());
+            cheapest = std::min(cheapest, (double)sym_cuts.begin()->first);
         }
         return cheapest;
     }
