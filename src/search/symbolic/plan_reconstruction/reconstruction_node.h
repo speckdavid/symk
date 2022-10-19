@@ -65,6 +65,7 @@ public:
                   << ", fwd_phase=" << node.is_fwd_phase()
                   << ", |plan|=" << node.get_plan_length()
                   << ", nodes=" << node.get_states().nodeCount()
+                  // << ", states=" << node.get_states().CountMinterm(15)
                   << "}";
     }
 };

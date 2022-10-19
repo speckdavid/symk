@@ -4,11 +4,9 @@
 using namespace std;
 
 namespace symbolic {
-//////////////// Plan Reconstruction /////////////////////////
-
 void SymSolutionRegistry::add_plan(const Plan &plan) const {
+    assert(!(simple_plans() && plan_data_base->has_zero_cost_loop(plan)));
     plan_data_base->add_plan(plan);
-    // assert(!plan_data_base->has_zero_cost_loop(plan));
 }
 
 void SymSolutionRegistry::reconstruct_plans(
@@ -35,6 +33,20 @@ void SymSolutionRegistry::reconstruct_plans(
     while (!queue.empty()) {
         ReconstructionNode cur_node = queue.top();
         queue.pop();
+
+        // If we do simple planning, we extract a single state form the relevant states
+        // and process it
+        if (simple_plans() && sym_vars->numStates(cur_node.get_states()) > 1) {
+            State state = sym_vars->getStateFrom(cur_node.get_states());
+            BDD state_bdd = sym_vars->getStateBDD(state.get_values());
+            ReconstructionNode remaining_node = cur_node;
+            remaining_node.set_state(remaining_node.get_states() * !state_bdd);
+            queue.push(remaining_node);
+            cur_node.set_state(state_bdd);
+        }
+        assert(sym_vars->numStates(cur_node.get_states()) > 0);
+        assert(!simple_plans() || sym_vars->numStates(cur_node.get_states()));
+
         // utils::g_log << cur_node << endl;
 
         // Check if we have found a solution with this cut
@@ -48,7 +60,12 @@ void SymSolutionRegistry::reconstruct_plans(
             if (!plan_data_base->reconstruct_solutions(sym_cuts[0].get_f())) {
                 return;
             }
-            // continue;
+
+            // Not necessary to with this plan since it can only lead to
+            // unjustified plans
+            if (justified_plans()) {
+                continue;
+            }
         }
         expand_actions(cur_node);
     }
@@ -135,9 +152,14 @@ bool SymSolutionRegistry::is_solution(const ReconstructionNode &node) const {
 }
 
 SymSolutionRegistry::SymSolutionRegistry()
-    : single_solution(true), fw_closed(nullptr),
-      bw_closed(nullptr), plan_data_base(nullptr) {
-    // If unit costs we simple use sort by remaiing cost
+    : justified(false),
+      simple(false),
+      single_solution(true),
+      fw_closed(nullptr),
+      bw_closed(nullptr),
+      plan_data_base(nullptr) {
+    // If unit costs we simple use sort by remaining cost
+    simple = true;
     queue = ReconstructionQueue(CompareReconstructionNodes(ReconstructionPriority::REMAINING_COST));
 }
 

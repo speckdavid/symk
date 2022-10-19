@@ -21,7 +21,7 @@ enum class PlanPruning {
     the solution set. The Plan reconstruction will optimize to prune partial plans that
     can not fullfill the contraints. */
     SIMPLE = 0,
-    JUSTIFIED = 1
+    // JUSTIFIED = 1
 };
 
 
@@ -31,8 +31,8 @@ class ClosedList;
 class SymSolutionRegistry {
 protected:
     // Pruning techniques
-    bool simple;
     bool justified;
+    bool simple;
 
     bool single_solution;
 
@@ -59,6 +59,10 @@ protected:
     bool is_solution(const ReconstructionNode &node) const;
 
     bool task_has_zero_costs() const {return trs.count(0) > 0;}
+
+    bool justified_plans() const {return justified;}
+
+    bool simple_plans() const {return simple;}
 
 public:
     SymSolutionRegistry();
