@@ -22,8 +22,10 @@ Main source:
 Based on:
  - Fast Downward: http://www.fast-downward.org/ (20.06)
  - Symbolic Fast Downward: https://people.cs.aau.dk/~alto/software.html
- 
-## Dependencies
+
+## Getting Started
+
+### Dependencies
 Currently we only support Linux systems. The following should install all necessary dependencies.
 ```console
 $ sudo apt-get -y install cmake g++ make python3 autoconf automake
@@ -31,13 +33,23 @@ $ sudo apt-get -y install cmake g++ make python3 autoconf automake
 
 Sym-k should compile on MacOS with the GNU C++ compiler and clang with the same instructions described above.
  
-## Compiling the Top-k Planner
+### Compiling the Sym-k Planner
 
 ```console
 $ ./build.py 
 ```
+## Generting A Single Optimal Solution
+We recommend to use the following configuration which uses bidirectional search.
 
-## Top-k Configurations
+```console
+$ ./fast-downward.py domain.pddl problem.pddl --search "sym-bd()"
+```
+
+Other configurations are forward or backward search: `--search "symk-fw()"` or `--search "symk-bw()"`.
+
+## Generting Multiple Solutions
+
+### Top-k Configurations
 
 We recommend to use the following configuration which uses bidirectional search and 
 reports the best **k** plans. Note that you can also specify `num_plans=infinity` if you want to find all possible plans.
@@ -46,19 +58,7 @@ reports the best **k** plans. Note that you can also specify `num_plans=infinity
 $ ./fast-downward.py domain.pddl problem.pddl --search "symk-bd(plan_selection=top_k(num_plans=**k**))"
 ```
 
-Other configurations are as follows.
-
- 
-```console
-# Forward Search
-$ ./fast-downward.py domain.pddl problem.pddl --search "symk-fw(plan_selection=top_k(num_plans=**k**))"
-
-
-# Backward Search
-$ ./fast-downward.py domain.pddl problem.pddl --search "symk-bw(plan_selection=top_k(num_plans=**k**))"
-```
-
-## Top-q Configurations
+### Top-q Configurations
 We recommend to use the following configuration which uses bidirectional search and
 reports the **k** plans with quality bound **q**. Quality `1<=q<=infinity` is a multiplier that is multiplied to the cost of the cheapest solution. 
 For example, `q=1` reports only the cheapest plans, where `quality=infinity` corresponds to the top-k planning.
@@ -67,19 +67,7 @@ For example, `q=1` reports only the cheapest plans, where `quality=infinity` cor
 $ ./fast-downward.py domain.pddl problem.pddl --search "symq-bd(plan_selection=top_k(num_plans=**k**),quality=**q**)"
 ```
 
-Other configurations are as follows.
-
-
-```console
-# Forward Search
-$ ./fast-downward.py domain.pddl problem.pddl --search "symq-fw(plan_selection=top_k(num_plans=**k**),quality=**q**)"
-
-
-# Backward Search
-$ ./fast-downward.py domain.pddl problem.pddl --search "symq-bw(plan_selection=top_k(num_plans=**k**),,quality=**q**)"
-```
-
-## Loopless/Simple Planning
+### Loopless/Simple Planning
 It is possible to generate loopless/simple plans, i.e., plans that do not visit any state more than once. In general, the option to consider and generate only simple plans can be combined with any Sym-k search engine and with different plan selectors by setting the `simple` parameter to true. See the following two examples and our [ICAPS 2022 Paper](https://gki.informatik.uni-freiburg.de/papers/vontschammer-etal-icaps2022.pdf).
 
 ```console
@@ -90,24 +78,16 @@ $ ./fast-downward.py domain.pddl problem.pddl --search "symk-bd(simple=true,plan
 $ ./fast-downward.py domain.pddl problem.pddl --search "symq-bd(simple=true,plan_selection=top_k(num_plans=**k**),quality=**q**)"
 ```
 
-## Ordinary Planning Configurations
-We recommend to use the following configuration which uses bidirectional search.
+### Pitfalls
+By default, the planner performs a relevance analysis and removes components such as variables and actions that are irrelevant to achieving the goal. Although such variables and actions can in principle lead to further (simple) plans, they are classified as irrelevant and removed when translating PDDL to SAS+. If you wish to **obtain all plans** (even the non-relevant ones), please use the following options:
 
 ```console
-$ ./fast-downward.py domain.pddl problem.pddl --search "sym-bd()"
+$ ./fast-downward.py --translate --search domain.pddl problem.pddl --translate-options --keep-unimportant-variables --search-options --search "symk-bd(plan_selection=top_k(num_plans=**k**))
 ```
 
-Other configurations are as follows.
+### Other Configurations
+It is possible to run sym-k also with forward or backward search instead of bidirectional search, e.g., with `--search "symk-fw(...)"` or `--search "symk-bw(...)"`. Depending on the domain, one of these configurations may be faster than bidirectional search (`"--search symk-bd(...)"`).
 
-
-```console
-# Forward Search
-$ ./fast-downward.py domain.pddl problem.pddl --search "sym-fw())"
-
-
-# Backward Search
-$ ./fast-downward.py domain.pddl problem.pddl --search "sym-bw()"
-```
 ## Plan Selection - Generate-and-Test Plans Framework
 It is possible to create plans until a number of plans or simply a single plan is found that meets certain requirements.
 For this purpose it is possible to write your own plan selector. During the search, plans are created and handed over to a plan selector with an anytime behavior. 
