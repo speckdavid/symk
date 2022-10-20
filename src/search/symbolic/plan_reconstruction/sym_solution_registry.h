@@ -22,7 +22,7 @@ enum class PlanPruning {
     can not fullfill the contraints. */
     SINGLE_SOLUTION = 0,
     SIMPLE_SOLUTIONS = 1,
-    // JUSTIFIED = 1
+    JUSTIFIED = 2
 };
 
 
