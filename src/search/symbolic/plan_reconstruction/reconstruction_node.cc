@@ -5,10 +5,12 @@
 using namespace std;
 
 namespace symbolic {
-ReconstructionNode::ReconstructionNode(int g, int h, BDD states, bool fwd_phase, int plan_length) :
+ReconstructionNode::ReconstructionNode(int g, int h, BDD states, BDD visited_states,
+                                       bool fwd_phase, int plan_length) :
     g(g),
     h(h),
     states(states),
+    visited_states(visited_states),
     fwd_phase(fwd_phase),
     predecessor(nullptr),
     successor(nullptr),

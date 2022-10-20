@@ -20,7 +20,8 @@ enum class PlanPruning {
     /* Multiple combinable options to specify which plans are allowed to be part of
     the solution set. The Plan reconstruction will optimize to prune partial plans that
     can not fullfill the contraints. */
-    SIMPLE = 0,
+    SINGLE_SOLUTION = 0,
+    SIMPLE_SOLUTIONS = 1,
     // JUSTIFIED = 1
 };
 
@@ -31,10 +32,10 @@ class ClosedList;
 class SymSolutionRegistry {
 protected:
     // Pruning techniques
-    bool justified;
-    bool simple;
+    bool justified_solutions_pruning;
+    bool single_solution_pruning;
+    bool simple_solutions_pruning;
 
-    bool single_solution;
 
     std::map<int, std::vector<SymSolutionCut>> sym_cuts;
 
@@ -60,9 +61,15 @@ protected:
 
     bool task_has_zero_costs() const {return trs.count(0) > 0;}
 
-    bool justified_plans() const {return justified;}
+    bool justified_solutions() const {return justified_solutions_pruning;}
 
-    bool simple_plans() const {return simple;}
+    bool simple_solutions() const {return simple_solutions_pruning;}
+
+    bool single_solution() const {return single_solution_pruning;}
+
+    bool no_pruning() const {
+        return !single_solution() && !justified_solutions() && !simple_solutions();
+    }
 
 public:
     SymSolutionRegistry();
@@ -72,7 +79,8 @@ public:
               std::shared_ptr<symbolic::ClosedList> bw_closed,
               std::map<int, std::vector<TransitionRelation>> &trs,
               std::shared_ptr<PlanDataBase> plan_data_base,
-              bool single_solution);
+              bool single_solution,
+              bool simple_solutions);
 
     virtual ~SymSolutionRegistry() = default;
 

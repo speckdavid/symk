@@ -44,7 +44,7 @@ void TopkSymbolicUniformCostSearch::initialize() {
                             bw_search ? bw_search->getClosedShared() : nullptr,
                             individual_trs,
                             plan_data_base,
-                            false);
+                            false, simple);
 
     if (fw && bw) {
         search = unique_ptr<BidirectionalSearch>(new BidirectionalSearch(

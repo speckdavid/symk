@@ -17,6 +17,7 @@ protected:
     int g; // cost left for fwd reconstruction (towards initial state)
     int h; // cost left for bwd reconstruction (towards goal state)
     BDD states; // relevant states
+    BDD visited_states; // states visited (relevant for simple plans)
     bool fwd_phase; // reconstruction phase: changes from yes to false
 
     std::shared_ptr<ReconstructionNode> predecessor;
@@ -27,12 +28,13 @@ protected:
 
 public:
     ReconstructionNode() = delete;
-    ReconstructionNode(int g, int h, BDD states, bool fwd_reconstruction, int plan_length);
+    ReconstructionNode(int g, int h, BDD states, BDD visited_staes, bool fwd_reconstruction, int plan_length);
 
     int get_g() const {return g;}
     int get_h() const {return h;}
     int get_f() const {return get_g() + get_h();}
     BDD get_states() const {return states;}
+    BDD get_visitied_states() const {return visited_states;}
 
     std::shared_ptr<ReconstructionNode> get_predecessor() const;
     std::shared_ptr<ReconstructionNode> get_successor() const;
@@ -46,6 +48,8 @@ public:
     void set_g(int g) {this->g = g;}
     void set_h(int h) {this->h = h;}
     void set_state(BDD states) {this->states = states;}
+    void set_visited_states(BDD visited_states) {this->visited_states = visited_states;}
+    void add_visited_states(BDD newly_visited_states) {this->visited_states += newly_visited_states;}
 
     void set_predecessor(const std::shared_ptr<ReconstructionNode> &predecessor,
                          const OperatorID &to_predecessor_op);
@@ -65,7 +69,8 @@ public:
                   << ", fwd_phase=" << node.is_fwd_phase()
                   << ", |plan|=" << node.get_plan_length()
                   << ", nodes=" << node.get_states().nodeCount()
-                  // << ", states=" << node.get_states().CountMinterm(15)
+                  << ", visited_nodes=" << node.get_visitied_states().nodeCount()
+               // << ", states=" << node.get_states().CountMinterm(15)
                   << "}";
     }
 };

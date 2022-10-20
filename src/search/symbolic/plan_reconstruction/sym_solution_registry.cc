@@ -5,7 +5,7 @@ using namespace std;
 
 namespace symbolic {
 void SymSolutionRegistry::add_plan(const Plan &plan) const {
-    assert(!(simple_plans() && plan_data_base->has_zero_cost_loop(plan)));
+    assert(!(simple_solutions() && plan_data_base->has_zero_cost_loop(plan)));
     plan_data_base->add_plan(plan);
 }
 
@@ -17,8 +17,12 @@ void SymSolutionRegistry::reconstruct_plans(
         assert(fw_closed || sym_cut.get_g() == 0);
         assert(bw_closed || sym_cut.get_h() == 0);
 
-        ReconstructionNode cur_node(sym_cut.get_g(), sym_cut.get_h(),
-                                    sym_cut.get_cut(), fw_closed != nullptr, 0);
+        ReconstructionNode cur_node(sym_cut.get_g(),
+                                    sym_cut.get_h(),
+                                    sym_cut.get_cut(),
+                                    sym_vars->zeroBDD(),
+                                    fw_closed != nullptr,
+                                    0);
         queue.push(cur_node);
 
         // In the bidirectional case we might can directly swap the direction
@@ -36,18 +40,24 @@ void SymSolutionRegistry::reconstruct_plans(
 
         // If we do simple planning, we extract a single state form the relevant states
         // and process it
-        if (simple_plans() && sym_vars->numStates(cur_node.get_states()) > 1) {
-            State state = sym_vars->getStateFrom(cur_node.get_states());
-            BDD state_bdd = sym_vars->getStateBDD(state.get_values());
-            ReconstructionNode remaining_node = cur_node;
-            remaining_node.set_state(remaining_node.get_states() * !state_bdd);
-            queue.push(remaining_node);
-            cur_node.set_state(state_bdd);
+        if (simple_solutions()) {
+            if (sym_vars->numStates(cur_node.get_states()) > 1) {
+                State state = sym_vars->getStateFrom(cur_node.get_states());
+                BDD state_bdd = sym_vars->getStateBDD(state.get_values());
+                ReconstructionNode remaining_node = cur_node;
+                remaining_node.set_state(remaining_node.get_states() * !state_bdd);
+                queue.push(remaining_node);
+                cur_node.set_state(state_bdd);
+            }
+            cur_node.add_visited_states(cur_node.get_states());
         }
-        assert(sym_vars->numStates(cur_node.get_states()) > 0);
-        assert(!simple_plans() || sym_vars->numStates(cur_node.get_states()));
 
-        // utils::g_log << cur_node << endl;
+        //utils::g_log << cur_node << endl;
+
+        assert(sym_vars->numStates(cur_node.get_states()) > 0);
+        assert(!simple_solutions() || sym_vars->numStates(cur_node.get_states()));
+        assert(!simple_solutions() || cur_node.get_plan_length() + 1 == sym_vars->numStates(cur_node.get_visitied_states()));
+
 
         // Check if we have found a solution with this cut
         if (is_solution(cur_node)) {
@@ -63,7 +73,7 @@ void SymSolutionRegistry::reconstruct_plans(
 
             // Not necessary to with this plan since it can only lead to
             // unjustified plans
-            if (justified_plans()) {
+            if (justified_solutions()) {
                 continue;
             }
         }
@@ -85,23 +95,33 @@ void SymSolutionRegistry::expand_actions(const ReconstructionNode &node) {
         cur_closed_list = bw_closed;
     }
 
-    for (auto const &key : trs) {
-        int new_cost = cur_cost - key.first;
+    // Traverse in oposite direction to first consider actions with higher costs
+    // Mostly relevant for single solution reconstruction
+    for (auto it = trs.rbegin(); it != trs.rend(); it++) {
+        int new_cost = cur_cost - it->first;
 
         // new cost can not be negative
         if (new_cost < 0) {
             continue;
         }
 
-        for (const TransitionRelation &tr : key.second) {
+        for (const TransitionRelation &tr : it->second) {
             BDD succ = fwd ? tr.preimage(node.get_states()) : tr.image(node.get_states());
             BDD intersection = succ * cur_closed_list->get_closed_at(new_cost);
+
+            // Ignore states we have already visited
+            if (simple_solutions()) {
+                intersection *= !node.get_visitied_states();
+            }
+
             if (intersection.IsZero()) {
                 continue;
             }
 
             OperatorID op_id = *(tr.getOpsIds().begin());
-            ReconstructionNode new_node(-1, -1, intersection, fwd, node.get_plan_length() + 1);
+            ReconstructionNode new_node(-1, -1,
+                                        intersection, node.get_visitied_states(),
+                                        fwd, node.get_plan_length() + 1);
             if (fwd) {
                 new_node.set_g(new_cost);
                 new_node.set_h(node.get_h());
@@ -114,21 +134,31 @@ void SymSolutionRegistry::expand_actions(const ReconstructionNode &node) {
 
             // We have sucessfully reconstructed to the initial state
             if (swap_to_bwd_phase(new_node)) {
+                assert(fw_closed->get_start_states() == new_node.get_states());
                 Plan partial_plan;
                 new_node.get_plan(partial_plan);
                 BDD middle_state = plan_data_base->get_final_state(partial_plan);
                 ReconstructionNode bw_node(0, new_node.get_h(), middle_state,
+                                           new_node.get_visitied_states(),
                                            false, node.get_plan_length() + 1);
                 bw_node.set_predecessor(make_shared<ReconstructionNode>(node), op_id);
+
+                // Add init state to visited states
+                if (simple_solutions()) {
+                    bw_node.add_visited_states(fw_closed->get_start_states());
+                }
+
                 queue.push(bw_node);
 
-                // We probably want to do the push below if we have zero cost
-                // and have not simple path pruning
-                if (task_has_zero_costs()) {
+                if (task_has_zero_costs() && no_pruning()) {
                     queue.push(new_node);
                 }
             } else {
                 queue.push(new_node);
+            }
+
+            if (single_solution()) {
+                return;
             }
         }
     }
@@ -152,14 +182,13 @@ bool SymSolutionRegistry::is_solution(const ReconstructionNode &node) const {
 }
 
 SymSolutionRegistry::SymSolutionRegistry()
-    : justified(false),
-      simple(false),
-      single_solution(true),
+    : justified_solutions_pruning(false),
+      single_solution_pruning(false),
+      simple_solutions_pruning(false),
       fw_closed(nullptr),
       bw_closed(nullptr),
       plan_data_base(nullptr) {
     // If unit costs we simple use sort by remaining cost
-    simple = true;
     queue = ReconstructionQueue(CompareReconstructionNodes(ReconstructionPriority::REMAINING_COST));
 }
 
@@ -168,17 +197,19 @@ void SymSolutionRegistry::init(std::shared_ptr<SymVariables> sym_vars,
                                shared_ptr<symbolic::ClosedList> bw_closed,
                                map<int, vector<TransitionRelation>> &trs,
                                shared_ptr<PlanDataBase> plan_data_base,
-                               bool single_solution) {
+                               bool single_solution,
+                               bool simple_solutions) {
     this->sym_vars = sym_vars;
     this->plan_data_base = plan_data_base;
     this->fw_closed = fw_closed;
     this->bw_closed = bw_closed;
     this->trs = trs;
-    this->single_solution = single_solution;
+    this->single_solution_pruning = single_solution;
+    this->simple_solutions_pruning = simple_solutions;
 }
 
 void SymSolutionRegistry::register_solution(const SymSolutionCut &solution) {
-    if (single_solution) {
+    if (single_solution()) {
         if (!sym_cuts.empty()) {
             sym_cuts = map<int, vector<SymSolutionCut>>();
         }
