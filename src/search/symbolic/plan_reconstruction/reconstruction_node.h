@@ -16,6 +16,7 @@ class ReconstructionNode {
 protected:
     int g; // cost left for fwd reconstruction (towards initial state)
     int h; // cost left for bwd reconstruction (towards goal state)
+    int zero_layer; // current layer of zero cost BDD
     BDD states; // relevant states
     BDD visited_states; // states visited (relevant for simple plans)
     bool fwd_phase; // reconstruction phase: changes from yes to false
@@ -28,11 +29,12 @@ protected:
 
 public:
     ReconstructionNode() = delete;
-    ReconstructionNode(int g, int h, BDD states, BDD visited_staes, bool fwd_reconstruction, int plan_length);
+    ReconstructionNode(int g, int h, int zero_layer, BDD states, BDD visited_staes, bool fwd_reconstruction, int plan_length);
 
     int get_g() const {return g;}
     int get_h() const {return h;}
     int get_f() const {return get_g() + get_h();}
+    int get_zero_layer() const {return zero_layer;}
     BDD get_states() const {return states;}
     BDD get_visitied_states() const {return visited_states;}
 
@@ -47,7 +49,8 @@ public:
 
     void set_g(int g) {this->g = g;}
     void set_h(int h) {this->h = h;}
-    void set_state(BDD states) {this->states = states;}
+    void set_zero_layer(int zero_layer) {this->zero_layer = zero_layer;}
+    void set_states(BDD states) {this->states = states;}
     void set_visited_states(BDD visited_states) {this->visited_states = visited_states;}
     void add_visited_states(BDD newly_visited_states) {this->visited_states += newly_visited_states;}
 
@@ -66,6 +69,7 @@ public:
                                     const ReconstructionNode &node) {
         return os << "symcut{g=" << node.get_g() << ", h=" << node.get_h()
                   << ", f=" << node.get_f()
+                  << ", zero_layer=" << node.get_zero_layer()
                   << ", fwd_phase=" << node.is_fwd_phase()
                   << ", |plan|=" << node.get_plan_length()
                   << ", nodes=" << node.get_states().nodeCount()
@@ -107,7 +111,11 @@ public:
             return true;
         if (node2.is_fwd_phase() && !node1.is_fwd_phase())
             return false;
-        return node2.get_plan_length() < node1.get_plan_length();
+        if (node2.get_zero_layer() < node1.get_zero_layer())
+            return true;
+        if (node2.get_zero_layer() > node1.get_zero_layer())
+            return false;
+        return node2.get_plan_length() > node1.get_plan_length();
     }
 
     bool sort_by_plan_length(const ReconstructionNode &node1, const ReconstructionNode &node2) {
