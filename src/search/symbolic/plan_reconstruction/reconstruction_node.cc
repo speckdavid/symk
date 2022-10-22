@@ -51,13 +51,13 @@ OperatorID ReconstructionNode::get_to_successor_op() const {
     return to_successor_op;
 }
 
-void ReconstructionNode::set_predecessor(const std::shared_ptr<ReconstructionNode> &predecessor,
+void ReconstructionNode::set_predecessor(const shared_ptr<ReconstructionNode> &predecessor,
                                          const OperatorID &to_predecessor_op) {
     this->predecessor = predecessor;
     this->to_predecessor_op = to_predecessor_op;
 }
 
-void ReconstructionNode::set_successor(const std::shared_ptr<ReconstructionNode> &successor,
+void ReconstructionNode::set_successor(const shared_ptr<ReconstructionNode> &successor,
                                        const OperatorID &to_successor_op) {
     this->successor = successor;
     this->to_successor_op = to_successor_op;
