@@ -46,7 +46,7 @@ void SymSolutionRegistry::reconstruct_plans(
         if (simple_solutions()) {
             if (sym_vars->numStates(cur_node.get_states()) > 1) {
                 State state = sym_vars->getStateFrom(cur_node.get_states());
-                BDD state_bdd = sym_vars->getStateBDD(state.get_values());
+                BDD state_bdd = sym_vars->getStateBDD(state);
                 ReconstructionNode remaining_node = cur_node;
                 remaining_node.set_states(remaining_node.get_states() * !state_bdd);
                 queue.push(remaining_node);
@@ -165,7 +165,10 @@ void SymSolutionRegistry::expand_actions(const ReconstructionNode &node) {
                 queue.push(new_node);
             }
 
-            if (single_solution()) {
+            // A single solution and we made progress
+            if (single_solution() &&
+                (new_node.get_f() < node.get_f() ||
+                 new_node.get_zero_layer() < node.get_zero_layer())) {
                 return;
             }
         }

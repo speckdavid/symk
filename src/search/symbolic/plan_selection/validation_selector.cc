@@ -25,7 +25,7 @@ void ValidationSelector::add_plan(const Plan &plan) {
 }
 
 bool ValidationSelector::is_valid_plan(const Plan &plan) {
-    GlobalState cur = original_state_registry->get_initial_state();
+    State cur = original_state_registry->get_initial_state();
 
     for (size_t i = 0; i < plan.size(); i++) {
         auto original_op_id =
@@ -33,13 +33,13 @@ bool ValidationSelector::is_valid_plan(const Plan &plan) {
             .get_operators()[plan[i]]
             .get_ancestor_operator_id(tasks::g_root_task.get());
         auto original_op = original_task_proxy.get_operators()[original_op_id];
-        if (task_properties::is_applicable(original_op, cur.unpack())) {
+        if (task_properties::is_applicable(original_op, cur)) {
             cur = original_state_registry->get_successor_state(cur, original_op);
         } else {
             return false;
         }
     }
-    return task_properties::is_goal_state(original_task_proxy, cur.unpack());
+    return task_properties::is_goal_state(original_task_proxy, cur);
 }
 
 static shared_ptr<PlanDataBase> _parse(OptionParser &parser) {

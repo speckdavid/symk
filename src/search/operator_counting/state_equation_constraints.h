@@ -3,12 +3,18 @@
 
 #include "constraint_generator.h"
 
+#include "../utils/logging.h"
+
 #include <set>
 
 class TaskProxy;
 
 namespace lp {
 class LPConstraint;
+}
+
+namespace options {
+class Options;
 }
 
 namespace operator_counting {
@@ -26,17 +32,18 @@ struct Proposition {
 };
 
 class StateEquationConstraints : public ConstraintGenerator {
+    mutable utils::LogProxy log;
     std::vector<std::vector<Proposition>> propositions;
     // Map goal variables to their goal value and other variables to max int.
     std::vector<int> goal_state;
 
     void build_propositions(const TaskProxy &task_proxy);
-    void add_constraints(std::vector<lp::LPConstraint> &constraints, double infinity);
+    void add_constraints(named_vector::NamedVector<lp::LPConstraint> &constraints, double infinity);
 public:
-    virtual void initialize_constraints(const std::shared_ptr<AbstractTask> &task,
-                                        std::vector<lp::LPConstraint> &constraints,
-                                        double infinity);
-    virtual bool update_constraints(const State &state, lp::LPSolver &lp_solver);
+    explicit StateEquationConstraints(const options::Options &opts);
+    virtual void initialize_constraints(
+        const std::shared_ptr<AbstractTask> &task, lp::LinearProgram &lp) override;
+    virtual bool update_constraints(const State &state, lp::LPSolver &lp_solver) override;
 };
 }
 

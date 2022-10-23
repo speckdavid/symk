@@ -83,7 +83,7 @@ size_t PlanDataBase::different(const vector<Plan> &plans,
 }
 
 BDD PlanDataBase::get_final_state(const Plan &plan) const {
-    GlobalState cur = state_registry->get_initial_state();
+    State cur = state_registry->get_initial_state();
     for (auto &op : plan) {
         cur = state_registry->get_successor_state(
             cur,
@@ -93,7 +93,7 @@ BDD PlanDataBase::get_final_state(const Plan &plan) const {
 }
 
 BDD PlanDataBase::states_on_path(const Plan &plan) {
-    GlobalState cur = state_registry->get_initial_state();
+    State cur = state_registry->get_initial_state();
     BDD path_states = sym_vars->getStateBDD(cur);
     for (auto &op : plan) {
         cur = state_registry->get_successor_state(
@@ -146,7 +146,7 @@ void PlanDataBase::save_rejected_plan(const Plan &plan) {
 }
 
 bool PlanDataBase::has_zero_cost_loop(const Plan &plan) const {
-    GlobalState cur = state_registry->get_initial_state();
+    State cur = state_registry->get_initial_state();
     BDD zero_reachable = sym_vars->getStateBDD(cur);
     for (auto &op : plan) {
         cur = state_registry->get_successor_state(
@@ -175,10 +175,10 @@ pair<int, int>
 PlanDataBase::get_first_zero_cost_loop(const Plan &plan) const {
     pair<int, int> zero_cost_op_seq(-1, -1);
     int last_zero_op_state = 0;
-    vector<GlobalState> states;
+    vector<State> states;
     states.push_back(state_registry->get_initial_state());
     for (size_t op_i = 0; op_i < plan.size(); ++op_i) {
-        GlobalState succ = state_registry->get_successor_state(
+        State succ = state_registry->get_successor_state(
             states.back(), state_registry
             ->get_task_proxy()
             .get_operators()[plan[op_i]]);

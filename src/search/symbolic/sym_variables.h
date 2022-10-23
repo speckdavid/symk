@@ -89,7 +89,7 @@ public:
 
     State getStateFrom(const BDD &bdd) const;
     BDD getStateBDD(const std::vector<int> &state) const;
-    BDD getStateBDD(const GlobalState &state) const;
+    BDD getStateBDD(const State &state) const;
 
     BDD getPartialStateBDD(const std::vector<std::pair<int, int>> &state) const;
 

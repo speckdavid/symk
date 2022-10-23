@@ -1,6 +1,5 @@
 #include "sym_variables.h"
 
-#include "../global_state.h"
 #include "../options/option_parser.h"
 #include "../options/options.h"
 #include "../task_utils/task_properties.h"
@@ -146,10 +145,10 @@ BDD SymVariables::getStateBDD(const vector<int> &state) const {
     return res;
 }
 
-BDD SymVariables::getStateBDD(const GlobalState &state) const {
+BDD SymVariables::getStateBDD(const State &state) const {
     BDD res = oneBDD();
     for (int i = var_order.size() - 1; i >= 0; i--) {
-        res = res * preconditionBDDs[var_order[i]][state[var_order[i]]];
+        res = res * preconditionBDDs[var_order[i]][state[var_order[i]].get_value()];
     }
     return res;
 }

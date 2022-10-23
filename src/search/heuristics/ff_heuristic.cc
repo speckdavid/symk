@@ -1,6 +1,5 @@
 #include "ff_heuristic.h"
 
-#include "../global_state.h"
 #include "../option_parser.h"
 #include "../plugin.h"
 
@@ -16,7 +15,9 @@ namespace ff_heuristic {
 FFHeuristic::FFHeuristic(const Options &opts)
     : AdditiveHeuristic(opts),
       relaxed_plan(task_proxy.get_operators().size(), false) {
-    utils::g_log << "Initializing FF heuristic..." << endl;
+    if (log.is_at_least_normal()) {
+        log << "Initializing FF heuristic..." << endl;
+    }
 }
 
 void FFHeuristic::mark_preferred_operators_and_relaxed_plan(
@@ -49,8 +50,8 @@ void FFHeuristic::mark_preferred_operators_and_relaxed_plan(
     }
 }
 
-int FFHeuristic::compute_heuristic(const GlobalState &global_state) {
-    State state = convert_global_state(global_state);
+int FFHeuristic::compute_heuristic(const State &ancestor_state) {
+    State state = convert_ancestor_state(ancestor_state);
     int h_add = compute_add_and_ff(state);
     if (h_add == DEAD_END)
         return h_add;

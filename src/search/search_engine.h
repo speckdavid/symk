@@ -10,6 +10,8 @@
 #include "state_registry.h"
 #include "task_proxy.h"
 
+#include "utils/logging.h"
+
 #include <vector>
 
 namespace options {
@@ -26,10 +28,6 @@ namespace successor_generator {
 class SuccessorGenerator;
 }
 
-namespace utils {
-enum class Verbosity;
-}
-
 enum SearchStatus {IN_PROGRESS, TIMEOUT, FAILED, SOLVED};
 
 class SearchEngine {
@@ -43,6 +41,7 @@ protected:
     // Use task_proxy to access task information.
     TaskProxy task_proxy;
 
+    mutable utils::LogProxy log;
     PlanManager plan_manager;
     StateRegistry state_registry;
     const successor_generator::SuccessorGenerator &successor_generator;
@@ -53,13 +52,12 @@ protected:
     OperatorCost cost_type;
     bool is_unit_cost;
     double max_time;
-    const utils::Verbosity verbosity;
 
     virtual void initialize() {}
     virtual SearchStatus step() = 0;
 
     void set_plan(const Plan &plan);
-    bool check_goal_and_set_plan(const GlobalState &state);
+    bool check_goal_and_set_plan(const State &state);
     int get_adjusted_cost(const OperatorProxy &op) const;
 public:
     SearchEngine(const options::Options &opts);
@@ -85,7 +83,8 @@ public:
 /*
   Print evaluator values of all evaluators evaluated in the evaluation context.
 */
-extern void print_initial_evaluator_values(const EvaluationContext &eval_context);
+extern void print_initial_evaluator_values(
+    const EvaluationContext &eval_context);
 
 extern void collect_preferred_operators(
     EvaluationContext &eval_context, Evaluator *preferred_operator_evaluator,

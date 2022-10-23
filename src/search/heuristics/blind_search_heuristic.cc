@@ -1,6 +1,5 @@
 #include "blind_search_heuristic.h"
 
-#include "../global_state.h"
 #include "../option_parser.h"
 #include "../plugin.h"
 
@@ -17,14 +16,16 @@ namespace blind_search_heuristic {
 BlindSearchHeuristic::BlindSearchHeuristic(const Options &opts)
     : Heuristic(opts),
       min_operator_cost(task_properties::get_min_operator_cost(task_proxy)) {
-    utils::g_log << "Initializing blind search heuristic..." << endl;
+    if (log.is_at_least_normal()) {
+        log << "Initializing blind search heuristic..." << endl;
+    }
 }
 
 BlindSearchHeuristic::~BlindSearchHeuristic() {
 }
 
-int BlindSearchHeuristic::compute_heuristic(const GlobalState &global_state) {
-    State state = convert_global_state(global_state);
+int BlindSearchHeuristic::compute_heuristic(const State &ancestor_state) {
+    State state = convert_ancestor_state(ancestor_state);
     if (task_properties::is_goal_state(task_proxy, state))
         return 0;
     else

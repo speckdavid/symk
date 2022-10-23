@@ -24,11 +24,13 @@ CGHeuristic::CGHeuristic(const Options &opts)
       cache_misses(0),
       helpful_transition_extraction_counter(0),
       min_action_cost(task_properties::get_min_operator_cost(task_proxy)) {
-    utils::g_log << "Initializing causal graph heuristic..." << endl;
+    if (log.is_at_least_normal()) {
+        log << "Initializing causal graph heuristic..." << endl;
+    }
 
     int max_cache_size = opts.get<int>("max_cache_size");
     if (max_cache_size > 0)
-        cache = utils::make_unique_ptr<CGCache>(task_proxy, max_cache_size);
+        cache = utils::make_unique_ptr<CGCache>(task_proxy, max_cache_size, log);
 
     unsigned int num_vars = task_proxy.get_variables().size();
     prio_queues.reserve(num_vars);
@@ -48,8 +50,8 @@ bool CGHeuristic::dead_ends_are_reliable() const {
     return false;
 }
 
-int CGHeuristic::compute_heuristic(const GlobalState &global_state) {
-    const State state = convert_global_state(global_state);
+int CGHeuristic::compute_heuristic(const State &ancestor_state) {
+    State state = convert_ancestor_state(ancestor_state);
     setup_domain_transition_graphs();
 
     int heuristic = 0;
