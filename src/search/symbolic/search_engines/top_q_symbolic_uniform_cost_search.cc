@@ -96,7 +96,7 @@ void TopqSymbolicUniformCostSearch::add_options_to_parser(
 static shared_ptr<SearchEngine> _parse_forward_ucs(OptionParser &parser) {
     parser.document_synopsis("Top-q Symbolic Forward Uniform Cost Search", "");
     symbolic::SymbolicSearch::add_options_to_parser(parser);
-    parser.add_option<shared_ptr<symbolic::PlanDataBase>>(
+    parser.add_option<shared_ptr<symbolic::PlanSelector>>(
         "plan_selection", "plan selection strategy");
     symbolic::TopqSymbolicUniformCostSearch::add_options_to_parser(parser);
     Options opts = parser.parse();
@@ -114,7 +114,7 @@ static shared_ptr<SearchEngine> _parse_forward_ucs(OptionParser &parser) {
 static shared_ptr<SearchEngine> _parse_backward_ucs(OptionParser &parser) {
     parser.document_synopsis("Top-q Symbolic Backward Uniform Cost Search", "");
     symbolic::SymbolicSearch::add_options_to_parser(parser);
-    parser.add_option<shared_ptr<symbolic::PlanDataBase>>(
+    parser.add_option<shared_ptr<symbolic::PlanSelector>>(
         "plan_selection", "plan selection strategy");
     symbolic::TopqSymbolicUniformCostSearch::add_options_to_parser(parser);
     Options opts = parser.parse();
@@ -134,7 +134,7 @@ _parse_bidirectional_ucs(OptionParser &parser) {
     parser.document_synopsis("Top-q Symbolic Bidirectional Uniform Cost Search",
                              "");
     symbolic::SymbolicSearch::add_options_to_parser(parser);
-    parser.add_option<shared_ptr<symbolic::PlanDataBase>>(
+    parser.add_option<shared_ptr<symbolic::PlanSelector>>(
         "plan_selection", "plan selection strategy");
     symbolic::TopqSymbolicUniformCostSearch::add_options_to_parser(parser);
     Options opts = parser.parse();

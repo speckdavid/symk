@@ -1,14 +1,14 @@
 #ifndef SYMBOLIC_ITERATIVE_COST_SELECTOR_H
 #define SYMBOLIC_ITERATIVE_COST_SELECTOR_H
 
-#include "plan_database.h"
+#include "plan_selector.h"
 #include "../../option_parser.h"
 #include "../../task_utils/task_properties.h"
 
 using namespace std;
 
 namespace symbolic {
-class IterativeCostSelector : public PlanDataBase {
+class IterativeCostSelector : public PlanSelector {
 public:
     IterativeCostSelector(const options::Options &opts);
     ~IterativeCostSelector() {}

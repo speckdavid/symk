@@ -4,7 +4,7 @@
 #include "../plugin.h"
 
 #include "../original_state_space.h"
-#include "../plan_selection/plan_database.h"
+#include "../plan_selection/plan_selector.h"
 #include "../searches/bidirectional_search.h"
 #include "../searches/top_k_uniform_cost_search.h"
 #include "../searches/uniform_cost_search.h"
@@ -32,7 +32,7 @@ SymbolicSearch::SymbolicSearch(const options::Options &opts)
       lower_bound(0),
       upper_bound(numeric_limits<int>::max()),
       min_g(0),
-      plan_data_base(opts.get<shared_ptr<PlanDataBase>>("plan_selection")),
+      plan_data_base(opts.get<shared_ptr<PlanSelector>>("plan_selection")),
       solution_registry(make_shared<SymSolutionRegistry>()),
       simple(opts.get<bool>("simple")) {
     cout << endl;
@@ -169,7 +169,7 @@ void SymbolicSearch::add_options_to_parser(OptionParser &parser) {
     SymVariables::add_options_to_parser(parser);
     SymParamsSearch::add_options_to_parser(parser, 30e3, 10e7);
     SymParamsMgr::add_options_to_parser(parser);
-    PlanDataBase::add_options_to_parser(parser);
+    PlanSelector::add_options_to_parser(parser);
     parser.add_option<bool>("simple", "simple/loopless plan construction",
                             "false");
 }

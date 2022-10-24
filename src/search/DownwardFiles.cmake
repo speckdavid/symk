@@ -831,7 +831,7 @@ fast_downward_plugin(
         symbolic/plan_reconstruction/sym_solution_registry
         symbolic/plan_reconstruction/reconstruction_node
         symbolic/plan_selection/iterative_cost_selector
-        symbolic/plan_selection/plan_database
+        symbolic/plan_selection/plan_selector
         symbolic/plan_selection/top_k_selector
         symbolic/plan_selection/top_k_even_selector
         symbolic/plan_selection/simple_selector

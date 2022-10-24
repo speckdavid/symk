@@ -8,7 +8,7 @@ using namespace std;
 
 namespace symbolic {
 ValidationSelector::ValidationSelector(const options::Options &opts)
-    : PlanDataBase(opts), original_task_proxy(*tasks::g_root_task),
+    : PlanSelector(opts), original_task_proxy(*tasks::g_root_task),
       original_state_registry(make_shared<StateRegistry>(original_task_proxy)) {
     anytime_completness = true;
 }
@@ -42,8 +42,8 @@ bool ValidationSelector::is_valid_plan(const Plan &plan) {
     return task_properties::is_goal_state(original_task_proxy, cur);
 }
 
-static shared_ptr<PlanDataBase> _parse(OptionParser &parser) {
-    PlanDataBase::add_options_to_parser(parser);
+static shared_ptr<PlanSelector> _parse(OptionParser &parser) {
+    PlanSelector::add_options_to_parser(parser);
 
     Options opts = parser.parse();
     if (parser.dry_run())
@@ -51,5 +51,5 @@ static shared_ptr<PlanDataBase> _parse(OptionParser &parser) {
     return make_shared<ValidationSelector>(opts);
 }
 
-static Plugin<PlanDataBase> _plugin("validation_selector", _parse);
+static Plugin<PlanSelector> _plugin("validation_selector", _parse);
 }
