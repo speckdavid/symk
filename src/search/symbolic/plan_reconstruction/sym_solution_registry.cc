@@ -45,11 +45,14 @@ void SymSolutionRegistry::reconstruct_plans(
         // and process it
         if (simple_solutions()) {
             if (sym_vars->numStates(cur_node.get_states()) > 1) {
-                State state = sym_vars->getStateFrom(cur_node.get_states());
-                BDD state_bdd = sym_vars->getStateBDD(state);
+                BDD state_bdd = sym_vars->getSinglePrimaryStateFrom(cur_node.get_states());
                 ReconstructionNode remaining_node = cur_node;
                 remaining_node.set_states(remaining_node.get_states() * !state_bdd);
-                queue.push(remaining_node);
+                if (sym_vars->numStates(remaining_node.get_states()) > 0) {
+                    queue.push(remaining_node);
+                }
+                assert(sym_vars->numStates(remaining_node.get_states()) > 0
+                       || remaining_node.get_states() == sym_vars->zeroBDD());
                 cur_node.set_states(state_bdd);
             }
             cur_node.add_visited_states(cur_node.get_states());
@@ -58,7 +61,7 @@ void SymSolutionRegistry::reconstruct_plans(
         // utils::g_log << cur_node << endl;
 
         assert(sym_vars->numStates(cur_node.get_states()) > 0);
-        assert(!simple_solutions() || sym_vars->numStates(cur_node.get_states()));
+        assert(!simple_solutions() || sym_vars->numStates(cur_node.get_states()) == 1);
         assert(!simple_solutions() || cur_node.get_plan_length() + 1 == sym_vars->numStates(cur_node.get_visitied_states()));
 
         // Check if we have found a solution with this cut
@@ -70,6 +73,7 @@ void SymSolutionRegistry::reconstruct_plans(
             // Plan data base tells us if we need to continue
             // We can stop early if we, e.g., have found enough plans
             if (!plan_data_base->reconstruct_solutions(sym_cuts[0].get_f())) {
+                queue = ReconstructionQueue(CompareReconstructionNodes(ReconstructionPriority::REMAINING_COST));
                 return;
             }
 

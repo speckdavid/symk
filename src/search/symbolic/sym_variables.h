@@ -53,8 +53,8 @@ class SymVariables {
     Cudd *manager; // manager associated with this symbolic search
     std::shared_ptr<SymAxiomCompilation> ax_comp; // used for axioms
 
-    int numBDDVars; // Number of binary variables (just one set, the total number
-    // is numBDDVars*2
+    int numBDDVars; // Number of binary variables (just one set, the total number is numBDDVars*2
+    int numPrimaryBDDVars; // Number of binary variables that represent the primary variables
     std::vector<BDD> variables; // BDD variables
 
     // The variable order must be complete.
@@ -84,10 +84,11 @@ public:
     }
 
     double numStates(const BDD &bdd) const {
-        return bdd.CountMinterm(numBDDVars);
+        return bdd.CountMinterm(numPrimaryBDDVars);
     }
 
     State getStateFrom(const BDD &bdd) const;
+    BDD getSinglePrimaryStateFrom(const BDD &bdd) const;
     BDD getStateBDD(const std::vector<int> &state) const;
     BDD getStateBDD(const State &state) const;
 

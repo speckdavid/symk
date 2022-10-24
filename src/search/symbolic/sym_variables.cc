@@ -56,12 +56,16 @@ void SymVariables::init(const vector<int> &v_order) {
 
     // Initialize binary representation of variables.
     numBDDVars = 0;
+    numPrimaryBDDVars = 0;
     bdd_index_pre = vector<vector<int>>(v_order.size());
     bdd_index_eff = vector<vector<int>>(v_order.size());
     int _numBDDVars = 0; // numBDDVars;
     for (int var : var_order) {
         int var_len = ceil(log2(task_proxy.get_variables()[var].get_domain_size()));
         numBDDVars += var_len;
+        if (!task_proxy.get_variables()[var].is_derived()) {
+            numPrimaryBDDVars += var_len;
+        }
         for (int j = 0; j < var_len; j++) {
             bdd_index_pre[var].push_back(_numBDDVars);
             bdd_index_eff[var].push_back(_numBDDVars + 1);
@@ -126,6 +130,9 @@ State SymVariables::getStateFrom(const BDD &bdd) const {
     for (int var = 0; var < tasks::g_root_task->get_num_variables(); var++) {
         for (int val = 0; val < tasks::g_root_task->get_variable_domain_size(var);
              val++) {
+            // We ignore derived predicates
+            if (task_proxy.get_variables()[var].is_derived())
+                continue;
             BDD aux = current * preconditionBDDs[var][val];
             if (!aux.IsZero()) {
                 current = aux;
@@ -135,6 +142,26 @@ State SymVariables::getStateFrom(const BDD &bdd) const {
         }
     }
     return State(*tasks::g_root_task, move(vals));
+}
+
+BDD SymVariables::getSinglePrimaryStateFrom(const BDD &bdd) const {
+    vector<pair<int, int>> vars_vals;
+    BDD current = bdd;
+    for (int var = 0; var < tasks::g_root_task->get_num_variables(); var++) {
+        // We ignore derived predicates
+        if (task_proxy.get_variables()[var].is_derived())
+            continue;
+        for (int val = 0; val < tasks::g_root_task->get_variable_domain_size(var);
+             val++) {
+            BDD aux = current * preconditionBDDs[var][val];
+            if (!aux.IsZero()) {
+                current = aux;
+                vars_vals.emplace_back(var, val);
+                break;
+            }
+        }
+    }
+    return getPartialStateBDD(vars_vals);
 }
 
 BDD SymVariables::getStateBDD(const vector<int> &state) const {
@@ -148,6 +175,9 @@ BDD SymVariables::getStateBDD(const vector<int> &state) const {
 BDD SymVariables::getStateBDD(const State &state) const {
     BDD res = oneBDD();
     for (int i = var_order.size() - 1; i >= 0; i--) {
+        if (task_proxy.get_variables()[var_order[i]].is_derived()) {
+            continue;
+        }
         res = res * preconditionBDDs[var_order[i]][state[var_order[i]].get_value()];
     }
     return res;
