@@ -19,7 +19,7 @@ void SymSolutionRegistry::reconstruct_plans(
 
         ReconstructionNode cur_node(sym_cut.get_g(),
                                     sym_cut.get_h(),
-                                    0,
+                                    numeric_limits<int>::max(),
                                     sym_cut.get_cut(),
                                     sym_vars->zeroBDD(),
                                     fw_closed != nullptr,
@@ -150,7 +150,8 @@ void SymSolutionRegistry::expand_actions(const ReconstructionNode &node) {
                 Plan partial_plan;
                 new_node.get_plan(partial_plan);
                 BDD middle_state = plan_data_base->get_final_state(partial_plan);
-                ReconstructionNode bw_node(0, new_node.get_h(), 0, middle_state,
+                ReconstructionNode bw_node(0, new_node.get_h(),
+                                           numeric_limits<int>::max(), middle_state,
                                            new_node.get_visitied_states(),
                                            false, node.get_plan_length() + 1);
                 bw_node.set_predecessor(make_shared<ReconstructionNode>(node), op_id);
