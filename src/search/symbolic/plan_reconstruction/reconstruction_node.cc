@@ -1,5 +1,5 @@
 #include "reconstruction_node.h"
-
+#include "../transition_relation.h"
 #include "../../utils/logging.h"
 
 using namespace std;
@@ -15,8 +15,8 @@ ReconstructionNode::ReconstructionNode(int g, int h, int zero_layer, BDD states,
     fwd_phase(fwd_phase),
     predecessor(nullptr),
     successor(nullptr),
-    to_predecessor_op(OperatorID::no_operator),
-    to_successor_op(OperatorID::no_operator),
+    to_predecessor_tr(nullptr),
+    to_successor_tr(nullptr),
     plan_length(plan_length) {}
 
 shared_ptr<ReconstructionNode> ReconstructionNode::get_successor() const {
@@ -43,24 +43,24 @@ shared_ptr<ReconstructionNode> ReconstructionNode::get_origin_successor() const 
     return cur;
 }
 
-OperatorID ReconstructionNode::get_to_predecessor_op() const {
-    return to_predecessor_op;
+shared_ptr<TransitionRelation> ReconstructionNode::get_to_predecessor_tr() const {
+    return to_predecessor_tr;
 }
 
-OperatorID ReconstructionNode::get_to_successor_op() const {
-    return to_successor_op;
+shared_ptr<TransitionRelation> ReconstructionNode::get_to_successor_tr() const {
+    return to_successor_tr;
 }
 
 void ReconstructionNode::set_predecessor(const shared_ptr<ReconstructionNode> &predecessor,
-                                         const OperatorID &to_predecessor_op) {
+                                         const shared_ptr<TransitionRelation> &to_predecessor_tr) {
     this->predecessor = predecessor;
-    this->to_predecessor_op = to_predecessor_op;
+    this->to_predecessor_tr = to_predecessor_tr;
 }
 
 void ReconstructionNode::set_successor(const shared_ptr<ReconstructionNode> &successor,
-                                       const OperatorID &to_successor_op) {
+                                       const shared_ptr<TransitionRelation> &to_successor_tr) {
     this->successor = successor;
-    this->to_successor_op = to_successor_op;
+    this->to_successor_tr = to_successor_tr;
 }
 
 bool ReconstructionNode::is_fwd_phase() const {
@@ -74,18 +74,33 @@ void ReconstructionNode::get_plan(Plan &plan) const {
 
     Plan suffix_plan;
     while (cur_node->get_successor()) {
-        assert(cur_node->get_to_successor_op() != OperatorID::no_operator);
-        suffix_plan.push_back(cur_node->get_to_successor_op());
+        assert(cur_node->get_to_successor_tr());
+        suffix_plan.push_back(cur_node->get_to_successor_tr()->getUniqueOpId());
         cur_node = cur_node->get_successor();
     }
     reverse(suffix_plan.begin(), suffix_plan.end());
 
     while (cur_node->get_predecessor()) {
-        assert(cur_node->get_to_predecessor_op() != OperatorID::no_operator);
-        plan.push_back(cur_node->get_to_predecessor_op());
+        assert(cur_node->get_to_predecessor_tr());
+        plan.push_back(cur_node->get_to_predecessor_tr()->getUniqueOpId());
         cur_node = cur_node->get_predecessor();
     }
     plan.insert(plan.end(), suffix_plan.begin(), suffix_plan.end());
     assert(plan.size() == get_plan_length());
 }
+
+BDD ReconstructionNode::get_middle_state(BDD initial_state) const {
+    assert(get_successor() == nullptr);
+    shared_ptr<ReconstructionNode> cur_node = make_shared<ReconstructionNode>(*this);
+    BDD cur_state = initial_state;
+
+    while(cur_node->get_predecessor()) {
+        assert(cur_node->get_to_predecessor_tr());
+        cur_state = cur_node->get_to_predecessor_tr()->image(cur_state);
+        assert(cur_node->get_to_predecessor_tr()->get_sym_vars()->numStates(cur_state) == 1);
+        cur_node = cur_node->get_predecessor();
+    }
+    return cur_state;
+}
+
 }

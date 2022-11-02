@@ -11,6 +11,7 @@ using Plan = std::vector<OperatorID>;
 
 namespace symbolic {
 class SymSolutionCut;
+class TransitionRelation;
 
 class ReconstructionNode {
 protected:
@@ -23,8 +24,8 @@ protected:
 
     std::shared_ptr<ReconstructionNode> predecessor;
     std::shared_ptr<ReconstructionNode> successor;
-    OperatorID to_predecessor_op;
-    OperatorID to_successor_op;
+    std::shared_ptr<TransitionRelation> to_predecessor_tr;
+    std::shared_ptr<TransitionRelation> to_successor_tr;
     size_t plan_length;
 
 public:
@@ -40,8 +41,8 @@ public:
 
     std::shared_ptr<ReconstructionNode> get_predecessor() const;
     std::shared_ptr<ReconstructionNode> get_successor() const;
-    OperatorID get_to_predecessor_op() const;
-    OperatorID get_to_successor_op() const;
+    std::shared_ptr<TransitionRelation> get_to_predecessor_tr() const;
+    std::shared_ptr<TransitionRelation> get_to_successor_tr() const;
     size_t get_plan_length() const {return plan_length;}
 
     std::shared_ptr<ReconstructionNode> get_origin_predecessor() const;
@@ -55,15 +56,16 @@ public:
     void add_visited_states(BDD newly_visited_states) {this->visited_states += newly_visited_states;}
 
     void set_predecessor(const std::shared_ptr<ReconstructionNode> &predecessor,
-                         const OperatorID &to_predecessor_op);
+                         const std::shared_ptr<TransitionRelation> &to_predecessor_tr);
     void set_successor(const std::shared_ptr<ReconstructionNode> &successor,
-                       const OperatorID &to_successor_op);
+                       const std::shared_ptr<TransitionRelation> &to_successor_tr);
     void set_plan_length(size_t plan_length) {this->plan_length = plan_length;}
 
     bool is_fwd_phase() const;
     void set_fwd_phase(bool fwd_phase) {this->fwd_phase = fwd_phase;}
 
     void get_plan(Plan &plan) const;
+    BDD get_middle_state(BDD initial_state) const;
 
     friend std::ostream &operator<<(std::ostream &os,
                                     const ReconstructionNode &node) {

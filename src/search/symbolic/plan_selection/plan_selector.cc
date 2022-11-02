@@ -3,6 +3,7 @@
 #include "../../option_parser.h"
 #include "../../plugin.h"
 #include "../../state_registry.h"
+#include "../../task_utils/task_properties.h"
 
 using namespace std;
 
@@ -85,6 +86,8 @@ size_t PlanSelector::different(const vector<Plan> &plans,
 BDD PlanSelector::get_final_state(const Plan &plan) const {
     State cur = state_registry->get_initial_state();
     for (auto &op : plan) {
+        assert(task_properties::is_applicable(
+                   state_registry->get_task_proxy().get_operators()[op.get_index()], cur));
         cur = state_registry->get_successor_state(
             cur,
             state_registry->get_task_proxy().get_operators()[op]);
@@ -92,6 +95,9 @@ BDD PlanSelector::get_final_state(const Plan &plan) const {
     return sym_vars->getStateBDD(cur);
 }
 
+// The FD successor generator does sometimes has issues with conditional effects
+// e.g., in settlers-opt18-adl + p02.pddl.
+// In the long run we want to change it here to use our symbolic data structures
 BDD PlanSelector::states_on_path(const Plan &plan) {
     State cur = state_registry->get_initial_state();
     BDD path_states = sym_vars->getStateBDD(cur);

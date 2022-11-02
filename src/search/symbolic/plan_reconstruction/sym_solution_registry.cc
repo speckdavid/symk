@@ -130,31 +130,28 @@ void SymSolutionRegistry::expand_actions(const ReconstructionNode &node) {
                 continue;
             }
 
-            OperatorID op_id = *(tr.getOpsIds().begin());
             ReconstructionNode new_node(-1, -1, layer_id,
                                         intersection, node.get_visitied_states(),
                                         fwd, node.get_plan_length() + 1);
             if (fwd) {
                 new_node.set_g(new_cost);
                 new_node.set_h(node.get_h());
-                new_node.set_predecessor(make_shared<ReconstructionNode>(node), op_id);
+                new_node.set_predecessor(make_shared<ReconstructionNode>(node), make_shared<TransitionRelation>(tr));
             } else {
                 new_node.set_g(node.get_g());
                 new_node.set_h(new_cost);
-                new_node.set_successor(make_shared<ReconstructionNode>(node), op_id);
+                new_node.set_successor(make_shared<ReconstructionNode>(node), make_shared<TransitionRelation>(tr));
             }
 
             // We have sucessfully reconstructed to the initial state
             if (swap_to_bwd_phase(new_node)) {
                 assert(fw_closed->get_start_states() == new_node.get_states());
-                Plan partial_plan;
-                new_node.get_plan(partial_plan);
-                BDD middle_state = plan_data_base->get_final_state(partial_plan);
+                BDD middle_state = new_node.get_middle_state(fw_closed->get_start_states());
                 ReconstructionNode bw_node(0, new_node.get_h(),
                                            numeric_limits<int>::max(), middle_state,
                                            new_node.get_visitied_states(),
                                            false, node.get_plan_length() + 1);
-                bw_node.set_predecessor(make_shared<ReconstructionNode>(node), op_id);
+                bw_node.set_predecessor(make_shared<ReconstructionNode>(node), make_shared<TransitionRelation>(tr));
 
                 // Add init state to visited states
                 if (simple_solutions()) {
