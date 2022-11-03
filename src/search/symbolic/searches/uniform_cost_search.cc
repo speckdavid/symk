@@ -17,8 +17,12 @@ using namespace std;
 namespace symbolic {
 UniformCostSearch::UniformCostSearch(SymbolicSearch *eng,
                                      const SymParamsSearch &params)
-    : SymSearch(eng, params), fw(true), closed(make_shared<ClosedList>()),
-      estimationCost(params), estimationZero(params), lastStepCost(true) {}
+    : SymSearch(eng, params),
+      fw(true),
+      step_estimation(0, 0, false),
+      closed(make_shared<ClosedList>()),
+      lastStepCost(true) {
+}
 
 bool UniformCostSearch::init(shared_ptr<SymStateSpaceManager> manager,
                              bool forward, UniformCostSearch *opposite_search) {
@@ -71,11 +75,11 @@ void UniformCostSearch::checkFrontierCut(Bucket &bucket, int g) {
 
 bool UniformCostSearch::provable_no_more_plans() {return open_list.empty();}
 
-void UniformCostSearch::prepareBucket() {
+bool UniformCostSearch::prepareBucket() {
     if (!frontier.bucketReady()) {
         if (provable_no_more_plans()) {
             engine->setLowerBound(numeric_limits<int>::max());
-            return;
+            return true;
         }
 
         open_list.pop(frontier);
@@ -95,23 +99,15 @@ void UniformCostSearch::prepareBucket() {
         }
         engine->setLowerBound(getF());
         engine->setMinG(getG());
-
-        computeEstimation(true);
     }
 
     if (engine->solved()) {
-        return; // If it has been solved, return
+        return true; // If it has been solved, return
     }
 
     initialization();
 
-    int maxTime = p.getAllotedTime(nextStepTime());
-    int maxNodes = p.getAllotedNodes(nextStepNodesResult());
-
-    Result res = frontier.prepare(maxTime, maxNodes, fw, initialization());
-    if (!res.ok) {
-        violated(res.truncated_reason, res.time_spent, maxTime, maxNodes);
-    }
+    return false;
 }
 
 // Here we filter states: remove closed states and mutex states
@@ -123,23 +119,21 @@ void UniformCostSearch::filterFrontier() {
     removeZero(frontier.bucket());
 }
 
-bool UniformCostSearch::stepImage(int maxTime, int maxNodes) {
-    utils::Timer sTime;
-    Result prepare_res =
-        frontier.prepare(maxTime, maxNodes, fw, initialization());
-    if (!prepare_res.ok) {
-        violated(prepare_res.truncated_reason, prepare_res.time_spent, maxTime,
-                 maxNodes);
+void UniformCostSearch::stepImage(int maxTime, int maxNodes) {
+    utils::Timer step_timer;
+    bool done = prepareBucket();
+    if (done) {
+        return;
+    }
 
-        if (sTime() * 1000.0 > p.maxStepTime) {
-            double ratio = (double)p.maxStepTime / ((double)sTime() * 1000.0);
-            p.maxStepNodes *= ratio;
-        }
-        return false;
+    Result prepare_res = frontier.prepare(maxTime, maxNodes, fw, initialization());
+    if (!prepare_res.ok) {
+        step_estimation.set_data(step_timer(), frontier.nodes(), !prepare_res.ok);
+        return;
     }
 
     if (engine->solved()) {
-        return true; // Skip image if we are done
+        return; // Skip image if we are done
     }
 
     int stepNodes = frontier.nodes();
@@ -168,100 +162,10 @@ bool UniformCostSearch::stepImage(int maxTime, int maxNodes) {
         }
     }
 
-    if (!res_expansion.step_zero) {
-        estimationCost.stepTaken(1000 * res_expansion.time_spent, stepNodes);
-    } else {
-        estimationZero.stepTaken(1000 * res_expansion.time_spent, stepNodes);
-    }
+    // prepareBucket();
+    step_estimation.set_data(step_timer(), stepNodes, !res_expansion.ok);
 
-    // Try to prepare next Bucket
-    computeEstimation(true);
-
-    // We prepare the next bucket before checking time in doing
-    // the step because we consider preparing the bucket as a
-    // part of the step.
-    prepareBucket();
-
-    if (sTime() * 1000.0 > p.maxStepTime) {
-        double ratio = (double)p.maxStepTime / ((double)sTime() * 1000.0);
-        p.maxStepNodes = stepNodes * ratio;
-    } else if (!res_expansion.ok) {
-        // In case maxAllotedNodes were exceeded we reduce the maximum
-        // frontier size by 3/4.  TODO: make this a parameter
-        p.maxStepNodes = stepNodes * 0.75;
-    }
-
-    return res_expansion.ok;
+    return;
 }
 
-bool UniformCostSearch::isSearchableWithNodes(int maxNodes) const {
-    return frontier.expansionReady() && nextStepNodes() <= maxNodes;
 }
-
-void UniformCostSearch::computeEstimation(bool prepare) {
-    if (prepare) {
-        prepareBucket(/*p.max_pop_time, p.max_pop_nodes, true*/);
-    }
-
-    if (frontier.expansionReady()) {
-        // Succeded, the estimation will be only in image
-        if (frontier.nextStepZero()) {
-            estimationZero.nextStep(frontier.nodes());
-        } else {
-            estimationCost.nextStep(frontier.nodes());
-        }
-    } else {
-        if (mgr->hasTransitions0()) {
-            estimationZero.nextStep(frontier.nodes());
-        } else {
-            estimationCost.nextStep(frontier.nodes());
-        }
-    }
-}
-
-long UniformCostSearch::nextStepTime() const {
-    long estimation = 0;
-
-    if (mgr->hasTransitions0() &&
-        (!frontier.expansionReady() || frontier.nextStepZero())) {
-        estimation += estimationZero.time();
-    } else {
-        estimation += estimationCost.time();
-    }
-    return estimation;
-}
-
-long UniformCostSearch::nextStepNodes() const {
-    if (mgr->hasTransitions0() &&
-        (!frontier.expansionReady() || frontier.nextStepZero())) {
-        return estimationZero.nextNodes();
-    } else {
-        return estimationCost.nextNodes();
-    }
-}
-
-long UniformCostSearch::nextStepNodesResult() const {
-    long estimation = 0;
-
-    if (mgr->hasTransitions0() &&
-        (!frontier.expansionReady() || frontier.nextStepZero())) {
-        estimation = max(estimation, estimationZero.nodes());
-    } else {
-        estimation = max(estimation, estimationCost.nodes());
-    }
-    return estimation;
-}
-
-void UniformCostSearch::violated(TruncatedReason /*reason*/,
-                                 double ellapsed_seconds, int maxTime,
-                                 int maxNodes) {
-    int time = 1 + ellapsed_seconds * 1000;
-
-    if (mgr->hasTransitions0() &&
-        (!frontier.expansionReady() || frontier.nextStepZero())) {
-        estimationZero.violated(time, maxTime, maxNodes);
-    } else {
-        estimationCost.violated(time, maxTime, maxNodes);
-    }
-}
-} // namespace symbolic

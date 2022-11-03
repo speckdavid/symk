@@ -27,7 +27,8 @@ SymbolicSearch::SymbolicSearch(const options::Options &opts)
       task_proxy(*task),
       vars(make_shared<SymVariables>(opts, task)),
       mgrParams(opts, task),
-      searchParams(opts), step_num(-1),
+      searchParams(opts),
+      step_num(-1),
       lower_bound_increased(true),
       lower_bound(0),
       upper_bound(numeric_limits<int>::max()),
@@ -167,7 +168,7 @@ void SymbolicSearch::add_options_to_parser(OptionParser &parser) {
         "no_transform()");
     SearchEngine::add_options_to_parser(parser);
     SymVariables::add_options_to_parser(parser);
-    SymParamsSearch::add_options_to_parser(parser, 30e3, 10e7);
+    SymParamsSearch::add_options_to_parser(parser);
     SymParamsMgr::add_options_to_parser(parser);
     PlanSelector::add_options_to_parser(parser);
     parser.add_option<bool>("simple", "simple/loopless plan construction",

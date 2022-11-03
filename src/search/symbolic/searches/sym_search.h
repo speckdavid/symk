@@ -33,25 +33,14 @@ public:
         return mgr;
     }
 
-    bool isSearchable() const {
-        return isSearchableWithNodes(p.getMaxStepNodes());
+    virtual void step() {
+        stepImage(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
     }
 
-    bool step() {
-        return stepImage(p.getAllotedTime(nextStepTime()),
-                         p.getAllotedNodes(nextStepNodesResult()));
-    }
-
-    virtual bool stepImage(int maxTime, int maxNodes) = 0;
+    virtual void stepImage(int maxTime, int maxNodes) = 0;
 
     virtual int getF() const = 0;
     virtual bool finished() const = 0;
-
-    virtual long nextStepTime() const = 0;
-    virtual long nextStepNodes() const = 0;
-    virtual long nextStepNodesResult() const = 0;
-
-    virtual bool isSearchableWithNodes(int maxNodes) const = 0;
 };
-} // namespace symbolic
-#endif // SYMBOLIC_SEARCH
+}
+#endif

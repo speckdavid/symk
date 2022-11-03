@@ -143,6 +143,7 @@ ResultExpansion Frontier::expand_cost(int maxTime, int maxNodes, bool fw) {
     assert(nodeCount(S) <= maxNodes);
     utils::Timer image_time;
     mgr->setTimeLimit(maxTime);
+    // cout << maxTime << " + " << maxNodes << endl;
     try {
         for (size_t i = 0; i < S.size(); i++) {
             Simg.push_back(map<int, Bucket>());
