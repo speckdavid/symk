@@ -33,9 +33,7 @@ public:
         return mgr;
     }
 
-    virtual void step() {
-        stepImage(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
-    }
+    virtual void step() = 0;
 
     virtual void stepImage(int maxTime, int maxNodes) = 0;
 

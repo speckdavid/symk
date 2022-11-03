@@ -82,6 +82,13 @@ public:
         return open_list.empty() && frontier.empty();
     }
 
+    void step() override {
+        if (step_estimation.get_failed()) {
+            p.increase_bound();
+        }
+        stepImage(p.maxAllotedTime, p.maxAllotedNodes);
+    }
+
     virtual void stepImage(int maxTime, int maxNodes);
 
     bool
