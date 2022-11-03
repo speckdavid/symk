@@ -105,8 +105,6 @@ bool UniformCostSearch::prepareBucket() {
         return true; // If it has been solved, return
     }
 
-    initialization();
-
     return false;
 }
 

@@ -83,10 +83,11 @@ public:
     }
 
     void step() override {
-        if (step_estimation.get_failed()) {
+        /*if (step_estimation.get_failed()) {
             p.increase_bound();
         }
-        stepImage(p.maxAllotedTime, p.maxAllotedNodes);
+        stepImage(p.maxAllotedTime, p.maxAllotedNodes);*/
+        stepImage(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
     }
 
     virtual void stepImage(int maxTime, int maxNodes);

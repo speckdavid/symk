@@ -99,7 +99,6 @@ public:
             return expand_zero(maxTime, maxNodes, fw);
         }
 
-        assert(!S.empty());
         // Image with respect to cost actions
         return expand_cost(maxTime, maxNodes, fw);
     }
