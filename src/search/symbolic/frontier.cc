@@ -44,7 +44,7 @@ Result Frontier::prepare(int maxTime, int maxNodes, bool fw,
 
     if (!Smerge.empty()) {
         if (Smerge.size() > 1) {
-            mgr->mergeBucket(Smerge, 30000, 10000000);
+            mgr->mergeBucket(Smerge, 60000, 10000000);
         }
 
         if (mgr->hasTransitions0()) {
@@ -59,7 +59,7 @@ Result Frontier::prepare(int maxTime, int maxNodes, bool fw,
     // If there are zero cost operators, merge S
     if (mgr->hasTransitions0() && Szero.empty()) {
         if (S.size() > 1) {
-            mgr->mergeBucket(S, 30000, 10000000);
+            mgr->mergeBucket(S, 60000, 10000000);
         }
     }
 
@@ -105,11 +105,9 @@ ResultExpansion Frontier::expand_zero(int maxTime, int maxNodes, bool fw) {
     mgr->setTimeLimit(maxTime);
     // Compute image, storing the result on Simg
     try {
-        int numImagesComputed = 0;
         for (size_t i = 0; i < Szero.size(); i++) {
             Simg.push_back(map<int, Bucket>());
             mgr->zero_image(fw, Szero[i], Simg[i][0], maxNodes);
-            ++numImagesComputed;
         }
         mgr->unsetTimeLimit();
     } catch (BDDError e) {
