@@ -94,7 +94,7 @@ BDD ReconstructionNode::get_middle_state(BDD initial_state) const {
     shared_ptr<ReconstructionNode> cur_node = make_shared<ReconstructionNode>(*this);
     BDD cur_state = initial_state;
 
-    while(cur_node->get_predecessor()) {
+    while (cur_node->get_predecessor()) {
         assert(cur_node->get_to_predecessor_tr());
         cur_state = cur_node->get_to_predecessor_tr()->image(cur_state);
         assert(cur_node->get_to_predecessor_tr()->get_sym_vars()->numStates(cur_state) == 1);
@@ -102,5 +102,4 @@ BDD ReconstructionNode::get_middle_state(BDD initial_state) const {
     }
     return cur_state;
 }
-
 }
