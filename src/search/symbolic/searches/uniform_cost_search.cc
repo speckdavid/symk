@@ -82,7 +82,6 @@ bool UniformCostSearch::prepareBucket() {
             engine->setLowerBound(numeric_limits<int>::max());
             return true;
         }
-
         open_list.pop(frontier);
         last_g_cost = frontier.g();
         assert(!frontier.empty() || frontier.g() == numeric_limits<int>::max());
@@ -91,7 +90,6 @@ bool UniformCostSearch::prepareBucket() {
         filterFrontier();
 
         // Close and move to reopen
-
         if (!lastStepCost || frontier.g() != 0) {
             // Avoid closing init twice
             for (const BDD &states : frontier.bucket()) {
@@ -144,11 +142,9 @@ void UniformCostSearch::stepImage(int maxTime, int maxNodes) {
         // reopen. Include new states in the open list
         for (auto &resImage : res_expansion.buckets) {
             for (auto &pairCostBDDs : resImage) {
-                int cost = frontier.g() +
-                    pairCostBDDs.first; // Include states of the given cost
+                int cost = frontier.g() + pairCostBDDs.first;
                 mgr->mergeBucket(pairCostBDDs.second);
 
-                // Check for cut (remove those states)
                 checkFrontierCut(pairCostBDDs.second, cost);
 
                 for (auto &bdd : pairCostBDDs.second) {
@@ -160,6 +156,8 @@ void UniformCostSearch::stepImage(int maxTime, int maxNodes) {
             }
         }
     }
+    prepareBucket();
+
     engine->setLowerBound(getG() + mgr->getAbsoluteMinTransitionCost());
     step_estimation.set_data(step_timer(), stepNodes, !res_expansion.ok);
 }
