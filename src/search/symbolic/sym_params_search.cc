@@ -24,8 +24,8 @@ void SymParamsSearch::increase_bound() {
     maxAllotedTime *= ratioAllotedTime;
     if (maxAllotedTime <= 0)
         maxAllotedTime = numeric_limits<int>::max();
-    utils::g_log << "Increase allot limits!" << endl;
-    utils::g_log << "Max alloted time: " << maxAllotedTime / 1000
+    utils::g_log << "Increase allot limits! "
+                 << "Max alloted time: " << maxAllotedTime / 1000
                  << "s nodes: " << maxAllotedNodes << endl;
 }
 
