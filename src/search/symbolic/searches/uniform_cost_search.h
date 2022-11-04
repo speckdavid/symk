@@ -90,6 +90,10 @@ public:
         stepImage(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
     }
 
+    virtual std::string get_last_dir() const override {
+        return fw ? "FW" : "BW";
+    }
+
     virtual void stepImage(int maxTime, int maxNodes);
 
     bool

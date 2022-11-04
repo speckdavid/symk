@@ -35,7 +35,10 @@ SymbolicSearch::SymbolicSearch(const options::Options &opts)
       min_g(0),
       plan_data_base(opts.get<shared_ptr<PlanSelector>>("plan_selection")),
       solution_registry(make_shared<SymSolutionRegistry>()),
-      simple(opts.get<bool>("simple")) {
+      simple(opts.get<bool>("simple")),
+      single_solution(opts.get<bool>("single_solution")) {
+    cout << endl;
+    vars->print_options();
     cout << endl;
     mgrParams.print_options();
     cout << endl;
@@ -116,7 +119,11 @@ SearchStatus SymbolicSearch::step() {
         utils::g_log << " [" << solution_registry->get_num_found_plans() << "/"
                      << plan_data_base->get_num_desired_plans() << " plans]"
                      << flush;
-        utils::g_log << ", total time: " << utils::g_timer << endl;
+        if (step_num > 0) {
+            utils::g_log << ", dir: " << search->get_last_dir() << flush;
+        }
+        utils::g_log << ", total time: " << utils::g_timer << ", " << flush;
+        utils::g_log << endl;
     }
     lower_bound_increased = false;
 
@@ -173,5 +180,7 @@ void SymbolicSearch::add_options_to_parser(OptionParser &parser) {
     PlanSelector::add_options_to_parser(parser);
     parser.add_option<bool>("simple", "simple/loopless plan construction",
                             "false");
+    parser.add_option<bool>("single_solution", "search for a single solution",
+                            "true");
 }
 } // namespace symbolic

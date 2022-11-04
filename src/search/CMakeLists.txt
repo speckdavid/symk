@@ -114,6 +114,7 @@ add_subdirectory(sdac_parser/boost_dependencies/libs)
 ### Cudd
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/cudd)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/cplusplus)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../dd_libs/cudd-3.0.0/mtr)
 
 if(${CMAKE_SIZEOF_VOID_P} EQUAL 4)
     message(STATUS "Building Cudd with 32-bit.")

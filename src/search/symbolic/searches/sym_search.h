@@ -34,6 +34,7 @@ public:
     }
 
     virtual void step() = 0;
+    virtual std::string get_last_dir() const = 0;
 
     virtual void stepImage(int maxTime, int maxNodes) = 0;
 

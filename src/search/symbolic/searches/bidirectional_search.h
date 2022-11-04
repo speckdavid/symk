@@ -8,6 +8,7 @@ namespace symbolic {
 class BidirectionalSearch : public SymSearch {
 private:
     std::shared_ptr<UniformCostSearch> fw, bw;
+    std::shared_ptr<UniformCostSearch> cur_dir;
 
     // Returns the best direction to search the bd exp
     UniformCostSearch *selectBestDirection();
@@ -22,6 +23,8 @@ public:
     virtual void step() override {
         stepImage(p.maxAllotedTime, p.maxAllotedNodes);
     }
+
+    virtual std::string get_last_dir() const override;
 
     virtual void stepImage(int maxTime, int maxNodes) override;
 

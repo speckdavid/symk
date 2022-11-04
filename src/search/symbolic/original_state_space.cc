@@ -41,9 +41,13 @@ OriginalStateSpace::OriginalStateSpace(
         create_single_sdac_trs(sdac_task, p.fast_sdac_generation);
     }
     utils::g_log << "Done!" << endl;
-    utils::g_log << "Merging transition relations..." << flush;
+    utils::g_log << "Merging transition relations: " << task->get_num_operators() << " => " << flush;
     init_transitions(indTRs);
-    utils::g_log << "Done!" << endl;
+    int num_trs = 0;
+    for (auto const &pair : transitions) {
+        num_trs += pair.second.size();
+    }
+    utils::g_log << num_trs << endl;
     cout << endl;
 }
 

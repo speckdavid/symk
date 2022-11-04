@@ -41,7 +41,8 @@ void SymbolicUniformCostSearch::initialize() {
                             bw_search ? bw_search->getClosedShared() : nullptr,
                             individual_trs,
                             plan_data_base,
-                            true, simple);
+                            single_solution,
+                            simple);
 
     if (fw && bw) {
         search = unique_ptr<BidirectionalSearch>(new BidirectionalSearch(

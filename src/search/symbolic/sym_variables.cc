@@ -27,6 +27,7 @@ SymVariables::SymVariables(const Options &opts,
       cudd_init_nodes(16000000L), cudd_init_cache_size(16000000L),
       cudd_init_available_memory(0L),
       gamer_ordering(opts.get<bool>("gamer_ordering")),
+      dynamic_reordering(opts.get<bool>("dynamic_reordering")),
       ax_comp(make_shared<SymAxiomCompilation>(this, task)) {}
 
 void SymVariables::init() {
@@ -121,6 +122,19 @@ void SymVariables::init(const vector<int> &v_order) {
                      << endl;
         ax_comp->init_axioms();
         utils::g_log << "Primary Representation... Done!" << endl;
+    }
+
+    if (dynamic_reordering) {
+        // http://web.mit.edu/sage/export/tmp/y/usr/share/doc/polybori/cudd/node3.html#SECTION000313000000000000000
+        size_t var_id = 0;
+        for (int var : var_order) {
+            size_t var_len =
+                ceil(log2(tasks::g_root_task->get_variable_domain_size(var)));
+            manager->MakeTreeNode(var_id, var_len * 2, MTR_FIXED);
+            var_id += var_len * 2;
+        }
+        manager->AutodynEnable(Cudd_ReorderingType::CUDD_REORDER_GROUP_SIFT);
+        // Mtr_PrintGroups(manager->ReadTree(), 0);
     }
 }
 
@@ -283,12 +297,14 @@ void SymVariables::to_dot(const ADD &add,
 void SymVariables::print_options() const {
     utils::g_log << "CUDD Init: nodes=" << cudd_init_nodes
                  << " cache=" << cudd_init_cache_size
-                 << " max_memory=" << cudd_init_available_memory
-                 << " ordering: " << (gamer_ordering ? "gamer" : "fd") << endl;
+                 << " max_memory=" << cudd_init_available_memory << endl;
+    utils::g_log << "Variable Ordering: " << (gamer_ordering ? "gamer" : "fd") << endl;
+    utils::g_log << "Dynamic reordering: " << (dynamic_reordering ? "True" : "False") << endl;
 }
 
 void SymVariables::add_options_to_parser(options::OptionParser &parser) {
     parser.add_option<bool>("gamer_ordering", "Use Gamer ordering optimization",
                             "true");
+    parser.add_option<bool>("dynamic_reordering", "Enable dynamic group sift reordering.", "false");
 }
 }

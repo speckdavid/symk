@@ -11,9 +11,13 @@ BidirectionalSearch::BidirectionalSearch(SymbolicSearch *eng,
                                          const SymParamsSearch &params,
                                          shared_ptr<UniformCostSearch> _fw,
                                          shared_ptr<UniformCostSearch> _bw)
-    : SymSearch(eng, params), fw(_fw), bw(_bw) {
+    : SymSearch(eng, params), fw(_fw), bw(_bw), cur_dir(nullptr) {
     assert(fw->getStateSpace() == bw->getStateSpace());
     mgr = fw->getStateSpaceShared();
+}
+
+string BidirectionalSearch::get_last_dir() const {
+    return cur_dir ? cur_dir->get_last_dir() : "";
 }
 
 UniformCostSearch *BidirectionalSearch::selectBestDirection() {
@@ -27,7 +31,8 @@ UniformCostSearch *BidirectionalSearch::selectBestDirection() {
     /*utils::g_log << "FWD: " << fw_est << endl;
     utils::g_log << "BWD: " << bw_est << endl;
     utils::g_log << ((bw_est < fw_est) ? "bw" : "fw") << endl;*/
-    return (bw_est < fw_est) ? bw.get() : fw.get();
+    cur_dir = (bw_est < fw_est) ? bw : fw;
+    return cur_dir.get();
 }
 
 bool BidirectionalSearch::finished() const {

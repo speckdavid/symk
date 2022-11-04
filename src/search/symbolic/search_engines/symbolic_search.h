@@ -51,6 +51,7 @@ protected:
     std::shared_ptr<PlanSelector> plan_data_base;
     std::shared_ptr<SymSolutionRegistry> solution_registry; // Solution registry
     bool simple;
+    bool single_solution;
 
     virtual void initialize() override;
 

@@ -1,6 +1,7 @@
 #ifndef SYMBOLIC_SYM_BUCKET_H
 #define SYMBOLIC_SYM_BUCKET_H
 
+#include "mtr.h"
 #include "cuddObj.hh"
 
 #include <vector>
