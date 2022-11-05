@@ -38,7 +38,7 @@ Sym-k should compile on MacOS with the GNU C++ compiler and clang with the same 
 ```console
 $ ./build.py 
 ```
-## Generting A Single Optimal Solution
+## Generating A Single Optimal Solution
 We recommend to use the following configuration which uses bidirectional search.
 
 ```console
@@ -47,7 +47,7 @@ $ ./fast-downward.py domain.pddl problem.pddl --search "sym-bd()"
 
 Other configurations are forward or backward search: `--search "symk-fw()"` or `--search "symk-bw()"`.
 
-## Generting Multiple Solutions
+## Generating Multiple Solutions
 
 ### Top-k Configurations
 
@@ -93,7 +93,7 @@ It is possible to create plans until a number of plans or simply a single plan i
 For this purpose it is possible to write your own plan selector. During the search, plans are created and handed over to a plan selector with an anytime behavior. 
 
 ### Unordered Plan Selector
-An example of a plan selector is the [unordered_selector](src/search/symbolic/plan_selection/unordered_selector.cc), which consideres two plans as equivalent if their action multi-sets are equivalent. In other words, plans with the same multi-set of actions form an equivalence class and only one representative plan is reported for each equivalence class.
+An example of a plan selector is the [unordered_selector](src/search/symbolic/plan_selection/unordered_selector.cc), which considers two plans as equivalent if their action multi-sets are equivalent. In other words, plans with the same multi-set of actions form an equivalence class and only one representative plan is reported for each equivalence class.
 Note that plan selectors can be combined with the different planning configurations.
 
 We recommend to use the following configurations which use bidirectional search.
