@@ -6,13 +6,14 @@
 using namespace std;
 
 namespace symbolic {
-SymSolutionCut::SymSolutionCut() : g(-1), h(-1), sol_cost(-1) {}
+SymSolutionCut::SymSolutionCut() :
+    g(-1),
+    h(-1) {}
 
-SymSolutionCut::SymSolutionCut(int g, int h, BDD cut, int sol_cost) :
+SymSolutionCut::SymSolutionCut(int g, int h, BDD cut) :
     g(g),
     h(h),
-    cut(cut),
-    sol_cost(sol_cost) {}
+    cut(cut) {}
 
 int SymSolutionCut::get_g() const {return g;}
 
@@ -21,8 +22,6 @@ int SymSolutionCut::get_h() const {return h;}
 int SymSolutionCut::get_f() const {return g + h;}
 
 BDD SymSolutionCut::get_cut() const {return cut;}
-
-int SymSolutionCut::get_sol_cost() const {return sol_cost;}
 
 void SymSolutionCut::merge(const SymSolutionCut &other) {
     assert(*this == other);

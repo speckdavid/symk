@@ -4,303 +4,265 @@
 using namespace std;
 
 namespace symbolic {
-//////////////// Plan Reconstruction /////////////////////////
-
 void SymSolutionRegistry::add_plan(const Plan &plan) const {
+    assert(!(simple_solutions() && plan_data_base->has_zero_cost_loop(plan)));
     plan_data_base->add_plan(plan);
-    if (!plan_data_base->found_enough_plans() && task_has_zero_costs()
-        && plan_data_base->has_zero_cost_loop(plan)) {
-        pair<int, int> zero_cost_op_seq =
-            plan_data_base->get_first_zero_cost_loop(plan);
-        Plan cur_plan = plan;
-        utils::g_log << "Zero cost loop detected!" << endl;
-        while (!plan_data_base->found_enough_plans()) {
-            cur_plan.insert(cur_plan.begin() + zero_cost_op_seq.first,
-                            plan.begin() + zero_cost_op_seq.first,
-                            plan.begin() + zero_cost_op_seq.second + 1);
-            plan_data_base->add_plan(cur_plan);
+}
+
+void SymSolutionRegistry::reconstruct_plans(
+    const vector<SymSolutionCut> &sym_cuts) {
+    assert(queue.empty());
+
+    for (const SymSolutionCut &sym_cut : sym_cuts) {
+        assert(fw_closed || sym_cut.get_g() == 0);
+        assert(bw_closed || sym_cut.get_h() == 0);
+
+        ReconstructionNode cur_node(sym_cut.get_g(),
+                                    sym_cut.get_h(),
+                                    numeric_limits<int>::max(),
+                                    sym_cut.get_cut(),
+                                    sym_vars->zeroBDD(),
+                                    fw_closed != nullptr,
+                                    0);
+        queue.push(cur_node);
+
+        // In the bidirectional case we might can directly swap the direction
+        if (swap_to_bwd_phase(cur_node)) {
+            ReconstructionNode bw_node = cur_node;
+            bw_node.set_states(fw_closed->get_start_states());
+            bw_node.set_visited_states(fw_closed->get_start_states());
+            bw_node.set_fwd_phase(false);
+            queue.push(bw_node);
         }
     }
-}
 
-void SymSolutionRegistry::reconstruct_plans(const SymSolutionCut &cut) {
-    Plan plan;
-    SymSolutionCut modifiable_cut = cut;
+    // While queue is not empty
+    while (!queue.empty()) {
+        ReconstructionNode cur_node = queue.top();
+        queue.pop();
 
-    if (fw_search && !bw_search) {
-        modifiable_cut.set_h(0);
-    }
-    if (!fw_search && bw_search) {
-        modifiable_cut.set_g(0);
-    }
-
-    if (fw_search) {
-        extract_all_plans(modifiable_cut, true, plan);
-    } else {
-        extract_all_plans(modifiable_cut, false, plan);
-    }
-}
-
-void SymSolutionRegistry::extract_all_plans(SymSolutionCut &sym_cut, bool fw,
-                                            Plan plan) {
-    if (!plan_data_base->reconstruct_solutions(sym_cut)) {
-        return;
-    }
-
-    if (!task_has_zero_costs()) {
-        extract_all_cost_plans(sym_cut, fw, plan);
-    } else {
-        extract_all_zero_plans(sym_cut, fw, plan);
-    }
-}
-
-void SymSolutionRegistry::extract_all_cost_plans(SymSolutionCut &sym_cut,
-                                                 bool fw, Plan &plan) {
-    // utils::g_log << sym_cut << endl;
-    if (sym_cut.get_g() == 0 && sym_cut.get_h() == 0) {
-        add_plan(plan);
-        return;
-    }
-
-    // Resolve cost action
-    if (fw) {
-        if (sym_cut.get_g() > 0) {
-            reconstruct_cost_action(sym_cut, true, fw_search->getClosedShared(),
-                                    plan);
-        } else {
-            SymSolutionCut new_cut(0, sym_cut.get_h(),
-                                   plan_data_base->get_final_state(plan),
-                                   sym_cut.get_sol_cost());
-            reconstruct_cost_action(new_cut, false, bw_search->getClosedShared(),
-                                    plan);
+        // If we do simple planning, we extract a single state form the relevant states
+        // and process it
+        if (simple_solutions()) {
+            if (sym_vars->numStates(cur_node.get_states()) > 1) {
+                BDD state_bdd = sym_vars->getSinglePrimaryStateFrom(cur_node.get_states());
+                ReconstructionNode remaining_node = cur_node;
+                remaining_node.set_states(remaining_node.get_states() * !state_bdd);
+                if (sym_vars->numStates(remaining_node.get_states()) > 0) {
+                    queue.push(remaining_node);
+                }
+                assert(sym_vars->numStates(remaining_node.get_states()) > 0
+                       || remaining_node.get_states() == sym_vars->zeroBDD());
+                cur_node.set_states(state_bdd);
+            }
+            cur_node.add_visited_states(cur_node.get_states());
         }
-    } else {
-        reconstruct_cost_action(sym_cut, false, bw_search->getClosedShared(), plan);
-    }
-}
 
-void SymSolutionRegistry::extract_all_zero_plans(SymSolutionCut &sym_cut,
-                                                 bool fw, Plan &plan) {
-    BDD intersection;
-    // Only zero costs left!
-    if (sym_cut.get_g() == 0 && sym_cut.get_h() == 0) {
-        // Check wether we are really in a initial or goal state
-        if (fw && !bw_search) {
-            intersection =
-                sym_cut.get_cut() * fw_search->getClosedShared()->get_start_states();
-            if (!intersection.IsZero()) {
-                add_plan(plan);
-                if (!plan_data_base->reconstruct_solutions(sym_cut)) {
-                    return;
-                }
-            }
-            reconstruct_zero_action(sym_cut, true, fw_search->getClosedShared(),
-                                    plan);
-        } else if (fw && bw_search) {
-            intersection =
-                sym_cut.get_cut() * fw_search->getClosedShared()->get_start_states();
-            if (!intersection.IsZero()) {
-                SymSolutionCut new_cut(0, sym_cut.get_h(),
-                                       plan_data_base->get_final_state(plan),
-                                       sym_cut.get_sol_cost());
+        // utils::g_log << cur_node << endl;
 
-                intersection = new_cut.get_cut() *
-                    bw_search->getClosedShared()->get_start_states();
-                if (!intersection.IsZero()) {
-                    add_plan(plan);
-                    if (!plan_data_base->reconstruct_solutions(sym_cut)) {
-                        return;
-                    }
-                }
-                reconstruct_zero_action(new_cut, false, bw_search->getClosedShared(),
-                                        plan);
-            }
-            reconstruct_zero_action(sym_cut, true, fw_search->getClosedShared(),
-                                    plan);
-        } else { // bw
-            intersection =
-                sym_cut.get_cut() * bw_search->getClosedShared()->get_start_states();
-            if (!intersection.IsZero()) {
-                add_plan(plan);
-                if (!plan_data_base->reconstruct_solutions(sym_cut)) {
-                    return;
-                }
-            }
-            reconstruct_zero_action(sym_cut, false, bw_search->getClosedShared(),
-                                    plan);
-        }
-    } else {
-        // Some cost left!
-        if (fw) {
-            if (sym_cut.get_g() > 0) {
-                reconstruct_cost_action(sym_cut, true, fw_search->getClosedShared(),
-                                        plan);
-            } else {
-                intersection = sym_cut.get_cut() *
-                    fw_search->getClosedShared()->get_start_states();
-                if (!intersection.IsZero()) {
-                    SymSolutionCut new_cut(0, sym_cut.get_h(), plan_data_base->get_final_state(plan), sym_cut.get_sol_cost());
-                    reconstruct_cost_action(new_cut, false, bw_search->getClosedShared(),
-                                            plan);
-                    reconstruct_zero_action(new_cut, false, bw_search->getClosedShared(),
-                                            plan);
-                }
-            }
-            reconstruct_zero_action(sym_cut, true, fw_search->getClosedShared(),
-                                    plan);
-        } else {
-            reconstruct_cost_action(sym_cut, false, bw_search->getClosedShared(),
-                                    plan);
-            reconstruct_zero_action(sym_cut, false, bw_search->getClosedShared(),
-                                    plan);
-        }
-    }
-}
+        assert(sym_vars->numStates(cur_node.get_states()) > 0);
+        assert(!simple_solutions() || sym_vars->numStates(cur_node.get_states()) == 1);
+        assert(!simple_solutions() || cur_node.get_plan_length() + 1 == sym_vars->numStates(cur_node.get_visitied_states()));
 
-void SymSolutionRegistry::reconstruct_zero_action(
-    SymSolutionCut &sym_cut, bool fw, shared_ptr<ClosedList> closed,
-    const Plan &plan) {
-    int cur_cost = fw ? sym_cut.get_g() : sym_cut.get_h();
-    BDD cut = sym_cut.get_cut();
+        // Check if we have found a solution with this cut
+        if (is_solution(cur_node)) {
+            Plan cur_plan;
+            cur_node.get_plan(cur_plan);
+            add_plan(cur_plan);
 
-    BDD succ;
-    for (size_t newSteps0 = 0;
-         newSteps0 < closed->get_num_zero_closed_layers(cur_cost); newSteps0++) {
-        for (const TransitionRelation &tr : trs.at(0)) {
-            succ = fw ? tr.preimage(cut) : tr.image(cut);
-            if (succ.IsZero()) {
+            // Plan data base tells us if we need to continue
+            // We can stop early if we, e.g., have found enough plans
+            if (!plan_data_base->reconstruct_solutions(sym_cuts[0].get_f())) {
+                queue = ReconstructionQueue(CompareReconstructionNodes(ReconstructionPriority::REMAINING_COST));
+                return;
+            }
+
+            // Not necessary to with this plan since it can only lead to
+            // unjustified plans
+            if (justified_solutions()) {
                 continue;
             }
-
-            BDD intersection = succ * closed->get_zero_closed_at(cur_cost, newSteps0);
-            if (!intersection.IsZero()) {
-                Plan new_plan = plan;
-                if (fw) {
-                    new_plan.insert(new_plan.begin(), *(tr.getOpsIds().begin()));
-                } else {
-                    new_plan.push_back(*(tr.getOpsIds().begin()));
-                }
-                SymSolutionCut new_cut(sym_cut.get_g(), sym_cut.get_h(),
-                                       intersection, sym_cut.get_sol_cost());
-                extract_all_plans(new_cut, fw, new_plan);
-
-                if (!plan_data_base->reconstruct_solutions(new_cut)) {
-                    return;
-                }
-            }
         }
+        expand_actions(cur_node);
     }
+    assert(queue.empty());
 }
 
-void SymSolutionRegistry::reconstruct_cost_action(
-    SymSolutionCut &sym_cut, bool fw, shared_ptr<ClosedList> closed,
-    const Plan &plan) {
-    int cur_cost = fw ? sym_cut.get_g() : sym_cut.get_h();
+void SymSolutionRegistry::expand_actions(const ReconstructionNode &node) {
+    bool fwd = node.is_fwd_phase();
+    int cur_cost;
+    shared_ptr<ClosedList> cur_closed_list;
 
-    for (auto key : trs) {
-        int new_cost = cur_cost - key.first;
-        if (key.first == 0 || new_cost < 0) {
+    if (fwd) {
+        cur_cost = node.get_g();
+        cur_closed_list = fw_closed;
+    } else {
+        cur_cost = node.get_h();
+        cur_closed_list = bw_closed;
+    }
+
+    // Traverse in oposite direction to first consider actions with higher costs
+    // Mostly relevant for single solution reconstruction
+    for (auto it = trs.rbegin(); it != trs.rend(); it++) {
+        int op_cost = it->first;
+        int new_cost = cur_cost - op_cost;
+
+        // new cost can not be negative
+        if (new_cost < 0) {
             continue;
         }
-        for (TransitionRelation &tr : key.second) {
-            BDD succ =
-                fw ? tr.preimage(sym_cut.get_cut()) : tr.image(sym_cut.get_cut());
-            BDD intersection = succ * closed->get_closed_at(new_cost);
+
+        for (const TransitionRelation &tr : it->second) {
+            BDD succ = fwd ? tr.preimage(node.get_states()) : tr.image(node.get_states());
+
+            BDD closed_states = cur_closed_list->get_closed_at(new_cost);
+            BDD intersection = succ * closed_states;
+            int layer_id = 0;
+            if (op_cost == 0)
+                layer_id = cur_closed_list->get_zero_cut(new_cost, intersection);
+
+            // Ignore states we have already visited
+            if (simple_solutions()) {
+                intersection *= !node.get_visitied_states();
+            }
+
             if (intersection.IsZero()) {
                 continue;
             }
-            Plan new_plan = plan;
-            SymSolutionCut new_cut(0, 0, intersection, sym_cut.get_sol_cost());
-            if (fw) {
-                new_plan.insert(new_plan.begin(), *(tr.getOpsIds().begin()));
-                new_cut.set_g(new_cost);
-                new_cut.set_h(sym_cut.get_h());
-            } else {
-                new_plan.push_back(*(tr.getOpsIds().begin()));
-                new_cut.set_g(sym_cut.get_g());
-                new_cut.set_h(new_cost);
-            }
-            extract_all_plans(new_cut, fw, new_plan);
 
-            if (!plan_data_base->reconstruct_solutions(new_cut)) {
+            ReconstructionNode new_node(-1, -1, layer_id,
+                                        intersection, node.get_visitied_states(),
+                                        fwd, node.get_plan_length() + 1);
+            if (fwd) {
+                new_node.set_g(new_cost);
+                new_node.set_h(node.get_h());
+                new_node.set_predecessor(make_shared<ReconstructionNode>(node), make_shared<TransitionRelation>(tr));
+            } else {
+                new_node.set_g(node.get_g());
+                new_node.set_h(new_cost);
+                new_node.set_successor(make_shared<ReconstructionNode>(node), make_shared<TransitionRelation>(tr));
+            }
+
+            // We have sucessfully reconstructed to the initial state
+            if (swap_to_bwd_phase(new_node)) {
+                assert(fw_closed->get_start_states() == new_node.get_states());
+                BDD middle_state = new_node.get_middle_state(fw_closed->get_start_states());
+                ReconstructionNode bw_node(0, new_node.get_h(),
+                                           numeric_limits<int>::max(), middle_state,
+                                           new_node.get_visitied_states(),
+                                           false, node.get_plan_length() + 1);
+                bw_node.set_predecessor(make_shared<ReconstructionNode>(node), make_shared<TransitionRelation>(tr));
+
+                // Add init state to visited states
+                if (simple_solutions()) {
+                    bw_node.add_visited_states(fw_closed->get_start_states());
+                }
+
+                queue.push(bw_node);
+
+                if (task_has_zero_costs() && no_pruning()) {
+                    queue.push(new_node);
+                }
+            } else {
+                queue.push(new_node);
+            }
+
+            // A single solution and we made progress
+            if (single_solution() &&
+                (new_node.get_f() < node.get_f() ||
+                 new_node.get_zero_layer() < node.get_zero_layer())) {
                 return;
             }
         }
     }
 }
 
-////// Plan registry
+bool SymSolutionRegistry::swap_to_bwd_phase(const ReconstructionNode &node) const {
+    return bw_closed
+           && node.is_fwd_phase()
+           && node.get_g() == 0
+           && !(node.get_states() * fw_closed->get_start_states()).IsZero();
+}
+
+bool SymSolutionRegistry::is_solution(const ReconstructionNode &node) const {
+    if (node.get_f() > 0)
+        return false;
+    if (bw_closed && node.is_fwd_phase())
+        return false;
+    shared_ptr<ClosedList> closed = node.is_fwd_phase() ?
+        fw_closed : bw_closed;
+    return !(node.get_states() * closed->get_start_states()).IsZero();
+}
 
 SymSolutionRegistry::SymSolutionRegistry()
-    : single_solution(true), sym_vars(nullptr), fw_search(nullptr),
-      bw_search(nullptr), plan_data_base(nullptr), plan_cost_bound(-1) {}
+    : justified_solutions_pruning(false),
+      single_solution_pruning(false),
+      simple_solutions_pruning(false),
+      fw_closed(nullptr),
+      bw_closed(nullptr),
+      plan_data_base(nullptr) {
+    queue = ReconstructionQueue(CompareReconstructionNodes(ReconstructionPriority::REMAINING_COST));
+}
 
 void SymSolutionRegistry::init(shared_ptr<SymVariables> sym_vars,
-                               UniformCostSearch *fwd_search,
-                               UniformCostSearch *bwd_search,
-                               shared_ptr<PlanDataBase> plan_data_base,
-                               bool single_solution) {
+                               shared_ptr<symbolic::ClosedList> fw_closed,
+                               shared_ptr<symbolic::ClosedList> bw_closed,
+                               map<int, vector<TransitionRelation>> &trs,
+                               shared_ptr<PlanSelector> plan_data_base,
+                               bool single_solution,
+                               bool simple_solutions) {
     this->sym_vars = sym_vars;
     this->plan_data_base = plan_data_base;
-    this->fw_search = fwd_search;
-    this->bw_search = bwd_search;
-    this->trs = fwd_search
-        ? fwd_search->getStateSpaceShared()->getIndividualTRs()
-        : bwd_search->getStateSpaceShared()->getIndividualTRs();
-    this->single_solution = single_solution;
+    this->fw_closed = fw_closed;
+    this->bw_closed = bw_closed;
+    this->trs = trs;
+    this->single_solution_pruning = single_solution;
+    this->simple_solutions_pruning = simple_solutions;
+
+    // If unit costs we simple use sort by remaining cost
+    if (trs.size() == 1) {
+        queue = ReconstructionQueue(CompareReconstructionNodes(ReconstructionPriority::REMAINING_COST));
+    }
 }
 
 void SymSolutionRegistry::register_solution(const SymSolutionCut &solution) {
-    if (single_solution) {
-        if (sym_cuts.empty()) {
-            sym_cuts.push_back(solution);
-        } else {
-            sym_cuts[0] = solution;
+    if (single_solution()) {
+        if (!sym_cuts.empty()) {
+            sym_cuts = map<int, vector<SymSolutionCut>>();
         }
+        sym_cuts[solution.get_f()].push_back(solution);
         return;
     }
 
     bool merged = false;
     size_t pos = 0;
-    for (; pos < sym_cuts.size(); pos++) {
+    for (; pos < sym_cuts[solution.get_f()].size(); pos++) {
         // a cut with same g and h values exist
         // => we combine the cut to avoid multiple cuts with same solutions
-        if (sym_cuts[pos] == solution) {
-            sym_cuts[pos].merge(solution);
+        if (sym_cuts[solution.get_f()][pos] == solution) {
+            sym_cuts[solution.get_f()][pos].merge(solution);
             merged = true;
-            break;
-        }
-        if (sym_cuts[pos] > solution) {
             break;
         }
     }
     if (!merged) {
-        sym_cuts.insert(sym_cuts.begin() + pos, solution);
+        sym_cuts[solution.get_f()].push_back(solution);
     }
 }
 
 void SymSolutionRegistry::construct_cheaper_solutions(int bound) {
-    bool bound_used = false;
-    int min_plan_bound = numeric_limits<int>::max();
+    for (const auto &key : sym_cuts) {
+        int plan_cost = key.first;
+        const vector<SymSolutionCut> &cuts = key.second;
+        if (plan_cost >= bound || found_all_plans())
+            break;
 
-    while (sym_cuts.size() > 0 && sym_cuts.at(0).get_f() < bound
-           && !found_all_plans()) {
-        // Ignore cuts with costs smaller than the proven cost bound
-        // This occurs only in bidirectional search
-        if (sym_cuts.at(0).get_f() < plan_cost_bound) {
-            sym_cuts.erase(sym_cuts.begin());
-        } else {
-            min_plan_bound = min(min_plan_bound, sym_cuts.at(0).get_f());
-            bound_used = true;
-
-            reconstruct_plans(sym_cuts[0]);
-            sym_cuts.erase(sym_cuts.begin());
-        }
+        reconstruct_plans(cuts);
     }
 
-    // Update the plan bound
-    if (bound_used) {
-        plan_cost_bound = min_plan_bound;
+    // Erase handled keys
+    for (auto it = sym_cuts.begin(); it != sym_cuts.end();) {
+        (it->first < bound) ? sym_cuts.erase(it++) : (++it);
     }
 }
-} // namespace symbolic
+}

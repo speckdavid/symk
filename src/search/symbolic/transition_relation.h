@@ -63,6 +63,8 @@ public:
 
     int nodeCount() const {return tBDD.nodeCount();}
 
+    const OperatorID &getUniqueOpId() const;
+
     const std::set<OperatorID> &getOpsIds() const {return ops_ids;}
 
     void setOpsIds(const std::set<OperatorID> &operator_ids) {ops_ids = operator_ids;}
@@ -75,6 +77,8 @@ public:
     const std::vector<BDD> &getSwapVarsP() const {return swapVarsSp;}
 
     BDD getTrBDD() const {return tBDD;}
+
+    SymVariables *get_sym_vars() const {return sV;}
 };
 }
 #endif

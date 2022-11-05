@@ -1,10 +1,10 @@
 #ifndef SYMBOLIC_TOP_K_EVEN_SELECTOR_H
 #define SYMBOLIC_TOP_K_EVEN_SELECTOR_H
 
-#include "plan_database.h"
+#include "plan_selector.h"
 
 namespace symbolic {
-class TopKEvenSelector : public PlanDataBase {
+class TopKEvenSelector : public PlanSelector {
 public:
     TopKEvenSelector(const options::Options &opts);
 

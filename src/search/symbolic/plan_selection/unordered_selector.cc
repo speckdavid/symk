@@ -6,8 +6,8 @@
 using namespace std;
 
 namespace symbolic {
-UnorderedSelector::UnorderedSelector(const options::Options &opts) : PlanDataBase(opts) {
-    PlanDataBase::anytime_completness = true;
+UnorderedSelector::UnorderedSelector(const options::Options &opts) : PlanSelector(opts) {
+    PlanSelector::anytime_completness = true;
 }
 
 void UnorderedSelector::add_plan(const Plan &plan) {
@@ -37,8 +37,8 @@ void UnorderedSelector::save_accepted_plan(const Plan &ordered_plan, const Plan 
                        false, true);
 }
 
-static shared_ptr<PlanDataBase> _parse(OptionParser &parser) {
-    PlanDataBase::add_options_to_parser(parser);
+static shared_ptr<PlanSelector> _parse(OptionParser &parser) {
+    PlanSelector::add_options_to_parser(parser);
 
     Options opts = parser.parse();
     if (parser.dry_run())
@@ -46,5 +46,5 @@ static shared_ptr<PlanDataBase> _parse(OptionParser &parser) {
     return make_shared<UnorderedSelector>(opts);
 }
 
-static Plugin<PlanDataBase> _plugin("unordered", _parse);
-} // namespace symbolic
+static Plugin<PlanSelector> _plugin("unordered", _parse);
+}

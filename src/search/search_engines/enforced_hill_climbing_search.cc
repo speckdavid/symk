@@ -20,13 +20,16 @@ using GEval = g_evaluator::GEvaluator;
 using PrefEval = pref_evaluator::PrefEvaluator;
 
 static shared_ptr<OpenListFactory> create_ehc_open_list_factory(
-    bool use_preferred, PreferredUsage preferred_usage) {
+    const Options &opts, bool use_preferred, PreferredUsage preferred_usage) {
     /*
       TODO: this g-evaluator should probably be set up to always
       ignore costs since EHC is supposed to implement a breadth-first
       search, not a uniform-cost search. So this seems to be a bug.
     */
-    shared_ptr<Evaluator> g_evaluator = make_shared<GEval>();
+    Options g_evaluator_options;
+    g_evaluator_options.set<utils::Verbosity>(
+        "verbosity", opts.get<utils::Verbosity>("verbosity"));
+    shared_ptr<Evaluator> g_evaluator = make_shared<GEval>(g_evaluator_options);
 
     if (!use_preferred ||
         preferred_usage == PreferredUsage::PRUNE_BY_PREFERRED) {
@@ -51,7 +54,10 @@ static shared_ptr<OpenListFactory> create_ehc_open_list_factory(
           constructor that encapsulates this work to the tie-breaking
           open list code.
         */
-        vector<shared_ptr<Evaluator>> evals = {g_evaluator, make_shared<PrefEval>()};
+        Options pref_evaluator_options;
+        pref_evaluator_options.set<utils::Verbosity>(
+            "verbosity", opts.get<utils::Verbosity>("verbosity"));
+        vector<shared_ptr<Evaluator>> evals = {g_evaluator, make_shared<PrefEval>(pref_evaluator_options)};
         Options options;
         options.set("evals", evals);
         options.set("pref_only", false);
@@ -76,7 +82,7 @@ EnforcedHillClimbingSearch::EnforcedHillClimbingSearch(
     }
     evaluator->get_path_dependent_evaluators(path_dependent_evaluators);
 
-    const GlobalState &initial_state = state_registry.get_initial_state();
+    State initial_state = state_registry.get_initial_state();
     for (Evaluator *evaluator : path_dependent_evaluators) {
         evaluator->notify_initial_state(initial_state);
     }
@@ -85,14 +91,14 @@ EnforcedHillClimbingSearch::EnforcedHillClimbingSearch(
         preferred_operator_evaluators.end();
 
     open_list = create_ehc_open_list_factory(
-        use_preferred, preferred_usage)->create_edge_open_list();
+        opts, use_preferred, preferred_usage)->create_edge_open_list();
 }
 
 EnforcedHillClimbingSearch::~EnforcedHillClimbingSearch() {
 }
 
 void EnforcedHillClimbingSearch::reach_state(
-    const GlobalState &parent, OperatorID op_id, const GlobalState &state) {
+    const State &parent, OperatorID op_id, const State &state) {
     for (Evaluator *evaluator : path_dependent_evaluators) {
         evaluator->notify_state_transition(parent, op_id, state);
     }
@@ -100,11 +106,11 @@ void EnforcedHillClimbingSearch::reach_state(
 
 void EnforcedHillClimbingSearch::initialize() {
     assert(evaluator);
-    utils::g_log << "Conducting enforced hill-climbing search, (real) bound = "
-                 << bound << endl;
+    log << "Conducting enforced hill-climbing search, (real) bound = "
+        << bound << endl;
     if (use_preferred) {
-        utils::g_log << "Using preferred operators for "
-                     << (preferred_usage == PreferredUsage::RANK_PREFERRED_FIRST ?
+        log << "Using preferred operators for "
+            << (preferred_usage == PreferredUsage::RANK_PREFERRED_FIRST ?
             "ranking successors" : "pruning") << endl;
     }
 
@@ -113,7 +119,7 @@ void EnforcedHillClimbingSearch::initialize() {
     print_initial_evaluator_values(current_eval_context);
 
     if (dead_end) {
-        utils::g_log << "Initial state is a dead end, no solution" << endl;
+        log << "Initial state is a dead end, no solution" << endl;
         if (evaluator->dead_ends_are_reliable())
             utils::exit_with(ExitCode::SEARCH_UNSOLVABLE);
         else
@@ -133,10 +139,10 @@ void EnforcedHillClimbingSearch::insert_successor_into_open_list(
     bool preferred) {
     OperatorProxy op = task_proxy.get_operators()[op_id];
     int succ_g = parent_g + get_adjusted_cost(op);
-    EdgeOpenListEntry entry = make_pair(
-        eval_context.get_state().get_id(), op_id);
+    const State &state = eval_context.get_state();
+    EdgeOpenListEntry entry = make_pair(state.get_id(), op_id);
     EvaluationContext new_eval_context(
-        eval_context.get_cache(), succ_g, preferred, &statistics);
+        eval_context, succ_g, preferred, &statistics);
     open_list->insert(new_eval_context, entry);
     statistics.inc_generated_ops();
 }
@@ -196,7 +202,7 @@ SearchStatus EnforcedHillClimbingSearch::ehc() {
         OperatorID last_op_id = entry.second;
         OperatorProxy last_op = task_proxy.get_operators()[last_op_id];
 
-        GlobalState parent_state = state_registry.lookup_state(parent_state_id);
+        State parent_state = state_registry.lookup_state(parent_state_id);
         SearchNode parent_node = search_space.get_node(parent_state);
 
         // d: distance from initial node in this EHC phase
@@ -206,7 +212,7 @@ SearchStatus EnforcedHillClimbingSearch::ehc() {
         if (parent_node.get_real_g() + last_op.get_cost() >= bound)
             continue;
 
-        GlobalState state = state_registry.get_successor_state(parent_state, last_op);
+        State state = state_registry.get_successor_state(parent_state, last_op);
         statistics.inc_generated();
 
         SearchNode node = search_space.get_node(state);
@@ -234,7 +240,7 @@ SearchStatus EnforcedHillClimbingSearch::ehc() {
                 d_pair.first += 1;
                 d_pair.second += statistics.get_expanded() - last_num_expanded;
 
-                current_eval_context = eval_context;
+                current_eval_context = move(eval_context);
                 open_list->clear();
                 current_phase_start_g = node.get_g();
                 return IN_PROGRESS;
@@ -243,27 +249,27 @@ SearchStatus EnforcedHillClimbingSearch::ehc() {
             }
         }
     }
-    utils::g_log << "No solution - FAILED" << endl;
+    log << "No solution - FAILED" << endl;
     return FAILED;
 }
 
 void EnforcedHillClimbingSearch::print_statistics() const {
     statistics.print_detailed_statistics();
 
-    utils::g_log << "EHC phases: " << num_ehc_phases << endl;
+    log << "EHC phases: " << num_ehc_phases << endl;
     assert(num_ehc_phases != 0);
-    utils::g_log << "Average expansions per EHC phase: "
-                 << static_cast<double>(statistics.get_expanded()) / num_ehc_phases
-                 << endl;
+    log << "Average expansions per EHC phase: "
+        << static_cast<double>(statistics.get_expanded()) / num_ehc_phases
+        << endl;
 
     for (auto count : d_counts) {
         int depth = count.first;
         int phases = count.second.first;
         assert(phases != 0);
         int total_expansions = count.second.second;
-        utils::g_log << "EHC phases of depth " << depth << ": " << phases
-                     << " - Avg. Expansions: "
-                     << static_cast<double>(total_expansions) / phases << endl;
+        log << "EHC phases of depth " << depth << ": " << phases
+            << " - Avg. Expansions: "
+            << static_cast<double>(total_expansions) / phases << endl;
     }
 }
 

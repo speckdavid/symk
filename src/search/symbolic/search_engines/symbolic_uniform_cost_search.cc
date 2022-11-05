@@ -34,8 +34,15 @@ void SymbolicUniformCostSearch::initialize() {
         bw_search->init(mgr, false, fw_search.get());
     }
 
-    solution_registry->init(vars, fw_search.get(), bw_search.get(), plan_data_base,
-                            true);
+    auto individual_trs = fw ? fw_search->getStateSpaceShared()->getIndividualTRs() :  bw_search->getStateSpaceShared()->getIndividualTRs();
+
+    solution_registry->init(vars,
+                            fw_search ? fw_search->getClosedShared() : nullptr,
+                            bw_search ? bw_search->getClosedShared() : nullptr,
+                            individual_trs,
+                            plan_data_base,
+                            single_solution,
+                            simple);
 
     if (fw && bw) {
         search = unique_ptr<BidirectionalSearch>(new BidirectionalSearch(
@@ -55,12 +62,12 @@ void SymbolicUniformCostSearch::new_solution(const SymSolutionCut &sol) {
         upper_bound = sol.get_f();
     }
 }
-} // namespace symbolic
+}
 
 static shared_ptr<SearchEngine> _parse_forward_ucs(OptionParser &parser) {
     parser.document_synopsis("Symbolic Forward Uniform Cost Search", "");
     symbolic::SymbolicSearch::add_options_to_parser(parser);
-    parser.add_option<shared_ptr<symbolic::PlanDataBase>>(
+    parser.add_option<shared_ptr<symbolic::PlanSelector>>(
         "plan_selection", "plan selection strategy", "top_k(num_plans=1)");
     Options opts = parser.parse();
 
@@ -77,7 +84,7 @@ static shared_ptr<SearchEngine> _parse_forward_ucs(OptionParser &parser) {
 static shared_ptr<SearchEngine> _parse_backward_ucs(OptionParser &parser) {
     parser.document_synopsis("Symbolic Backward Uniform Cost Search", "");
     symbolic::SymbolicSearch::add_options_to_parser(parser);
-    parser.add_option<shared_ptr<symbolic::PlanDataBase>>(
+    parser.add_option<shared_ptr<symbolic::PlanSelector>>(
         "plan_selection", "plan selection strategy", "top_k(num_plans=1)");
     Options opts = parser.parse();
 
@@ -95,7 +102,7 @@ static shared_ptr<SearchEngine>
 _parse_bidirectional_ucs(OptionParser &parser) {
     parser.document_synopsis("Symbolic Bidirectional Uniform Cost Search", "");
     symbolic::SymbolicSearch::add_options_to_parser(parser);
-    parser.add_option<shared_ptr<symbolic::PlanDataBase>>(
+    parser.add_option<shared_ptr<symbolic::PlanSelector>>(
         "plan_selection", "plan selection strategy", "top_k(num_plans=1)");
     Options opts = parser.parse();
 

@@ -11,8 +11,7 @@ using namespace std;
 
 namespace stubborn_sets_atom_centric {
 StubbornSetsAtomCentric::StubbornSetsAtomCentric(const options::Options &opts)
-    : StubbornSets(opts),
-      use_sibling_shortcut(opts.get<bool>("use_sibling_shortcut")),
+    : use_sibling_shortcut(opts.get<bool>("use_sibling_shortcut")),
       atom_selection_strategy(opts.get<AtomSelectionStrategy>("atom_selection_strategy")) {
 }
 
@@ -259,8 +258,7 @@ static shared_ptr<PruningMethod> _parse(OptionParser &parser) {
             "https://ai.dmi.unibas.ch/papers/roeger-et-al-socs2020.pdf",
             "Proceedings of the 13th Annual Symposium on Combinatorial Search "
             "(SoCS 2020)",
-            // TODO: add page numbers.
-            "",
+            "57-65",
             "AAAI Press",
             "2020"));
     parser.add_option<bool>(
@@ -290,7 +288,6 @@ static shared_ptr<PruningMethod> _parse(OptionParser &parser) {
         "breaking ties.",
         "quick_skip",
         strategies_docs);
-    stubborn_sets::add_pruning_options(parser);
 
     Options opts = parser.parse();
 

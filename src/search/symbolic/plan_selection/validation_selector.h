@@ -1,10 +1,10 @@
 #ifndef SYMBOLIC_VALIDATION_SELECTOR_H
 #define SYMBOLIC_VALIDATION_SELECTOR_H
 
-#include "plan_database.h"
+#include "plan_selector.h"
 
 namespace symbolic {
-class ValidationSelector : public PlanDataBase {
+class ValidationSelector : public PlanSelector {
     // Original State Space
     const TaskProxy original_task_proxy;
     std::shared_ptr<StateRegistry> original_state_registry;
@@ -20,6 +20,6 @@ public:
 
     std::string tag() const override {return "Validation";}
 };
-} // namespace symbolic
+}
 
 #endif

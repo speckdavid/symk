@@ -45,7 +45,7 @@ int main(int argc, const char **argv) {
             if (i < argc) {
                 try {
                     h2_mutex_time = atoi(argv[i]);
-                }catch (std::invalid_argument&) {
+                }catch (std::invalid_argument &) {
                     cerr << "please specify the number of seconds after --h2_time_limit" << endl;
                     exit(2);
                 }
@@ -76,7 +76,6 @@ int main(int argc, const char **argv) {
     cout << "Building causal graph..." << endl;
     CausalGraph causal_graph(variables, operators, axioms, goals);
     const vector<Variable *> &ordering = causal_graph.get_variable_ordering();
-    bool cg_acyclic = causal_graph.is_acyclic();
 
     // Remove unnecessary effects from operators and axioms, then remove
     // operators and axioms without effects.
@@ -98,15 +97,15 @@ int main(int argc, const char **argv) {
         if (conditional_effects)
             disable_bw_h2 = true;
 
-        if(!compute_h2_mutexes(ordering, operators, axioms,
-                           mutexes, initial_state, goals,
-			       h2_mutex_time, disable_bw_h2)){
-	                // TODO: don't duplicate the code to return an unsolvable task, log and exit here
+        if (!compute_h2_mutexes(ordering, operators, axioms,
+                                mutexes, initial_state, goals,
+                                h2_mutex_time, disable_bw_h2)) {
+            // TODO: don't duplicate the code to return an unsolvable task, log and exit here
             cout << "Unsolvable task in preprocessor" << endl;
             generate_unsolvable_cpp_input();
             cout << "done" << endl;
             return 0;
-	}
+        }
 
         //Update the causal graph and remove unneccessary variables
         strip_mutexes(mutexes);
@@ -158,34 +157,10 @@ int main(int argc, const char **argv) {
         strip_axioms(axioms);
 
         causal_graph.update();
-        cg_acyclic = causal_graph.is_acyclic();
         strip_mutexes(mutexes);
         strip_operators(operators);
         strip_axioms(axioms);
     }
-
-    cout << "Building domain transition graphs..." << endl;
-    build_DTGs(ordering, operators, axioms, transition_graphs);
-    //dump_DTGs(ordering, transition_graphs);
-    bool solveable_in_poly_time = false;
-    if (cg_acyclic)
-        solveable_in_poly_time = are_DTGs_strongly_connected(transition_graphs);
-    /*
-      TODO: The above test doesn't seem to be quite ok because it
-      ignores axioms and it ignores non-unary operators. (Note that the
-      causal graph computed here does *not* contain arcs between
-      effects, only arcs from preconditions to effects.)
-
-      So solveable_in_poly_time [sic] should also be set to false if
-      there are any derived variables or non-unary operators.
-     */
-
-    //TODO: genauer machen? (highest level var muss nicht scc sein...gemacht)
-    //nur Werte, die wichtig sind fuer drunterliegende vars muessen in scc sein
-    cout << "solveable in poly time " << solveable_in_poly_time << endl;
-    cout << "Building successor generator..." << endl;
-    SuccessorGenerator successor_generator(ordering, operators);
-    //successor_generator.dump();
 
     // Output some task statistics
     int facts = 0;
@@ -271,11 +246,9 @@ int main(int argc, const char **argv) {
         cout << "Unsolvable task in preprocessor" << endl;
         generate_unsolvable_cpp_input();
     } else {
-        generate_cpp_input(
-            solveable_in_poly_time, ordering, metric,
-            mutexes, initial_state, goals,
-            operators, axioms, successor_generator,
-            transition_graphs, causal_graph);
+        generate_cpp_input(ordering, metric,
+                           mutexes, initial_state, goals,
+                           operators, axioms);
     }
     cout << "done" << endl;
 }

@@ -8,9 +8,10 @@ namespace symbolic {
 class BidirectionalSearch : public SymSearch {
 private:
     std::shared_ptr<UniformCostSearch> fw, bw;
+    std::shared_ptr<UniformCostSearch> cur_dir;
 
     // Returns the best direction to search the bd exp
-    UniformCostSearch *selectBestDirection() const;
+    UniformCostSearch *selectBestDirection();
 
 public:
     BidirectionalSearch(SymbolicSearch *eng, const SymParamsSearch &params,
@@ -19,29 +20,18 @@ public:
 
     virtual bool finished() const override;
 
-    virtual bool stepImage(int maxTime, int maxNodes) override;
+    virtual void step() override {
+        stepImage(p.maxAllotedTime, p.maxAllotedNodes);
+    }
+
+    virtual std::string get_last_dir() const override;
+
+    virtual void stepImage(int maxTime, int maxNodes) override;
 
     virtual int getF() const override {
         return std::max<int>(std::max<int>(fw->getF(), bw->getF()),
                              fw->getG() + bw->getG() +
                              mgr->getAbsoluteMinTransitionCost());
-    }
-
-    virtual bool isSearchableWithNodes(int maxNodes) const override {
-        return fw->isSearchableWithNodes(maxNodes) ||
-               bw->isSearchableWithNodes(maxNodes);
-    }
-
-    virtual long nextStepTime() const override {
-        return std::min<int>(fw->nextStepTime(), bw->nextStepTime());
-    }
-
-    virtual long nextStepNodes() const override {
-        return std::min<int>(fw->nextStepNodes(), bw->nextStepNodes());
-    }
-
-    virtual long nextStepNodesResult() const override {
-        return std::min<int>(fw->nextStepNodesResult(), bw->nextStepNodesResult());
     }
 
     bool isExpFor(BidirectionalSearch *bdExp) const;

@@ -19,7 +19,7 @@ class Options;
 namespace symbolic {
 class SymStateSpaceManager;
 class SymSearch;
-class PlanDataBase;
+class PlanSelector;
 class SymVariables;
 
 class SymbolicSearch : public SearchEngine {
@@ -48,9 +48,10 @@ protected:
     int upper_bound; // Upper bound of search (not use by top_k)
     int min_g;     // min g costs of open lists
 
-    std::shared_ptr<PlanDataBase> plan_data_base;
+    std::shared_ptr<PlanSelector> plan_data_base;
     std::shared_ptr<SymSolutionRegistry> solution_registry; // Solution registry
     bool simple;
+    bool single_solution;
 
     virtual void initialize() override;
 

@@ -107,7 +107,7 @@ public:
 
     virtual vector<int> get_initial_state_values() const override;
     virtual vector<MutexGroup> get_mutex_groups() const override;
-    virtual void convert_state_values(
+    virtual void convert_ancestor_state_values(
         vector<int> &values,
         const AbstractTask *ancestor_task) const override;
 };
@@ -524,7 +524,7 @@ vector<MutexGroup> RootTask::get_mutex_groups() const {
     return mutex_groups;
 }
 
-void RootTask::convert_state_values(
+void RootTask::convert_ancestor_state_values(
     vector<int> &, const AbstractTask *ancestor_task) const {
     if (this != ancestor_task) {
         ABORT("Invalid state conversion");

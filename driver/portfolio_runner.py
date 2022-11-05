@@ -15,8 +15,8 @@ the process is started.
 
 __all__ = ["run"]
 
-import os
 import subprocess
+import sys
 
 from . import call
 from . import limits
@@ -85,9 +85,7 @@ def compute_run_time(timeout, configs, pos):
     remaining_relative_time = sum(config[0] for config in configs[pos:])
     print("config {}: relative time {}, remaining {}".format(
           pos, relative_time, remaining_relative_time))
-    # For the last config we have relative_time == remaining_relative_time, so
-    # we use all of the remaining time at the end.
-    return remaining_time * relative_time / remaining_relative_time
+    return limits.round_time_limit(remaining_time * relative_time / remaining_relative_time)
 
 
 def run_sat_config(configs, pos, search_cost_type, heuristic_cost_type,
@@ -171,6 +169,8 @@ def run_sat(configs, executable, sas_file, plan_manager, final_config,
 def run_opt(configs, executable, sas_file, plan_manager, timeout, memory):
     for pos, (relative_time, args) in enumerate(configs):
         run_time = compute_run_time(timeout, configs, pos)
+        if run_time <= 0:
+            return
         exitcode = run_search(executable, args, sas_file, plan_manager,
                               run_time, memory)
         yield exitcode
@@ -219,8 +219,8 @@ def run(portfolio, executable, sas_file, plan_manager, time, memory):
             "Please pass a time limit to fast-downward.py.")
 
     if time is None:
-        if os.name == "nt":
-            returncodes.exit_with_driver_unsupported_error(limits.RESOURCE_MODULE_MISSING_MSG)
+        if sys.platform == "win32":
+            returncodes.exit_with_driver_unsupported_error(limits.CANNOT_LIMIT_TIME_MSG)
         else:
             returncodes.exit_with_driver_input_error(
                 "Portfolios need a time limit. Please pass --search-time-limit "
@@ -235,4 +235,4 @@ def run(portfolio, executable, sas_file, plan_manager, time, memory):
         exitcodes = run_sat(
             configs, executable, sas_file, plan_manager, final_config,
             final_config_builder, timeout, memory)
-    return returncodes.generate_portfolio_exitcode(exitcodes)
+    return returncodes.generate_portfolio_exitcode(list(exitcodes))

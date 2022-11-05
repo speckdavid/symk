@@ -18,10 +18,12 @@ HMHeuristic::HMHeuristic(const Options &opts)
       m(opts.get<int>("m")),
       has_cond_effects(task_properties::has_conditional_effects(task_proxy)),
       goals(task_properties::get_fact_pairs(task_proxy.get_goals())) {
-    utils::g_log << "Using h^" << m << "." << endl;
-    utils::g_log << "The implementation of the h^m heuristic is preliminary." << endl
-                 << "It is SLOOOOOOOOOOOW." << endl
-                 << "Please do not use this for comparison!" << endl;
+    if (log.is_at_least_normal()) {
+        log << "Using h^" << m << "." << endl;
+        log << "The implementation of the h^m heuristic is preliminary." << endl
+            << "It is SLOOOOOOOOOOOW." << endl
+            << "Please do not use this for comparison!" << endl;
+    }
     generate_all_tuples();
 }
 
@@ -31,8 +33,8 @@ bool HMHeuristic::dead_ends_are_reliable() const {
 }
 
 
-int HMHeuristic::compute_heuristic(const GlobalState &global_state) {
-    State state = convert_global_state(global_state);
+int HMHeuristic::compute_heuristic(const State &ancestor_state) {
+    State state = convert_ancestor_state(ancestor_state);
     if (task_properties::is_goal_state(task_proxy, state)) {
         return 0;
     } else {
@@ -255,8 +257,10 @@ void HMHeuristic::generate_all_partial_tuples_aux(
 
 
 void HMHeuristic::dump_table() const {
-    for (auto &hm_ent : hm_table) {
-        utils::g_log << "h(" << hm_ent.first << ") = " << hm_ent.second << endl;
+    if (log.is_at_least_debug()) {
+        for (auto &hm_ent : hm_table) {
+            log << "h(" << hm_ent.first << ") = " << hm_ent.second << endl;
+        }
     }
 }
 

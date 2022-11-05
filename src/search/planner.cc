@@ -32,25 +32,6 @@ int main(int argc, const char **argv) {
         unit_cost = task_properties::is_unit_cost(task_proxy);
     }
 
-    // Increase stack size for top-k planning
-    // https://stackoverflow.com/questions/2275550/change-stack-size-for-a-c-application-in-linux-during-compilation-with-gnu-com
-    const rlim_t kStackSize = 500 * 1024 * 1024; // min stack size = 100 MB
-    struct rlimit rl;
-    int result;
-    result = getrlimit(RLIMIT_STACK, &rl);
-    if (result == 0) {
-        if (rl.rlim_cur < kStackSize) {
-            rl.rlim_cur = kStackSize;
-            result = setrlimit(RLIMIT_STACK, &rl);
-            if (result != 0) {
-                cerr << "setrlimit returned result = " << result << endl;
-            } else {
-                utils::g_log << "setrlimit (stack size) to " << kStackSize / 1024 / 1024
-                             << "MB" << endl;
-            }
-        }
-    }
-
     shared_ptr<SearchEngine> engine;
 
     // The command line is parsed twice: once in dry-run mode, to

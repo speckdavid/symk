@@ -4,8 +4,7 @@
 #include "../plugin.h"
 
 #include "../original_state_space.h"
-#include "../plan_reconstruction/simple_sym_solution_registry.h"
-#include "../plan_selection/plan_database.h"
+#include "../plan_selection/plan_selector.h"
 #include "../searches/bidirectional_search.h"
 #include "../searches/top_k_uniform_cost_search.h"
 #include "../searches/uniform_cost_search.h"
@@ -28,14 +27,18 @@ SymbolicSearch::SymbolicSearch(const options::Options &opts)
       task_proxy(*task),
       vars(make_shared<SymVariables>(opts, task)),
       mgrParams(opts, task),
-      searchParams(opts), step_num(-1),
+      searchParams(opts),
+      step_num(-1),
       lower_bound_increased(true),
       lower_bound(0),
       upper_bound(numeric_limits<int>::max()),
       min_g(0),
-      plan_data_base(opts.get<shared_ptr<PlanDataBase>>("plan_selection")),
+      plan_data_base(opts.get<shared_ptr<PlanSelector>>("plan_selection")),
       solution_registry(make_shared<SymSolutionRegistry>()),
-      simple(opts.get<bool>("simple")) {
+      simple(opts.get<bool>("simple")),
+      single_solution(opts.get<bool>("single_solution")) {
+    cout << endl;
+    vars->print_options();
     cout << endl;
     mgrParams.print_options();
     cout << endl;
@@ -70,7 +73,6 @@ void SymbolicSearch::initialize() {
         utils::g_log << "Plan Reconstruction: Simple (without loops)" << endl;
         utils::g_log << "Maximal plan cost: " << max_plan_cost << endl;
         upper_bound = min((double)upper_bound, max_plan_cost + 1);
-        solution_registry = make_shared<SimpleSymSolutionRegistry>();
         cout << endl;
     }
 
@@ -84,7 +86,7 @@ SearchStatus SymbolicSearch::step() {
     if (step_num == 0) {
         BDD cut = mgr->getInitialState() * mgr->getGoal();
         if (!cut.IsZero()) {
-            new_solution(SymSolutionCut(0, 0, cut, 0));
+            new_solution(SymSolutionCut(0, 0, cut));
         }
     }
 
@@ -97,7 +99,7 @@ SearchStatus SymbolicSearch::step() {
         solution_found = plan_data_base->get_num_reported_plan() > 0;
         cur_status = solution_found ? SOLVED : FAILED;
     } else {
-        // Bound increade => construct plans
+        // Bound increased => construct plans
         if (lower_bound_increased) {
             solution_registry->construct_cheaper_solutions(lower_bound);
         }
@@ -117,7 +119,11 @@ SearchStatus SymbolicSearch::step() {
         utils::g_log << " [" << solution_registry->get_num_found_plans() << "/"
                      << plan_data_base->get_num_desired_plans() << " plans]"
                      << flush;
-        utils::g_log << ", total time: " << utils::g_timer << endl;
+        if (step_num > 0) {
+            utils::g_log << ", dir: " << search->get_last_dir() << flush;
+        }
+        utils::g_log << ", total time: " << utils::g_timer << ", " << flush;
+        utils::g_log << endl;
     }
     lower_bound_increased = false;
 
@@ -169,10 +175,12 @@ void SymbolicSearch::add_options_to_parser(OptionParser &parser) {
         "no_transform()");
     SearchEngine::add_options_to_parser(parser);
     SymVariables::add_options_to_parser(parser);
-    SymParamsSearch::add_options_to_parser(parser, 30e3, 10e7);
+    SymParamsSearch::add_options_to_parser(parser);
     SymParamsMgr::add_options_to_parser(parser);
-    PlanDataBase::add_options_to_parser(parser);
+    PlanSelector::add_options_to_parser(parser);
     parser.add_option<bool>("simple", "simple/loopless plan construction",
                             "false");
+    parser.add_option<bool>("single_solution", "search for a single solution",
+                            "true");
 }
 } // namespace symbolic

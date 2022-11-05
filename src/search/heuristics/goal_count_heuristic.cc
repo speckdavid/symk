@@ -11,11 +11,13 @@ using namespace std;
 namespace goal_count_heuristic {
 GoalCountHeuristic::GoalCountHeuristic(const Options &opts)
     : Heuristic(opts) {
-    utils::g_log << "Initializing goal count heuristic..." << endl;
+    if (log.is_at_least_normal()) {
+        log << "Initializing goal count heuristic..." << endl;
+    }
 }
 
-int GoalCountHeuristic::compute_heuristic(const GlobalState &global_state) {
-    const State state = convert_global_state(global_state);
+int GoalCountHeuristic::compute_heuristic(const State &ancestor_state) {
+    State state = convert_ancestor_state(ancestor_state);
     int unsatisfied_goal_count = 0;
 
     for (FactProxy goal : task_proxy.get_goals()) {

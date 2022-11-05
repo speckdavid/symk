@@ -18,13 +18,13 @@ class Options;
 } // namespace options
 
 namespace symbolic {
-class PlanDataBase {
+class PlanSelector {
 public:
     static void add_options_to_parser(options::OptionParser &parser);
 
-    PlanDataBase(const options::Options &opts);
+    PlanSelector(const options::Options &opts);
 
-    virtual ~PlanDataBase() {}
+    virtual ~PlanSelector() {}
 
     virtual void init(std::shared_ptr<SymVariables> sym_vars,
                       const std::shared_ptr<AbstractTask> &task,
@@ -50,7 +50,7 @@ public:
         return num_accepted_plans >= num_desired_plans;
     }
 
-    virtual bool reconstruct_solutions(const SymSolutionCut & /*cut*/) const {
+    virtual bool reconstruct_solutions(int /*cost*/) const {
         return !found_enough_plans();
     }
 
@@ -115,6 +115,6 @@ protected:
     size_t different(const std::vector<Plan> &plans, const Plan &plan) const;
     size_t get_hash_value(const Plan &plan) const;
 };
-} // namespace symbolic
+}
 
-#endif /* SYMBOLIC_PLAN_DATABASE_H */
+#endif

@@ -34,6 +34,8 @@ class UniformCostSearch : public SymSearch {
 protected:
     bool fw; // Direction of the search. true=forward, false=backward
 
+    Estimation step_estimation;
+
     // Current state of the search:
     std::shared_ptr<ClosedList> closed; // Closed list is a shared ptr to share
     OpenList open_list;
@@ -42,14 +44,6 @@ protected:
     // Opposite direction. Mostly relevant when bidirectional search ist used
     std::shared_ptr<ClosedList> perfectHeuristic;
 
-    SymStepCostEstimation estimationCost, estimationZero; // Time/nodes estimated
-    // NOTE: This was used to estimate the time and nodes needed to
-    // perform a step in case that the next bucket is still not prepared.
-    // Now, we always prepare the next bucket and when that fails no
-    // estimation is needed (the exploration is deemed as not searchable
-    // and is worse than any other exploration which has its next bucket
-    // to expand ready)
-    // SymStepCostEstimation estimationDisjCost, estimationDisjZero;
     bool lastStepCost; // If the last step was a cost step (to know if we are in
                        // estimationDisjCost or Zero)
 
@@ -71,11 +65,9 @@ protected:
 
     void closeStates(Bucket &bucket, int g);
 
-    void prepareBucket();
+    bool prepareBucket();
 
     virtual void filterFrontier();
-
-    void computeEstimation(bool prepare);
 
     //////////////////////////////////////////////////////////////////////////////
 public:
@@ -90,13 +82,23 @@ public:
         return open_list.empty() && frontier.empty();
     }
 
-    virtual bool stepImage(int maxTime, int maxNodes);
+    void step() override {
+        /*if (step_estimation.get_failed()) {
+            p.increase_bound();
+        }
+        stepImage(p.maxAllotedTime, p.maxAllotedNodes);*/
+        stepImage(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
+    }
+
+    virtual std::string get_last_dir() const override {
+        return fw ? "FW" : "BW";
+    }
+
+    virtual void stepImage(int maxTime, int maxNodes);
 
     bool
     init(std::shared_ptr<SymStateSpaceManager> manager, bool fw,
          UniformCostSearch *opposite_search); // Init forward or backward search
-
-    virtual bool isSearchableWithNodes(int maxNodes) const;
 
     virtual int getF() const override {
         return open_list.minNextG(frontier, mgr->getAbsoluteMinTransitionCost());
@@ -110,14 +112,12 @@ public:
 
     void filterDuplicates(Bucket &bucket);
 
-    virtual long nextStepTime() const override;
-    virtual long nextStepNodes() const override;
-    virtual long nextStepNodesResult() const override;
-
     // Returns the nodes that have been expanded by the algorithm (closed without
     // the current frontier)
     BDD getExpanded() const;
     void getNotExpanded(Bucket &res) const;
+
+    Estimation *get_step_estimator() {return &step_estimation;}
 
     // void write(const std::string & file) const;
 

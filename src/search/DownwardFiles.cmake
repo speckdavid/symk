@@ -1,4 +1,4 @@
-# See http://www.fast-downward.org/ForDevelopers/AddingSourceFiles
+# See https://www.fast-downward.org/ForDevelopers/AddingSourceFiles
 # for general information on adding source files and CMake plugins.
 #
 # All plugins are enabled by default and users can disable them by specifying
@@ -55,7 +55,6 @@ fast_downward_plugin(
         evaluation_result
         evaluator
         evaluator_cache
-        global_state
         heuristic
         mutex_group
         open_list
@@ -175,6 +174,14 @@ fast_downward_plugin(
     HELP "Poor man's version of boost::dynamic_bitset"
     SOURCES
         algorithms/dynamic_bitset
+    DEPENDENCY_ONLY
+)
+
+fast_downward_plugin(
+    NAME NAMED_VECTOR
+    HELP "Generic vector with associated name for each element"
+    SOURCES
+        algorithms/named_vector
     DEPENDENCY_ONLY
 )
 
@@ -314,6 +321,13 @@ fast_downward_plugin(
 )
 
 fast_downward_plugin(
+    NAME LIMITED_PRUNING
+    HELP "Method for limiting another pruning method"
+    SOURCES
+        pruning/limited_pruning
+)
+
+fast_downward_plugin(
     NAME STUBBORN_SETS
     HELP "Base class for all stubborn set partial order reduction methods"
     SOURCES
@@ -450,6 +464,7 @@ fast_downward_plugin(
     SOURCES
         lp/lp_internals
         lp/lp_solver
+    DEPENDS NAMED_VECTOR
     DEPENDENCY_ONLY
 )
 
@@ -680,11 +695,14 @@ fast_downward_plugin(
     HELP "Plugin containing the code to reason with landmarks"
     SOURCES
         landmarks/exploration
+        landmarks/landmark
         landmarks/landmark_cost_assignment
         landmarks/landmark_count_heuristic
         landmarks/landmark_factory
         landmarks/landmark_factory_h_m
+        landmarks/landmark_factory_reasonable_orders_hps
         landmarks/landmark_factory_merged
+        landmarks/landmark_factory_relaxation
         landmarks/landmark_factory_rpg_exhaust
         landmarks/landmark_factory_rpg_sasp
         landmarks/landmark_factory_zhu_givan
@@ -696,9 +714,10 @@ fast_downward_plugin(
 
 fast_downward_plugin(
     NAME OPERATOR_COUNTING
-    HELP "Plugin containing the code for operator counting heuristics"
+    HELP "Plugin containing the code for operator-counting heuristics"
     SOURCES
         operator_counting/constraint_generator
+        operator_counting/delete_relaxation_constraints
         operator_counting/lm_cut_constraints
         operator_counting/operator_counting_heuristic
         operator_counting/pho_constraints
@@ -712,6 +731,7 @@ fast_downward_plugin(
     SOURCES
         pdbs/canonical_pdbs
         pdbs/canonical_pdbs_heuristic
+        pdbs/cegar
         pdbs/dominance_pruning
         pdbs/incremental_canonical_pdbs
         pdbs/match_tree
@@ -719,17 +739,24 @@ fast_downward_plugin(
         pdbs/pattern_cliques
         pdbs/pattern_collection_information
         pdbs/pattern_collection_generator_combo
+        pdbs/pattern_collection_generator_disjoint_cegar
         pdbs/pattern_collection_generator_genetic
         pdbs/pattern_collection_generator_hillclimbing
         pdbs/pattern_collection_generator_manual
+        pdbs/pattern_collection_generator_multiple_cegar
+        pdbs/pattern_collection_generator_multiple_random
+        pdbs/pattern_collection_generator_multiple
         pdbs/pattern_collection_generator_systematic
         pdbs/pattern_database
+        pdbs/pattern_generator_cegar
         pdbs/pattern_generator_greedy
         pdbs/pattern_generator_manual
+        pdbs/pattern_generator_random
         pdbs/pattern_generator
         pdbs/pattern_information
         pdbs/pdb_heuristic
         pdbs/plugin_group
+        pdbs/random_pattern
         pdbs/types
         pdbs/utils
         pdbs/validation
@@ -800,12 +827,11 @@ fast_downward_plugin(
         symbolic/search_engines/symbolic_uniform_cost_search
         symbolic/search_engines/top_k_symbolic_uniform_cost_search
         symbolic/search_engines/top_q_symbolic_uniform_cost_search
-        symbolic/plan_reconstruction/simple_sym_solution_cut
-        symbolic/plan_reconstruction/simple_sym_solution_registry
         symbolic/plan_reconstruction/sym_solution_cut
         symbolic/plan_reconstruction/sym_solution_registry
+        symbolic/plan_reconstruction/reconstruction_node
         symbolic/plan_selection/iterative_cost_selector
-        symbolic/plan_selection/plan_database
+        symbolic/plan_selection/plan_selector
         symbolic/plan_selection/top_k_selector
         symbolic/plan_selection/top_k_even_selector
         symbolic/plan_selection/simple_selector

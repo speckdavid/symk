@@ -3,20 +3,28 @@
 
 #include "evaluation_result.h"
 
+#include "../utils/logging.h"
+
 #include <set>
 
 class EvaluationContext;
-class GlobalState;
+class State;
+
+namespace options {
+class OptionParser;
+class Options;
+}
 
 class Evaluator {
     const std::string description;
     const bool use_for_reporting_minima;
     const bool use_for_boosting;
     const bool use_for_counting_evaluations;
-
+protected:
+    mutable utils::LogProxy log;
 public:
-    Evaluator(
-        const std::string &description = "<none>",
+    explicit Evaluator(
+        const options::Options &opts,
         bool use_for_reporting_minima = false,
         bool use_for_boosting = false,
         bool use_for_counting_evaluations = false);
@@ -44,13 +52,13 @@ public:
         std::set<Evaluator *> &evals) = 0;
 
 
-    virtual void notify_initial_state(const GlobalState & /*initial_state*/) {
+    virtual void notify_initial_state(const State & /*initial_state*/) {
     }
 
     virtual void notify_state_transition(
-        const GlobalState & /*parent_state*/,
+        const State & /*parent_state*/,
         OperatorID /*op_id*/,
-        const GlobalState & /*state*/) {
+        const State & /*state*/) {
     }
 
     /*
@@ -85,12 +93,14 @@ public:
     bool is_used_for_counting_evaluations() const;
 
     virtual bool does_cache_estimates() const;
-    virtual bool is_estimate_cached(const GlobalState &state) const;
+    virtual bool is_estimate_cached(const State &state) const;
     /*
       Calling get_cached_estimate is only allowed if an estimate for
       the given state is cached, i.e., is_estimate_cached returns true.
     */
-    virtual int get_cached_estimate(const GlobalState &state) const;
+    virtual int get_cached_estimate(const State &state) const;
 };
+
+extern void add_evaluator_options_to_parser(options::OptionParser &parser);
 
 #endif

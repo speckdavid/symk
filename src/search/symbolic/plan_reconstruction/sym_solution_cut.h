@@ -12,17 +12,16 @@ protected:
     int g;
     int h;
     BDD cut;
-    int sol_cost; // orginial solution cost
 
 public:
     SymSolutionCut(); // dummy for no solution
-    SymSolutionCut(int g, int h, BDD cut, int sol_cost);
+    SymSolutionCut(int g, int h, BDD cut);
 
     int get_g() const;
     int get_h() const;
     int get_f() const;
-    int get_sol_cost() const;
     BDD get_cut() const;
+
     void merge(const SymSolutionCut &other);
 
     void set_g(int g);

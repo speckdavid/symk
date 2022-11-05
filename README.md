@@ -20,7 +20,7 @@ Main source:
 ```
 
 Based on:
- - Fast Downward: http://www.fast-downward.org/ (20.06)
+ - Fast Downward: http://www.fast-downward.org/ (22.06)
  - Symbolic Fast Downward: https://people.cs.aau.dk/~alto/software.html
 
 ## Getting Started

@@ -242,4 +242,9 @@ void TransitionRelation::edeletion(
         }
     }
 }
+
+const OperatorID &TransitionRelation::getUniqueOpId() const {
+    assert(ops_ids.size() == 1);
+    return *(getOpsIds().begin());
+}
 }

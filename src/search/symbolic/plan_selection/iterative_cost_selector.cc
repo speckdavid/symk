@@ -10,22 +10,21 @@ using namespace std;
 
 namespace symbolic {
 IterativeCostSelector::IterativeCostSelector(const options::Options &opts)
-    : PlanDataBase(opts),
+    : PlanSelector(opts),
       most_expensive_plan_cost(opts.get<int>("plan_cost_bound")) {
-    PlanDataBase::anytime_completness = false;
+    PlanSelector::anytime_completness = false;
 }
 
 void IterativeCostSelector::init(shared_ptr<SymVariables> sym_vars,
                                  const shared_ptr<AbstractTask> &task,
                                  PlanManager &plan_manager) {
-    PlanDataBase::init(sym_vars, task, plan_manager);
+    PlanSelector::init(sym_vars, task, plan_manager);
     utils::g_log << "Plan cost bound: " << most_expensive_plan_cost << endl;
     cout << endl;
 }
 
-bool IterativeCostSelector::reconstruct_solutions(
-    const SymSolutionCut &cut) const {
-    if (most_expensive_plan_cost >= cut.get_sol_cost()) {
+bool IterativeCostSelector::reconstruct_solutions(int cost) const {
+    if (most_expensive_plan_cost >= cost) {
         return false;
     }
     return !found_enough_plans();
@@ -42,8 +41,8 @@ void IterativeCostSelector::add_plan(const Plan &plan) {
     }
 }
 
-static shared_ptr<PlanDataBase> _parse(OptionParser &parser) {
-    PlanDataBase::add_options_to_parser(parser);
+static shared_ptr<PlanSelector> _parse(OptionParser &parser) {
+    PlanSelector::add_options_to_parser(parser);
     parser.add_option<int>(
         "plan_cost_bound",
         "plan cost bound such that only more expansive plans are reconstructed",
@@ -56,5 +55,5 @@ static shared_ptr<PlanDataBase> _parse(OptionParser &parser) {
     return make_shared<IterativeCostSelector>(opts);
 }
 
-static Plugin<PlanDataBase> _plugin("iterative_cost", _parse);
+static Plugin<PlanSelector> _plugin("iterative_cost", _parse);
 }
