@@ -76,7 +76,6 @@ void UniformCostSearch::checkFrontierCut(Bucket &bucket, int g) {
 bool UniformCostSearch::provable_no_more_plans() {return open_list.empty();}
 
 bool UniformCostSearch::prepareBucket() {
-    assert(!step_estimation.get_failed() || frontier.bucketReady());
     if (!frontier.bucketReady()) {
         if (provable_no_more_plans()) {
             engine->setLowerBound(numeric_limits<int>::max());

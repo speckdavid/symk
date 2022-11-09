@@ -87,7 +87,7 @@ public:
             p.increase_bound();
         }
         stepImage(p.maxAllotedTime, p.maxAllotedNodes);*/
-        stepImage(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
+        stepImage(0, 0);
     }
 
     virtual std::string get_last_dir() const override {

@@ -1,5 +1,8 @@
 #include "sym_state_space_manager.h"
 
+#include "sym_enums.h"
+#include "sym_utils.h"
+
 #include "../abstract_task.h"
 #include "../mutex_group.h"
 #include "../options/option_parser.h"
@@ -8,8 +11,6 @@
 #include "../task_utils/task_properties.h"
 #include "../utils/logging.h"
 #include "../utils/timer.h"
-#include "sym_enums.h"
-#include "sym_utils.h"
 
 #include <algorithm>
 #include <limits>

@@ -13,26 +13,30 @@ SymParamsSearch::SymParamsSearch(const Options &opts)
       maxAllotedNodes(opts.get<int>("max_alloted_nodes")),
       ratioAllotedTime(opts.get<double>("ratio_alloted_time")),
       ratioAllotedNodes(opts.get<double>("ratio_alloted_nodes")),
-      non_stop(opts.get<bool>("non_stop"))
-{}
+      non_stop(opts.get<bool>("non_stop")) {
+    maxAllotedNodes = maxAllotedNodes < 0 ? 0 : maxAllotedNodes;
+    maxAllotedTime = maxAllotedTime < 0 ? 0 : maxAllotedTime;
+}
 
 void SymParamsSearch::increase_bound() {
     maxAllotedNodes *= ratioAllotedNodes;
     if (maxAllotedNodes <= 0)
-        maxAllotedNodes = numeric_limits<int>::max();
+        maxAllotedNodes = 0;
 
     maxAllotedTime *= ratioAllotedTime;
     if (maxAllotedTime <= 0)
-        maxAllotedTime = numeric_limits<int>::max();
+        maxAllotedTime = 0;
     utils::g_log << "Increase allot limits! "
                  << "Max alloted time: " << maxAllotedTime / 1000
                  << "s nodes: " << maxAllotedNodes << endl;
 }
 
 void SymParamsSearch::print_options() const {
-    utils::g_log << "Max alloted time: " << maxAllotedTime / 1000
-                 << "s nodes: " << maxAllotedNodes << endl;
-    utils::g_log << "Mult alloted time: " << ratioAllotedTime
+    utils::g_log << "Max alloted time (for bd): "
+                 << (maxAllotedTime == 0 ? "INF" : to_string(maxAllotedTime / 1000.0) + "s")
+                 << " nodes: "
+                 << (maxAllotedNodes == 0 ? "INF" : to_string(maxAllotedNodes)) << endl;
+    utils::g_log << "Mult alloted time (for bd): " << ratioAllotedTime
                  << " nodes: " << ratioAllotedNodes << endl;
 }
 
