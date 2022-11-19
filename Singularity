@@ -2,7 +2,9 @@ Bootstrap: docker
 From: ubuntu:20.04
 
 %files
-    `pwd` /planner
+   src/* /planner/src/
+   driver/* /planner/driver/
+   *.py /planner/
 
 %post
     ## Install all necessary dependencies.
