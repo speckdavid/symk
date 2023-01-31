@@ -8,6 +8,22 @@ In addition, Symk natively supports a variety of PDDL features that are rarely s
 See this readme file for more information on running Symk and the various configurations. 
 We appreciate citations when SymK is used in a scientific context (see [References](#references) for more details).
 
+## Table of Contents  
+- [Getting Started](#getting-started)
+  - [Dependencies](#dependencies)
+  - [Compiling the Symk Planner](#compiling-the-symk-planner)
+- [Generating A Single Optimal Solution](#generating-a-single-optimal-solution)
+- [Generating Multiple Solutions](#generating-multiple-solutions)
+  - [Top-k Configurations](#top-k-configurations)
+  - [Top-q Configurations](#top-q-configurations)
+  - [Loopless Planning](#loopless-planning)
+  - [Other Configurations](#other-configurations)
+- [Plan Selection Framework](#plan-selection-framework)
+  - [Unordered Plan Selector](#unordered-plan-selector)
+  - [New Plan Selector](#new-plan-selector)
+- [Pitfalls and Troubleshooting](#pitfalls-and-troubleshooting)
+- [References](#references)
+
 ## Getting Started
 
 ### Dependencies
@@ -52,7 +68,7 @@ For example, `q=1` reports only the cheapest plans, where `quality=infinity` cor
 ./fast-downward.py domain.pddl problem.pddl --search "symq-bd(plan_selection=top_k(num_plans=**k**),quality=**q**)"
 ```
 
-### Loopless/Simple Planning
+### Loopless Planning
 It is possible to generate loopless/simple plans, i.e., plans that do not visit any state more than once. In general, the option to consider and generate only simple plans can be combined with any Symk search engine and with different plan selectors by setting the `simple` parameter to true. See the following two examples and our [ICAPS 2022 Paper](https://gki.informatik.uni-freiburg.de/papers/vontschammer-etal-icaps2022.pdf).
 
 ```console
@@ -62,18 +78,10 @@ It is possible to generate loopless/simple plans, i.e., plans that do not visit 
 ```console
 ./fast-downward.py domain.pddl problem.pddl --search "symq-bd(simple=true,plan_selection=top_k(num_plans=**k**),quality=**q**)"
 ```
-
-### Pitfalls
-By default, the planner performs a relevance analysis and removes components such as variables and actions that are irrelevant to achieving the goal. Although such variables and actions can in principle lead to further (simple) plans, they are classified as irrelevant and removed when translating PDDL to SAS+. If you wish to **obtain all plans** (even the non-relevant ones), please use the following options:
-
-```console
-./fast-downward.py --translate --search domain.pddl problem.pddl --translate-options --keep-unimportant-variables --search-options --search "symk-bd(plan_selection=top_k(num_plans=**k**))
-```
-
 ### Other Configurations
 It is possible to run Symk also with forward or backward search instead of bidirectional search, e.g., with `--search "symk-fw(...)"` or `--search "symk-bw(...)"`. Depending on the domain, one of these configurations may be faster than bidirectional search (`"--search symk-bd(...)"`).
 
-## Plan Selection - Generate-and-Test Plans Framework
+## Plan Selection Framework
 It is possible to create plans until a number of plans or simply a single plan is found that meets certain requirements.
 For this purpose it is possible to write your own plan selector. During the search, plans are created and handed over to a plan selector with an anytime behavior. 
 
@@ -105,6 +113,13 @@ Finally, if you want to find a plan with your *awesome_selector* selector (the n
 ```
 
 Note, that you can also search for the best **k** plans using your selector.
+
+## Pitfalls and Troubleshooting
+By default, the planner performs a relevance analysis and removes components such as variables and actions that are irrelevant to achieving the goal. Although such variables and actions can in principle lead to further (simple) plans, they are classified as irrelevant and removed when translating PDDL to SAS+. If you wish to **obtain all plans** (even the non-relevant ones), please use the following options:
+
+```console
+./fast-downward.py --translate --search domain.pddl problem.pddl --translate-options --keep-unimportant-variables --search-options --search "symk-bd(plan_selection=top_k(num_plans=**k**))
+```
 
 # References
 Note that several components of SymK have been developed and published separately. 
