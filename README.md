@@ -46,7 +46,7 @@ We recommend to use the following configuration which uses bidirectional search.
 ./fast-downward.py domain.pddl problem.pddl --search "sym-bd()"
 ```
 
-Other configurations are forward or backward search: `--search "symk-fw()"` or `--search "symk-bw()"`.
+Other configurations are forward or backward search: `--search "sym-fw()"` or `--search "sym-bw()"`.
 
 ## Generating Multiple Solutions
 
