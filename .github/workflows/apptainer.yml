@@ -1,0 +1,34 @@
+name: Apptainer
+# Run for all pushes to the master branch and for all pull requests.
+on:
+  push:
+    branches:
+      - master
+  pull_request: []
+
+jobs:
+  build-image:
+    name: Build Apptainer image
+    if: github.repository == 'speckdavid/symk'
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Install Apptainer
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y software-properties-common
+          sudo add-apt-repository -y ppa:apptainer/ppa
+          sudo apt-get update
+          sudo apt-get install -y apptainer
+      - name: Build image
+        run: |
+          apptainer build image.sif Apptainer
+      - name: Login and deploy image
+        if: (github.event_name != 'pull_request')
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | apptainer remote login -u ${GITHUB_ACTOR} --password-stdin oras://ghcr.io
+          apptainer push image.sif oras://ghcr.io/${GITHUB_REPOSITORY}:latest
+          # Image can now be pulled with "apptainer pull oras://ghcr.io/${GITHUB_REPOSITORY}:latest"

@@ -1,4 +1,4 @@
-# Symbolic Top-k Planner [![Linux build](https://github.com/speckdavid/symk/workflows/Linux%20build/badge.svg)](https://github.com/speckdavid/symk/actions?query=workflow%3A%22Linux+build%22) [![MacOS build](https://github.com/speckdavid/symk/workflows/MacOS%20build/badge.svg)](https://github.com/speckdavid/symk/actions?query=workflow%3A%22MacOS+build%22)
+# Symk [![Linux build](https://github.com/speckdavid/symk/workflows/Linux%20build/badge.svg)](https://github.com/speckdavid/symk/actions?query=workflow%3A%22Linux+build%22) [![MacOS build](https://github.com/speckdavid/symk/workflows/MacOS%20build/badge.svg)](https://github.com/speckdavid/symk/actions?query=workflow%3A%22MacOS+build%22)
 
 Symk is a state-of-the-art classical *optimal* and *top-k planner* based on symbolic search.
 
