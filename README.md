@@ -12,6 +12,7 @@ We appreciate citations when SymK is used in a scientific context (see [Referenc
 - [Getting Started](#getting-started)
   - [Dependencies](#dependencies)
   - [Compiling the Symk Planner](#compiling-the-symk-planner)
+  - [Apptainer Image](#apptainer-image)
 - [Generating A Single Optimal Solution](#generating-a-single-optimal-solution)
 - [Generating Multiple Solutions](#generating-multiple-solutions)
   - [Top-k Configurations](#top-k-configurations)
@@ -35,10 +36,24 @@ sudo apt-get -y install cmake g++ make python3 autoconf automake
 Symk should compile on MacOS with the GNU C++ compiler and clang with the same instructions described above.
  
 ### Compiling the Symk Planner
-
 ```console
 ./build.py 
 ```
+
+### Apptainer Image
+To simplify the installation process, we alternatively provide an executable [Apptainer](https://apptainer.org/) container (formerly known as Singularity). It accepts the same arguments as Symk (`fast-downward.py` script; see below).
+
+```console
+    # Download the image,
+    apptainer pull symk.sif oras://ghcr.io/speckdavid/symk:latest
+
+    # or build it yourself.
+    apptainer build symk.sif Apptainer
+
+    # Then run the desired configuration (for other configurations see below).
+    ./symk.sif domain.pddl problem.pddl --search "sym-bd()"
+```
+
 ## Generating A Single Optimal Solution
 We recommend to use the following configuration which uses bidirectional search.
 
