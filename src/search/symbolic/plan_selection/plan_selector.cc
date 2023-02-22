@@ -137,8 +137,7 @@ void PlanSelector::save_accepted_plan(const Plan &plan) {
     hashes_accepted_plans[plan_seed].push_back(plan);
     states_accepted_goal_paths += states_on_path(plan);
     num_accepted_plans++;
-    plan_mgr.save_plan(plan, state_registry->get_task_proxy(),
-                       false, true);
+    plan_mgr.save_plan(plan, state_registry->get_task_proxy(), false, num_desired_plans > 1);
 }
 
 void PlanSelector::save_rejected_plan(const Plan &plan) {
