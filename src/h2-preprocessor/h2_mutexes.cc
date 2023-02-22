@@ -5,6 +5,7 @@
 //#include "utilities.h"
 
 #include <algorithm>
+#include <iterator>
 #include <vector>
 #include <set>
 
@@ -77,19 +78,20 @@ bool compute_h2_mutexes(const vector <Variable *> &variables,
             int mutexes_detected = h2.compute(variables, operators, axioms, initial_state, goals, mutexes, regression);
             if (mutexes_detected == TIMEOUT) {
                 break;
-            }else if (mutexes_detected == UNSOLVABLE) {
-		return false;
-	    }
+            } else if (mutexes_detected == UNSOLVABLE) {
+                return false;
+            }
 
             if (regression)
                 total_mutexes_bw += mutexes_detected;
             else
                 total_mutexes_fw += mutexes_detected;
 
-	    
+
             int res_unreachable = h2.detect_unreachable_fluents(variables, initial_state, goals);
-	    if(res_unreachable == UNSOLVABLE) return false;
-	    bool unreachable_detected = res_unreachable != 0;
+            if (res_unreachable == UNSOLVABLE)
+                return false;
+            bool unreachable_detected = res_unreachable != 0;
 
             bool spurious_detected = h2.remove_spurious_operators(operators);
 
@@ -97,16 +99,18 @@ bool compute_h2_mutexes(const vector <Variable *> &variables,
             update_regression |= spurious_detected || unreachable_detected || (!regression && mutexes_detected);
         }
         regression = !regression;
-  } while (update_progression || update_regression);  
+    } while (update_progression || update_regression);
 
     cout << "Total mutex and disambiguation time: " << (double)(clock() - start_t) / CLOCKS_PER_SEC << " iterations: " << num_iterations << endl;
+    cout << "Total mutexes found forward: " << total_mutexes_fw << endl;
+    cout << "Total mutexes found backward: " << total_mutexes_bw << endl;
     return true;
 }
 
 
-int H2Mutexes::detect_unreachable_fluents(const vector <Variable *> &variables, 
-					   const State &initial_state, 
-					   const vector<pair<Variable *, int>> &goals ) {
+int H2Mutexes::detect_unreachable_fluents(const vector <Variable *> &variables,
+                                          const State &initial_state,
+                                          const vector<pair<Variable *, int>> &goals) {
     bool new_unreachable;
     int num_discovered = 0;
     do {
@@ -131,10 +135,10 @@ int H2Mutexes::detect_unreachable_fluents(const vector <Variable *> &variables,
                     for (auto it = inconsistent.begin();
                          it != inconsistent.end(); it++) {
                         if (!is_unreachable(it->first, it->second)) {
-                            if(!set_unreachable(it->first, it->second, variables, initial_state, goals))
-				return UNSOLVABLE;
+                            if (!set_unreachable(it->first, it->second, variables, initial_state, goals))
+                                return UNSOLVABLE;
                             new_unreachable = true;
-			    num_discovered ++;
+                            num_discovered++;
                         }
                     }
                 }
@@ -148,9 +152,9 @@ int H2Mutexes::detect_unreachable_fluents(const vector <Variable *> &variables,
     //     int num_unreach_var = unreachable[var].size();
     //     for (int val = 0; val < num_unreach_var; ++val) {
     //         if (variables[var]->is_reachable(val) && unreachable[var][val]) {
-    // 		cout << "WARNING: Setting an unreachable var out of set_unreachable. This never should happen." << endl;
+    //          cout << "WARNING: Setting an unreachable var out of set_unreachable. This never should happen." << endl;
 
-    // 		cout << "Unreachable proposition: " << variables[var]->get_fact_name(val) << endl;
+    //          cout << "Unreachable proposition: " << variables[var]->get_fact_name(val) << endl;
     //             variables[var]->set_unreachable(val);
     //         }
     //     }
@@ -161,22 +165,22 @@ int H2Mutexes::detect_unreachable_fluents(const vector <Variable *> &variables,
 
 
 
-bool  H2Mutexes::set_unreachable(int var, int val, const vector <Variable *> &variables, 
-				 const State &initial_state, 
-				 const vector<pair<Variable *, int>> &goals) { 
-
-    if (initial_state [variables[var]] == val) return false;
-    for (auto & g : goals) 
-	if (g.first == variables[var] && g.second == val) 
-	    return false;
+bool H2Mutexes::set_unreachable(int var, int val, const vector <Variable *> &variables,
+                                const State &initial_state,
+                                const vector<pair<Variable *, int>> &goals) {
+    if (initial_state [variables[var]] == val)
+        return false;
+    for (auto &g : goals)
+        if (g.first == variables[var] && g.second == val)
+            return false;
 
 
     unreachable[var][val] = true;
-    if (variables[var]->is_reachable(val) ) {
-	cout << "Unreachable proposition: " << variables[var]->get_fact_name(val) << endl;
-	variables[var]->set_unreachable(val);
-    }else {
-	cout << "WARNING: Double setting as unreachable" << endl;
+    if (variables[var]->is_reachable(val)) {
+        cout << "Unreachable proposition: " << variables[var]->get_fact_name(val) << endl;
+        variables[var]->set_unreachable(val);
+    } else {
+        cout << "WARNING: Double setting as unreachable" << endl;
     }
 
 
@@ -283,7 +287,7 @@ bool H2Mutexes::initialize(const vector <Variable *> &variables,
                     inconsistent_facts[var2][val2].insert(fact1); // Vidal: redundancy included
 
 
-		    //cout << "Initialize mutex: " << var1 <<"-" << val1 << " "  << variables[var1]->get_fact_name(val1) << " - " << var2<< "-" << val2 << " "  << variables[var2]->get_fact_name(val2) << endl;
+                    //cout << "Initialize mutex: " << var1 <<"-" << val1 << " "  << variables[var1]->get_fact_name(val1) << " - " << var2<< "-" << val2 << " "  << variables[var2]->get_fact_name(val2) << endl;
 
                     // set the pairs that are mutex as spurious
                     m_values[position(p_index[var1][val1], p_index[var2][val2])] = SPURIOUS;
@@ -325,7 +329,8 @@ bool H2Mutexes::init_values_progression(const vector <Variable *> &variables,
             int var2 = variables[j]->get_level();
             unsigned fluent2 = p_index[var2][initial_state[variables[j]]];
             unsigned pos = position(fluent1, fluent2);
-	    if(m_values[pos] == SPURIOUS) return false;
+            if (m_values[pos] == SPURIOUS)
+                return false;
             //This check probably is unnecessary, because the initial state should not contain anything spurious
             // (I left it just in case of unsolvable problems)
             if (m_values[pos] == NOT_REACHED) {
@@ -343,7 +348,7 @@ bool H2Mutexes::init_values_progression(const vector <Variable *> &variables,
 
 
 bool H2Mutexes::check_initial_state_is_dead_end(const vector <Variable *> &variables,
-						const State &initial_state) const {
+                                                const State &initial_state) const {
     for (unsigned i = 0; i < variables.size(); i++) {
         int var1 = variables[i]->get_level();
         unsigned fluent1 = p_index[var1][initial_state[variables[i]]];
@@ -352,7 +357,7 @@ bool H2Mutexes::check_initial_state_is_dead_end(const vector <Variable *> &varia
             unsigned fluent2 = p_index[var2][initial_state[variables[j]]];
             unsigned pos = position(fluent1, fluent2);
             if (m_values[pos] == SPURIOUS) {
-		return true;
+                return true;
             }
         }
     }
@@ -362,15 +367,15 @@ bool H2Mutexes::check_initial_state_is_dead_end(const vector <Variable *> &varia
 bool H2Mutexes::check_goal_state_is_unreachable(const vector<pair<Variable *, int>> &goal) const {
     for (unsigned g = 0; g < goal.size(); g++) {
         int var1 = goal[g].first->get_level();
-	unsigned fluent1 = p_index[var1][goal[g].second];
-      
-	for (unsigned g2 = 0; g2 < goal.size(); g2++) {
-	    int var2 = goal[g2].first->get_level();
-	    unsigned fluent2 = p_index[var2][goal[g2].second];
+        unsigned fluent1 = p_index[var1][goal[g].second];
+
+        for (unsigned g2 = 0; g2 < goal.size(); g2++) {
+            int var2 = goal[g2].first->get_level();
+            unsigned fluent2 = p_index[var2][goal[g2].second];
 
             unsigned pos = position(fluent1, fluent2);
             if (m_values[pos] == SPURIOUS) {
-		return true;
+                return true;
             }
         }
     }
@@ -381,8 +386,9 @@ bool H2Mutexes::check_goal_state_is_unreachable(const vector<pair<Variable *, in
 
 bool H2Mutexes::init_values_regression(const vector<pair<Variable *, int>> &goal) {
     cout << "Init values regression" << endl;
-    
-    if(check_goal_state_is_unreachable(goal)) return false;
+
+    if (check_goal_state_is_unreachable(goal))
+        return false;
 
     for (unsigned i = 0; i < m_values.size(); i++) {
         if (m_values[i] != SPURIOUS) {
@@ -464,9 +470,11 @@ int H2Mutexes::compute(const vector <Variable *> &variables,
                        bool regression) {
     cout << "Initialize m_index " << (regression ? "bw" : "fw") << endl;
     if (regression) {
-        if(!init_values_regression(goal)) return UNSOLVABLE;
+        if (!init_values_regression(goal))
+            return UNSOLVABLE;
     } else {
-        if(!init_values_progression(variables, initial_state)) return UNSOLVABLE;
+        if (!init_values_progression(variables, initial_state))
+            return UNSOLVABLE;
     }
     cout << "Initialize m_ops " << (regression ? "bw" : "fw") << endl;
     init_h2_operators(operators, axioms, regression);
@@ -477,10 +485,11 @@ int H2Mutexes::compute(const vector <Variable *> &variables,
     do {
         // if (time_exceeded())
         //     return TIMEOUT;
-	
+
         updated = false;
         for (unsigned op_i = 0; op_i < m_ops.size(); op_i++) {
-	    if (op_i % 10000 == 0 && time_exceeded()) return TIMEOUT; 
+            if (op_i % 10000 == 0 && time_exceeded())
+                return TIMEOUT;
 
             // disregard spurious operators
             if (m_ops[op_i].triggered == SPURIOUS)
@@ -561,19 +570,19 @@ int H2Mutexes::compute(const vector <Variable *> &variables,
 
     //Add mutexes
     unsigned count = 0;
-  int countUnreachable = 0;
+    int countUnreachable = 0;
     for (unsigned i = 0; i < m_values.size(); i++) {
         if (m_values[i] == NOT_REACHED) {
             m_values[i] = SPURIOUS;
             pair<unsigned, unsigned> a = p_index_reverse[i / number_props];
             pair<unsigned, unsigned> b = p_index_reverse[i % number_props];
             if (a == b) {
-		if(!is_unreachable(a.first, a.second)) {
-	      countUnreachable ++;
-		    if(!set_unreachable(a.first, a.second, variables, initial_state, goal)){ 
-			return UNSOLVABLE;
-		    }
-		}
+                if (!is_unreachable(a.first, a.second)) {
+                    countUnreachable++;
+                    if (!set_unreachable(a.first, a.second, variables, initial_state, goal)) {
+                        return UNSOLVABLE;
+                    }
+                }
             } else {
                 if (m_values[position(p_index[a.first][a.second], p_index[a.first][a.second])] == REACHED &&
                     m_values[position(p_index[b.first][b.second], p_index[b.first][b.second])] == REACHED) {
@@ -596,14 +605,14 @@ int H2Mutexes::compute(const vector <Variable *> &variables,
         }
     }
 
-  //   This is not neeed anymore because we handle this in set_unreachable
+    //   This is not neeed anymore because we handle this in set_unreachable
     // for (int var = 0; var < static_cast<int>(unreachable.size()); var++) {
     //     for (int val = 0; val < static_cast<int>(unreachable[var].size()); val++) {
     //   if(variables[var]->is_reachable(val) && unreachable[var][val]){
-    // 	  cout << "WARNING: Setting an unreachable var out of set_unreachable. This never should happen." << endl;
-    // 	  // cout << "Unreachable proposition: " << variables[var]->get_fact_name(val) << endl;
-    // 	  countUnreachable++;
-    // 	variables[var]->set_unreachable(val);
+    //    cout << "WARNING: Setting an unreachable var out of set_unreachable. This never should happen." << endl;
+    //    // cout << "Unreachable proposition: " << variables[var]->get_fact_name(val) << endl;
+    //    countUnreachable++;
+    //  variables[var]->set_unreachable(val);
     //   }
     // }
     //}
@@ -613,7 +622,7 @@ int H2Mutexes::compute(const vector <Variable *> &variables,
     return count + countUnreachable;
 }
 
-Reachability H2Mutexes::eval_propositions(const vector<unsigned> & props) {
+Reachability H2Mutexes::eval_propositions(const vector<unsigned> &props) {
     if (props.empty())
         return REACHED;
     for (unsigned i = 0; i < props.size(); i++)
@@ -861,7 +870,7 @@ void Op_h2::instantiate_operator_backward(const Operator &op,
             set<pair<int, int>> intersect;
             set_intersection(potential_deletes[pvar].begin(), potential_deletes[pvar].end(),
                              potential_deletes_aux.begin(), potential_deletes_aux.end(),
-                             std::inserter(intersect, intersect.begin()));
+                             inserter(intersect, intersect.begin()));
             potential_deletes[pvar].swap(intersect);
         } else {
             potential_deletes[pvar].swap(potential_deletes_aux);

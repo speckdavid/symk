@@ -1,15 +1,12 @@
 /* Main file, keeps all important variables.
  * Calls functions from "helper_functions" to read in input (variables, operators,
  * goals, initial state),
- * then calls functions to build causal graph, domain_transition_graphs and
- * successor generator
+ * then calls functions to build causal graph and domain_transition_graphs
  * finally prints output to file "output.sas"
  */
 
 #include "helper_functions.h"
-#include "successor_generator.h"
 #include "causal_graph.h"
-#include "domain_transition_graph.h"
 #include "state.h"
 #include "mutex_group.h"
 #include "operator.h"
@@ -20,7 +17,7 @@
 using namespace std;
 
 int main(int argc, const char **argv) {
-    int h2_mutex_time = 300; // 300; // 5 minutes to compute mutexes by default
+    int h2_mutex_time = 300; // 5 minutes to compute mutexes by default
     bool include_augmented_preconditions = false;
     bool expensive_statistics = false;
     bool disable_bw_h2 = false;
@@ -33,7 +30,6 @@ int main(int argc, const char **argv) {
     vector<MutexGroup> mutexes;
     vector<Operator> operators;
     vector<Axiom> axioms;
-    vector<DomainTransitionGraph> transition_graphs;
 
     for (int i = 1; i < argc; ++i) {
         string arg = string(argv[i]);
@@ -246,9 +242,8 @@ int main(int argc, const char **argv) {
         cout << "Unsolvable task in preprocessor" << endl;
         generate_unsolvable_cpp_input();
     } else {
-        generate_cpp_input(ordering, metric,
-                           mutexes, initial_state, goals,
-                           operators, axioms);
+        generate_cpp_input(
+            ordering, metric, mutexes, initial_state, goals, operators, axioms);
     }
     cout << "done" << endl;
 }

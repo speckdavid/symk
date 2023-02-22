@@ -12,8 +12,6 @@
 #include "operator.h"
 #include "axiom.h"
 #include "variable.h"
-#include "successor_generator.h"
-#include "domain_transition_graph.h"
 
 using namespace std;
 
@@ -149,15 +147,6 @@ void dump_preprocessed_problem_description(const vector<Variable *> &variables,
         axiom.dump();
 }
 
-void dump_DTGs(const vector<Variable *> &ordering,
-               vector<DomainTransitionGraph> &transition_graphs) {
-    int num_graphs = transition_graphs.size();
-    for (int i = 0; i < num_graphs; i++) {
-        cout << "Domain transition graph for " << ordering[i]->get_name() << ":" << endl;
-        transition_graphs[i].dump();
-    }
-}
-
 void generate_cpp_input(const vector<Variable *> &ordered_vars,
                         const bool &metric,
                         const vector<MutexGroup> &mutexes,
@@ -211,20 +200,6 @@ void generate_cpp_input(const vector<Variable *> &ordered_vars,
     for (const Axiom &axiom : axioms)
         axiom.generate_cpp_input(outfile);
 
-    /*outfile << "begin_SG" << endl;
-    sg.generate_cpp_input(outfile);
-    outfile << "end_SG" << endl;
-
-    for (const auto &dtg : transition_graphs) {
-        outfile << "begin_DTG" << endl;
-        dtg.generate_cpp_input(outfile);
-        outfile << "end_DTG" << endl;
-    }
-
-    outfile << "begin_CG" << endl;
-    cg.generate_cpp_input(outfile, ordered_vars);
-    outfile << "end_CG" << endl;*/
-
     outfile.close();
 }
 void generate_unsolvable_cpp_input() {
@@ -257,15 +232,6 @@ void generate_unsolvable_cpp_input() {
 
     //Axioms
     outfile << "0" << endl;
-
-    outfile << "begin_SG" << endl;
-    outfile << "check 0" << endl;
-    outfile << "end_SG" << endl;
-
-    outfile << "begin_DTG" << endl << "0" << endl << "0" << endl
-            << "end_DTG" << endl;
-
-    outfile << "begin_CG" << endl << "0" << endl << "end_CG" << endl;
 
     outfile.close();
 }
