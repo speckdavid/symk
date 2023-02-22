@@ -44,14 +44,14 @@ Symk should compile on MacOS with the GNU C++ compiler and clang with the same i
 To simplify the installation process, we alternatively provide an executable [Apptainer](https://apptainer.org/) container (formerly known as Singularity). It accepts the same arguments as Symk (`fast-downward.py` script; see below).
 
 ```console
-    # Download the image,
-    apptainer pull symk.sif oras://ghcr.io/speckdavid/symk:latest
+# Download the image,
+apptainer pull symk.sif oras://ghcr.io/speckdavid/symk:latest
 
-    # or build it yourself.
-    apptainer build symk.sif Apptainer
+# or build it yourself.
+apptainer build symk.sif Apptainer
 
-    # Then run the desired configuration (for other configurations see below).
-    ./symk.sif domain.pddl problem.pddl --search "sym-bd()"
+# Then run the desired configuration (for other configurations see below).
+./symk.sif domain.pddl problem.pddl --search "sym-bd()"
 ```
 
 ## Generating A Single Optimal Solution
