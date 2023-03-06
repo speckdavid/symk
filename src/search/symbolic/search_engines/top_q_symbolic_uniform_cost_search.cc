@@ -61,7 +61,7 @@ SearchStatus TopqSymbolicUniformCostSearch::step() {
         }
     }
 
-    if (lower_bound_increased) {
+    if (lower_bound_increased && !silent) {
         utils::g_log << "BOUND: " << lower_bound << " < " << upper_bound << flush;
 
         utils::g_log << " [" << solution_registry->get_num_found_plans() << "/"

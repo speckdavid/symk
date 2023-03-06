@@ -36,7 +36,8 @@ SymbolicSearch::SymbolicSearch(const options::Options &opts)
       plan_data_base(opts.get<shared_ptr<PlanSelector>>("plan_selection")),
       solution_registry(make_shared<SymSolutionRegistry>()),
       simple(opts.get<bool>("simple")),
-      single_solution(opts.get<bool>("single_solution")) {
+      single_solution(opts.get<bool>("single_solution")),
+      silent(opts.get<bool>("silent")) {
     cout << endl;
     vars->print_options();
     cout << endl;
@@ -113,7 +114,7 @@ SearchStatus SymbolicSearch::step() {
         }
     }
 
-    if (lower_bound_increased) {
+    if (lower_bound_increased && !silent) {
         utils::g_log << "BOUND: " << lower_bound << " < " << upper_bound << flush;
 
         utils::g_log << " [" << solution_registry->get_num_found_plans() << "/"
@@ -178,6 +179,8 @@ void SymbolicSearch::add_options_to_parser(OptionParser &parser) {
     SymParamsSearch::add_options_to_parser(parser);
     SymParamsMgr::add_options_to_parser(parser);
     PlanSelector::add_options_to_parser(parser);
+    parser.add_option<bool>("silent", "silent mode that avoids writing the cost bounds",
+                            "false");
     parser.add_option<bool>("simple", "simple/loopless plan construction",
                             "false");
     parser.add_option<bool>("single_solution", "search for a single solution",
