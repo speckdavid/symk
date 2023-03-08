@@ -1,6 +1,6 @@
 EXTRA_DIST += doc/phase.pdf
 
-if HAVE_PDFLATEX
+if FALSE #HAVE_PDFLATEX
 
 doc/cudd.pdf: doc/cudd.tex $(top_srcdir)/doc/phase.pdf
 	@if $(AM_V_P); then dest='2>&1'; else dest='> /dev/null 2>&1'; fi; \
