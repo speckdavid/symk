@@ -33,6 +33,11 @@ EagerSearch::EagerSearch(const Options &opts)
         cerr << "lazy_evaluator must cache its estimates" << endl;
         utils::exit_with(utils::ExitCode::SEARCH_INPUT_ERROR);
     }
+    if (has_sdac_cost) {
+        cerr << "error: explicit search does not support state-dependent action costs. "
+             << "Please use symbolic search." << endl;
+        utils::exit_with(utils::ExitCode::SEARCH_INPUT_ERROR);
+    }
 }
 
 void EagerSearch::initialize() {

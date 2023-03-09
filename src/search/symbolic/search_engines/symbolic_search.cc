@@ -53,7 +53,7 @@ void SymbolicSearch::initialize() {
     plan_data_base->print_options();
     cout << endl;
 
-    if (task_properties::has_sdac_cost_operator(task_proxy)) {
+    if (has_sdac_cost) {
         utils::g_log << "Creating sdac task..." << endl;
         search_task = make_shared<extra_tasks::SdacTask>(task, vars.get());
         utils::g_log << "#Operators with sdac: " << task->get_num_operators() << endl;

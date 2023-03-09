@@ -77,6 +77,11 @@ EnforcedHillClimbingSearch::EnforcedHillClimbingSearch(
       current_phase_start_g(-1),
       num_ehc_phases(0),
       last_num_expanded(-1) {
+    if (has_sdac_cost) {
+        cerr << "error: explicit search does not support state-dependent action costs. "
+             << "Please use symbolic search." << endl;
+        utils::exit_with(utils::ExitCode::SEARCH_INPUT_ERROR);
+    }
     for (const shared_ptr<Evaluator> &eval : preferred_operator_evaluators) {
         eval->get_path_dependent_evaluators(path_dependent_evaluators);
     }

@@ -53,6 +53,7 @@ SearchEngine::SearchEngine(const Options &opts)
       statistics(log),
       cost_type(opts.get<OperatorCost>("cost_type")),
       is_unit_cost(task_properties::is_unit_cost(task_proxy)),
+      has_sdac_cost(task_properties::has_sdac_cost_operator(task_proxy)),
       max_time(opts.get<double>("max_time")) {
     if (opts.get<int>("bound") < 0) {
         cerr << "error: negative cost bound " << opts.get<int>("bound") << endl;

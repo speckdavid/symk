@@ -51,6 +51,7 @@ protected:
     int bound;
     OperatorCost cost_type;
     bool is_unit_cost;
+    bool has_sdac_cost;
     double max_time;
 
     virtual void initialize() {}
