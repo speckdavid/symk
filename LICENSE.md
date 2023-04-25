@@ -5,7 +5,7 @@ license:
 
 * [./src/search/ext](./src/search/ext)
 * [./src/search/sdac_parser/boost_dependencies](./src/search/sdac_parser/boost_dependencies) see [Boost Software License Version 1.0](./src/search/sdac_parser/boost_dependencies/LICENSE_1_0.txt)
-* [./src/dd_libs/cudd-3.0.0](./src/dd_libs/cudd-3.0.0): see [CUDD License](./src/dd_libs/cudd-3.0.0/LICENSE) 
+* [./src/dd_libs/cudd-3.0.0](./src/dd_libs/cudd-3.0.0): see [BSD 3-Clause "New" or "Revised" License](./src/dd_libs/cudd-3.0.0/LICENSE) 
 
 For the rest, the following license applies (GNU General Public License v3.0):
 
