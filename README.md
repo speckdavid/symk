@@ -1,17 +1,21 @@
-# Symk [![Linux build](https://github.com/speckdavid/symk/workflows/Linux%20build/badge.svg)](https://github.com/speckdavid/symk/actions/workflows/linux_build.yml) [![MacOS build](https://github.com/speckdavid/symk/workflows/MacOS%20build/badge.svg)](https://github.com/speckdavid/symk/actions/workflows/macos_build.yml) [![Apptainer](https://github.com/speckdavid/symk/workflows/Apptainer/badge.svg)](https://github.com/speckdavid/symk/actions/workflows/apptainer.yml)
+# SymK [![Linux build](https://github.com/speckdavid/symk/workflows/Linux%20build/badge.svg)](https://github.com/speckdavid/symk/actions/workflows/linux_build.yml) [![MacOS build](https://github.com/speckdavid/symk/workflows/MacOS%20build/badge.svg)](https://github.com/speckdavid/symk/actions/workflows/macos_build.yml) [![Apptainer](https://github.com/speckdavid/symk/workflows/Apptainer/badge.svg)](https://github.com/speckdavid/symk/actions/workflows/apptainer.yml)
 
-Symk is a state-of-the-art classical *optimal* and *top-k planner* based on symbolic search.
+SymK is a state-of-the-art classical *optimal* and *top-k* planner based on symbolic search that extends [Fast
+Downward](https://www.fast-downward.org). 
+The main extensions are described below.
 
 
-With Symk, it is possible to find a *single optimal plan* or a *set of k different best plans* with the lowest cost for a given planning task. 
-In addition, Symk natively supports a variety of PDDL features that are rarely supported by other planners, such as conditional effects, derived predicates with axioms, and state-dependent action costs.
-See this readme file for more information on running Symk and the various configurations. 
+With SymK, it is possible to find a *single optimal plan* or a *set of k different best plans* with the lowest cost for a given planning task. 
+In addition, SymK natively supports a variety of PDDL features that are rarely supported by other planners, such as conditional effects, derived predicates with axioms, and state-dependent action costs.
+See this readme file for more information on running SymK and the various configurations. 
 We appreciate citations when SymK is used in a scientific context (see [References](#references) for more details).
+
+Sym
 
 ## Table of Contents  
 - [Getting Started](#getting-started)
   - [Dependencies](#dependencies)
-  - [Compiling the Symk Planner](#compiling-the-symk-planner)
+  - [Compiling the SymK Planner](#compiling-the-symk-planner)
   - [Apptainer Image](#apptainer-image)
 - [Generating A Single Optimal Solution](#generating-a-single-optimal-solution)
 - [Generating Multiple Solutions](#generating-multiple-solutions)
@@ -33,15 +37,15 @@ Currently we only support Linux systems. The following should install all necess
 sudo apt-get -y install cmake g++ make python3 autoconf automake
 ```
 
-Symk should compile on MacOS with the GNU C++ compiler and clang with the same instructions described above.
+SymK should compile on MacOS with the GNU C++ compiler and clang with the same instructions described above.
  
-### Compiling the Symk Planner
+### Compiling the SymK Planner
 ```console
 ./build.py 
 ```
 
 ### Apptainer Image
-To simplify the installation process, we alternatively provide an executable [Apptainer](https://apptainer.org/) container (formerly known as Singularity). It accepts the same arguments as Symk (`fast-downward.py` script; see below).
+To simplify the installation process, we alternatively provide an executable [Apptainer](https://apptainer.org/) container (formerly known as Singularity). It accepts the same arguments as SymK (`fast-downward.py` script; see below).
 
 ```console
 # Download the image,
@@ -84,7 +88,7 @@ For example, `q=1` reports only the cheapest plans, where `quality=infinity` cor
 ```
 
 ### Loopless Planning
-It is possible to generate loopless/simple plans, i.e., plans that do not visit any state more than once. In general, the option to consider and generate only simple plans can be combined with any Symk search engine and with different plan selectors by setting the `simple` parameter to true. See the following two examples and our [ICAPS 2022 Paper](https://gki.informatik.uni-freiburg.de/papers/vontschammer-etal-icaps2022.pdf).
+It is possible to generate loopless/simple plans, i.e., plans that do not visit any state more than once. In general, the option to consider and generate only simple plans can be combined with any SymK search engine and with different plan selectors by setting the `simple` parameter to true. See the following two examples and our [ICAPS 2022 Paper](https://gki.informatik.uni-freiburg.de/papers/vontschammer-etal-icaps2022.pdf).
 
 ```console
 ./fast-downward.py domain.pddl problem.pddl --search "symk-bd(simple=true,plan_selection=top_k(num_plans=**k**))"
@@ -94,7 +98,7 @@ It is possible to generate loopless/simple plans, i.e., plans that do not visit 
 ./fast-downward.py domain.pddl problem.pddl --search "symq-bd(simple=true,plan_selection=top_k(num_plans=**k**),quality=**q**)"
 ```
 ### Other Configurations
-It is possible to run Symk also with forward or backward search instead of bidirectional search, e.g., with `--search "symk-fw(...)"` or `--search "symk-bw(...)"`. Depending on the domain, one of these configurations may be faster than bidirectional search (`"--search symk-bd(...)"`).
+It is possible to run SymK also with forward or backward search instead of bidirectional search, e.g., with `--search "symk-fw(...)"` or `--search "symk-bw(...)"`. Depending on the domain, one of these configurations may be faster than bidirectional search (`"--search symk-bd(...)"`).
 
 ## Plan Selection Framework
 It is possible to create plans until a number of plans or simply a single plan is found that meets certain requirements.
@@ -158,6 +162,6 @@ We appreciate citations of these sources when used.
  
  You can find examples of domains with state-dependent action cost [here](https://github.com/speckdavid/SDAC-Benchmarks).
 
-Finally, we want to acknowledge that Symk is based on:
- - Fast Downward: http://www.fast-downward.org/ (22.06)
+Finally, we want to acknowledge that SymK is based on:
+ - Fast Downward (22.06): http://www.fast-downward.org/ and [FD_README.md](FD_README.md) 
  - Symbolic Fast Downward: https://people.cs.aau.dk/~alto/software.html
