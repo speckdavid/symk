@@ -10,7 +10,6 @@ In addition, SymK natively supports a variety of PDDL features that are rarely s
 See this readme file for more information on running SymK and the various configurations. 
 We appreciate citations when SymK is used in a scientific context (see [References](#references) for more details).
 
-Sym
 
 ## Table of Contents  
 - [Getting Started](#getting-started)
