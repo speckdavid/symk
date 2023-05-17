@@ -91,6 +91,7 @@ protected:
     // which only occurs if no reachable loops part of in the state space
     bool anytime_completness;
 
+    bool dump_plans;
 
     int num_desired_plans;
     int num_accepted_plans;

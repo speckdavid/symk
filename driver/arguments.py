@@ -408,7 +408,7 @@ def parse_args():
         help="set log level (most verbose: debug; least verbose: warning; default: %(default)s)")
 
     driver_other.add_argument(
-        "--plan-file", metavar="FILE", default="found_plans/sas_plan",
+        "--plan-file", metavar="FILE", default="sas_plan",
         help="write plan(s) to FILE (default: %(default)s; anytime configurations append .1, .2, ...)")
 
     driver_other.add_argument(

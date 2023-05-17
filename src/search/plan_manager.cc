@@ -43,12 +43,12 @@ void PlanManager::dump_plan(const Plan &plan,
                             const TaskProxy &task_proxy) const {
     OperatorsProxy operators = task_proxy.get_operators();
     for (OperatorID op_id : plan) {
-        cout << operators[op_id].get_name() << " (" << operators[op_id].get_cost()
+        utils::g_log << operators[op_id].get_name() << " (" << operators[op_id].get_cost()
              << ")" << endl;
     }
     int plan_cost = calculate_plan_cost(plan, task_proxy);
-    cout << "Plan length: " << plan.size() << " step(s)." << endl;
-    cout << "Plan cost: " << plan_cost << endl;
+    utils::g_log << "Plan length: " << plan.size() << " step(s)." << endl;
+    utils::g_log << "Plan cost: " << plan_cost << endl;
 }
 
 void PlanManager::save_plan(const Plan &plan, const TaskProxy &task_proxy,

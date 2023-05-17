@@ -33,8 +33,11 @@ void UnorderedSelector::save_accepted_plan(const Plan &ordered_plan, const Plan 
     hashes_accepted_plans[plan_seed].push_back(unordered_plan);
     states_accepted_goal_paths += states_on_path(ordered_plan);
     num_accepted_plans++;
-    plan_mgr.save_plan(ordered_plan, state_registry->get_task_proxy(),
-                       false, true);
+
+    if (dump_plans) {
+        utils::g_log << endl << "Ordered plan " << num_accepted_plans << ": " << endl;
+    }
+    plan_mgr.save_plan(ordered_plan, state_registry->get_task_proxy(), dump_plans, num_desired_plans > 1);
 }
 
 static shared_ptr<PlanSelector> _parse(OptionParser &parser) {

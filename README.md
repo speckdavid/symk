@@ -58,7 +58,7 @@ apptainer build symk.sif Apptainer
 ```
 
 ## Generating A Single Optimal Solution
-We recommend to use the following configuration which uses bidirectional search.
+We recommend using the following configuration which uses bidirectional search.
 
 ```console
 ./fast-downward.py domain.pddl problem.pddl --search "sym-bd()"
@@ -70,31 +70,33 @@ Other configurations are forward or backward search: `--search "sym-fw()"` or `-
 
 ### Top-k Configurations
 
-We recommend to use the following configuration which uses bidirectional search and 
+We recommend using the following configuration which uses bidirectional search and 
 reports the best **k** plans. Note that you can also specify `num_plans=infinity` if you want to find all possible plans.
 
 ```console
-./fast-downward.py domain.pddl problem.pddl --search "symk-bd(plan_selection=top_k(num_plans=**k**))"
+./fast-downward.py domain.pddl problem.pddl --search "symk-bd(plan_selection=top_k(num_plans=**k**,dump_plans=false))"
 ```
 
+Note that with `./fast-downward.py --plan-file sas_plan dom...` you can specify the path and name of the generated plan files (here: `sas_plan`), and by setting the `dump_plans` argument to `true`, all plans found will also be dumped to the console.
+
 ### Top-q Configurations
-We recommend to use the following configuration which uses bidirectional search and
+We recommend using the following configuration which uses bidirectional search and
 reports the **k** plans with quality bound **q**. Quality `1<=q<=infinity` is a multiplier that is multiplied to the cost of the cheapest solution. 
 For example, `q=1` reports only the cheapest plans, where `quality=infinity` corresponds to the top-k planning.
 
 ```console
-./fast-downward.py domain.pddl problem.pddl --search "symq-bd(plan_selection=top_k(num_plans=**k**),quality=**q**)"
+./fast-downward.py domain.pddl problem.pddl --search "symq-bd(plan_selection=top_k(num_plans=**k**,dump_plans=false),quality=**q**)"
 ```
 
 ### Loopless Planning
 It is possible to generate loopless/simple plans, i.e., plans that do not visit any state more than once. In general, the option to consider and generate only simple plans can be combined with any SymK search engine and with different plan selectors by setting the `simple` parameter to true. See the following two examples and our [ICAPS 2022 Paper](https://gki.informatik.uni-freiburg.de/papers/vontschammer-etal-icaps2022.pdf).
 
 ```console
-./fast-downward.py domain.pddl problem.pddl --search "symk-bd(simple=true,plan_selection=top_k(num_plans=**k**))"
+./fast-downward.py domain.pddl problem.pddl --search "symk-bd(simple=true,plan_selection=top_k(num_plans=**k**,dump_plans=false))"
 ```
 
 ```console
-./fast-downward.py domain.pddl problem.pddl --search "symq-bd(simple=true,plan_selection=top_k(num_plans=**k**),quality=**q**)"
+./fast-downward.py domain.pddl problem.pddl --search "symq-bd(simple=true,plan_selection=top_k(num_plans=**k**,dump_plans=false),quality=**q**)"
 ```
 ### Other Configurations
 It is possible to run SymK also with forward or backward search instead of bidirectional search, e.g., with `--search "symk-fw(...)"` or `--search "symk-bw(...)"`. Depending on the domain, one of these configurations may be faster than bidirectional search (`"--search symk-bd(...)"`).
