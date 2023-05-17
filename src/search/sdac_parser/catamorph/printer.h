@@ -8,7 +8,7 @@
 #include <iostream>
 #include <string>
 
-#include "../boost_dependencies/boost/algorithm/string/join.hpp"
+#include "../../ext/boost_dependencies/boost/algorithm/string/join.hpp"
 
 namespace sdac_parser {
 class Printer {

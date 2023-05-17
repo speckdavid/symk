@@ -44,7 +44,7 @@ void PlanManager::dump_plan(const Plan &plan,
     OperatorsProxy operators = task_proxy.get_operators();
     for (OperatorID op_id : plan) {
         utils::g_log << operators[op_id].get_name() << " (" << operators[op_id].get_cost()
-             << ")" << endl;
+                     << ")" << endl;
     }
     int plan_cost = calculate_plan_cost(plan, task_proxy);
     utils::g_log << "Plan length: " << plan.size() << " step(s)." << endl;

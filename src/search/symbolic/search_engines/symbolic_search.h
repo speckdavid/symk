@@ -52,7 +52,7 @@ protected:
     std::shared_ptr<SymSolutionRegistry> solution_registry; // Solution registry
     bool simple;
     bool single_solution;
-    
+
     bool silent;
 
     virtual void initialize() override;

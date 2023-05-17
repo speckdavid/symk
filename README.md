@@ -27,6 +27,7 @@ We appreciate citations when SymK is used in a scientific context (see [Referenc
   - [New Plan Selector](#new-plan-selector)
 - [Pitfalls and Troubleshooting](#pitfalls-and-troubleshooting)
 - [References](#references)
+- [License](#license)
 
 ## Getting Started
 
@@ -163,6 +164,25 @@ We appreciate citations of these sources when used.
  
  You can find examples of domains with state-dependent action cost [here](https://github.com/speckdavid/SDAC-Benchmarks).
 
-Finally, we want to acknowledge that SymK is based on:
+We want to acknowledge that SymK is based on:
  - Fast Downward (22.06): http://www.fast-downward.org/ and [FD_README.md](FD_README.md) 
  - Symbolic Fast Downward: https://people.cs.aau.dk/~alto/software.html
+
+Finally, SymK uses some external software that can be found in the [src/search/ext](src/search/ext) folder.
+
+# License
+
+```
+SymK is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or (at
+your option) any later version.
+
+SymK is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+```

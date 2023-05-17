@@ -1,8 +1,8 @@
 #ifndef SDAC_PARSER_CATAMORPH_EXPRESSION_H
 #define SDAC_PARSER_CATAMORPH_EXPRESSION_H
 
-#include "../boost_dependencies/boost/range/adaptors.hpp"
-#include "../boost_dependencies/boost/variant.hpp"
+#include "../../ext/boost_dependencies/boost/range/adaptors.hpp"
+#include "../../ext/boost_dependencies/boost/variant.hpp"
 
 using NBR = float;
 using ID = std::string;
