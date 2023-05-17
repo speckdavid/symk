@@ -9,9 +9,10 @@ __pycache__/
 /misc/autodoc/downward-xmlrpc.secret
 
 # CUDD
-src/search/ext/cudd-3.0.0/autom4te.cache/
-src/search/ext/cudd-3.0.0/Makefile.in
-src/search/ext/cudd-3.0.0/aclocal.m4
-src/search/ext/cudd-3.0.0/configure
-src/search/ext/cudd-3.0.0/config.h.in
-src/search/ext/cudd-3.0.0/config.h.in~
+/src/search/ext/cudd-3.0.0/autom4te.cache/
+/src/search/ext/cudd-3.0.0/Makefile.in
+/src/search/ext/cudd-3.0.0/aclocal.m4
+/src/search/ext/cudd-3.0.0/configure
+/src/search/ext/cudd-3.0.0/configure~
+/src/search/ext/cudd-3.0.0/config.h.in
+/src/search/ext/cudd-3.0.0/config.h.in~
