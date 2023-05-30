@@ -95,11 +95,13 @@ class CausalGraph:
             else:
                 self.ordering.append(scc[0])
 
-    def calculate_important_vars(self, goal):
+    def calculate_important_vars(self, goals_and_utilies):
         # Note for future refactoring: it is perhaps more idiomatic
         # and efficient to use a set rather than a defaultdict(bool).
         necessary = defaultdict(bool)
-        for var, _ in goal.pairs:
+        for entry in goals_and_utilies:
+            assert len(entry) == 2 or len(entry) == 3
+            var = entry[0]
             if not necessary[var]:
                 necessary[var] = True
                 self.dfs(var, necessary)
@@ -194,6 +196,7 @@ class VariableOrder:
         self._apply_to_variables(sas_task.variables)
         self._apply_to_init(sas_task.init)
         self._apply_to_goal(sas_task.goal)
+        self._apply_to_utility(sas_task.utility)
         self._apply_to_mutexes(sas_task.mutexes)
         self._apply_to_operators(sas_task.operators)
         self._apply_to_axioms(sas_task.axioms)
@@ -218,6 +221,11 @@ class VariableOrder:
     def _apply_to_goal(self, goal):
         goal.pairs = sorted((self.new_var[var], val)
                             for var, val in goal.pairs
+                            if var in self.new_var)
+
+    def _apply_to_utility(self, utility):
+        utility.triplets = sorted((self.new_var[var], val, util)
+                            for var, val, util in utility.triplets
                             if var in self.new_var)
 
     def _apply_to_mutexes(self, mutexes):
@@ -277,7 +285,7 @@ def find_and_apply_variable_order(sas_task, reorder_vars=True,
         else:
             order = list(range(len(sas_task.variables.ranges)))
         if filter_unimportant_vars:
-            necessary = cg.calculate_important_vars(sas_task.goal)
+            necessary = cg.calculate_important_vars(sas_task.goal.pairs + sas_task.utility.triplets)
             print("%s of %s variables necessary." % (len(necessary),
                                                      len(order)))
             order = [var for var in order if necessary[var]]

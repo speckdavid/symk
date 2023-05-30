@@ -11,12 +11,14 @@ class SASTask:
     generally be sorted and mention each variable at most once. See
     the validate methods for details."""
 
-    def __init__(self, variables, mutexes, init, goal,
+    def __init__(self, variables, mutexes, init, goal, utility, bound,
                  operators, axioms, metric):
         self.variables = variables
         self.mutexes = mutexes
         self.init = init
         self.goal = goal
+        self.utility = utility
+        self.bound = bound
         self.operators = sorted(operators, key=lambda op: (
             op.name, op.prevail, op.pre_post))
         self.axioms = sorted(axioms, key=lambda axiom: (
@@ -50,6 +52,7 @@ class SASTask:
             mutex.validate(self.variables)
         self.init.validate(self.variables)
         self.goal.validate(self.variables)
+        self.utility.validate()
         for op in self.operators:
             op.validate(self.variables)
         for axiom in self.axioms:
@@ -67,6 +70,10 @@ class SASTask:
         self.init.dump()
         print("goal:")
         self.goal.dump()
+        print("utility:")
+        self.utility.dump()
+        print("bound:")
+        print("  %d" % self.bound)
         print("%d operators:" % len(self.operators))
         for operator in self.operators:
             operator.dump()
@@ -88,6 +95,10 @@ class SASTask:
             mutex.output(stream)
         self.init.output(stream)
         self.goal.output(stream)
+        self.utility.output(stream)
+        print("begin_bound", file=stream)
+        print(self.bound, file=stream)
+        print("end_bound", file=stream)
         print(len(self.operators), file=stream)
         for op in self.operators:
             op.output(stream)
@@ -101,6 +112,7 @@ class SASTask:
         for mutex in self.mutexes:
             task_size += mutex.get_encoding_size()
         task_size += self.goal.get_encoding_size()
+        task_size += self.utility.get_encoding_size()
         for op in self.operators:
             task_size += op.get_encoding_size()
         for axiom in self.axioms:
@@ -225,6 +237,27 @@ class SASInit:
             print(val, file=stream)
         print("end_state", file=stream)
 
+class SASUtil:
+    def __init__(self, values):
+        self.triplets = sorted(values)
+
+    def validate(self):
+        """ Assert that the utility is not empty."""
+        assert self.triplets
+
+    def dump(self):
+        for var, val, u in self.triplets:
+            print("v%d: %d = %d" % (var, val, u))
+
+    def output(self, stream):
+        print("begin_util", file=stream)
+        print(len(self.triplets), file=stream)
+        for var, val, u in self.triplets:
+            print(var, val, u, file=stream)
+        print("end_util", file=stream)
+
+    def get_encoding_size(self):
+        return len(self.triplets)
 
 class SASGoal:
     def __init__(self, pairs):
