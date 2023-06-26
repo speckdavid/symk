@@ -27,6 +27,9 @@ class SASTask:
         if DEBUG:
             self.validate()
 
+    def is_osp_task(self):
+        return self.bound is not None
+
     def validate(self):
         """Fail an assertion if the task is invalid.
 
@@ -68,12 +71,14 @@ class SASTask:
             mutex.dump()
         print("init:")
         self.init.dump()
-        print("goal:")
-        self.goal.dump()
-        print("utility:")
-        self.utility.dump()
-        print("bound:")
-        print("  %d" % self.bound)
+        if not self.is_osp_task():
+            print("goal:")
+            self.goal.dump()
+        else:
+            print("utility:")
+            self.utility.dump()
+            print("bound:")
+            print("  %d" % self.bound)
         print("%d operators:" % len(self.operators))
         for operator in self.operators:
             operator.dump()
@@ -94,11 +99,13 @@ class SASTask:
         for mutex in self.mutexes:
             mutex.output(stream)
         self.init.output(stream)
-        self.goal.output(stream)
-        self.utility.output(stream)
-        print("begin_bound", file=stream)
-        print(self.bound, file=stream)
-        print("end_bound", file=stream)
+        if not self.is_osp_task():
+            self.goal.output(stream)
+        else:
+            self.utility.output(stream)
+            print("begin_bound", file=stream)
+            print(self.bound, file=stream)
+            print("end_bound", file=stream)
         print(len(self.operators), file=stream)
         for op in self.operators:
             op.output(stream)
@@ -237,6 +244,7 @@ class SASInit:
             print(val, file=stream)
         print("end_state", file=stream)
 
+
 class SASUtil:
     def __init__(self, values):
         self.triplets = sorted(values)
@@ -258,6 +266,7 @@ class SASUtil:
 
     def get_encoding_size(self):
         return len(self.triplets)
+
 
 class SASGoal:
     def __init__(self, pairs):
@@ -297,6 +306,7 @@ class SASOperator:
         def tuplify(entry):
             var, pre, post, cond = entry
             return var, pre, post, tuple(cond)
+
         def listify(entry):
             var, pre, post, cond = entry
             return var, pre, post, list(cond)
@@ -440,7 +450,6 @@ class SASAxiom:
             assert val >= 0, condition
 
     def validate(self, variables, init):
-
         """Validate the axiom.
 
         Assert that the axiom condition is a valid condition, that the
@@ -472,8 +481,8 @@ class SASAxiom:
         eff_layer = variables.axiom_layers[eff_var]
         assert eff_layer >= 0
         eff_init_value = init.values[eff_var]
-        ## The following rule is currently commented out because of
-        ## the TODO/bug mentioned in the docstring.
+        # The following rule is currently commented out because of
+        # the TODO/bug mentioned in the docstring.
         # assert eff_value != eff_init_value
         for cond_var, cond_value in self.condition:
             cond_layer = variables.axiom_layers[cond_var]
@@ -481,9 +490,9 @@ class SASAxiom:
                 assert cond_layer <= eff_layer
                 if cond_layer == eff_layer:
                     cond_init_value = init.values[cond_var]
-                    ## Once the TODO/bug above is addressed, the
-                    ## following four lines can be simplified because
-                    ## we are guaranteed to land in the "if" branch.
+                    # Once the TODO/bug above is addressed, the
+                    # following four lines can be simplified because
+                    # we are guaranteed to land in the "if" branch.
                     if eff_value != eff_init_value:
                         assert cond_value != cond_init_value
                     else:

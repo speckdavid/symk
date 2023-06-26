@@ -298,6 +298,11 @@ def parse_task(domain_pddl, task_pddl):
     task_name, task_domain_name, task_requirements, objects, init, goal, utility, bound, use_metric = parse_task_pddl(task_pddl, type_dict, predicate_dict)
 
     assert domain_name == task_domain_name
+
+    # Ensure that we have either a hard goal (classical task) or a soft goal (osp task)
+    assert (
+        (goal != pddl.Truth() and not utility and not bound) or goal == pddl.Truth() and utility and bound
+    ), "We currently only support specifying a classical planning task with a hard goal using :goal, or specifying an oversubscription planning task using :utility and :bound, but not a combination."
     requirements = pddl.Requirements(sorted(set(
                 domain_requirements.requirements +
                 task_requirements.requirements)))
@@ -393,7 +398,6 @@ def parse_domain_pddl(domain_pddl):
     yield the_axioms
 
 def parse_task_pddl(task_pddl, type_dict, predicate_dict):
-    print(task_pddl)
     iterator = iter(task_pddl)
 
     define_tag = next(iterator)

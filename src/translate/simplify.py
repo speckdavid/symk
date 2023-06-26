@@ -156,14 +156,18 @@ def build_dtgs(task):
 always_false = object()
 always_true = object()
 
+
 class Impossible(Exception):
     pass
+
 
 class TriviallySolvable(Exception):
     pass
 
+
 class DoesNothing(Exception):
     pass
+
 
 class VarValueRenaming:
     def __init__(self):
@@ -266,7 +270,8 @@ class VarValueRenaming:
                         print("Removed false proposition: %s" % value_name)
                 else:
                     new_value_names[new_var_no][new_value] = value_name
-        assert all((None not in value_names) for value_names in new_value_names)
+        assert all((None not in value_names)
+                   for value_names in new_value_names)
         value_names[:] = new_value_names
 
     def apply_to_mutexes(self, mutexes):
@@ -276,7 +281,7 @@ class VarValueRenaming:
             for var, val in mutex.facts:
                 new_var_no, new_value = self.translate_pair((var, val))
                 if (new_value is not always_true and
-                    new_value is not always_false):
+                        new_value is not always_false):
                     new_facts.append((new_var_no, new_value))
             if len(new_facts) >= 2:
                 mutex.facts = new_facts
@@ -298,7 +303,7 @@ class VarValueRenaming:
     def apply_to_goals(self, goals):
         # This may propagate Impossible up.
         self.convert_pairs(goals)
-        
+
     def apply_to_utils(self, utils):
         # This may propagate Impossible up.
         if utils:
@@ -451,7 +456,7 @@ class VarValueRenaming:
 
         for cond_var, cond_value in new_cond:
             if (cond_var in conditions_dict and
-                conditions_dict[cond_var] != cond_value):
+                    conditions_dict[cond_var] != cond_value):
                 # This effect condition is not compatible with
                 # the applicability conditions.
                 return None
@@ -486,7 +491,7 @@ class VarValueRenaming:
         pairs[:] = new_pairs
 
     def translate_triplet(self, util_triplet):
-        #print(util_triplet)
+        # print(util_triplet)
         (var_no, value, uval) = util_triplet
         new_var_no = self.new_var_nos[var_no]
         new_value = self.new_values[var_no][value]
@@ -505,6 +510,7 @@ class VarValueRenaming:
                 assert new_var_no is not None
                 new_triplets.append((new_var_no, new_value, uval))
         util_triplets[:] = new_triplets
+
 
 def build_renaming(dtgs):
     renaming = VarValueRenaming()

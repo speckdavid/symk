@@ -52,9 +52,10 @@ class Task:
         print("Goal:")
         self.goal.dump()
         print("Utility:")
-        self.utility.dump()
+        for u in self.utility:
+            print(f"  {u[0]}: {u[1]}")
         print("Bound:")
-        print("  %d" % self.bound)
+        print(f"  {self.bound}")
         print("Actions:")
         for action in self.actions:
             action.dump()

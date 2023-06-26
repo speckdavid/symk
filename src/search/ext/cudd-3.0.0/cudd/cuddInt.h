@@ -1025,7 +1025,7 @@ struct DdLevelQueue {
                           (dd)->recursiveCalls, (dd)->keys,            \
                           (dd)->keys - (dd)->dead,                     \
                           (dd)->nodesDropped, (dd)->reclaimed);        \
-            (dd)->nextSample += 250000; }                                \
+            (dd)->nextSample += 250000;}                                \
     } \
     while (0)
 #else
@@ -1069,8 +1069,8 @@ extern "C" {
 extern DdNode *cuddAddExistAbstractRecur(DdManager *manager, DdNode *f, DdNode *cube);
 extern DdNode *cuddAddUnivAbstractRecur(DdManager *manager, DdNode *f, DdNode *cube);
 extern DdNode *cuddAddOrAbstractRecur(DdManager *manager, DdNode *f, DdNode *cube);
-extern DdNode *cuddAddMinAbstractRecur (DdManager *manager, DdNode *f, DdNode *cube);
-extern DdNode *cuddAddApplyRecur(DdManager * dd, DdNode * (*)(DdManager *, DdNode * *, DdNode * *), DdNode * f, DdNode * g);
+extern DdNode *cuddAddMinAbstractRecur(DdManager *manager, DdNode *f, DdNode *cube);
+extern DdNode *cuddAddApplyRecur(DdManager * dd, DdNode * (*)(DdManager *, DdNode **, DdNode **), DdNode *f, DdNode *g);
 extern DdNode *cuddAddMonadicApplyRecur(DdManager *dd, DdNode * (*op)(DdManager *, DdNode *), DdNode *f);
 extern DdNode *cuddAddScalarInverseRecur(DdManager *dd, DdNode *f, DdNode *epsilon);
 extern DdNode *cuddAddIteRecur(DdManager *dd, DdNode *f, DdNode *g, DdNode *h);
@@ -1093,14 +1093,14 @@ extern DdNode *cuddBddTransfer(DdManager *ddS, DdManager *ddD, DdNode *f);
 extern DdNode *cuddAddBddDoPattern(DdManager *dd, DdNode *f);
 extern int cuddInitCache(DdManager *unique, unsigned int cacheSize, unsigned int maxCacheSize);
 extern void cuddCacheInsert(DdManager *table, ptruint op, DdNode *f, DdNode *g, DdNode *h, DdNode *data);
-extern void cuddCacheInsert2(DdManager * table, DdNode * (*)(DdManager *, DdNode *, DdNode *), DdNode * f, DdNode * g, DdNode * data);
-extern void cuddCacheInsert1(DdManager * table, DdNode * (*)(DdManager *, DdNode *), DdNode * f, DdNode * data);
+extern void cuddCacheInsert2(DdManager * table, DdNode * (*)(DdManager *, DdNode *, DdNode *), DdNode *f, DdNode *g, DdNode *data);
+extern void cuddCacheInsert1(DdManager * table, DdNode * (*)(DdManager *, DdNode *), DdNode *f, DdNode *data);
 extern DdNode *cuddCacheLookup(DdManager *table, ptruint op, DdNode *f, DdNode *g, DdNode *h);
 extern DdNode *cuddCacheLookupZdd(DdManager *table, ptruint op, DdNode *f, DdNode *g, DdNode *h);
-extern DdNode *cuddCacheLookup2(DdManager * table, DdNode * (*)(DdManager *, DdNode *, DdNode *), DdNode * f, DdNode * g);
-extern DdNode *cuddCacheLookup1(DdManager * table, DdNode * (*)(DdManager *, DdNode *), DdNode * f);
-extern DdNode *cuddCacheLookup2Zdd(DdManager * table, DdNode * (*)(DdManager *, DdNode *, DdNode *), DdNode * f, DdNode * g);
-extern DdNode *cuddCacheLookup1Zdd(DdManager * table, DdNode * (*)(DdManager *, DdNode *), DdNode * f);
+extern DdNode *cuddCacheLookup2(DdManager * table, DdNode * (*)(DdManager *, DdNode *, DdNode *), DdNode *f, DdNode *g);
+extern DdNode *cuddCacheLookup1(DdManager * table, DdNode * (*)(DdManager *, DdNode *), DdNode *f);
+extern DdNode *cuddCacheLookup2Zdd(DdManager * table, DdNode * (*)(DdManager *, DdNode *, DdNode *), DdNode *f, DdNode *g);
+extern DdNode *cuddCacheLookup1Zdd(DdManager * table, DdNode * (*)(DdManager *, DdNode *), DdNode *f);
 extern DdNode *cuddConstantLookup(DdManager *table, ptruint op, DdNode *f, DdNode *g, DdNode *h);
 extern int cuddCacheProfile(DdManager *table, FILE *fp);
 extern void cuddCacheResize(DdManager *table);

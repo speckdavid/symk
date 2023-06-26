@@ -41,7 +41,7 @@ def main():
     args = parse_args()
     if not args.force and args.modify and search_files_are_dirty():
         sys.exit(f"Error: {SEARCH_DIR} has uncommited changes.")
-    src_files = utils.get_src_files(SEARCH_DIR, (".h", ".cc"))
+    src_files = utils.get_src_files(SEARCH_DIR, (".h", ".cc"), ignore_dirs=["cudd-3.0.0"])
     print(f"Checking {len(src_files)} files with uncrustify.")
     config_file = os.path.join(REPO, ".uncrustify.cfg")
     executable = "uncrustify"

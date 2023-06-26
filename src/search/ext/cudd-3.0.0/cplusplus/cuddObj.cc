@@ -616,7 +616,7 @@ ostream &operator<<(ostream &os, BDD const &f) {
     DdManager *mgr = f.p->manager;
     vector<char *> const &vn = f.p->varnames;
     char const *const *inames = vn.size() == (size_t)Cudd_ReadSize(mgr) ?
-                                &vn[0] : 0;
+        &vn[0] : 0;
     char *str = Cudd_FactoredFormString(mgr, f.node, inames);
     f.checkReturnValue(str);
     os << string(str);
@@ -2380,62 +2380,62 @@ ADD::Xnor(
     return ADD(p, result);
 } // ADD::Xnor
 
-ADD ADD::Equals(const ADD& g) const {
+ADD ADD::Equals(const ADD &g) const {
     DdManager *mgr = checkSameManager(g);
     DdNode *result = Cudd_addApply(mgr, Cudd_addEquals, node, g.node);
     checkReturnValue(result);
     return ADD(p, result);
 }
 
-ADD ADD::NotEquals(const ADD& g) const {
+ADD ADD::NotEquals(const ADD &g) const {
     DdManager *mgr = checkSameManager(g);
     DdNode *result = Cudd_addApply(mgr, Cudd_addNotEquals, node, g.node);
     checkReturnValue(result);
     return ADD(p, result);
 }
 
-ADD ADD::GreaterThan(const ADD& g) const {
+ADD ADD::GreaterThan(const ADD &g) const {
     DdManager *mgr = checkSameManager(g);
     DdNode *result = Cudd_addApply(mgr, Cudd_addGreaterThan, node, g.node);
     checkReturnValue(result);
     return ADD(p, result);
 }
 
-ADD ADD::GreaterThanEquals(const ADD& g) const {
+ADD ADD::GreaterThanEquals(const ADD &g) const {
     DdManager *mgr = checkSameManager(g);
     DdNode *result = Cudd_addApply(mgr, Cudd_addGreaterThanEquals, node, g.node);
     checkReturnValue(result);
     return ADD(p, result);
 }
 
-ADD ADD::LessThan(const ADD& g) const {
+ADD ADD::LessThan(const ADD &g) const {
     DdManager *mgr = checkSameManager(g);
     DdNode *result = Cudd_addApply(mgr, Cudd_addLessThan, node, g.node);
     checkReturnValue(result);
     return ADD(p, result);
 }
 
-ADD ADD::LessThanEquals(const ADD& g) const {
+ADD ADD::LessThanEquals(const ADD &g) const {
     DdManager *mgr = checkSameManager(g);
     DdNode *result = Cudd_addApply(mgr, Cudd_addLessThanEquals, node, g.node);
     checkReturnValue(result);
     return ADD(p, result);
 }
 
-ADD ADD::Pow(const ADD& g) const {
+ADD ADD::Pow(const ADD &g) const {
     DdManager *mgr = checkSameManager(g);
     DdNode *result = Cudd_addApply(mgr, Cudd_addPow, node, g.node);
     checkReturnValue(result);
     return ADD(p, result);
 }
-ADD ADD::Mod(const ADD& g) const {
+ADD ADD::Mod(const ADD &g) const {
     DdManager *mgr = checkSameManager(g);
     DdNode *result = Cudd_addApply(mgr, Cudd_addMod, node, g.node);
     checkReturnValue(result);
     return ADD(p, result);
 }
 
-ADD ADD::LogXY(const ADD& g) const {
+ADD ADD::LogXY(const ADD &g) const {
     DdManager *mgr = checkSameManager(g);
     DdNode *result = Cudd_addApply(mgr, Cudd_addLogXY, node, g.node);
     checkReturnValue(result);
