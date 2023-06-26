@@ -462,10 +462,18 @@ def translate_task(strips_to_sas, ranges, translation_key,
         dump_task(nonconstant_init, goals, utilities,
                   bound, actions, axioms, axiom_layer_dict)
 
+    constant_utility = 0
     init_values = [rang - 1 for rang in ranges]
     # Closed World Assumption: Initialize to "range - 1" == Nothing.
     for fact in init:
         pairs = strips_to_sas.get(fact, [])  # empty for static init facts
+
+        # Osp task and this fact has a base utility
+        if bound is not None:
+            for util in utilities:
+                if util[0] == fact:
+                    print(util)
+                    constant_utility += int(util[1])
         for var, val in pairs:
             curr_val = init_values[var]
             if curr_val != ranges[var] - 1 and curr_val != val:
@@ -514,7 +522,7 @@ def translate_task(strips_to_sas, ranges, translation_key,
         axiom_layers[var] = layer
     variables = sas_tasks.SASVariables(ranges, axiom_layers, translation_key)
     mutexes = [sas_tasks.SASMutexGroup(group) for group in mutex_key]
-    return sas_tasks.SASTask(variables, mutexes, init, goal, util, bound,
+    return sas_tasks.SASTask(variables, mutexes, init, goal, util, constant_utility, bound,
                              operators, axioms, metric)
 
 

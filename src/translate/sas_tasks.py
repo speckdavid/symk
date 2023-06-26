@@ -11,13 +11,14 @@ class SASTask:
     generally be sorted and mention each variable at most once. See
     the validate methods for details."""
 
-    def __init__(self, variables, mutexes, init, goal, utility, bound,
+    def __init__(self, variables, mutexes, init, goal, utility, constant_utility, bound,
                  operators, axioms, metric):
         self.variables = variables
         self.mutexes = mutexes
         self.init = init
         self.goal = goal
         self.utility = utility
+        self.constant_utility = constant_utility
         self.bound = bound
         self.operators = sorted(operators, key=lambda op: (
             op.name, op.prevail, op.pre_post))
@@ -77,6 +78,8 @@ class SASTask:
         else:
             print("utility:")
             self.utility.dump()
+            print("constant_utility")
+            print("  %d" % self.constant_utility)
             print("bound:")
             print("  %d" % self.bound)
         print("%d operators:" % len(self.operators))
@@ -103,6 +106,9 @@ class SASTask:
             self.goal.output(stream)
         else:
             self.utility.output(stream)
+            print("begin_constant_util", file=stream)
+            print(self.constant_utility, file=stream)
+            print("end_constant_util", file=stream)
             print("begin_bound", file=stream)
             print(self.bound, file=stream)
             print("end_bound", file=stream)
