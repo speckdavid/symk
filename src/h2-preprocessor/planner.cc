@@ -31,6 +31,11 @@ int main(int argc, const char **argv) {
     vector<Operator> operators;
     vector<Axiom> axioms;
 
+    // osp stuff which may replace goals
+    vector<tuple<Variable *, int, int>> utils;
+    int constant_util = -1;
+    int bound = -1;
+
     for (int i = 1; i < argc; ++i) {
         string arg = string(argv[i]);
         if (arg.compare("--no_rel") == 0) {
@@ -65,9 +70,20 @@ int main(int argc, const char **argv) {
     }
 
     read_preprocessed_problem_description
-        (cin, metric, internal_variables, variables, mutexes, initial_state, goals, operators, axioms);
+        (cin, metric, internal_variables, variables, mutexes, initial_state, goals, operators, axioms, utils, constant_util, bound);
     //dump_preprocessed_problem_description
     //  (variables, initial_state, goals, operators, axioms);
+
+    if (utils.size() > 0) {
+        cout << "Disabling preprocessing because it does not currently support utilities." << endl;
+        for (size_t i = 0; i < variables.size(); ++i) {
+            variables.at(i)->set_level(i);
+        }
+        generate_cpp_osp_input(
+            variables, metric, mutexes, initial_state, operators, axioms, utils, constant_util, bound);
+        cout << "done" << endl;
+        return 0;
+    }
 
     cout << "Building causal graph..." << endl;
     CausalGraph causal_graph(variables, operators, axioms, goals);
@@ -81,7 +97,7 @@ int main(int argc, const char **argv) {
 
     // compute h2 mutexes
     if (axioms.size() > 0) {
-        cout << "Disabling h2 analysis because it does not currently support axioms" << endl;
+        cout << "Disabling h2 analysis because it does not currently support axioms." << endl;
     } else if (h2_mutex_time) {
         bool conditional_effects = false;
         for (const Operator &op : operators) {
@@ -224,7 +240,7 @@ int main(int argc, const char **argv) {
         }
     }
     // Calculate the problem size
-    int task_size = ordering.size() + facts + goals.size();
+    int task_size = ordering.size() + facts + goals.size() + utils.size();
 
     for (const MutexGroup &mutex : mutexes)
         task_size += mutex.get_encoding_size();
