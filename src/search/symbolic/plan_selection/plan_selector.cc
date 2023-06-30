@@ -144,7 +144,7 @@ void PlanSelector::save_accepted_plan(const Plan &plan) {
     num_accepted_plans++;
 
     if (dump_plans) {
-        utils::g_log << endl << "Plan " << num_accepted_plans << ":" << endl;
+        utils::g_log << endl << "New plan " << num_accepted_plans << ":" << endl;
     }
     plan_mgr.save_plan(plan, state_registry->get_task_proxy(), dump_plans, num_desired_plans > 1);
 }

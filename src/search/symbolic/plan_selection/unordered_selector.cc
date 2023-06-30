@@ -35,7 +35,7 @@ void UnorderedSelector::save_accepted_plan(const Plan &ordered_plan, const Plan 
     num_accepted_plans++;
 
     if (dump_plans) {
-        utils::g_log << endl << "Ordered plan " << num_accepted_plans << ":" << endl;
+        utils::g_log << endl << "New plan " << num_accepted_plans << ":" << endl;
     }
     plan_mgr.save_plan(ordered_plan, state_registry->get_task_proxy(), dump_plans, num_desired_plans > 1);
 }
