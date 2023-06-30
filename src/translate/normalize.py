@@ -310,6 +310,8 @@ def eliminate_existential_quantifiers_from_conditional_effects(task):
 
 def substitute_complicated_goal(task):
     goal = task.goal
+    if isinstance(goal, pddl.Truth):
+        return
     if isinstance(goal, pddl.Literal):
         return
     elif isinstance(goal, pddl.Conjunction):

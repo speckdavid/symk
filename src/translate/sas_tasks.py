@@ -72,10 +72,9 @@ class SASTask:
             mutex.dump()
         print("init:")
         self.init.dump()
-        if not self.is_osp_task():
-            print("goal:")
-            self.goal.dump()
-        else:
+        print("goal:")
+        self.goal.dump()
+        if self.is_osp_task():
             print("utility:")
             self.utility.dump()
             print("constant_utility")
@@ -102,9 +101,8 @@ class SASTask:
         for mutex in self.mutexes:
             mutex.output(stream)
         self.init.output(stream)
-        if not self.is_osp_task():
-            self.goal.output(stream)
-        else:
+        self.goal.output(stream)
+        if self.is_osp_task():
             self.utility.output(stream)
             print("begin_constant_util", file=stream)
             print(self.constant_utility, file=stream)

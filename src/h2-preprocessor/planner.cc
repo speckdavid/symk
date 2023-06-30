@@ -13,6 +13,7 @@
 #include "axiom.h"
 #include "h2_mutexes.h"
 #include "variable.h"
+#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -74,7 +75,10 @@ int main(int argc, const char **argv) {
     //dump_preprocessed_problem_description
     //  (variables, initial_state, goals, operators, axioms);
 
+    assert(goals.size() == 0 || utils.size() == 0);
+
     if (utils.size() > 0) {
+        assert(goals.size() == 0);
         cout << "Disabling preprocessing because it does not currently support utilities." << endl;
         for (size_t i = 0; i < variables.size(); ++i) {
             variables.at(i)->set_level(i);

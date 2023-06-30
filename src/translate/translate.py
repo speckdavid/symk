@@ -441,13 +441,6 @@ def dump_task(init, goals, utils, bound, actions, axioms, axiom_layer_dict):
     sys.stdout = old_stdout
 
 
-def skip_goal(goals):
-    for goal in goals:
-        if isinstance(goal, pddl.Truth):
-            return True
-    return False
-
-
 def translate_task(strips_to_sas, ranges, translation_key,
                    mutex_dict, mutex_ranges, mutex_key,
                    init, goals, utilities, bound,
@@ -481,30 +474,28 @@ def translate_task(strips_to_sas, ranges, translation_key,
             init_values[var] = val
     init = sas_tasks.SASInit(init_values)
 
-    if skip_goal(goals):
-        goal = sas_tasks.SASGoal([])
-    else:
-        goal_dict_list = translate_strips_conditions(goals, strips_to_sas, ranges,
-                                                     mutex_dict, mutex_ranges)
-
-    assert len(goal_dict_list) == 1, "Negative goal not supported"
-    # we could substitute the negative goal literal in
-    # normalize.substitute_complicated_goal, using an axiom. We currently
-    # don't do this, because we don't run into this assertion, if the
-    # negative goal is part of finite domain variable with only two
-    # values, which is most of the time the case, and hence refrain from
-    # introducing axioms (that are not supported by all heuristics)
-    goal_pairs = list(goal_dict_list[0].items())
-    if not goal_pairs:
-        return solvable_sas_task("Empty goal")
-    goal = sas_tasks.SASGoal(goal_pairs)
-
     util_values = []
     if utilities:
+        goal = sas_tasks.SASGoal([])
         for fact, uval in utilities:
             pairs = strips_to_sas.get(fact, [])
             for var, val in pairs:
                 util_values.append((var, val, int(uval)))
+    else:
+        goal_dict_list = translate_strips_conditions(goals, strips_to_sas, ranges,
+                                                     mutex_dict, mutex_ranges)
+
+        assert len(goal_dict_list) == 1, "Negative goal not supported"
+        # we could substitute the negative goal literal in
+        # normalize.substitute_complicated_goal, using an axiom. We currently
+        # don't do this, because we don't run into this assertion, if the
+        # negative goal is part of finite domain variable with only two
+        # values, which is most of the time the case, and hence refrain from
+        # introducing axioms (that are not supported by all heuristics)
+        goal_pairs = list(goal_dict_list[0].items())
+        if not goal_pairs:
+            return solvable_sas_task("Empty goal")
+        goal = sas_tasks.SASGoal(goal_pairs)
 
     util = sas_tasks.SASUtil(util_values)
     bound = int(bound) if bound else None
@@ -733,7 +724,6 @@ def main():
             for index, effect in reversed(list(enumerate(action.effects))):
                 if effect.literal.negated:
                     del action.effects[index]
-
     sas_task = pddl_to_sas(task)
     dump_statistics(sas_task)
 

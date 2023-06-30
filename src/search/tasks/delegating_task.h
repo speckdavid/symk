@@ -3,6 +3,7 @@
 
 #include "../abstract_task.h"
 
+#include <map>
 #include <memory>
 #include <string>
 #include <utility>
@@ -57,6 +58,10 @@ public:
 
     virtual std::vector<int> get_initial_state_values() const override;
     virtual std::vector<MutexGroup> get_mutex_groups() const override;
+
+    virtual std::map<FactPair, int> get_utilities() const override;
+    virtual int get_constant_utility() const override;
+    virtual int get_plan_bound() const override;
 
     virtual void convert_ancestor_state_values(
         std::vector<int> &values,

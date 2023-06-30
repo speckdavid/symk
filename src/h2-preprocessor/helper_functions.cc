@@ -75,7 +75,7 @@ void read_mutexes(istream &in, vector<MutexGroup> &mutexes,
 
 void read_goal(istream &in, const vector<Variable *> &variables,
                vector<pair<Variable *, int>> &goals) {
-    // check_magic(in, "begin_goal");
+    check_magic(in, "begin_goal");
     int count;
     in >> count;
     for (int i = 0; i < count; i++) {
@@ -109,18 +109,14 @@ void read_axioms(istream &in, const vector<Variable *> &variables,
         axioms.push_back(Axiom(in, variables));
 }
 
-bool is_osp_task(istream &in) {
+void read_utils(istream &in, const vector<Variable *> &variables, vector<tuple<Variable *, int, int>> &utils) {
     string word;
     in >> word;
-    if (word != "begin_goal" && word != "begin_util") {
-        cerr << "Failed to match magic word 'begin_goal' or 'begin_util'." << endl;
-        cerr << "Got '" << word << "'." << endl;
-        exit(1);
+    if (word != "begin_util") {
+        // set pointer back
+        in.seekg(-word.length(), std::ios::cur);
+        return;
     }
-    return word == "begin_util";
-}
-
-void read_utils(istream &in, const vector<Variable *> &variables, vector<tuple<Variable *, int, int>> &utils) {
     int count;
     in >> count;
     for (int i = 0; i < count; i++) {
@@ -132,13 +128,25 @@ void read_utils(istream &in, const vector<Variable *> &variables, vector<tuple<V
 }
 
 void read_constant_util(istream &in, int &constant_util) {
-    check_magic(in, "begin_constant_util");
+    string word;
+    in >> word;
+    if (word != "begin_constant_util") {
+        // set pointer back
+        in.seekg(-word.length(), std::ios::cur);
+        return;
+    }
     in >> constant_util;
     check_magic(in, "end_constant_util");
 }
 
 void read_bound(istream &in, int &bound) {
-    check_magic(in, "begin_bound");
+    string word;
+    in >> word;
+    if (word != "begin_bound") {
+        // set pointer back
+        in.seekg(-word.length(), std::ios::cur);
+        return;
+    }
     in >> bound;
     check_magic(in, "end_bound");
 }
@@ -160,13 +168,13 @@ void read_preprocessed_problem_description(istream &in,
     read_variables(in, internal_variables, variables);
     read_mutexes(in, mutexes, variables);
     initial_state = State(in, variables);
-    if (is_osp_task(in)) {
-        read_utils(in, variables, utils);
-        read_constant_util(in, constant_util);
-        read_bound(in, bound);
-    } else {
-        read_goal(in, variables, goals);
-    }
+    read_goal(in, variables, goals);
+
+    // try to read osp things
+    read_utils(in, variables, utils);
+    read_constant_util(in, constant_util);
+    read_bound(in, bound);
+
     read_operators(in, variables, operators);
     read_axioms(in, variables, axioms);
 }
@@ -280,6 +288,9 @@ void generate_cpp_osp_input(const vector<Variable *> &vars,
         outfile << initial_state[var] << endl;  // for axioms default value
     outfile << "end_state" << endl;
 
+    outfile << "begin_goal" << endl;
+    outfile << "0" << endl;
+    outfile << "end_goal" << endl;
 
     outfile << "begin_util" << endl;
     outfile << utils.size() << endl;

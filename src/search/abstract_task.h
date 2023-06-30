@@ -7,6 +7,7 @@
 #include "utils/hash.h"
 #include "mutex_group.h"
 
+#include <map>
 #include <memory>
 #include <string>
 #include <utility>
@@ -96,6 +97,11 @@ public:
     virtual std::vector<int> get_initial_state_values() const = 0;
 
     virtual std::vector<MutexGroup> get_mutex_groups() const = 0;
+
+    virtual std::map<FactPair, int> get_utilities() const = 0;
+    virtual int get_constant_utility() const = 0;
+    virtual int get_plan_bound() const = 0;
+
     /*
       Convert state values from an ancestor task A (ancestor) into
       state values from this task, C (child). Task A has to be an

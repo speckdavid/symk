@@ -296,7 +296,6 @@ def parse_task(domain_pddl, task_pddl):
     domain_name, domain_requirements, types, type_dict, constants, predicates, predicate_dict, functions, actions, axioms \
                  = parse_domain_pddl(domain_pddl)
     task_name, task_domain_name, task_requirements, objects, init, goal, utility, bound, use_metric = parse_task_pddl(task_pddl, type_dict, predicate_dict)
-
     assert domain_name == task_domain_name
 
     # Ensure that we have either a hard goal (classical task) or a soft goal (osp task)
