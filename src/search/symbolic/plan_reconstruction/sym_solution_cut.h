@@ -11,21 +11,25 @@ class SymSolutionCut {
 protected:
     int g;
     int h;
+    int util; // utility for osp
     BDD cut;
 
 public:
     SymSolutionCut(); // dummy for no solution
+    SymSolutionCut(int g, int h, int util, BDD cut);
     SymSolutionCut(int g, int h, BDD cut);
 
     int get_g() const;
     int get_h() const;
     int get_f() const;
+    int get_util() const;
     BDD get_cut() const;
 
     void merge(const SymSolutionCut &other);
 
     void set_g(int g);
     void set_h(int h);
+    void set_util(int util);
     void set_cut(BDD cut);
 
     // Here we only compare g and h values!!!

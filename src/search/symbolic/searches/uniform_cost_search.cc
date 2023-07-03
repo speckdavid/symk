@@ -58,18 +58,16 @@ bool UniformCostSearch::init(shared_ptr<SymStateSpaceManager> manager,
     return true;
 }
 
-void UniformCostSearch::checkFrontierCut(Bucket &bucket, int g) {
+void UniformCostSearch::checkFrontierCut(const Bucket &bucket, int g) {
     if (p.get_non_stop()) {
         return;
     }
 
-    for (BDD &bucketBDD : bucket) {
+    for (BDD bucketBDD : bucket) {
         auto sol = perfectHeuristic->getCheapestCut(bucketBDD, g, fw);
         if (sol.get_f() >= 0) {
             engine->new_solution(sol);
         }
-        // Prune everything closed in opposite direction
-        bucketBDD *= perfectHeuristic->notClosed();
     }
 }
 
@@ -110,7 +108,8 @@ bool UniformCostSearch::prepareBucket() {
 // This procedure is delayed in comparision to explicit search
 // Idea: no need to "change" BDDs until we actually process them
 void UniformCostSearch::filterFrontier() {
-    frontier.filter(!closed->notClosed());
+    frontier.filter(perfectHeuristic->getClosed());
+    frontier.filter(closed->getClosed());
     mgr->filterMutex(frontier.bucket(), fw, initialization());
     removeZero(frontier.bucket());
 }

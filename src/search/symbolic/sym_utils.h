@@ -130,5 +130,8 @@ BDD mergeAndBDD(const BDD &bdd, const BDD &bdd2, int maxSize);
 BDD mergeOrBDD(const BDD &bdd, const BDD &bdd2, int maxSize);
 
 inline std::string dirname(bool fw) {return fw ? "fw" : "bw";}
+
+void partition_add_to_bdds(SymVariables *vars, ADD add, std::map<double, BDD> &res);
+void partition_add_to_bdds(SymVariables *vars, ADD add, std::map<int, BDD> &res);
 }
 #endif

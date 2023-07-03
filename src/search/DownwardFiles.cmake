@@ -806,40 +806,42 @@ fast_downward_plugin(
     NAME SYMBOLIC
     HELP "Plugin containing the base for symbolic search"
     SOURCES
-        symbolic/sym_bucket
-        symbolic/opt_order
-        symbolic/sym_variables
-        symbolic/sym_enums
-        symbolic/sym_utils
-        symbolic/sym_state_space_manager
-        symbolic/transition_relation
-        symbolic/original_state_space
-        symbolic/sym_params_search
-        symbolic/sym_estimate
+        symbolic/closed_list
         symbolic/frontier
         symbolic/open_list
-        symbolic/closed_list
-        symbolic/searches/bidirectional_search
-        symbolic/searches/uniform_cost_search
-        symbolic/searches/sym_search
-        symbolic/searches/top_k_uniform_cost_search
+        symbolic/opt_order
+        symbolic/original_state_space
+        symbolic/plan_reconstruction/reconstruction_node
+        symbolic/plan_reconstruction/sym_solution_cut
+        symbolic/plan_reconstruction/sym_solution_registry
+        symbolic/plan_selection/iterative_cost_selector
+        symbolic/plan_selection/plan_selector
+        symbolic/plan_selection/simple_selector
+        symbolic/plan_selection/top_k_even_selector
+        symbolic/plan_selection/top_k_selector
+        symbolic/plan_selection/unordered_selector
+        symbolic/plan_selection/validation_selector
+        symbolic/search_engines/symbolic_osp_search
         symbolic/search_engines/symbolic_search
         symbolic/search_engines/symbolic_uniform_cost_search
         symbolic/search_engines/top_k_symbolic_uniform_cost_search
         symbolic/search_engines/top_q_symbolic_uniform_cost_search
-        symbolic/plan_reconstruction/sym_solution_cut
-        symbolic/plan_reconstruction/sym_solution_registry
-        symbolic/plan_reconstruction/reconstruction_node
-        symbolic/plan_selection/iterative_cost_selector
-        symbolic/plan_selection/plan_selector
-        symbolic/plan_selection/top_k_selector
-        symbolic/plan_selection/top_k_even_selector
-        symbolic/plan_selection/simple_selector
-        symbolic/plan_selection/unordered_selector
-        symbolic/plan_selection/validation_selector
+        symbolic/searches/bidirectional_search
+        symbolic/searches/osp_cost_search
+        symbolic/searches/sym_search
+        symbolic/searches/top_k_uniform_cost_search
+        symbolic/searches/uniform_cost_search
         symbolic/sym_axiom/sym_axiom_compilation
+        symbolic/sym_bucket
+        symbolic/sym_enums
+        symbolic/sym_estimate
         symbolic/sym_function_creator
-        DEPENDS SDAC
+        symbolic/sym_params_search
+        symbolic/sym_state_space_manager
+        symbolic/sym_utils
+        symbolic/sym_variables
+        symbolic/transition_relation
+    DEPENDS SDAC
 )
 
 fast_downward_add_plugin_sources(PLANNER_SOURCES)

@@ -24,6 +24,13 @@ inline bool is_goal_state(TaskProxy task, const State &state) {
 }
 
 /*
+  Return true if utilites and a cost bound are present
+  Runtime: O(1)
+*/ 
+
+extern bool is_oversubscribed(TaskProxy task);
+
+/*
   Return true iff all operators have cost 1.
 
   Runtime: O(n), where n is the number of operators.

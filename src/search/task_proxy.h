@@ -32,6 +32,8 @@ class PreconditionsProxy;
 class State;
 class StateRegistry;
 class TaskProxy;
+class UtilitiesProxy;
+class UtilityProxy;
 class VariableProxy;
 class VariablesProxy;
 
@@ -553,6 +555,72 @@ public:
     }
 };
 
+class UtilityProxy {
+    const AbstractTask *task;
+    FactPair fact;
+    int util;
+public:
+    UtilityProxy(const AbstractTask &task, int var_id, int var_val, int util);
+    UtilityProxy(const AbstractTask &task, const std::pair<FactPair, int> &util);
+    ~UtilityProxy() = default;
+
+    VariableProxy get_variable() const {
+        return VariableProxy(*task, fact.var);
+    }
+
+    int get_var_value() const {
+        return fact.value;
+    }
+
+    FactPair get_fact_pair() const {
+        return fact;
+    }
+
+    std::string get_fact_name() const {
+        return task->get_fact_name(fact);
+    }
+
+    int get_utility() const {
+        return util;
+    }
+
+    bool operator==(const UtilityProxy &other) const {
+        assert(task == other.task);
+        return fact == other.fact && util == other.util;
+    }
+
+    bool operator!=(const UtilityProxy &other) const {
+        return !(*this == other);
+    }
+
+    bool is_mutex(const UtilityProxy &other) const {
+        return task->are_facts_mutex(fact, other.fact);
+    }
+};
+
+class UtilitiesProxy {
+protected:
+    const AbstractTask *task;
+public:
+    using ItemType = UtilityProxy;
+    explicit UtilitiesProxy(const AbstractTask &task)
+        : task(&task) {}
+    virtual ~UtilitiesProxy() = default;
+
+    virtual std::size_t size() const {
+        return task->get_num_utilties();
+    }
+
+    virtual UtilityProxy operator[](std::size_t index) const {
+        assert(index < size());
+        return UtilityProxy(*task, task->get_utility(index));
+    }
+
+    bool empty() const {
+        return size() == 0;
+    }
+};
+
 
 bool does_fire(const EffectProxy &effect, const State &state);
 
@@ -685,6 +753,18 @@ public:
         return GoalsProxy(*task);
     }
 
+    UtilitiesProxy get_utilities() const {
+        return UtilitiesProxy(*task);
+    }
+
+    int get_constant_utility() const {
+        return task->get_constant_utility();
+    }
+
+    int get_plan_cost_bound() const {
+        return task->get_plan_cost_bound();
+    }
+
     State create_state(std::vector<int> &&state_values) const {
         return State(*task, std::move(state_values));
     }
@@ -740,6 +820,16 @@ inline FactProxy::FactProxy(const AbstractTask &task, const FactPair &fact)
 
 inline FactProxy::FactProxy(const AbstractTask &task, int var_id, int value)
     : FactProxy(task, FactPair(var_id, value)) {
+}
+
+inline UtilityProxy::UtilityProxy(const AbstractTask &task, int var_id, int var_val, int util)
+    :    task(&task), fact(var_id, var_val), util(util) {
+    assert(fact.var >= 0 && fact.var < task.get_num_variables());
+    assert(fact.value >= 0 && fact.value < get_variable().get_domain_size());
+}
+
+inline UtilityProxy::UtilityProxy(const AbstractTask &task, const std::pair<FactPair, int> &util)
+    : UtilityProxy(task, util.first.var, util.first.value, util.second) {
 }
 
 

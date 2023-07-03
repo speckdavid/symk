@@ -21,8 +21,8 @@ bool TopkUniformCostSearch::provable_no_more_plans() {
     return open_list.empty();
 }
 
-void TopkUniformCostSearch::checkFrontierCut(Bucket &bucket, int g) {
-    for (BDD &bucketBDD : bucket) {
+void TopkUniformCostSearch::checkFrontierCut(const Bucket &bucket, int g) {
+    for (BDD bucketBDD : bucket) {
         auto all_sols =
             perfectHeuristic->getAllCuts(bucketBDD, g, fw, engine->getMinG());
         for (auto &sol : all_sols) {

@@ -66,9 +66,9 @@ class RootTask : public AbstractTask {
     vector<FactPair> goals;
 
     // OSP data
-    map<FactPair, int> utilities;
+    vector<pair<FactPair, int>> utilities;
     int constant_utility;
-    int plan_bound;
+    int plan_cost_bound;
 
     const ExplicitVariable &get_variable(int var) const;
     const ExplicitEffect &get_effect(int op_id, int effect_id, bool is_axiom) const;
@@ -113,9 +113,10 @@ public:
 
     virtual vector<int> get_initial_state_values() const override;
     virtual vector<MutexGroup> get_mutex_groups() const override;
-    virtual map<FactPair, int> get_utilities() const override;
+    virtual int get_num_utilties() const override;
+    virtual pair<FactPair, int> get_utility(int index) const override;
     virtual int get_constant_utility() const override;
-    virtual int get_plan_bound() const override;
+    virtual int get_plan_cost_bound() const override;
     virtual void convert_ancestor_state_values(
         vector<int> &values,
         const AbstractTask *ancestor_task) const override;
@@ -345,13 +346,13 @@ vector<FactPair> read_goal(istream &in) {
     return goals;
 }
 
-map<FactPair, int> read_utilities(istream &in) {
+vector<pair<FactPair, int>> read_utilities(istream &in) {
     string word;
     in >> word;
-    map<FactPair, int> utilities;
+    vector<pair<FactPair, int>> utilities;
     if (word != "begin_util") {
         // set pointer back
-        in.seekg(-word.length(), std::ios::cur);
+        in.seekg(-word.length(), ios::cur);
         return utilities;
     }
     int count;
@@ -360,7 +361,7 @@ map<FactPair, int> read_utilities(istream &in) {
         FactPair condition = FactPair::no_fact;
         int util;
         in >> condition.var >> condition.value >> util;
-        utilities[condition] = util;
+        utilities.emplace_back(condition, util);
     }
     check_magic(in, "end_util");
     return utilities;
@@ -372,7 +373,7 @@ int read_constant_utility(istream &in) {
     int constant_util = -1;
     if (word != "begin_constant_util") {
         // set pointer back
-        in.seekg(-word.length(), std::ios::cur);
+        in.seekg(-word.length(), ios::cur);
         return 0;
     }
     in >> constant_util;
@@ -380,13 +381,13 @@ int read_constant_utility(istream &in) {
     return constant_util; // we use strictly smaller
 }
 
-int read_plan_bound(istream &in) {
+int read_plan_cost_bound(istream &in) {
     string word;
     in >> word;
     int bound = -1;
     if (word != "begin_bound") {
         // set pointer back
-        in.seekg(-word.length(), std::ios::cur);
+        in.seekg(-word.length(), ios::cur);
         return -1;
     }
     in >> bound;
@@ -437,14 +438,14 @@ RootTask::RootTask(istream &in) {
 
     // OSP
     utilities = read_utilities(in);
-    for (const std::pair<const FactPair, int> &util : utilities) {
+    for (const pair<FactPair, int> &util : utilities) {
         check_fact(util.first, variables);
     }
     constant_utility = read_constant_utility(in);
-    plan_bound = read_plan_bound(in);
+    plan_cost_bound = read_plan_cost_bound(in);
 
     // No OSP task and empty goal
-    if (plan_bound < 0 && goals.empty()) {
+    if (plan_cost_bound < 0 && goals.empty()) {
         cerr << "Task has no goal condition!" << endl;
         utils::exit_with(ExitCode::SEARCH_INPUT_ERROR);
     }
@@ -597,16 +598,20 @@ vector<MutexGroup> RootTask::get_mutex_groups() const {
     return mutex_groups;
 }
 
-map<FactPair, int> RootTask::get_utilities() const {
-    return utilities;
+int RootTask::get_num_utilties() const {
+    return utilities.size();
+}
+
+pair<FactPair, int> RootTask::get_utility(int index) const {
+    return utilities[index];
 }
 
 int RootTask::get_constant_utility() const {
     return constant_utility;
 }
 
-int RootTask::get_plan_bound() const {
-    return plan_bound;
+int RootTask::get_plan_cost_bound() const {
+    return plan_cost_bound;
 }
 
 void RootTask::convert_ancestor_state_values(

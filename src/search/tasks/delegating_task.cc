@@ -108,16 +108,20 @@ vector<MutexGroup> DelegatingTask::get_mutex_groups() const {
     return parent->get_mutex_groups();
 }
 
-map<FactPair, int> DelegatingTask::get_utilities() const {
-    return parent->get_utilities();
+int DelegatingTask::get_num_utilties() const {
+    return parent->get_num_utilties();
+}
+
+pair<FactPair, int> DelegatingTask::get_utility(int index) const {
+    return parent->get_utility(index);
 }
 
 int DelegatingTask::get_constant_utility() const {
     return parent->get_constant_utility();
 }
 
-int DelegatingTask::get_plan_bound() const {
-    return parent->get_plan_bound();
+int DelegatingTask::get_plan_cost_bound() const {
+    return parent->get_plan_cost_bound();
 }
 
 void DelegatingTask::convert_ancestor_state_values(

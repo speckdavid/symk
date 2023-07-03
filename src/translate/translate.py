@@ -462,10 +462,10 @@ def translate_task(strips_to_sas, ranges, translation_key,
         pairs = strips_to_sas.get(fact, [])  # empty for static init facts
 
         # Osp task and this fact has a base utility
-        if bound is not None:
+        if bound is not None and len(pairs) == 0 and isinstance(fact, pddl.conditions.Atom):
             for util in utilities:
                 if util[0] == fact:
-                    print(util)
+                    print(f"{fact} is constant with utlity {util[1]}.")
                     constant_utility += int(util[1])
         for var, val in pairs:
             curr_val = init_values[var]

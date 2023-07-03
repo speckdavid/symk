@@ -8,7 +8,7 @@ class TopkUniformCostSearch : public UniformCostSearch {
 protected:
     virtual bool provable_no_more_plans() override;
 
-    virtual void checkFrontierCut(Bucket &bucket, int g) override;
+    virtual void checkFrontierCut(const Bucket& bucket, int g) override;
 
     virtual void filterFrontier() override;
 

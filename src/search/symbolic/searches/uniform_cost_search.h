@@ -61,7 +61,7 @@ protected:
     /*
      * Check generated or closed states with other frontiers => solution check
      */
-    virtual void checkFrontierCut(Bucket &bucket, int g);
+    virtual void checkFrontierCut(const Bucket &bucket, int g);
 
     void closeStates(Bucket &bucket, int g);
 

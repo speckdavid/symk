@@ -13,6 +13,11 @@ using utils::ExitCode;
 
 
 namespace task_properties {
+bool is_oversubscribed(TaskProxy task) {
+    // If the plan cost bound is -1 we have a classical task
+    return task.get_plan_cost_bound() != -1;
+}
+
 bool is_unit_cost(TaskProxy task) {
     for (OperatorProxy op : task.get_operators()) {
         if (op.get_cost() != 1)

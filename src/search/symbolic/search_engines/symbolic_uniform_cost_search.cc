@@ -54,7 +54,13 @@ void SymbolicUniformCostSearch::initialize() {
 
 SymbolicUniformCostSearch::SymbolicUniformCostSearch(
     const options::Options &opts, bool fw, bool bw)
-    : SymbolicSearch(opts), fw(fw), bw(bw) {}
+    : SymbolicSearch(opts), fw(fw), bw(bw) {
+    if (is_oversubscribed) {
+        cerr << "error: ordinary symbolic search does not support oversubscribed tasks. "
+             << "Please use symbolic search for osp, e.g., symosp-fw()." << endl;
+        utils::exit_with(utils::ExitCode::SEARCH_INPUT_ERROR);
+    }
+}
 
 void SymbolicUniformCostSearch::new_solution(const SymSolutionCut &sol) {
     if (!solution_registry->found_all_plans() && sol.get_f() < upper_bound) {

@@ -52,6 +52,7 @@ SearchEngine::SearchEngine(const Options &opts)
       search_space(state_registry, log),
       statistics(log),
       cost_type(opts.get<OperatorCost>("cost_type")),
+      is_oversubscribed(task_properties::is_oversubscribed(task_proxy)),
       is_unit_cost(task_properties::is_unit_cost(task_proxy)),
       has_sdac_cost(task_properties::has_sdac_cost_operator(task_proxy)),
       max_time(opts.get<double>("max_time")) {

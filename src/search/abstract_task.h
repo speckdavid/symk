@@ -98,9 +98,10 @@ public:
 
     virtual std::vector<MutexGroup> get_mutex_groups() const = 0;
 
-    virtual std::map<FactPair, int> get_utilities() const = 0;
+    virtual int get_num_utilties() const = 0;
+    virtual std::pair<FactPair, int> get_utility(int index) const = 0;
     virtual int get_constant_utility() const = 0;
-    virtual int get_plan_bound() const = 0;
+    virtual int get_plan_cost_bound() const = 0;
 
     /*
       Convert state values from an ancestor task A (ancestor) into

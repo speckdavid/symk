@@ -35,6 +35,11 @@ LazySearch::LazySearch(const Options &opts)
       We initialize current_eval_context in such a way that the initial node
       counts as "preferred".
     */
+    if (is_oversubscribed) {
+        cerr << "error: explicit search does not support oversubscribed tasks. "
+             << "Please use symbolic search." << endl;
+        utils::exit_with(utils::ExitCode::SEARCH_INPUT_ERROR);
+    }
     if (has_sdac_cost) {
         cerr << "error: explicit search does not support state-dependent action costs. "
              << "Please use symbolic search." << endl;
