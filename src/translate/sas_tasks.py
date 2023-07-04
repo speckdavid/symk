@@ -253,6 +253,9 @@ class SASUtil:
     def __init__(self, values):
         self.triplets = sorted(values)
 
+    def __repr__(self) -> str:
+        return str(self.triplets)
+
     def validate(self):
         """ Assert that the utility is not empty."""
         assert self.triplets

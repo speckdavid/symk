@@ -234,18 +234,20 @@ class VarValueRenaming:
         self.apply_to_mutexes(task.mutexes)
         self.apply_to_init(task.init)
         self.apply_to_goals(task.goal.pairs)
-        self.apply_to_utils(task.utility.triplets)
-        if self.is_trivial_unsolvable(task.goal.pairs, task.utility.triplets):
+        self.apply_to_utils(task)
+        if task.is_osp_task() and self.is_trivial_unsolvable(task.utility.triplets):
+            raise TriviallySolvable
+        elif not task.is_osp_task() and self.is_trivial_unsolvable(task.goal.pairs):
             raise TriviallySolvable
         self.apply_to_operators(task.operators)
         self.apply_to_axioms(task.axioms)
 
-    def is_trivial_unsolvable(self, goals, utils):
+    def is_trivial_unsolvable(self, goals):
         # We raise an exception because we do not consider a SAS+
         # task without goals well-formed. Our callers are supposed
         # to catch this and replace the task with a well-formed
         # trivially solvable task.
-        return not goals and not utils
+        return not goals
 
     def apply_to_variables(self, variables):
         variables.ranges = self.new_sizes
@@ -304,10 +306,10 @@ class VarValueRenaming:
         # This may propagate Impossible up.
         self.convert_pairs(goals)
 
-    def apply_to_utils(self, utils):
+    def apply_to_utils(self, task):
         # This may propagate Impossible up.
-        if utils:
-            self.convert_triplets(utils)
+        if task.is_osp_task():
+            task.constant_utility += self.convert_utility_triplets(task.utility.triplets)
 
     def apply_to_operators(self, operators):
         new_operators = []
@@ -497,19 +499,25 @@ class VarValueRenaming:
         new_value = self.new_values[var_no][value]
         return new_var_no, new_value, uval
 
-    def convert_triplets(self, util_triplets):
+    def convert_utility_triplets(self, util_triplets):
         # We call this convert_... because it is an in-place method.
+        constant_util = 0
         new_triplets = []
         for tr in util_triplets:
             new_var_no, new_value, uval = self.translate_triplet(tr)
             if new_value is always_false:
+                print(f"{tr} pruned because it is always false.")
                 # This is not valid for soft goal problems.
                 # raise Impossible
                 continue
-            elif new_value is not always_true:
+            elif new_value is always_true:
+                print(f"{tr} pruned because it is always true.")
+                constant_util += util_triplets[2]
+            else:
                 assert new_var_no is not None
                 new_triplets.append((new_var_no, new_value, uval))
         util_triplets[:] = new_triplets
+        return constant_util
 
 
 def build_renaming(dtgs):

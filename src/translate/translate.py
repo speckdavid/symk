@@ -31,7 +31,7 @@ if not python_version_supported():
 
 
 # TODO: The translator may generate trivial derived variables which are always
-# true, for example if there ia a derived predicate in the input that only
+# true, for example if there is a derived predicate in the input that only
 # depends on (non-derived) variables which are detected as always true.
 # Such a situation was encountered in the PSR-STRIPS-DerivedPredicates domain.
 # Such "always-true" variables should best be compiled away, but it is
@@ -485,6 +485,11 @@ def translate_task(strips_to_sas, ranges, translation_key,
         goal_dict_list = translate_strips_conditions(goals, strips_to_sas, ranges,
                                                      mutex_dict, mutex_ranges)
 
+        if goal_dict_list is None:
+            # "None" is a signal that the goal is unreachable because it
+            # violates a mutex.
+            return unsolvable_sas_task("Goal violates a mutex", None)
+
         assert len(goal_dict_list) == 1, "Negative goal not supported"
         # we could substitute the negative goal literal in
         # normalize.substitute_complicated_goal, using an axiom. We currently
@@ -494,7 +499,7 @@ def translate_task(strips_to_sas, ranges, translation_key,
         # introducing axioms (that are not supported by all heuristics)
         goal_pairs = list(goal_dict_list[0].items())
         if not goal_pairs:
-            return solvable_sas_task("Empty goal")
+            return solvable_sas_task("Empty goal", None)
         goal = sas_tasks.SASGoal(goal_pairs)
 
     util = sas_tasks.SASUtil(util_values)
@@ -517,7 +522,7 @@ def translate_task(strips_to_sas, ranges, translation_key,
                              operators, axioms, metric)
 
 
-def trivial_task(solvable):
+def trivial_task(solvable, task):
     variables = sas_tasks.SASVariables(
         [2], [-1], [["Atom dummy(val1)", "Atom dummy(val2)"]])
     # We create no mutexes: the only possible mutex is between
@@ -526,30 +531,38 @@ def trivial_task(solvable):
     # finite-domain variable).
     mutexes = []
     init = sas_tasks.SASInit([0])
-    if solvable:
-        goal_fact = (0, 0)
-        util_fact = (0, 0, 1)
+    goal = sas_tasks.SASGoal([])
+    util = sas_tasks.SASGoal([])
+    constant_utility = 0
+    bound = None
+    if task is not None and task.is_osp_task():
+        assert solvable, "OSP Tasks should always be solvable!"
+        util_fact = (0, 0, 0)
+        util = sas_tasks.SASUtil([util_fact])
+        constant_utility = task.constant_utility
+        bound = 1
     else:
-        goal_fact = (0, 1)
-        util_fact = (0, 1, 1)
-    goal = sas_tasks.SASGoal([goal_fact])
-    util = sas_tasks.SASUtil([util_fact])
-    bound = 1
+        if solvable:
+            goal_fact = (0, 0)
+        else:
+            goal_fact = (0, 1)
+        goal = sas_tasks.SASGoal([goal_fact])
+
     operators = []
     axioms = []
     metric = True
-    return sas_tasks.SASTask(variables, mutexes, init, goal, util, bound,
+    return sas_tasks.SASTask(variables, mutexes, init, goal, util, constant_utility, bound,
                              operators, axioms, metric)
 
 
-def solvable_sas_task(msg):
+def solvable_sas_task(msg, task):
     print("%s! Generating solvable task..." % msg)
-    return trivial_task(solvable=True)
+    return trivial_task(solvable=True, task=task)
 
 
-def unsolvable_sas_task(msg):
+def unsolvable_sas_task(msg, task):
     print("%s! Generating unsolvable task..." % msg)
-    return trivial_task(solvable=False)
+    return trivial_task(solvable=False, task=task)
 
 
 def pddl_to_sas(task):
@@ -558,9 +571,9 @@ def pddl_to_sas(task):
          reachable_action_params) = instantiate.explore(task)
 
     if not relaxed_reachable:
-        return unsolvable_sas_task("No relaxed solution")
+        return unsolvable_sas_task("No relaxed solution", task)
     elif goal_list is None:
-        return unsolvable_sas_task("Trivially false goal")
+        return unsolvable_sas_task("Trivially false goal", task)
 
     for item in goal_list:
         assert isinstance(item, pddl.Literal)
@@ -694,7 +707,10 @@ def dump_statistics(sas_task):
                if layer >= 0]))
     print("Translator facts: %d" % sum(sas_task.variables.ranges))
     print("Translator goal facts: %d" % len(sas_task.goal.pairs))
-    print("Translator utility facts: %d" % len(sas_task.utility.triplets))
+    if sas_task.is_osp_task():
+        print("Translator utility facts: %d" % len(sas_task.utility.triplets))
+        print("Translator constant utility: %d" % sas_task.constant_utility)
+        print("Translator plan cost bound: %d" % sas_task.bound)
     print("Translator mutex groups: %d" % len(sas_task.mutexes))
     print("Translator total mutex groups size: %d" %
           sum(mutex.get_encoding_size() for mutex in sas_task.mutexes))

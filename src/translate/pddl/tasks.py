@@ -23,6 +23,9 @@ class Task:
         self.axiom_counter = 0
         self.use_min_cost_metric = use_metric
 
+    def is_osp_task(self):
+        return self.bound is not None
+
     def add_axiom(self, parameters, condition):
         name = "new-axiom@%d" % self.axiom_counter
         self.axiom_counter += 1
@@ -51,11 +54,12 @@ class Task:
             print("  %s" % fact)
         print("Goal:")
         self.goal.dump()
-        print("Utility:")
-        for u in self.utility:
-            print(f"  {u[0]}: {u[1]}")
-        print("Bound:")
-        print(f"  {self.bound}")
+        if self.is_osp_task():
+            print("Utility:")
+            for u in self.utility:
+                print(f"  {u[0]}: {u[1]}")
+            print("Bound:")
+            print(f"  {self.bound}")
         print("Actions:")
         for action in self.actions:
             action.dump()
