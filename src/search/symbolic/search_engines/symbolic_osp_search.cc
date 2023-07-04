@@ -106,6 +106,12 @@ SearchStatus SymbolicOspSearch::step() {
         solution_registry->construct_cheaper_solutions(upper_bound);
         solution_found = plan_data_base->get_num_reported_plan() > 0;
         cur_status = solution_found ? SOLVED : FAILED;
+    } else if (max_utility == highest_seen_utility) {
+        // Highest utility => Search finished!
+        utils::g_log << "State with overall highest utility reached." << endl;
+        solution_registry->construct_cheaper_solutions(upper_bound);
+        assert(plan_data_base->get_num_reported_plan() > 0);
+        cur_status = SOLVED;
     }
 
     if (lower_bound_increased && !silent) {
