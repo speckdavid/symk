@@ -566,14 +566,22 @@ def unsolvable_sas_task(msg, task):
 
 
 def pddl_to_sas(task):
+    # if task.is_osp_task() and len(task.utility) > 0:
+    #     task.goal = pddl.Conjunction([u[0] for u in task.utility]).simplified()
+
     with timers.timing("Instantiating", block=True):
         (relaxed_reachable, atoms, actions, goal_list, axioms,
          reachable_action_params) = instantiate.explore(task)
 
-    if not relaxed_reachable:
-        return unsolvable_sas_task("No relaxed solution", task)
-    elif goal_list is None:
-        return unsolvable_sas_task("Trivially false goal", task)
+    if task.is_osp_task():
+        # task.goal = pddl.Truth()
+        goal_list = [u[0] for u in task.utility]
+
+    if not task.is_osp_task():
+        if not relaxed_reachable:
+            return unsolvable_sas_task("No relaxed solution", task)
+        elif goal_list is None:
+            return unsolvable_sas_task("Trivially false goal", task)
 
     for item in goal_list:
         assert isinstance(item, pddl.Literal)
@@ -625,9 +633,9 @@ def pddl_to_sas(task):
             try:
                 simplify.filter_unreachable_propositions(sas_task)
             except simplify.Impossible:
-                return unsolvable_sas_task("Simplified to trivially false goal")
+                return unsolvable_sas_task("Simplified to trivially false goal", sas_task)
             except simplify.TriviallySolvable:
-                return solvable_sas_task("Simplified to empty goal")
+                return solvable_sas_task("Simplified to empty goal", sas_task)
 
     if options.reorder_variables or options.filter_unimportant_vars:
         with timers.timing("Reordering and filtering variables", block=True):
