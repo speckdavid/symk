@@ -822,6 +822,7 @@ fast_downward_plugin(
         symbolic/plan_selection/unordered_selector
         symbolic/plan_selection/validation_selector
         symbolic/search_engines/symbolic_osp_search
+        symbolic/search_engines/symbolic_osp_top_k_search
         symbolic/search_engines/symbolic_search
         symbolic/search_engines/symbolic_uniform_cost_search
         symbolic/search_engines/top_k_symbolic_uniform_cost_search

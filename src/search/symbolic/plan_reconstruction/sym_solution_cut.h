@@ -25,6 +25,11 @@ public:
     int get_util() const;
     BDD get_cut() const;
 
+    // Sorting of cuts: usually f but for osp it is util
+    int get_priority() const;
+
+    bool has_utility() const;
+
     void merge(const SymSolutionCut &other);
 
     void set_g(int g);

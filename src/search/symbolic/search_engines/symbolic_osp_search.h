@@ -13,10 +13,11 @@ protected:
     int highest_seen_utility;
 
     virtual void initialize() override;
+    virtual void initialize_utlility();
 
     ADD create_utility_function() const;
 
-    SymSolutionCut get_highest_util_solution(const SymSolutionCut sol) const;
+    SymSolutionCut get_highest_util_solution(const SymSolutionCut &sol) const;
 
     virtual SearchStatus step() override;
 

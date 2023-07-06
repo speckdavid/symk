@@ -230,23 +230,29 @@ void SymSolutionRegistry::register_solution(const SymSolutionCut &solution) {
         if (!sym_cuts.empty()) {
             sym_cuts = map<int, vector<SymSolutionCut>>();
         }
-        sym_cuts[solution.get_f()].push_back(solution);
+        sym_cuts[solution.get_priority()].push_back(solution);
         return;
     }
 
+    // // We skip the merging optimization in case we have utilities
+    // if (solution.has_utility()) {
+    //     sym_cuts[solution.get_priority()].push_back(solution);
+    //     return;
+    // }
+
     bool merged = false;
     size_t pos = 0;
-    for (; pos < sym_cuts[solution.get_f()].size(); pos++) {
+    for (; pos < sym_cuts[solution.get_priority()].size(); pos++) {
         // a cut with same g and h values exist
         // => we combine the cut to avoid multiple cuts with same solutions
-        if (sym_cuts[solution.get_f()][pos] == solution) {
-            sym_cuts[solution.get_f()][pos].merge(solution);
+        if (sym_cuts[solution.get_priority()][pos] == solution) {
+            sym_cuts[solution.get_priority()][pos].merge(solution);
             merged = true;
             break;
         }
     }
     if (!merged) {
-        sym_cuts[solution.get_f()].push_back(solution);
+        sym_cuts[solution.get_priority()].push_back(solution);
     }
 }
 
@@ -264,5 +270,11 @@ void SymSolutionRegistry::construct_cheaper_solutions(int bound) {
     for (auto it = sym_cuts.begin(); it != sym_cuts.end();) {
         (it->first < bound) ? sym_cuts.erase(it++) : (++it);
     }
+}
+
+void SymSolutionRegistry::reconstruct_solution(const SymSolutionCut &sol) {
+    vector<SymSolutionCut> cur_sols;
+    cur_sols.push_back(sol);
+    reconstruct_plans(cur_sols);
 }
 }

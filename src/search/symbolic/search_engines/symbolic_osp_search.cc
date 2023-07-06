@@ -13,21 +13,7 @@ using namespace std;
 namespace symbolic {
 void SymbolicOspSearch::initialize() {
     SymbolicSearch::initialize();
-
-    upper_bound = search_task->get_plan_cost_bound();
-
-    ADD add_utility_function = create_utility_function();
-    partition_add_to_bdds(vars.get(), add_utility_function, utility_function);
-    max_utility = utility_function.rbegin()->first;
-    assert(max_utility == round(Cudd_V(add_utility_function.FindMax().getNode())));
-
-    utils::g_log << "Plan cost bound: " << upper_bound - 1 << endl;
-    utils::g_log << "Constant utility: " << search_task->get_constant_utility() << endl;
-    utils::g_log << "Number of utility facts: " << search_task->get_num_utilties() << endl;
-    utils::g_log << "Max utility value: " << max_utility << endl;
-    cout << endl;
-    // vars->to_dot(utility_function, "utility.dot");
-
+    initialize_utlility();
 
     mgr = make_shared<OriginalStateSpace>(vars.get(), mgrParams, search_task);
     unique_ptr<OspCostSearch> fw_search = unique_ptr<OspCostSearch>(new OspCostSearch(this, searchParams));
@@ -46,6 +32,28 @@ void SymbolicOspSearch::initialize() {
     search.reset(fw_search.release());
 }
 
+void SymbolicOspSearch::initialize_utlility() {
+    upper_bound = search_task->get_plan_cost_bound();
+
+    ADD add_utility_function = create_utility_function();
+    partition_add_to_bdds(vars.get(), add_utility_function, utility_function);
+    max_utility = utility_function.rbegin()->first;
+    assert(max_utility == round(Cudd_V(add_utility_function.FindMax().getNode())));
+
+    int min_utility = round(Cudd_V(add_utility_function.FindMin().getNode()));
+    if (min_utility <= -numeric_limits<int>::max()) {
+        cerr << "Utility values exceed integer limits." << endl;
+        utils::exit_with(utils::ExitCode::SEARCH_INPUT_ERROR);
+    }
+
+    utils::g_log << "Plan cost bound: " << upper_bound - 1 << endl;
+    utils::g_log << "Constant utility: " << search_task->get_constant_utility() << endl;
+    utils::g_log << "Number of utility facts: " << search_task->get_num_utilties() << endl;
+    utils::g_log << "Max utility value: " << max_utility << endl;
+    cout << endl;
+    // vars->to_dot(utility_function, "utility.dot");
+}
+
 ADD SymbolicOspSearch::create_utility_function() const {
     ADD res = vars->constant(search_task->get_constant_utility());
     for (const UtilityProxy util: task_proxy.get_utilities()) {
@@ -55,7 +63,7 @@ ADD SymbolicOspSearch::create_utility_function() const {
     return res;
 }
 
-SymSolutionCut SymbolicOspSearch::get_highest_util_solution(const SymSolutionCut sol) const {
+SymSolutionCut SymbolicOspSearch::get_highest_util_solution(const SymSolutionCut &sol) const {
     double max_util_value = -1;
     BDD max_util_states = vars->zeroBDD();
     for (auto iter = utility_function.rbegin(); iter != utility_function.rend(); ++iter) {
@@ -103,17 +111,17 @@ SearchStatus SymbolicOspSearch::step() {
 
     // Search finished!
     if (lower_bound >= upper_bound) {
-        solution_registry->construct_cheaper_solutions(upper_bound);
+        solution_registry->construct_cheaper_solutions(numeric_limits<int>::max());
         solution_found = plan_data_base->get_num_reported_plan() > 0;
         cur_status = solution_found ? SOLVED : FAILED;
     } else if (max_utility == highest_seen_utility) {
         // Highest utility => Search finished!
         utils::g_log << "State with overall highest utility reached." << endl;
-        solution_registry->construct_cheaper_solutions(upper_bound);
-        assert(plan_data_base->get_num_reported_plan() > 0);
-        cur_status = SOLVED;
+        solution_registry->construct_cheaper_solutions(numeric_limits<int>::max());
+        if (solution_registry->found_all_plans()) {
+            cur_status = SOLVED;
+        }
     }
-
     if (lower_bound_increased && !silent) {
         utils::g_log << "BOUND: " << lower_bound << " < " << upper_bound << flush;
 
@@ -156,5 +164,5 @@ static shared_ptr<SearchEngine> _parse_forward_osp(OptionParser &parser) {
     return engine;
 }
 
-static Plugin<SearchEngine> _plugin_sym_fw_ordinary("symosp-fw",
+static Plugin<SearchEngine> _plugin_sym_fw_ordinary("sym-osp-fw",
                                                     _parse_forward_osp);

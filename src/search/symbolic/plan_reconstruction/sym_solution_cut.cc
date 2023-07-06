@@ -9,7 +9,7 @@ namespace symbolic {
 SymSolutionCut::SymSolutionCut() :
     g(-1),
     h(-1),
-    util(-1) {}
+    util(-numeric_limits<int>::max()) {}
 
 SymSolutionCut::SymSolutionCut(int g, int h, int util, BDD cut) :
     g(g),
@@ -30,6 +30,18 @@ int SymSolutionCut::get_f() const {return g + h;}
 int SymSolutionCut::get_util() const {return util;}
 
 BDD SymSolutionCut::get_cut() const {return cut;}
+
+int SymSolutionCut::get_priority() const {
+    if (get_util() != -numeric_limits<int>::max()) {
+        // Negative to assign higest prio to max util
+        return -get_util();
+    }
+    return get_f();
+}
+
+bool SymSolutionCut::has_utility() const {
+    return get_util() != -numeric_limits<int>::max();
+}
 
 void SymSolutionCut::merge(const SymSolutionCut &other) {
     assert(*this == other);

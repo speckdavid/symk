@@ -86,6 +86,7 @@ public:
 
     void register_solution(const SymSolutionCut &solution);
     void construct_cheaper_solutions(int bound);
+    void reconstruct_solution(const SymSolutionCut &sol);
 
     bool found_all_plans() const {
         return plan_data_base && plan_data_base->found_enough_plans();
@@ -112,6 +113,7 @@ public:
         }
         return cheapest;
     }
+
 };
 }
 
