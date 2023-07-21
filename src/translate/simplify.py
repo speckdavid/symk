@@ -512,7 +512,7 @@ class VarValueRenaming:
                 continue
             elif new_value is always_true:
                 print(f"{tr} pruned because it is always true.")
-                constant_util += util_triplets[2]
+                constant_util += uval
             else:
                 assert new_var_no is not None
                 new_triplets.append((new_var_no, new_value, uval))

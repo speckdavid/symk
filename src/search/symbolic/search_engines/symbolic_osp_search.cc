@@ -51,7 +51,6 @@ void SymbolicOspSearch::initialize_utlility() {
     utils::g_log << "Number of utility facts: " << search_task->get_num_utilties() << endl;
     utils::g_log << "Max utility value: " << max_utility << endl;
     cout << endl;
-    // vars->to_dot(utility_function, "utility.dot");
 }
 
 ADD SymbolicOspSearch::create_utility_function() const {
@@ -60,6 +59,7 @@ ADD SymbolicOspSearch::create_utility_function() const {
         BDD fact = vars->get_axiom_compiliation()->get_primary_representation(util.get_fact_pair().var, util.get_fact_pair().value);
         res += fact.Add() * vars->constant(util.get_utility());
     }
+    // vars->to_dot(res, "utility.dot");
     return res;
 }
 
