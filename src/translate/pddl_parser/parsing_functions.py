@@ -475,7 +475,7 @@ def parse_task_pddl(task_pddl, type_dict, predicate_dict):
 
     yield goal_cond
 
-    if utility:
+    if utility and utility[0] == ":utility":
         assert utility[0] == ":utility"
         utility_list = []
         for fact in utility[1:]:
@@ -488,7 +488,7 @@ def parse_task_pddl(task_pddl, type_dict, predicate_dict):
         yield None
 
     bound = next(iterator, None)
-    if bound:
+    if bound and bound[0] == ":bound":
         assert bound[0] == ":bound" and len(bound) == 2
         yield bound[1]
     else:
