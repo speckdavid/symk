@@ -36,8 +36,10 @@ void partition_add_to_bdds(SymVariables *vars, ADD add, map<int, BDD> &res) {
 
     ADD inf = vars->constant(numeric_limits<double>::infinity());
     while (cur_add != inf) {
-        res[round(min_value)] = cur_add.BddInterval(min_value, min_value);
-        cur_add = cur_add.Maximum(res[min_value].Add() * inf);
+        int int_min_value = round(min_value);
+        res[int_min_value] = cur_add.BddInterval(min_value, min_value);
+        // vars->to_dot(res[int_min_value], "bdd_" + to_string(int_min_value) + "_util.dot");
+        cur_add = cur_add + (res[int_min_value].Add() * inf);
         min_value = Cudd_V(cur_add.FindMin().getNode());
     }
 }

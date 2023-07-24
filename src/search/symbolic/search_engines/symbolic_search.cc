@@ -31,7 +31,7 @@ SymbolicSearch::SymbolicSearch(const options::Options &opts)
       step_num(-1),
       lower_bound_increased(true),
       lower_bound(0),
-      upper_bound(numeric_limits<int>::max()),
+      upper_bound(bound),
       min_g(0),
       plan_data_base(opts.get<shared_ptr<PlanSelector>>("plan_selection")),
       solution_registry(make_shared<SymSolutionRegistry>()),

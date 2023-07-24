@@ -33,7 +33,7 @@ void SymbolicOspSearch::initialize() {
 }
 
 void SymbolicOspSearch::initialize_utlility() {
-    upper_bound = search_task->get_plan_cost_bound();
+    upper_bound = min(search_task->get_plan_cost_bound(), upper_bound);
 
     ADD add_utility_function = create_utility_function();
     partition_add_to_bdds(vars.get(), add_utility_function, utility_function);
