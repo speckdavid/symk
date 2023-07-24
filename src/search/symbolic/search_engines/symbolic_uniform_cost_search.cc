@@ -57,7 +57,7 @@ SymbolicUniformCostSearch::SymbolicUniformCostSearch(
     : SymbolicSearch(opts), fw(fw), bw(bw) {
     if (is_oversubscribed) {
         cerr << "error: ordinary symbolic search does not support oversubscribed tasks. "
-             << "Please use symbolic search for osp, e.g., symosp-fw()." << endl;
+             << "Please use symbolic search for osp, e.g., sym-osp-fw()." << endl;
         utils::exit_with(utils::ExitCode::SEARCH_INPUT_ERROR);
     }
 }

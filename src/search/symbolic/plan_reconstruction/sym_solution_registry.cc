@@ -256,19 +256,33 @@ void SymSolutionRegistry::register_solution(const SymSolutionCut &solution) {
     }
 }
 
-void SymSolutionRegistry::construct_cheaper_solutions(int bound) {
+void SymSolutionRegistry::construct_better_cost_solutions(int upper_cost_bound) {
     for (const auto &key : sym_cuts) {
         int plan_cost = key.first;
         const vector<SymSolutionCut> &cuts = key.second;
-        if (plan_cost >= bound || found_all_plans())
+        if (plan_cost >= upper_cost_bound || found_all_plans())
             break;
-
         reconstruct_plans(cuts);
     }
 
     // Erase handled keys
     for (auto it = sym_cuts.begin(); it != sym_cuts.end();) {
-        (it->first < bound) ? sym_cuts.erase(it++) : (++it);
+        (it->first < upper_cost_bound) ? sym_cuts.erase(it++) : (++it);
+    }
+}
+
+void SymSolutionRegistry::construct_better_utility_solutions(int lower_utility_bound) {
+    for (const auto &key : sym_cuts) {
+        int plan_utility = -key.first; // negation because we use negative prios
+        const vector<SymSolutionCut> &cuts = key.second;
+        if (plan_utility <= lower_utility_bound || found_all_plans())
+            break;
+        reconstruct_plans(cuts);
+    }
+
+    // Erase handled keys (negation because we use negative prios)
+    for (auto it = sym_cuts.begin(); it != sym_cuts.end();) {
+        (-it->first > lower_utility_bound) ? sym_cuts.erase(it++) : (++it);
     }
 }
 

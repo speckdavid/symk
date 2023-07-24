@@ -85,7 +85,8 @@ public:
     virtual ~SymSolutionRegistry() = default;
 
     void register_solution(const SymSolutionCut &solution);
-    void construct_cheaper_solutions(int bound);
+    void construct_better_cost_solutions(int upper_cost_bound);
+    void construct_better_utility_solutions(int lower_utility_bound);
     void reconstruct_solution(const SymSolutionCut &sol);
 
     bool found_all_plans() const {
@@ -103,15 +104,15 @@ public:
         return plan_data_base->get_states_accepted_goal_path();
     }
 
-    double cheapest_solution_cost_found() const {
-        double cheapest = std::numeric_limits<double>::infinity();
+    double best_solution_found() const {
+        double best_prio = std::numeric_limits<double>::infinity();
         if (plan_data_base) {
-            cheapest = std::min(cheapest, plan_data_base->get_first_plan_cost());
+            best_prio = std::min(best_prio, plan_data_base->get_first_plan_cost());
         }
         if (sym_cuts.size() > 0) {
-            cheapest = std::min(cheapest, (double)sym_cuts.begin()->first);
+            best_prio = std::min(best_prio, (double)sym_cuts.begin()->first);
         }
-        return cheapest;
+        return best_prio;
     }
 };
 }

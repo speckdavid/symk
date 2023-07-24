@@ -47,6 +47,7 @@ public:
                                     const SymSolutionCut &sym_cut) {
         return os << "symcut{g=" << sym_cut.get_g() << ", h=" << sym_cut.get_h()
                   << ", f=" << sym_cut.get_f()
+                  << ", u=" << sym_cut.get_util()
                   << ", nodes=" << sym_cut.get_cut().nodeCount() << "}";
     }
 };

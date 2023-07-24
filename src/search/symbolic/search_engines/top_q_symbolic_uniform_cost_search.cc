@@ -43,13 +43,13 @@ SearchStatus TopqSymbolicUniformCostSearch::step() {
 
     // Search finished!
     if (lower_bound >= upper_bound) {
-        solution_registry->construct_cheaper_solutions(upper_bound);
+        solution_registry->construct_better_cost_solutions(upper_bound);
         solution_found = plan_data_base->get_num_reported_plan() > 0;
         cur_status = solution_found ? SOLVED : FAILED;
     } else {
         // Bound increade => construct plans
         if (lower_bound_increased) {
-            solution_registry->construct_cheaper_solutions(lower_bound);
+            solution_registry->construct_better_cost_solutions(lower_bound);
         }
 
         // All plans found

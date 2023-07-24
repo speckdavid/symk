@@ -34,7 +34,11 @@ void SymbolicOspTopkSearch::initialize() {
 
 SymbolicOspTopkSearch::SymbolicOspTopkSearch(
     const options::Options &opts) :
-    SymbolicOspSearch(opts) {}
+    SymbolicOspSearch(opts),
+    quality_multiplier(opts.get<double>("quality")) {
+    if (quality_multiplier != numeric_limits<double>::infinity())
+        utils::g_log << "Quality multiplier: " << quality_multiplier << endl;
+}
 
 vector<SymSolutionCut> SymbolicOspTopkSearch::get_all_util_solutions(const SymSolutionCut &sol) {
     vector<SymSolutionCut> result;
@@ -84,7 +88,10 @@ SearchStatus SymbolicOspTopkSearch::step() {
 
     // Search finished!
     if (lower_bound >= upper_bound) {
-        solution_registry->construct_cheaper_solutions(numeric_limits<int>::max());
+        int lower_utility_bound = get_quality_bound();
+        if (lower_utility_bound != -numeric_limits<int>::max())
+            --lower_utility_bound;
+        solution_registry->construct_better_utility_solutions(lower_utility_bound);
         solution_found = plan_data_base->get_num_reported_plan() > 0;
         cur_status = solution_found ? SOLVED : FAILED;
     }
@@ -115,12 +122,13 @@ SearchStatus SymbolicOspTopkSearch::step() {
 }
 }
 
-static shared_ptr<SearchEngine> _parse_forward_osp(OptionParser &parser) {
+static shared_ptr<SearchEngine> _parse_forward_top_k_osp(OptionParser &parser) {
     parser.document_synopsis("Symbolic Forward Oversubscription Top-k Search", "");
     symbolic::SymbolicSearch::add_options_to_parser(parser);
     parser.add_option<shared_ptr<symbolic::PlanSelector>>(
         "plan_selection", "plan selection strategy");
     Options opts = parser.parse();
+    opts.set<double>("quality", numeric_limits<double>::infinity());
 
     shared_ptr<symbolic::SymbolicSearch> engine = nullptr;
     if (!parser.dry_run()) {
@@ -131,5 +139,26 @@ static shared_ptr<SearchEngine> _parse_forward_osp(OptionParser &parser) {
     return engine;
 }
 
-static Plugin<SearchEngine> _plugin_sym_fw_ordinary("symk-osp-fw",
-                                                    _parse_forward_osp);
+static shared_ptr<SearchEngine> _parse_forward_top_q_osp(OptionParser &parser) {
+    parser.document_synopsis("Symbolic Forward Oversubscription Top-q Search", "");
+    symbolic::SymbolicSearch::add_options_to_parser(parser);
+    parser.add_option<shared_ptr<symbolic::PlanSelector>>(
+        "plan_selection", "plan selection strategy");
+    parser.add_option<double>("quality", "relative quality multiplier",
+                              "infinity", Bounds("1.0", "infinity"));
+    Options opts = parser.parse();
+
+    shared_ptr<symbolic::SymbolicSearch> engine = nullptr;
+    if (!parser.dry_run()) {
+        engine = make_shared<symbolic::SymbolicOspTopkSearch>(opts);
+        utils::g_log << "Symbolic Forward Oversubscription Top-q Search" << endl;
+    }
+
+    return engine;
+}
+
+static Plugin<SearchEngine> _plugin_sym_fw_top_k_osp("symk-osp-fw",
+                                                     _parse_forward_top_k_osp);
+
+static Plugin<SearchEngine> _plugin_sym_fw_top_q_osp("symq-osp-fw",
+                                                     _parse_forward_top_q_osp);
