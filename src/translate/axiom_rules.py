@@ -52,7 +52,7 @@ class AxiomCluster(object):
         self.layer = 0
 
 
-def handle_axioms(operators, axioms, goals, layer_strategy):
+def handle_axioms(operators, axioms, goals, layer_strategy, negative_axioms):
     clusters = compute_clusters(axioms, goals, operators)
     axiom_layers = compute_axiom_layers(clusters, layer_strategy)
 
@@ -62,8 +62,9 @@ def handle_axioms(operators, axioms, goals, layer_strategy):
     # the future. Similarly, it would be a good idea to remove the notion of
     # axiom layers and derived variable default values from the output.
     # (All derived variables should be binary and default to false.)
-    with timers.timing("Computing negative axioms"):
-        compute_negative_axioms(clusters)
+    if negative_axioms:
+        with timers.timing("Computing negative axioms"):
+            compute_negative_axioms(clusters)
 
     axioms = get_axioms(clusters)
     if DEBUG:

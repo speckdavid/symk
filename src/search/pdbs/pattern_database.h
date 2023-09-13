@@ -196,9 +196,9 @@ public:
         return num_states;
     }
 
-    std::vector<std::vector<OperatorID>> && extract_wildcard_plan() {
+    std::vector<std::vector<OperatorID>> &&extract_wildcard_plan() {
         return std::move(wildcard_plan);
-    };
+    }
 
     /*
       Returns the average h-value over all states, where dead-ends are
