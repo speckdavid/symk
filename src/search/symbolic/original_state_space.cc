@@ -34,7 +34,7 @@ OriginalStateSpace::OriginalStateSpace(
 
     init_mutex(task->get_mutex_groups());
     shared_ptr<extra_tasks::SdacTask> sdac_task = dynamic_pointer_cast<extra_tasks::SdacTask>(task);
-    utils::g_log << "Creating transition relations..." << flush;
+    utils::g_log << "Creating " << task->get_num_operators() << " transition relations..." << flush;
     if (sdac_task == nullptr) {
         create_single_trs();
     } else {

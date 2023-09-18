@@ -30,8 +30,7 @@ public:
 
     virtual int getF() const override {
         return std::max<int>(std::max<int>(fw->getF(), bw->getF()),
-                             fw->getG() + bw->getG() +
-                             mgr->getAbsoluteMinTransitionCost());
+                             fw->getG() + bw->getG() + std::min(1, mgr->getAbsoluteMinTransitionCost()));
     }
 
     bool isExpFor(BidirectionalSearch *bdExp) const;

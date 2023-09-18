@@ -47,7 +47,7 @@ private:
         if (auto *o = Factories::get_as_equals(e))
             return Printer::print_op(*o, "==");
         if (auto *o = Factories::get_as_and(e))
-            return Printer::print_op(*o, "^");
+            return Printer::print_op(*o, "&&");
         if (auto *o = Factories::get_as_or(e))
             return Printer::print_op(*o, "||");
         if (auto *i = Factories::get_as_cst(e)) {
