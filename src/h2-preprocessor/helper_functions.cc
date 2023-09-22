@@ -95,8 +95,20 @@ void dump_goal(const vector<pair<Variable *, int>> &goals) {
 
 void read_operators(istream &in, const vector<Variable *> &variables,
                     vector<Operator> &operators) {
+    string line_str;
+
+    // Double to move to next line
+    getline(in, line_str);
+    getline(in, line_str);
+    cout << line_str << endl;
+    if (line_str == "begin_util") {
+        cout << "Skipping the preprocessor because it does not support utilities." << endl;
+        exit(0);
+    }
+
     int count;
-    in >> count;
+    count = stoi(line_str);
+
     for (int i = 0; i < count; i++)
         operators.push_back(Operator(in, variables));
 }
@@ -109,48 +121,6 @@ void read_axioms(istream &in, const vector<Variable *> &variables,
         axioms.push_back(Axiom(in, variables));
 }
 
-void read_utils(istream &in, const vector<Variable *> &variables, vector<tuple<Variable *, int, int>> &utils) {
-    string word;
-    in >> word;
-    if (word != "begin_util") {
-        // set pointer back
-        in.seekg(-word.length(), std::ios::cur);
-        return;
-    }
-    int count;
-    in >> count;
-    for (int i = 0; i < count; i++) {
-        int varNo, val, util;
-        in >> varNo >> val >> util;
-        utils.push_back(make_tuple(variables[varNo], val, util));
-    }
-    check_magic(in, "end_util");
-}
-
-void read_constant_util(istream &in, int &constant_util) {
-    string word;
-    in >> word;
-    if (word != "begin_constant_util") {
-        // set pointer back
-        in.seekg(-word.length(), std::ios::cur);
-        return;
-    }
-    in >> constant_util;
-    check_magic(in, "end_constant_util");
-}
-
-void read_bound(istream &in, int &bound) {
-    string word;
-    in >> word;
-    if (word != "begin_bound") {
-        // set pointer back
-        in.seekg(-word.length(), std::ios::cur);
-        return;
-    }
-    in >> bound;
-    check_magic(in, "end_bound");
-}
-
 void read_preprocessed_problem_description(istream &in,
                                            bool &metric,
                                            vector<Variable> &internal_variables,
@@ -159,22 +129,13 @@ void read_preprocessed_problem_description(istream &in,
                                            State &initial_state,
                                            vector<pair<Variable *, int>> &goals,
                                            vector<Operator> &operators,
-                                           vector<Axiom> &axioms,
-                                           vector<tuple<Variable *, int, int>> &utils,
-                                           int &constant_util,
-                                           int &bound) {
+                                           vector<Axiom> &axioms) {
     read_and_verify_version(in);
     read_metric(in, metric);
     read_variables(in, internal_variables, variables);
     read_mutexes(in, mutexes, variables);
     initial_state = State(in, variables);
     read_goal(in, variables, goals);
-
-    // try to read osp things
-    read_utils(in, variables, utils);
-    read_constant_util(in, constant_util);
-    read_bound(in, bound);
-
     read_operators(in, variables, operators);
     read_axioms(in, variables, axioms);
 }
@@ -253,71 +214,6 @@ void generate_cpp_input(const vector<Variable *> &ordered_vars,
 
     outfile.close();
 }
-
-void generate_cpp_osp_input(const vector<Variable *> &vars,
-                            const bool &metric,
-                            const vector<MutexGroup> &mutexes,
-                            const State &initial_state,
-                            const vector<Operator> &operators,
-                            const vector<Axiom> &axioms,
-                            vector<tuple<Variable *, int, int>> &utils,
-                            int constant_util,
-                            int bound
-                            ) {
-    ofstream outfile;
-    outfile.open("output.sas", ios::out);
-
-    outfile << "begin_version" << endl;
-    outfile << PRE_FILE_VERSION << endl;
-    outfile << "end_version" << endl;
-
-    outfile << "begin_metric" << endl;
-    outfile << metric << endl;
-    outfile << "end_metric" << endl;
-
-    outfile << vars.size() << endl;
-    for (Variable *var : vars)
-        var->generate_cpp_input(outfile);
-
-    outfile << mutexes.size() << endl;
-    for (const MutexGroup &mutex : mutexes)
-        mutex.generate_cpp_input(outfile);
-
-    outfile << "begin_state" << endl;
-    for (Variable *var : vars)
-        outfile << initial_state[var] << endl;  // for axioms default value
-    outfile << "end_state" << endl;
-
-    outfile << "begin_goal" << endl;
-    outfile << "0" << endl;
-    outfile << "end_goal" << endl;
-
-    outfile << "begin_util" << endl;
-    outfile << utils.size() << endl;
-    for (const auto &util : utils) {
-        outfile << get<0>(util)->get_level() << " " << get<1>(util) << " " << get<2>(util) << endl;
-    }
-    outfile << "end_util" << endl;
-
-    outfile << "begin_constant_util" << endl;
-    outfile << constant_util << endl;
-    outfile << "end_constant_util" << endl;
-
-    outfile << "begin_bound" << endl;
-    outfile << bound << endl;
-    outfile << "end_bound" << endl;
-
-    outfile << operators.size() << endl;
-    for (const Operator &op : operators)
-        op.generate_cpp_input(outfile);
-
-    outfile << axioms.size() << endl;
-    for (const Axiom &axiom : axioms)
-        axiom.generate_cpp_input(outfile);
-
-    outfile.close();
-}
-
 void generate_unsolvable_cpp_input() {
     ofstream outfile;
     outfile.open("output.sas", ios::out);
