@@ -132,7 +132,7 @@ pair<int, int> Abstraction::refine(
     states.push_back(move(v2));
 
     return {
-               v1_id, v2_id
+        v1_id, v2_id
     };
 }
 

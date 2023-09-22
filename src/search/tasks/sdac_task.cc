@@ -2,6 +2,8 @@
 #include "../symbolic/sym_function_creator.h"
 #include "../symbolic/sym_variables.h"
 
+#include "../utils/logging.h"
+
 using namespace std;
 
 namespace extra_tasks {
@@ -26,6 +28,15 @@ SdacTask::SdacTask(const shared_ptr<AbstractTask> &parent, symbolic::SymVariable
 
     for (int op_id = 0; op_id < parent->get_num_operators(); ++op_id) {
         ADD cost_function = creator.create_add(parent->get_operator_cost_function(op_id, false));
+
+        double min_value = Cudd_V(cost_function.FindMin().getNode());
+        if (min_value < 0) {
+            utils::g_log << "Negative actions costs are note supported!" << endl;
+            utils::g_log << "Minimum action costs of operator " << parent->get_operator_name(op_id, false) <<
+                " is " << min_value << "." << endl;
+            utils::exit_with(utils::ExitCode::SEARCH_UNSUPPORTED);
+        }
+
         map<int, BDD> cost_cond;
         create_bdds_from_add(sym_vars, cost_function, cost_cond);
         for (auto pair : cost_cond) {

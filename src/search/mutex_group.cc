@@ -39,7 +39,7 @@ bool MutexGroup::hasPair(int var, int val) const {
 
 ostream &operator<<(ostream &os, const MutexGroup &mg) {
     os << (mg.exactly_one ? "[ExactlyOne_" : "[MutexGroup_") <<
-    (mg.detected_fw ? "fw" : "bw");
+        (mg.detected_fw ? "fw" : "bw");
     for (size_t i = 0; i < mg.facts.size(); ++i) {
         os << "   " << tasks::g_root_task->get_fact_name(mg.facts[i]);
     }
