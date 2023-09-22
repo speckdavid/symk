@@ -95,20 +95,8 @@ void dump_goal(const vector<pair<Variable *, int>> &goals) {
 
 void read_operators(istream &in, const vector<Variable *> &variables,
                     vector<Operator> &operators) {
-    string line_str;
-
-    // Double to move to next line
-    getline(in, line_str);
-    getline(in, line_str);
-    cout << line_str << endl;
-    if (line_str == "begin_util") {
-        cout << "Skipping the preprocessor because it does not support utilities." << endl;
-        exit(0);
-    }
-
     int count;
-    count = stoi(line_str);
-
+    in >> count;
     for (int i = 0; i < count; i++)
         operators.push_back(Operator(in, variables));
 }
