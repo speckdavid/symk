@@ -21,6 +21,7 @@ using utils::ExitCode;
 
 namespace tasks {
 static const int PRE_FILE_VERSION = 3;
+static const int OSP_FILE_VERSION = 4;
 shared_ptr<AbstractTask> g_root_task = nullptr;
 
 struct ExplicitVariable {
@@ -69,6 +70,7 @@ class RootTask : public AbstractTask {
     vector<pair<FactPair, int>> utilities;
     int constant_utility;
     int plan_cost_bound;
+    int version;
 
     const ExplicitVariable &get_variable(int var) const;
     const ExplicitEffect &get_effect(int op_id, int effect_id, bool is_axiom) const;
@@ -251,17 +253,18 @@ ExplicitOperator::ExplicitOperator(istream &in, bool is_an_axiom, bool use_metri
     assert(cost >= 0);
 }
 
-void read_and_verify_version(istream &in) {
+int read_and_verify_version(istream &in) {
     int version;
     check_magic(in, "begin_version");
     in >> version;
     check_magic(in, "end_version");
-    if (version != PRE_FILE_VERSION) {
+    if (version != PRE_FILE_VERSION && version != OSP_FILE_VERSION) {
         cerr << "Expected translator output file version " << PRE_FILE_VERSION
              << ", got " << version << "." << endl
              << "Exiting." << endl;
         utils::exit_with(ExitCode::SEARCH_INPUT_ERROR);
     }
+    return version;
 }
 
 bool read_metric(istream &in) {
@@ -350,11 +353,6 @@ vector<pair<FactPair, int>> read_utilities(istream &in) {
     string word;
     in >> word;
     vector<pair<FactPair, int>> utilities;
-    if (word != "begin_util") {
-        // set pointer back
-        in.seekg(-word.length(), ios::cur);
-        return utilities;
-    }
     int count;
     in >> count;
     for (int i = 0; i < count; i++) {
@@ -371,11 +369,6 @@ int read_constant_utility(istream &in) {
     string word;
     in >> word;
     int constant_util = -1;
-    if (word != "begin_constant_util") {
-        // set pointer back
-        in.seekg(-word.length(), ios::cur);
-        return 0;
-    }
     in >> constant_util;
     check_magic(in, "end_constant_util");
     return constant_util; // we use strictly smaller
@@ -385,11 +378,6 @@ int read_plan_cost_bound(istream &in) {
     string word;
     in >> word;
     int bound = -1;
-    if (word != "begin_bound") {
-        // set pointer back
-        in.seekg(-word.length(), ios::cur);
-        return -1;
-    }
     in >> bound;
     if (bound < 0) {
         cerr << "Task has negative cost bound!" << endl;
@@ -414,7 +402,7 @@ vector<ExplicitOperator> read_actions(
 }
 
 RootTask::RootTask(istream &in) {
-    read_and_verify_version(in);
+    version = read_and_verify_version(in);
     bool use_metric = read_metric(in);
     variables = read_variables(in);
     int num_variables = variables.size();
@@ -437,15 +425,20 @@ RootTask::RootTask(istream &in) {
     check_facts(goals, variables);
 
     // OSP
-    utilities = read_utilities(in);
-    for (const pair<FactPair, int> &util : utilities) {
-        check_fact(util.first, variables);
+    if (version == OSP_FILE_VERSION) {
+        utilities = read_utilities(in);
+        for (const pair<FactPair, int> &util : utilities) {
+            check_fact(util.first, variables);
+        }
+        constant_utility = read_constant_utility(in);
+        plan_cost_bound = read_plan_cost_bound(in);
+    } else {
+        constant_utility = 0;
+        plan_cost_bound = -1;
     }
-    constant_utility = read_constant_utility(in);
-    plan_cost_bound = read_plan_cost_bound(in);
 
     // No OSP task and empty goal
-    if (plan_cost_bound < 0 && goals.empty()) {
+    if (version == PRE_FILE_VERSION && goals.empty()) {
         cerr << "Task has no goal condition!" << endl;
         utils::exit_with(ExitCode::SEARCH_INPUT_ERROR);
     }

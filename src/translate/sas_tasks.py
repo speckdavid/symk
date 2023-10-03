@@ -1,4 +1,5 @@
 SAS_FILE_VERSION = 3
+OSP_SAS_FILE_VERSION = 4
 
 DEBUG = False
 
@@ -11,8 +12,7 @@ class SASTask:
     generally be sorted and mention each variable at most once. See
     the validate methods for details."""
 
-    def __init__(self, variables, mutexes, init, goal, utility, constant_utility, bound,
-                 operators, axioms, metric):
+    def __init__(self, variables, mutexes, init, goal, utility, constant_utility, bound, operators, axioms, metric):
         self.variables = variables
         self.mutexes = mutexes
         self.init = init
@@ -20,10 +20,8 @@ class SASTask:
         self.utility = utility
         self.constant_utility = constant_utility
         self.bound = bound
-        self.operators = sorted(operators, key=lambda op: (
-            op.name, op.prevail, op.pre_post))
-        self.axioms = sorted(axioms, key=lambda axiom: (
-            axiom.condition, axiom.effect))
+        self.operators = sorted(operators, key=lambda op: (op.name, op.prevail, op.pre_post))
+        self.axioms = sorted(axioms, key=lambda axiom: (axiom.condition, axiom.effect))
         self.metric = metric
         if DEBUG:
             self.validate()
@@ -91,7 +89,10 @@ class SASTask:
 
     def output(self, stream):
         print("begin_version", file=stream)
-        print(SAS_FILE_VERSION, file=stream)
+        if self.is_osp_task():
+            print(OSP_SAS_FILE_VERSION, file=stream)
+        else:
+            print(SAS_FILE_VERSION, file=stream)
         print("end_version", file=stream)
         print("begin_metric", file=stream)
         print(int(self.metric), file=stream)
@@ -144,10 +145,8 @@ class SASVariables:
         variables must have range exactly 2. See comment on derived
         variables in the docstring of SASTask.validate.
         """
-        assert len(self.ranges) == len(self.axiom_layers) == len(
-            self.value_names)
-        for (var_range, layer, var_value_names) in zip(
-                self.ranges, self.axiom_layers, self.value_names):
+        assert len(self.ranges) == len(self.axiom_layers) == len(self.value_names)
+        for var_range, layer, var_value_names in zip(self.ranges, self.axiom_layers, self.value_names):
             assert var_range == len(var_value_names)
             assert var_range >= 2
             assert layer == -1 or layer >= 0
@@ -164,14 +163,13 @@ class SASVariables:
         """Assert that the condition (list of facts) is sorted, mentions each
         variable at most once, and only consists of valid facts."""
         last_var = -1
-        for (var, value) in condition:
+        for var, value in condition:
             self.validate_fact((var, value))
             assert var > last_var
             last_var = var
 
     def dump(self):
-        for var, (rang, axiom_layer) in enumerate(
-                zip(self.ranges, self.axiom_layers)):
+        for var, (rang, axiom_layer) in enumerate(zip(self.ranges, self.axiom_layers)):
             if axiom_layer != -1:
                 axiom_str = " [axiom layer %d]" % axiom_layer
             else:
@@ -180,8 +178,7 @@ class SASVariables:
 
     def output(self, stream):
         print(len(self.ranges), file=stream)
-        for var, (rang, axiom_layer, values) in enumerate(zip(
-                self.ranges, self.axiom_layers, self.value_names)):
+        for var, (rang, axiom_layer, values) in enumerate(zip(self.ranges, self.axiom_layers, self.value_names)):
             print("begin_variable", file=stream)
             print("var%d" % var, file=stream)
             print(axiom_layer, file=stream)
@@ -257,7 +254,7 @@ class SASUtil:
         return str(self.triplets)
 
     def validate(self):
-        """ Assert that the utility is not empty."""
+        """Assert that the utility is not empty."""
         assert self.triplets
 
     def dump(self):
@@ -317,6 +314,7 @@ class SASOperator:
         def listify(entry):
             var, pre, post, cond = entry
             return var, pre, post, list(cond)
+
         pre_post = map(tuplify, pre_post)
         pre_post = sorted(set(pre_post))
         pre_post = list(map(listify, pre_post))
@@ -400,8 +398,7 @@ class SASOperator:
         print("Pre/Post:")
         for var, pre, post, cond in self.pre_post:
             if cond:
-                cond_str = " [%s]" % ", ".join(
-                    ["%d: %d" % tuple(c) for c in cond])
+                cond_str = " [%s]" % ", ".join(["%d: %d" % tuple(c) for c in cond])
             else:
                 cond_str = ""
             print("  v%d: %d -> %d%s" % (var, pre, post, cond_str))
@@ -414,9 +411,9 @@ class SASOperator:
             print(var, val, file=stream)
         print(len(self.pre_post), file=stream)
         for var, pre, post, cond in self.pre_post:
-            print(len(cond), end=' ', file=stream)
+            print(len(cond), end=" ", file=stream)
             for cvar, cval in cond:
-                print(cvar, cval, end=' ', file=stream)
+                print(cvar, cval, end=" ", file=stream)
             print(var, pre, post, file=stream)
         print(self.cost, file=stream)
         print("end_operator", file=stream)
