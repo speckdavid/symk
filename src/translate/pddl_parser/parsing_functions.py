@@ -463,19 +463,31 @@ def parse_task_pddl(task_pddl, type_dict, predicate_dict):
     initial.extend(initial_true)
     yield initial
 
-    goal = next(iterator)
-    goal_cond = pddl.Truth()
+    goal = None
+    utility = None
+    bound = None
+    metric = None
 
-    if goal[0] == ":goal":
-        if len(goal) == 2:
-            goal_cond = parse_condition(goal[1], type_dict, predicate_dict)
-        utility = next(iterator, None)
+    next_entry = next(iterator, None)
+
+    while next_entry is not None:
+        if next_entry[0] == ":goal":
+            goal = next_entry
+        if next_entry[0] == ":utility":
+            utility = next_entry
+        if next_entry[0] == ":bound":
+            bound = next_entry
+        if next_entry[0] == ":metric" or next_entry[0] == ":use-cost-metric":
+            metric = next_entry
+        next_entry = next(iterator, None)
+
+    if goal:
+        assert goal[0] == ":goal"
+        yield parse_condition(goal[1], type_dict, predicate_dict)
     else:
-        utility = goal
+        yield pddl.Truth()
 
-    yield goal_cond
-
-    if utility and utility[0] == ":utility":
+    if utility:
         assert utility[0] == ":utility"
         utility_list = []
         for fact in utility[1:]:
@@ -487,22 +499,21 @@ def parse_task_pddl(task_pddl, type_dict, predicate_dict):
     else:
         yield None
 
-    bound = next(iterator, None)
-    if bound and bound[0] == ":bound":
+    if bound:
         assert bound[0] == ":bound" and len(bound) == 2
         yield bound[1]
     else:
         yield None
 
     use_metric = False
-    for entry in iterator:
-        if entry[0] == ":metric":
-            if entry[1] == "minimize" and entry[2][0] == "total-cost":
-                use_metric = True
-            else:
-                assert False, "Unknown metric."
-        elif entry[0] == ":use-cost-metric":
+    if metric:
+        assert metric[0] == ":metric" or metric[0] == ":use-cost-metric"
+        if metric[0] == ":use-cost-metric":
             use_metric = True
+        elif metric[1] == "minimize" and metric[2][0] == "total-cost":
+            use_metric = True
+        else:
+            assert False, "Unknown metric."
     yield use_metric
 
     for entry in iterator:
