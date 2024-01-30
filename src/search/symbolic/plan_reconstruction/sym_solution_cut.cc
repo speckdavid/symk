@@ -19,7 +19,7 @@ SymSolutionCut::SymSolutionCut(int g, int h, int util, BDD cut) :
 
 
 SymSolutionCut::SymSolutionCut(int g, int h, BDD cut) :
-    SymSolutionCut(g, h, -1, cut) {}
+    SymSolutionCut(g, h, -numeric_limits<int>::max(), cut) {}
 
 int SymSolutionCut::get_g() const {return g;}
 

@@ -154,7 +154,9 @@ void UniformCostSearch::stepImage(int maxTime, int maxNodes) {
             }
         }
     }
-    prepareBucket();
+    while (!frontier.bucketReady() && !open_list.empty()) {
+        prepareBucket();
+    }
 
     engine->setLowerBound(getG() + mgr->getAbsoluteMinTransitionCost());
     step_estimation.set_data(step_timer(), stepNodes, !res_expansion.ok);
