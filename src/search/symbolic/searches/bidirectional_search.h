@@ -9,6 +9,7 @@ class BidirectionalSearch : public SymSearch {
 private:
     std::shared_ptr<UniformCostSearch> fw, bw;
     std::shared_ptr<UniformCostSearch> cur_dir;
+    bool alternating;
 
     // Returns the best direction to search the bd exp
     UniformCostSearch *selectBestDirection();
@@ -16,7 +17,8 @@ private:
 public:
     BidirectionalSearch(SymbolicSearch *eng, const SymParamsSearch &params,
                         std::shared_ptr<UniformCostSearch> fw,
-                        std::shared_ptr<UniformCostSearch> bw);
+                        std::shared_ptr<UniformCostSearch> bw,
+                        bool alternating = false);
 
     virtual bool finished() const override;
 

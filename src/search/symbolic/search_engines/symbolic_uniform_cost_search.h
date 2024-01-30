@@ -8,13 +8,14 @@ class SymbolicUniformCostSearch : public SymbolicSearch {
 protected:
     bool fw;
     bool bw;
+    bool alternating;
 
     virtual void initialize() override;
 
     virtual SearchStatus step() override {return SymbolicSearch::step();}
 
 public:
-    SymbolicUniformCostSearch(const options::Options &opts, bool fw, bool bw);
+    SymbolicUniformCostSearch(const options::Options &opts, bool fw, bool bw, bool alternating = false);
     virtual ~SymbolicUniformCostSearch() = default;
 
     virtual void new_solution(const SymSolutionCut &sol) override;

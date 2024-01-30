@@ -46,15 +46,15 @@ void SymbolicUniformCostSearch::initialize() {
 
     if (fw && bw) {
         search = unique_ptr<BidirectionalSearch>(new BidirectionalSearch(
-                                                     this, searchParams, move(fw_search), move(bw_search)));
+                                                     this, searchParams, move(fw_search), move(bw_search), alternating));
     } else {
         search.reset(fw ? fw_search.release() : bw_search.release());
     }
 }
 
 SymbolicUniformCostSearch::SymbolicUniformCostSearch(
-    const options::Options &opts, bool fw, bool bw)
-    : SymbolicSearch(opts), fw(fw), bw(bw) {}
+    const options::Options &opts, bool fw, bool bw, bool alternating)
+    : SymbolicSearch(opts), fw(fw), bw(bw), alternating(alternating) {}
 
 void SymbolicUniformCostSearch::new_solution(const SymSolutionCut &sol) {
     if (!solution_registry->found_all_plans() && sol.get_f() < upper_bound) {
@@ -104,12 +104,14 @@ _parse_bidirectional_ucs(OptionParser &parser) {
     symbolic::SymbolicSearch::add_options_to_parser(parser);
     parser.add_option<shared_ptr<symbolic::PlanSelector>>(
         "plan_selection", "plan selection strategy", "top_k(num_plans=1)");
+    parser.add_option<bool>("alternating", "alternating", "false");
     Options opts = parser.parse();
 
     shared_ptr<symbolic::SymbolicSearch> engine = nullptr;
     if (!parser.dry_run()) {
+        bool alternating = opts.get<bool>("alternating");
         engine =
-            make_shared<symbolic::SymbolicUniformCostSearch>(opts, true, true);
+            make_shared<symbolic::SymbolicUniformCostSearch>(opts, true, true, alternating);
         utils::g_log << "Symbolic Bidirectional Uniform Cost Search" << endl;
     }
 
