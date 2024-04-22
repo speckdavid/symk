@@ -16,28 +16,21 @@ class OriginalStateSpace;
 
 /*
  * Represents a symbolic transition.
- * It has two differentiated parts: label and abstract state transitions
- * Label refers to variables not considered in the merge-and-shrink
- * Each label has one or more abstract state transitions
  */
 class TransitionRelation {
     SymVariables *sV; // To call basic BDD creation methods
-    // Use task_proxy to access task information.
-    TaskProxy task_proxy;
+    TaskProxy task_proxy; // Use task_proxy to access task information.
     int cost; // transition cost
     BDD tBDD; // bdd for making the relprod
 
     std::vector<int> effVars;   // FD Index of eff variables. Must be sorted!!
     BDD existsVars, existsBwVars; // Cube with variables to existentialize
-    std::vector<BDD> swapVarsS,
-                     swapVarsSp; // Swap variables s to sp and viceversa
+    std::vector<BDD> swapVarsS, swapVarsSp; // Swap variables s to sp and viceversa
 
     std::set<OperatorID> ops_ids; // List of operators represented by the TR
 
 public:
-    // Constructor for transitions irrelevant for the abstraction
-    TransitionRelation(SymVariables *sVars, OperatorID op_id,
-                       const std::shared_ptr<AbstractTask> &task);
+    TransitionRelation(SymVariables *sVars, OperatorID op_id, const std::shared_ptr<AbstractTask> &task);
     void init();
     void init_from_tr(const TransitionRelation &other);
 

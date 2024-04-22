@@ -24,7 +24,7 @@ TransitionRelation::TransitionRelation(
 void TransitionRelation::init() {
     OperatorProxy op = task_proxy.get_operators()[ops_ids.begin()->get_index()];
 
-    for (auto const &pre : op.get_preconditions()) { // Put precondition of label
+    for (auto const &pre : op.get_preconditions()) {
         FactPair fact = pre.get_pair();
         tBDD *= sV->get_axiom_compiliation()->get_primary_representation(
             fact.var, fact.value);
@@ -60,7 +60,6 @@ void TransitionRelation::init() {
     }
 
     // Add effects to the tBDD
-    int counter = 0;
     for (auto it = effects.rbegin(); it != effects.rend(); ++it) {
         int var = it->first;
         BDD effectBDD = it->second;
@@ -71,7 +70,6 @@ void TransitionRelation::init() {
             effectBDD += (effect_conditions[var] * sV->biimp(var));
         }
         tBDD *= effectBDD;
-        counter++;
     }
     if (tBDD.IsZero()) {
         utils::g_log << "Operator is empty: " << op.get_name() << endl;
@@ -143,7 +141,6 @@ void TransitionRelation::merge(const TransitionRelation &t2, int maxNodes) {
         utils::exit_with(utils::ExitCode::SEARCH_CRITICAL_ERROR);
     }
 
-    //  utils::g_log << "set_union" << endl;
     // Attempt to generate the new tBDD
     vector<int> newEffVars;
     set_union(effVars.begin(), effVars.end(), t2.effVars.begin(),
@@ -152,7 +149,6 @@ void TransitionRelation::merge(const TransitionRelation &t2, int maxNodes) {
     BDD newTBDD = tBDD;
     BDD newTBDD2 = t2.tBDD;
 
-    //    utils::g_log << "Eff vars" << endl;
     vector<int>::const_iterator var1 = effVars.begin();
     vector<int>::const_iterator var2 = t2.effVars.begin();
     for (vector<int>::const_iterator var = newEffVars.begin();
