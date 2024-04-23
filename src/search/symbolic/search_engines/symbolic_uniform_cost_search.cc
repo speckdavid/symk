@@ -1,17 +1,20 @@
 #include "symbolic_uniform_cost_search.h"
 
-#include "../original_state_space.h"
 #include "../plugin.h"
+#include "../sym_state_space_manager.h"
+
+#include "../../option_parser.h"
+
 #include "../searches/bidirectional_search.h"
 #include "../searches/uniform_cost_search.h"
-#include "../../option_parser.h"
+
 
 using namespace std;
 
 namespace symbolic {
 void SymbolicUniformCostSearch::initialize() {
     SymbolicSearch::initialize();
-    mgr = make_shared<OriginalStateSpace>(vars.get(), sym_params, search_task);
+    mgr = make_shared<SymStateSpaceManager>(vars.get(), sym_params, search_task);
 
     unique_ptr<UniformCostSearch> fw_search = nullptr;
     unique_ptr<UniformCostSearch> bw_search = nullptr;

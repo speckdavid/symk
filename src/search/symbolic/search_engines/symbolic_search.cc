@@ -3,14 +3,13 @@
 #include "../option_parser.h"
 #include "../plugin.h"
 
-#include "../original_state_space.h"
+#include "../sym_state_space_manager.h"
+#include "../sym_variables.h"
+
 #include "../plan_selection/plan_selector.h"
 #include "../searches/bidirectional_search.h"
 #include "../searches/top_k_uniform_cost_search.h"
 #include "../searches/uniform_cost_search.h"
-
-#include "../sym_state_space_manager.h"
-#include "../sym_variables.h"
 
 #include "../../task_utils/task_properties.h"
 #include "../../tasks/sdac_task.h"

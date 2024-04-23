@@ -813,7 +813,6 @@ fast_downward_plugin(
         symbolic/sym_utils
         symbolic/sym_state_space_manager
         symbolic/transition_relation
-        symbolic/original_state_space
         symbolic/sym_parameters
         symbolic/sym_estimate
         symbolic/frontier

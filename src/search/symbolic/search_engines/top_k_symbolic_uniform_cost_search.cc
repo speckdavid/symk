@@ -1,10 +1,13 @@
 #include "top_k_symbolic_uniform_cost_search.h"
 
-#include "../original_state_space.h"
 #include "../plugin.h"
+#include "../sym_state_space_manager.h"
+
+#include "../../option_parser.h"
+
 #include "../searches/bidirectional_search.h"
 #include "../searches/top_k_uniform_cost_search.h"
-#include "../../option_parser.h"
+
 
 #include <memory>
 
@@ -14,7 +17,7 @@ namespace symbolic {
 void TopkSymbolicUniformCostSearch::initialize() {
     SymbolicSearch::initialize();
 
-    mgr = make_shared<OriginalStateSpace>(vars.get(), sym_params, search_task);
+    mgr = make_shared<SymStateSpaceManager>(vars.get(), sym_params, search_task);
 
     unique_ptr<TopkUniformCostSearch> fw_search = nullptr;
     unique_ptr<TopkUniformCostSearch> bw_search = nullptr;

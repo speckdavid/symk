@@ -1,10 +1,12 @@
 #include "top_q_symbolic_uniform_cost_search.h"
 
-#include "../original_state_space.h"
 #include "../plugin.h"
+
+#include "../../option_parser.h"
+
 #include "../searches/bidirectional_search.h"
 #include "../searches/top_k_uniform_cost_search.h"
-#include "../../option_parser.h"
+
 
 using namespace std;
 

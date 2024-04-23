@@ -1,10 +1,11 @@
 #include "transition_relation.h"
 
+#include "sym_state_space_manager.h"
+
 #include "../task_proxy.h"
 #include "../utils/logging.h"
 #include "../utils/timer.h"
-#include "original_state_space.h"
-#include "sym_state_space_manager.h"
+
 
 #include <algorithm>
 #include <cassert>
