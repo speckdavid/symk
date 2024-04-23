@@ -9,7 +9,7 @@ using options::Options;
 using namespace std;
 
 namespace symbolic {
-SymParameters::SymParameters(const Options &opts, const std::shared_ptr<AbstractTask> &task)
+SymParameters::SymParameters(const Options &opts, const shared_ptr<AbstractTask> &task)
     : max_tr_size(opts.get<int>("max_tr_size")),
       max_tr_time(opts.get<int>("max_tr_time")),
       mutex_type(opts.get<MutexType>("mutex_type")),

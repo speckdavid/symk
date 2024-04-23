@@ -4,6 +4,7 @@
 
 #include "sym_bucket.h"
 #include "sym_enums.h"
+#include "sym_mutexes.h"
 #include "sym_parameters.h"
 #include "sym_utils.h"
 #include "sym_variables.h"
@@ -39,27 +40,18 @@ protected:
     BDD initial_state; // initial state
     BDD goal; // bdd representing the true (i.e. not simplified) goal-state
 
-    std::map<int, std::vector<TransitionRelation>> indTRs; // individual TRs (for plan reconstruction)
+    std::map<int, std::vector<TransitionRelation>> individual_transitions; // individual TRs (for plan reconstruction)
     std::map<int, std::vector<TransitionRelation>> transitions; // Merged TRs
     int min_transition_cost; // minimum cost of non-zero cost transitions
     bool has_zero_cost_transition;           // If there is transitions with cost 0
 
-    // BDD representation of valid states (wrt mutex) for fw and bw search
-    std::vector<BDD> notMutexBDDsFw, notMutexBDDsBw;
-    // Dead ends for fw and bw searches. They are always removed in
-    // filter_mutex (it does not matter which mutex_type we are using).
-    std::vector<BDD> notDeadEndFw, notDeadEndBw;
-    // notMutex relative for each fluent
-    std::vector<std::vector<BDD>> notMutexBDDsByFluentFw, notMutexBDDsByFluentBw;
-    std::vector<std::vector<BDD>> exactlyOneBDDsByFluent;
+    SymMutexes sym_mutexes;
 
+    void init_transitions();
     void init_individual_transitions();
-    void init_transitions(const std::map<int, std::vector<TransitionRelation>> &(indTRs));
+    void init_merged_transitions();
     void create_single_trs();
     void create_single_sdac_trs(std::shared_ptr<extra_tasks::SdacTask> sdac_task, bool fast_creation);
-
-    void init_mutex(const std::vector<MutexGroup> &mutex_groups);
-    void init_mutex(const std::vector<MutexGroup> &mutex_groups, bool genMutexBDD, bool genMutexBDDByFluent, bool fw);
 
     // All the methods may throw exceptions in case the time or nodes are exceeded.
     void zero_preimage(BDD bdd, std::vector<BDD> &res, int max_nodes) const;
@@ -143,7 +135,7 @@ public:
 
     // For plan solution reconstruction
     const std::map<int, std::vector<TransitionRelation>> &getIndividualTRs() const {
-        return indTRs;
+        return individual_transitions;
     }
 };
 }
