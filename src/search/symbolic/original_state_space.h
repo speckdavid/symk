@@ -24,7 +24,7 @@ class OriginalStateSpace : public SymStateSpaceManager {
                     bool genMutexBDDByFluent, bool fw);
 
 public:
-    OriginalStateSpace(SymVariables *v, const SymParamsMgr &params,
+    OriginalStateSpace(SymVariables *v, const SymParameters &sym_params,
                        const std::shared_ptr<AbstractTask> &task);
 
     // Individual TRs: Useful for shrink and plan construction
@@ -33,8 +33,6 @@ public:
     // notMutex relative for each fluent
     std::vector<std::vector<BDD>> notMutexBDDsByFluentFw, notMutexBDDsByFluentBw;
     std::vector<std::vector<BDD>> exactlyOneBDDsByFluent;
-
-    virtual std::string tag() const override {return "original";}
 
     // Methods that require of mutex initialized
 

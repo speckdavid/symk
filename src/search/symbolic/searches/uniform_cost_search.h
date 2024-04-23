@@ -71,7 +71,7 @@ protected:
 
     //////////////////////////////////////////////////////////////////////////////
 public:
-    UniformCostSearch(SymbolicSearch *eng, const SymParamsSearch &params);
+    UniformCostSearch(SymbolicSearch *eng, const SymParameters &params);
     UniformCostSearch(const UniformCostSearch &) = delete;
     UniformCostSearch(UniformCostSearch &&) = default;
     UniformCostSearch &operator=(const UniformCostSearch &) = delete;
@@ -86,7 +86,7 @@ public:
         /*if (step_estimation.get_failed()) {
             p.increase_bound();
         }
-        stepImage(p.maxAllotedTime, p.maxAllotedNodes);*/
+        stepImage(p.max_alloted_time, p.max_alloted_nodes);*/
         stepImage(0, 0);
     }
 

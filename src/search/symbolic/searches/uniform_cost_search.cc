@@ -16,7 +16,7 @@ using namespace std;
 
 namespace symbolic {
 UniformCostSearch::UniformCostSearch(SymbolicSearch *eng,
-                                     const SymParamsSearch &params)
+                                     const SymParameters &params)
     : SymSearch(eng, params),
       fw(true),
       step_estimation(0, 0, false),
@@ -59,7 +59,7 @@ bool UniformCostSearch::init(shared_ptr<SymStateSpaceManager> manager,
 }
 
 void UniformCostSearch::checkFrontierCut(Bucket &bucket, int g) {
-    if (p.get_non_stop()) {
+    if (sym_params.non_stop) {
         return;
     }
 

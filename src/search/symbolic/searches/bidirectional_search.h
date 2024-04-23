@@ -15,7 +15,7 @@ private:
     UniformCostSearch *selectBestDirection();
 
 public:
-    BidirectionalSearch(SymbolicSearch *eng, const SymParamsSearch &params,
+    BidirectionalSearch(SymbolicSearch *eng, const SymParameters &params,
                         std::shared_ptr<UniformCostSearch> fw,
                         std::shared_ptr<UniformCostSearch> bw,
                         bool alternating = false);
@@ -23,7 +23,7 @@ public:
     virtual bool finished() const override;
 
     virtual void step() override {
-        stepImage(p.maxAllotedTime, p.maxAllotedNodes);
+        stepImage(sym_params.max_alloted_time, sym_params.max_alloted_nodes);
     }
 
     virtual std::string get_last_dir() const override;

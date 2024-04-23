@@ -7,7 +7,7 @@
 #include <utility>
 
 namespace symbolic {
-class SymParamsSearch;
+class SymParameters;
 
 class Estimation {
 protected:

@@ -14,19 +14,19 @@ namespace symbolic {
 void TopkSymbolicUniformCostSearch::initialize() {
     SymbolicSearch::initialize();
 
-    mgr = make_shared<OriginalStateSpace>(vars.get(), mgrParams, search_task);
+    mgr = make_shared<OriginalStateSpace>(vars.get(), sym_params, search_task);
 
     unique_ptr<TopkUniformCostSearch> fw_search = nullptr;
     unique_ptr<TopkUniformCostSearch> bw_search = nullptr;
 
     if (fw) {
         fw_search = unique_ptr<TopkUniformCostSearch>(
-            new TopkUniformCostSearch(this, searchParams));
+            new TopkUniformCostSearch(this, sym_params));
     }
 
     if (bw) {
         bw_search = unique_ptr<TopkUniformCostSearch>(
-            new TopkUniformCostSearch(this, searchParams));
+            new TopkUniformCostSearch(this, sym_params));
     }
 
     if (fw) {
@@ -49,7 +49,7 @@ void TopkSymbolicUniformCostSearch::initialize() {
 
     if (fw && bw) {
         search = unique_ptr<BidirectionalSearch>(new BidirectionalSearch(
-                                                     this, searchParams, move(fw_search), move(bw_search)));
+                                                     this, sym_params, move(fw_search), move(bw_search)));
     } else {
         search.reset(fw ? fw_search.release() : bw_search.release());
     }

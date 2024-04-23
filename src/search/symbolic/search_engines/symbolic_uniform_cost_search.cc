@@ -11,19 +11,19 @@ using namespace std;
 namespace symbolic {
 void SymbolicUniformCostSearch::initialize() {
     SymbolicSearch::initialize();
-    mgr = make_shared<OriginalStateSpace>(vars.get(), mgrParams, search_task);
+    mgr = make_shared<OriginalStateSpace>(vars.get(), sym_params, search_task);
 
     unique_ptr<UniformCostSearch> fw_search = nullptr;
     unique_ptr<UniformCostSearch> bw_search = nullptr;
 
     if (fw) {
         fw_search = unique_ptr<UniformCostSearch>(
-            new UniformCostSearch(this, searchParams));
+            new UniformCostSearch(this, sym_params));
     }
 
     if (bw) {
         bw_search = unique_ptr<UniformCostSearch>(
-            new UniformCostSearch(this, searchParams));
+            new UniformCostSearch(this, sym_params));
     }
 
     if (fw) {
@@ -46,7 +46,7 @@ void SymbolicUniformCostSearch::initialize() {
 
     if (fw && bw) {
         search = unique_ptr<BidirectionalSearch>(new BidirectionalSearch(
-                                                     this, searchParams, move(fw_search), move(bw_search), alternating));
+                                                     this, sym_params, move(fw_search), move(bw_search), alternating));
     } else {
         search.reset(fw ? fw_search.release() : bw_search.release());
     }

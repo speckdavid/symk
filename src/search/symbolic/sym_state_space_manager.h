@@ -1,12 +1,15 @@
 #ifndef SYMBOLIC_SYM_STATE_SPACE_MANAGER_H
 #define SYMBOLIC_SYM_STATE_SPACE_MANAGER_H
 
-#include "../tasks/root_task.h"
-#include "../utils/system.h"
+
 #include "sym_bucket.h"
 #include "sym_enums.h"
+#include "sym_parameters.h"
 #include "sym_utils.h"
 #include "sym_variables.h"
+
+#include "../tasks/root_task.h"
+#include "../utils/system.h"
 
 #include <cassert>
 #include <map>
@@ -23,44 +26,18 @@ namespace symbolic {
 class SymVariables;
 class TransitionRelation;
 
-/*
- * All the methods may throw exceptions in case the time or nodes are exceeded.
- *
- */
-class SymParamsMgr {
-public:
-    // Parameters to generate the TRs
-    int max_tr_size, max_tr_time;
-
-    // Parameters to generate the mutex BDDs
-    MutexType mutex_type;
-    int max_mutex_size, max_mutex_time;
-
-    // Time and memory bounds for auxiliary operations
-    int max_aux_nodes, max_aux_time;
-
-    bool fast_sdac_generation;
-
-
-    SymParamsMgr(const options::Options &opts,
-                 const std::shared_ptr<AbstractTask> &task);
-    static void add_options_to_parser(options::OptionParser &parser);
-    void print_options() const;
-};
-
 class SymStateSpaceManager {
-    void zero_preimage(const BDD &bdd, std::vector<BDD> &res, int maxNodes) const;
-    void cost_preimage(const BDD &bdd, std::map<int, std::vector<BDD>> &res,
-                       int maxNodes) const;
-    void zero_image(const BDD &bdd, std::vector<BDD> &res, int maxNodes) const;
-    void cost_image(const BDD &bdd, std::map<int, std::vector<BDD>> &res,
-                    int maxNodes) const;
+    // All the methods may throw exceptions in case the time or nodes are exceeded.
+    void zero_preimage(BDD bdd, std::vector<BDD> &res, int max_nodes) const;
+    void cost_preimage(BDD bdd, std::map<int, std::vector<BDD>> &res, int max_nodes) const;
+    void zero_image(BDD bdd, std::vector<BDD> &res, int maxn_nodes) const;
+    void cost_image(BDD bdd, std::map<int, std::vector<BDD>> &res, int max_nodes) const;
 
 protected:
-    SymVariables *vars;
-    const SymParamsMgr p;
+    SymVariables *sym_vars;
+    const SymParameters& sym_params;
 
-    BDD initialState; // initial state
+    BDD initial_state; // initial state
     BDD goal; // bdd representing the true (i.e. not simplified) goal-state
 
     std::map<int, std::vector<TransitionRelation>> transitions; // TRs
@@ -74,13 +51,10 @@ protected:
     // filter_mutex (it does not matter which mutex_type we are using).
     std::vector<BDD> notDeadEndFw, notDeadEndBw;
 
-    virtual std::string tag() const = 0;
-
-    void init_transitions(
-        const std::map<int, std::vector<TransitionRelation>> &(indTRs));
+    void init_transitions(const std::map<int, std::vector<TransitionRelation>> &(indTRs));
 
 public:
-    SymStateSpaceManager(SymVariables *v, const SymParamsMgr &params);
+    SymStateSpaceManager(SymVariables *v, const SymParameters &sym_params);
 
     virtual ~SymStateSpaceManager() {}
 
@@ -90,21 +64,21 @@ public:
 
     void shrinkBucket(Bucket &bucket, int maxNodes);
 
-    SymVariables *getVars() const {return vars;}
+    SymVariables *getVars() const {return sym_vars;}
 
-    const SymParamsMgr getParams() const {return p;}
+    const SymParameters& getParams() const {return sym_params;}
 
-    const BDD &getGoal() {return goal;}
+    BDD getGoal() {return goal;}
 
-    const BDD &getInitialState() {return initialState;}
+    BDD getInitialState() {return initial_state;}
 
     BDD getBDD(int variable, int value) const {
-        return vars->preBDD(variable, value);
+        return sym_vars->preBDD(variable, value);
     }
 
-    BDD zeroBDD() const {return vars->zeroBDD();}
+    BDD zeroBDD() const {return sym_vars->zeroBDD();}
 
-    BDD oneBDD() const {return vars->oneBDD();}
+    BDD oneBDD() const {return sym_vars->oneBDD();}
 
     const std::vector<BDD> &getNotMutexBDDs(bool fw) const {
         return fw ? notMutexBDDsFw : notMutexBDDsBw;
@@ -114,7 +88,7 @@ public:
         auto mergeBDDs = [](BDD bdd, BDD bdd2, int maxNodes) {
                 return bdd.Or(bdd2, maxNodes);
             };
-        merge(vars, bucket, mergeBDDs, maxTime, maxNodes);
+        merge(sym_vars, bucket, mergeBDDs, maxTime, maxNodes);
         removeZero(bucket); // Be sure that we do not contain only the zero BDD
 
         return bucket.size() <= 1;
@@ -124,13 +98,11 @@ public:
         auto mergeBDDs = [](BDD bdd, BDD bdd2, int maxNodes) {
                 return bdd.And(bdd2, maxNodes);
             };
-        merge(vars, bucket, mergeBDDs, maxTime, maxNodes);
+        merge(sym_vars, bucket, mergeBDDs, maxTime, maxNodes);
         removeZero(bucket); // Be sure that we do not contain only the zero BDD
 
         return bucket.size() <= 1;
     }
-
-    void dumpMutexBDDs(bool fw) const;
 
     // Methods that require of TRs initialized
 
@@ -151,37 +123,29 @@ public:
         return hasTR0;
     }
 
-    void zero_image(bool fw, const BDD &bdd, std::vector<BDD> &res,
-                    int maxNodes) {
+    void zero_image(bool fw, BDD bdd, std::vector<BDD> &res, int max_nodes) {
         if (fw) {
-            zero_image(bdd, res, maxNodes);
+            zero_image(bdd, res, max_nodes);
         } else {
-            zero_preimage(bdd, res, maxNodes);
+            zero_preimage(bdd, res, max_nodes);
         }
     }
 
-    void cost_image(bool fw, const BDD &bdd, std::map<int, std::vector<BDD>> &res,
-                    int maxNodes) {
+    void cost_image(bool fw, BDD bdd, std::map<int, std::vector<BDD>> &res, int max_nodes) {
         if (fw) {
-            cost_image(bdd, res, maxNodes);
+            cost_image(bdd, res, max_nodes);
         } else {
-            cost_preimage(bdd, res, maxNodes);
+            cost_preimage(bdd, res, max_nodes);
         }
     }
 
-    BDD filter_mutex(const BDD &bdd, bool fw, int maxNodes, bool initialization);
+    BDD filter_mutex(BDD bdd, bool fw, int maxNodes, bool initialization);
 
-    int filterMutexBucket(std::vector<BDD> &bucket, bool fw, bool initialization,
-                          int maxTime, int maxNodes);
+    int filterMutexBucket(std::vector<BDD> &bucket, bool fw, bool initialization, int max_time, int max_nodes);
 
-    void setTimeLimit(int maxTime) {vars->setTimeLimit(maxTime);}
+    void setTimeLimit(int maxTime) {sym_vars->setTimeLimit(maxTime);}
 
-    void unsetTimeLimit() {vars->unsetTimeLimit();}
-
-    friend std::ostream &operator<<(std::ostream &os,
-                                    const SymStateSpaceManager &state_space);
-
-    virtual void print(std::ostream &os, bool /*fullInfo*/) const {os << tag();}
+    void unsetTimeLimit() {sym_vars->unsetTimeLimit();}
 
     // For plan solution reconstruction. Only avaialble in original state space
 

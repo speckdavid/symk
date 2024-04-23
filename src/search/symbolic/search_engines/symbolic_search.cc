@@ -9,7 +9,6 @@
 #include "../searches/top_k_uniform_cost_search.h"
 #include "../searches/uniform_cost_search.h"
 
-#include "../sym_params_search.h"
 #include "../sym_state_space_manager.h"
 #include "../sym_variables.h"
 
@@ -26,8 +25,7 @@ SymbolicSearch::SymbolicSearch(const options::Options &opts)
       search_task(task),
       task_proxy(*task),
       vars(make_shared<SymVariables>(opts, task)),
-      mgrParams(opts, task),
-      searchParams(opts),
+      sym_params(opts, task),
       step_num(-1),
       lower_bound_increased(true),
       lower_bound(0),
@@ -41,9 +39,7 @@ SymbolicSearch::SymbolicSearch(const options::Options &opts)
     cout << endl;
     vars->print_options();
     cout << endl;
-    mgrParams.print_options();
-    cout << endl;
-    searchParams.print_options();
+    sym_params.print_options();
     cout << endl;
     vars->init();
     cout << endl;
@@ -176,8 +172,7 @@ void SymbolicSearch::add_options_to_parser(OptionParser &parser) {
         "no_transform()");
     SearchEngine::add_options_to_parser(parser);
     SymVariables::add_options_to_parser(parser);
-    SymParamsSearch::add_options_to_parser(parser);
-    SymParamsMgr::add_options_to_parser(parser);
+    SymParameters::add_options_to_parser(parser);
     PlanSelector::add_options_to_parser(parser);
     parser.add_option<bool>("silent", "silent mode that avoids writing the cost bounds",
                             "false");
