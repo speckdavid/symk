@@ -75,14 +75,14 @@ void ReconstructionNode::get_plan(Plan &plan) const {
     Plan suffix_plan;
     while (cur_node->get_successor()) {
         assert(cur_node->get_to_successor_tr());
-        suffix_plan.push_back(cur_node->get_to_successor_tr()->getUniqueOpId());
+        suffix_plan.push_back(cur_node->get_to_successor_tr()->get_unique_operator_id());
         cur_node = cur_node->get_successor();
     }
     reverse(suffix_plan.begin(), suffix_plan.end());
 
     while (cur_node->get_predecessor()) {
         assert(cur_node->get_to_predecessor_tr());
-        plan.push_back(cur_node->get_to_predecessor_tr()->getUniqueOpId());
+        plan.push_back(cur_node->get_to_predecessor_tr()->get_unique_operator_id());
         cur_node = cur_node->get_predecessor();
     }
     plan.insert(plan.end(), suffix_plan.begin(), suffix_plan.end());

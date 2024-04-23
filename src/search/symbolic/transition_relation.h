@@ -18,26 +18,23 @@ class OriginalStateSpace;
  * Represents a symbolic transition.
  */
 class TransitionRelation {
-    SymVariables *sV; // To call basic BDD creation methods
+    SymVariables *sym_vars; // To call basic BDD creation methods
     TaskProxy task_proxy; // Use task_proxy to access task information.
     int cost; // transition cost
-    BDD tBDD; // bdd for making the relprod
+    BDD tr_bdd; // bdd for making the relprod
 
-    std::vector<int> effVars;   // FD Index of eff variables. Must be sorted!!
-    BDD existsVars, existsBwVars; // Cube with variables to existentialize
-    std::vector<BDD> swapVarsS, swapVarsSp; // Swap variables s to sp and viceversa
+    std::vector<int> eff_vars;   // FD Index of eff variables. Must be sorted!!
+    BDD exist_vars, exists_bw_vars; // Cube with variables to existentialize
+    std::vector<BDD> swap_vars, swap_vars_p; // Swap variables from unprimed to primed
 
     std::set<OperatorID> ops_ids; // List of operators represented by the TR
 
 public:
-    TransitionRelation(SymVariables *sVars, OperatorID op_id, const std::shared_ptr<AbstractTask> &task);
+    TransitionRelation(SymVariables *sym_vars, OperatorID op_id, const std::shared_ptr<AbstractTask> &task);
     void init();
     void init_from_tr(const TransitionRelation &other);
 
     void add_condition(BDD cond);
-
-    // Copy constructor
-    TransitionRelation(const TransitionRelation &) = default;
 
     BDD image(const BDD &from) const;
     BDD preimage(const BDD &from) const;
@@ -50,28 +47,30 @@ public:
 
     void merge(const TransitionRelation &t2, int maxNodes);
 
-    int getCost() const {return cost;}
+    int get_cost() const {return cost;}
 
     void set_cost(int cost_) {cost = cost_;}
 
-    int nodeCount() const {return tBDD.nodeCount();}
+    // It's important to retain the name "nodeCount" as BDDs share the same functionality,
+    // allowing us to utilize it within the templated merge functions.
+    int nodeCount() const {return tr_bdd.nodeCount();}
 
-    const OperatorID &getUniqueOpId() const;
+    const OperatorID &get_unique_operator_id() const;
 
-    const std::set<OperatorID> &getOpsIds() const {return ops_ids;}
+    const std::set<OperatorID> &get_operator_ids() const {return ops_ids;}
 
     void setOpsIds(const std::set<OperatorID> &operator_ids) {ops_ids = operator_ids;}
 
-    const std::vector<int> &getEffVars() const {return effVars;}
+    const std::vector<int> &get_eff_vars() const {return eff_vars;}
 
-    BDD getExistsVars() const {return existsVars;}
-    BDD getExistBwVars() const {return existsBwVars;}
-    const std::vector<BDD> &getSwapVars() const {return swapVarsS;}
-    const std::vector<BDD> &getSwapVarsP() const {return swapVarsSp;}
+    BDD get_exists_vars() const {return exist_vars;}
+    BDD get_exist_bw_vars() const {return exists_bw_vars;}
+    const std::vector<BDD> &get_swap_vars() const {return swap_vars;}
+    const std::vector<BDD> &get_swap_vars_p() const {return swap_vars_p;}
 
-    BDD getTrBDD() const {return tBDD;}
+    BDD get_tr_BDD() const {return tr_bdd;}
 
-    SymVariables *get_sym_vars() const {return sV;}
+    SymVariables *get_sym_vars() const {return sym_vars;}
 };
 }
 #endif
