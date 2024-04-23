@@ -155,7 +155,7 @@ void UniformCostSearch::stepImage(int maxTime, int maxNodes) {
             }
         }
     }
-    
+
     while (!frontier.bucketReady() && !open_list.empty()) {
         prepareBucket();
     }
