@@ -117,7 +117,7 @@ BDD SymStateSpaceManager::filter_mutex(BDD bdd, bool fw, int node_limit, bool in
 
 int SymStateSpaceManager::filterMutexBucket(vector<BDD> &bucket, bool fw, bool initialization, int max_time, int max_nodes) {
     int numFiltered = 0;
-    setTimeLimit(max_time);
+    set_time_limit(max_time);
     try {
         for (size_t i = 0; i < bucket.size(); ++i) {
             bucket[i] = filter_mutex(bucket[i], fw, max_nodes, initialization);
@@ -125,20 +125,20 @@ int SymStateSpaceManager::filterMutexBucket(vector<BDD> &bucket, bool fw, bool i
         }
     } catch (BDDError e) {
     }
-    unsetTimeLimit();
+    unset_time_limit();
 
     return numFiltered;
 }
 
-void SymStateSpaceManager::filterMutex(Bucket &bucket, bool fw, bool initialization) {
+void SymStateSpaceManager::filter_mutex(Bucket &bucket, bool fw, bool initialization) {
     filterMutexBucket(bucket, fw, initialization, sym_params.max_aux_time, sym_params.max_aux_nodes);
 }
 
-void SymStateSpaceManager::mergeBucket(Bucket &bucket) const {
-    mergeBucket(bucket, sym_params.max_aux_time, sym_params.max_aux_nodes);
+void SymStateSpaceManager::merge_bucket(Bucket &bucket) const {
+    merge_bucket(bucket, sym_params.max_aux_time, sym_params.max_aux_nodes);
 }
 
-void SymStateSpaceManager::mergeBucketAnd(Bucket &bucket) const {
-    mergeBucketAnd(bucket, sym_params.max_aux_time, sym_params.max_aux_nodes);
+void SymStateSpaceManager::merge_bucket_and(Bucket &bucket) const {
+    merge_bucket_and(bucket, sym_params.max_aux_time, sym_params.max_aux_nodes);
 }
 }

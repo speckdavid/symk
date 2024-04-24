@@ -22,7 +22,7 @@ void Frontier::set(int g, Bucket &bdd) {
 }
 
 bool Frontier::nextStepZero() const {
-    return !Szero.empty() || (S.empty() && mgr->hasTransitions0());
+    return !Szero.empty() || (S.empty() && mgr->has_zero_cost_transition());
 }
 
 Result Frontier::prepare(int maxTime, int maxNodes, bool fw,
@@ -44,10 +44,10 @@ Result Frontier::prepare(int maxTime, int maxNodes, bool fw,
 
     if (!Smerge.empty()) {
         if (Smerge.size() > 1) {
-            mgr->mergeBucket(Smerge, 60000, 10000000);
+            mgr->merge_bucket(Smerge, 60000, 10000000);
         }
 
-        if (mgr->hasTransitions0()) {
+        if (mgr->has_zero_cost_transition()) {
             S.insert(S.end(), Smerge.begin(), Smerge.end());
             assert(Szero.empty());
             Szero.swap(Smerge);
@@ -57,9 +57,9 @@ Result Frontier::prepare(int maxTime, int maxNodes, bool fw,
     }
 
     // If there are zero cost operators, merge S
-    if (mgr->hasTransitions0() && Szero.empty()) {
+    if (mgr->has_zero_cost_transition() && Szero.empty()) {
         if (S.size() > 1) {
-            mgr->mergeBucket(S, 60000, 10000000);
+            mgr->merge_bucket(S, 60000, 10000000);
         }
     }
 
@@ -102,16 +102,16 @@ ResultExpansion Frontier::expand_zero(int maxTime, int maxNodes, bool fw) {
     // Image with respect to 0-cost actions
     utils::Timer image_time;
 
-    mgr->setTimeLimit(maxTime);
+    mgr->set_time_limit(maxTime);
     // Compute image, storing the result on Simg
     try {
         for (size_t i = 0; i < Szero.size(); i++) {
             Simg.push_back(map<int, Bucket>());
             mgr->zero_image(fw, Szero[i], Simg[i][0], maxNodes);
         }
-        mgr->unsetTimeLimit();
+        mgr->unset_time_limit();
     } catch (BDDError e) {
-        mgr->unsetTimeLimit();
+        mgr->unset_time_limit();
         return ResultExpansion(true, TruncatedReason::IMAGE_ZERO, image_time());
     }
 
@@ -122,17 +122,17 @@ ResultExpansion Frontier::expand_zero(int maxTime, int maxNodes, bool fw) {
 
 ResultExpansion Frontier::expand_cost(int maxTime, int maxNodes, bool fw) {
     utils::Timer image_time;
-    mgr->setTimeLimit(maxTime);
+    mgr->set_time_limit(maxTime);
     // cout << maxTime << " + " << maxNodes << endl;
     try {
         for (size_t i = 0; i < S.size(); i++) {
             Simg.push_back(map<int, Bucket>());
             mgr->cost_image(fw, S[i], Simg[i], maxNodes);
         }
-        mgr->unsetTimeLimit();
+        mgr->unset_time_limit();
     } catch (BDDError e) {
         // Update estimation
-        mgr->unsetTimeLimit();
+        mgr->unset_time_limit();
 
         return ResultExpansion(false, TruncatedReason::IMAGE_COST, image_time());
     }

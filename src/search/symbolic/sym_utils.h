@@ -113,9 +113,9 @@ void mergeAux(std::vector<T> &elems, FunctionMerge f, int maxTime,
 template<class T, class FunctionMerge>
 void merge(SymVariables *vars, std::vector<T> &elems, FunctionMerge f,
            int maxTime, int maxSize) {
-    vars->setTimeLimit(maxTime);
+    vars->set_time_limit(maxTime);
     mergeAux(elems, f, maxTime, maxSize);
-    vars->unsetTimeLimit();
+    vars->unset_time_limit();
 }
 
 /*

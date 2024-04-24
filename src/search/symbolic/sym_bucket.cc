@@ -6,7 +6,7 @@
 using namespace std;
 
 namespace symbolic {
-void removeZero(Bucket &bucket) {
+void remove_zero(Bucket &bucket) {
     bucket.erase(remove_if(begin(bucket), end(bucket),
                            [](BDD &bdd) {return bdd.IsZero();}),
                  end(bucket));
@@ -48,7 +48,7 @@ bool extract_states(Bucket &list, const Bucket &pruned, Bucket &res) {
             res.push_back(prun);
         }
     }
-    removeZero(list);
+    remove_zero(list);
     return somethingPruned;
 }
 

@@ -53,6 +53,7 @@ BDD ConjunctiveTransitionRelation::image(const BDD &from) const {
 }
 
 BDD ConjunctiveTransitionRelation::preimage(const BDD &from) const {
+    utils::exit_with(utils::ExitCode::SEARCH_CRITICAL_ERROR);
     return sym_vars->zeroBDD();
 }
 
@@ -73,6 +74,7 @@ BDD ConjunctiveTransitionRelation::image(const BDD &from, int maxNodes) const {
 }
 
 BDD ConjunctiveTransitionRelation::preimage(const BDD &from, int maxNodes) const {
+    utils::exit_with(utils::ExitCode::SEARCH_CRITICAL_ERROR);
     return sym_vars->zeroBDD();
 }
 

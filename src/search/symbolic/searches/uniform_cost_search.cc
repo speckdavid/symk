@@ -32,7 +32,7 @@ bool UniformCostSearch::init(shared_ptr<SymStateSpaceManager> manager,
     last_g_cost = 0;
     assert(mgr);
 
-    BDD init_bdd = fw ? mgr->getInitialState() : mgr->getGoal();
+    BDD init_bdd = fw ? mgr->get_initial_state() : mgr->get_goal();
     frontier.init(manager.get(), init_bdd);
 
     closed->init(mgr.get());
@@ -44,9 +44,9 @@ bool UniformCostSearch::init(shared_ptr<SymStateSpaceManager> manager,
         perfectHeuristic = make_shared<ClosedList>();
         perfectHeuristic->init(mgr.get());
         if (fw) {
-            perfectHeuristic->insert(0, mgr->getGoal());
+            perfectHeuristic->insert(0, mgr->get_goal());
         } else {
-            perfectHeuristic->insert(0, mgr->getInitialState());
+            perfectHeuristic->insert(0, mgr->get_initial_state());
         }
     }
 
@@ -111,8 +111,8 @@ bool UniformCostSearch::prepareBucket() {
 // Idea: no need to "change" BDDs until we actually process them
 void UniformCostSearch::filterFrontier() {
     frontier.filter(!closed->notClosed());
-    mgr->filterMutex(frontier.bucket(), fw, initialization());
-    removeZero(frontier.bucket());
+    mgr->filter_mutex(frontier.bucket(), fw, initialization());
+    remove_zero(frontier.bucket());
 }
 
 void UniformCostSearch::stepImage(int maxTime, int maxNodes) {
@@ -142,7 +142,7 @@ void UniformCostSearch::stepImage(int maxTime, int maxNodes) {
         for (auto &resImage : res_expansion.buckets) {
             for (auto &pairCostBDDs : resImage) {
                 int cost = frontier.g() + pairCostBDDs.first;
-                mgr->mergeBucket(pairCostBDDs.second);
+                mgr->merge_bucket(pairCostBDDs.second);
 
                 checkFrontierCut(pairCostBDDs.second, cost);
 
@@ -160,7 +160,7 @@ void UniformCostSearch::stepImage(int maxTime, int maxNodes) {
         prepareBucket();
     }
 
-    engine->setLowerBound(getG() + mgr->getAbsoluteMinTransitionCost());
+    engine->setLowerBound(getG() + mgr->get_min_transition_cost());
     step_estimation.set_data(step_timer(), stepNodes, !res_expansion.ok);
 }
 }

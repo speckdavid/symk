@@ -40,7 +40,7 @@ void TopkSymbolicUniformCostSearch::initialize() {
         bw_search->init(mgr, false, fw_search.get());
     }
 
-    auto individual_trs = fw ? fw_search->getStateSpaceShared()->getIndividualTRs() :  bw_search->getStateSpaceShared()->getIndividualTRs();
+    auto individual_trs = fw ? fw_search->getStateSpaceShared()->get_individual_transition_relations() :  bw_search->getStateSpaceShared()->get_individual_transition_relations();
 
     solution_registry->init(vars,
                             fw_search ? fw_search->getClosedShared() : nullptr,

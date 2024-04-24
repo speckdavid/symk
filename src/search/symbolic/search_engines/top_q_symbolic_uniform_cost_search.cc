@@ -35,7 +35,7 @@ SearchStatus TopqSymbolicUniformCostSearch::step() {
     step_num++;
     // Handling empty plan
     if (step_num == 0) {
-        BDD cut = mgr->getInitialState() * mgr->getGoal();
+        BDD cut = mgr->get_initial_state() * mgr->get_goal();
         if (!cut.IsZero()) {
             new_solution(SymSolutionCut(0, 0, cut));
         }

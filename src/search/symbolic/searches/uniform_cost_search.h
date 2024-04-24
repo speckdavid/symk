@@ -101,7 +101,7 @@ public:
          UniformCostSearch *opposite_search); // Init forward or backward search
 
     virtual int getF() const override {
-        return open_list.minNextG(frontier, mgr->getAbsoluteMinTransitionCost());
+        return open_list.minNextG(frontier, mgr->get_min_transition_cost());
     }
 
     virtual int getG() const {
@@ -121,8 +121,8 @@ public:
 
     // void write(const std::string & file) const;
 
-    void filterMutex(Bucket &bucket) {
-        mgr->filterMutex(bucket, fw, initialization());
+    void filter_mutex(Bucket &bucket) {
+        mgr->filter_mutex(bucket, fw, initialization());
     }
 };
 }

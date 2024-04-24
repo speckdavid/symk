@@ -39,7 +39,7 @@ void ClosedList::insert(int h, BDD S) {
         closed[h] = S;
     }
 
-    if (mgr->hasTransitions0()) {
+    if (mgr->has_zero_cost_transition()) {
         zeroCostClosed[h].push_back(S);
     }
     closedTotal += S;
