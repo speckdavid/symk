@@ -19,6 +19,13 @@ enum class MutexType {
 std::ostream &operator<<(std::ostream &os, const MutexType &m);
 extern const std::vector<std::string> MutexTypeValues;
 
+enum class ConditionalEffectsTransitionType {
+    MONOLITHIC,
+    CONJUNCTIVE,
+};
+std::ostream &operator<<(std::ostream &os, const ConditionalEffectsTransitionType &ce_type);
+extern const std::vector<std::string> ConditionalEffectsTransitionTypeValues;
+
 enum class Dir {FW, BW, BIDIR};
 std::ostream &operator<<(std::ostream &os, const Dir &dir);
 extern const std::vector<std::string> DirValues;

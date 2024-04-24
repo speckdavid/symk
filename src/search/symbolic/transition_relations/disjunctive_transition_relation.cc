@@ -110,22 +110,17 @@ void DisjunctiveTransitionRelation::add_condition(BDD cond) {
 }
 
 BDD DisjunctiveTransitionRelation::image(const BDD &from) const {
-    BDD aux = from;
-    BDD tmp = tr_bdd.AndAbstract(aux, exists_vars);
-    BDD res = tmp.SwapVariables(swap_vars, swap_vars_p);
-    return res;
+    return image(from, 0U);
+}
+
+BDD DisjunctiveTransitionRelation::preimage(const BDD &from) const {
+    return preimage(from, 0U);
 }
 
 BDD DisjunctiveTransitionRelation::image(const BDD &from, int maxNodes) const {
     BDD aux = from;
     BDD tmp = tr_bdd.AndAbstract(aux, exists_vars, maxNodes);
     BDD res = tmp.SwapVariables(swap_vars, swap_vars_p);
-    return res;
-}
-
-BDD DisjunctiveTransitionRelation::preimage(const BDD &from) const {
-    BDD tmp = from.SwapVariables(swap_vars, swap_vars_p);
-    BDD res = tr_bdd.AndAbstract(tmp, exists_bw_vars);
     return res;
 }
 
@@ -139,59 +134,83 @@ int DisjunctiveTransitionRelation::nodeCount() const {
     return tr_bdd.nodeCount();
 }
 
-void DisjunctiveTransitionRelation::merge(const DisjunctiveTransitionRelation &t2, int maxNodes) {
+void DisjunctiveTransitionRelation::disjunctive_merge(const DisjunctiveTransitionRelation &t2, int maxNodes) {
     assert(cost == t2.cost);
-    if (cost != t2.cost) {
-        cerr << "Error: merging transitions with different cost: " << cost << " "
-             << t2.cost << endl;
-        utils::exit_with(utils::ExitCode::SEARCH_CRITICAL_ERROR);
-    }
 
     // Attempt to generate the new tBDD
-    vector<int> newEffVars;
+    vector<int> new_eff_vars;
     set_union(eff_vars.begin(), eff_vars.end(), t2.eff_vars.begin(),
-              t2.eff_vars.end(), back_inserter(newEffVars));
+              t2.eff_vars.end(), back_inserter(new_eff_vars));
 
-    BDD newTBDD = tr_bdd;
-    BDD newTBDD2 = t2.tr_bdd;
+    BDD new_t_bdd = tr_bdd;
+    BDD new_t_bdd2 = t2.tr_bdd;
 
     vector<int>::const_iterator var1 = eff_vars.begin();
     vector<int>::const_iterator var2 = t2.eff_vars.begin();
-    for (vector<int>::const_iterator var = newEffVars.begin();
-         var != newEffVars.end(); ++var) {
+    for (vector<int>::const_iterator var = new_eff_vars.begin(); var != new_eff_vars.end(); ++var) {
         if (var1 == eff_vars.end() || *var1 != *var) {
-            newTBDD *= sym_vars->biimp(*var);
+            new_t_bdd *= sym_vars->biimp(*var);
         } else {
             ++var1;
         }
 
         if (var2 == t2.eff_vars.end() || *var2 != *var) {
-            newTBDD2 *= sym_vars->biimp(*var);
+            new_t_bdd2 *= sym_vars->biimp(*var);
         } else {
             ++var2;
         }
     }
-    newTBDD = newTBDD.Or(newTBDD2, maxNodes);
+    new_t_bdd = new_t_bdd.Or(new_t_bdd2, maxNodes);
 
-    if (newTBDD.nodeCount() > maxNodes) {
+    if (new_t_bdd.nodeCount() > maxNodes) {
         throw BDDError(); // We could not sucessfully merge
     }
 
-    tr_bdd = newTBDD;
+    tr_bdd = new_t_bdd;
 
-    eff_vars.swap(newEffVars);
+    eff_vars.swap(new_eff_vars);
     exists_vars *= t2.exists_vars;
     exists_bw_vars *= t2.exists_bw_vars;
 
-    for (size_t i = 0; i < t2.swap_vars.size(); i++) {
-        if (find(swap_vars.begin(), swap_vars.end(), t2.swap_vars[i]) ==
-            swap_vars.end()) {
+    for (size_t i = 0; i < t2.swap_vars.size(); ++i) {
+        if (find(swap_vars.begin(), swap_vars.end(), t2.swap_vars[i]) == swap_vars.end()) {
             swap_vars.push_back(t2.swap_vars[i]);
             swap_vars_p.push_back(t2.swap_vars_p[i]);
         }
     }
 
     ops_ids.insert(t2.ops_ids.begin(), t2.ops_ids.end());
+}
+
+void DisjunctiveTransitionRelation::conjunctive_merge(const DisjunctiveTransitionRelation &t2, int max_nodes) {
+    assert(cost == t2.cost);
+    assert(get_unique_operator_id() == t2.get_unique_operator_id());
+
+    // Attempt to generate the new tBDD
+    vector<int> new_eff_vars;
+    set_union(eff_vars.begin(), eff_vars.end(), t2.eff_vars.begin(),
+              t2.eff_vars.end(), back_inserter(new_eff_vars));
+
+    BDD new_t_bdd = tr_bdd;
+    BDD new_t_bdd2 = t2.tr_bdd;
+
+    new_t_bdd = new_t_bdd.And(new_t_bdd2, max_nodes);
+
+    if (new_t_bdd.nodeCount() > max_nodes) {
+        throw BDDError(); // We could not sucessfully merge
+    }
+
+    tr_bdd = new_t_bdd;
+    eff_vars.swap(new_eff_vars);
+    exists_vars *= t2.exists_vars;
+    exists_bw_vars *= t2.exists_bw_vars;
+
+    for (size_t i = 0; i < t2.swap_vars.size(); ++i) {
+        if (find(swap_vars.begin(), swap_vars.end(), t2.swap_vars[i]) == swap_vars.end()) {
+            swap_vars.push_back(t2.swap_vars[i]);
+            swap_vars_p.push_back(t2.swap_vars_p[i]);
+        }
+    }
 }
 
 // For each op, include relevant mutexes

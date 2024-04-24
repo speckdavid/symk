@@ -115,8 +115,8 @@ public:
     void unset_time_limit() {sym_vars->unset_time_limit();}
 
     // For plan solution reconstruction
-    const std::map<int, std::vector<DisjunctiveTransitionRelation>> &get_individual_transition_relations() const {
-        return sym_transition_relations.get_individual_transition_relations();
+    std::shared_ptr<SymTransitionRelations> get_transition_relations() const {
+        return std::make_shared<SymTransitionRelations>(sym_transition_relations);
     }
 };
 }

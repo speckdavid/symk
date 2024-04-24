@@ -19,7 +19,7 @@ class OriginalStateSpace;
 /*
  * Represents a disjunctive transition relation with BDDs.
  */
-class DisjunctiveTransitionRelation : TransitionRelation {
+class DisjunctiveTransitionRelation : public TransitionRelation {
     SymVariables *sym_vars; // To call basic BDD creation methods
     TaskProxy task_proxy; // Use task_proxy to access task information.
     int cost; // transition cost
@@ -40,22 +40,22 @@ public:
 
     BDD image(const BDD &from) const override;
     BDD preimage(const BDD &from) const override;
-    BDD image(const BDD &from, int maxNodes) const override;
-    BDD preimage(const BDD &from, int maxNodes) const override;
+    BDD image(const BDD &from, int max_nodes) const override;
+    BDD preimage(const BDD &from, int max_nodes) const override;
 
     virtual int nodeCount() const override;
+    const OperatorID &get_unique_operator_id() const override;
 
     void edeletion(const std::vector<std::vector<BDD>> &notMutexBDDsByFluentFw,
                    const std::vector<std::vector<BDD>> &notMutexBDDsByFluentBw,
                    const std::vector<std::vector<BDD>> &exactlyOneBDDsByFluent);
 
-    void merge(const DisjunctiveTransitionRelation &t2, int maxNodes);
+    void disjunctive_merge(const DisjunctiveTransitionRelation &t2, int max_nodes);
+    void conjunctive_merge(const DisjunctiveTransitionRelation &t2, int max_nodes);
 
     int get_cost() const {return cost;}
 
     void set_cost(int cost_) {cost = cost_;}
-
-    const OperatorID &get_unique_operator_id() const;
 
     const std::set<OperatorID> &get_operator_ids() const {return ops_ids;}
 

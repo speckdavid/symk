@@ -52,13 +52,13 @@ SymStateSpaceManager::SymStateSpaceManager(SymVariables *sym_vars, const SymPara
 
 void SymStateSpaceManager::zero_preimage(BDD bdd, vector<BDD> &res, int node_limit) const {
     for (const auto &tr : sym_transition_relations.get_transition_relations().at(0)) {
-        res.push_back(tr.preimage(bdd, node_limit));
+        res.push_back(tr->preimage(bdd, node_limit));
     }
 }
 
 void SymStateSpaceManager::zero_image(BDD bdd, vector<BDD> &res, int node_limit) const {
     for (const auto &tr : sym_transition_relations.get_transition_relations().at(0)) {
-        res.push_back(tr.image(bdd, node_limit));
+        res.push_back(tr->image(bdd, node_limit));
     }
 }
 
@@ -68,7 +68,7 @@ void SymStateSpaceManager::cost_preimage(BDD bdd, map<int, vector<BDD>> &res, in
         if (cost == 0)
             continue;
         for (size_t i = 0; i < trs.second.size(); i++) {
-            BDD result = trs.second[i].preimage(bdd, node_limit);
+            BDD result = trs.second[i]->preimage(bdd, node_limit);
             res[cost].push_back(result);
         }
     }
@@ -80,7 +80,7 @@ void SymStateSpaceManager::cost_image(BDD bdd, map<int, vector<BDD>> &res, int n
         if (cost == 0)
             continue;
         for (size_t i = 0; i < trs.second.size(); i++) {
-            BDD result = trs.second[i].image(bdd, node_limit);
+            BDD result = trs.second[i]->image(bdd, node_limit);
             res[cost].push_back(result);
         }
     }

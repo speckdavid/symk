@@ -14,6 +14,8 @@ class OptionParser;
 
 namespace symbolic {
 struct SymParameters {
+    
+    ConditionalEffectsTransitionType ce_transition_type;
     int max_tr_size, max_tr_time;
 
     MutexType mutex_type;

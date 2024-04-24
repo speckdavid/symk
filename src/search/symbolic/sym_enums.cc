@@ -4,19 +4,15 @@
 using namespace std;
 
 namespace symbolic {
-ostream &operator<<(ostream &os, const Dir &dir) {
-    switch (dir) {
-    case Dir::FW:
-        return os << "fw";
-    case Dir::BW:
-        return os << "bw";
-    case Dir::BIDIR:
-        return os << "bd";
-    default:
-        cerr << "Name of Dir not known";
-        utils::exit_with(utils::ExitCode::SEARCH_UNSUPPORTED);
-    }
-}
+const vector<string> MutexTypeValues{
+    "MUTEX_NOT", "MUTEX_AND", "MUTEX_EDELETION",
+};
+
+const vector<string> ConditionalEffectsTransitionTypeValues{
+    "MONOLITHIC", "CONJUNCTIVE"
+};
+
+const vector<string> DirValues{"FW", "BW", "BIDIR"};
 
 ostream &operator<<(ostream &os, const MutexType &m) {
     switch (m) {
@@ -32,9 +28,29 @@ ostream &operator<<(ostream &os, const MutexType &m) {
     }
 }
 
-const vector<string> MutexTypeValues{
-    "MUTEX_NOT", "MUTEX_AND", "MUTEX_EDELETION",
-};
+ostream &operator<<(ostream &os, const ConditionalEffectsTransitionType &ce_type) {
+    switch (ce_type) {
+    case ConditionalEffectsTransitionType::MONOLITHIC:
+        return os << "monolithic";
+    case ConditionalEffectsTransitionType::CONJUNCTIVE:
+        return os << "conjunctive";
+    default:
+        cerr << "Name of ConditionalEffectsTransitionType not known";
+        utils::exit_with(utils::ExitCode::SEARCH_UNSUPPORTED);
+    }
+}
 
-const vector<string> DirValues{"FW", "BW", "BIDIR"};
+ostream &operator<<(ostream &os, const Dir &dir) {
+    switch (dir) {
+    case Dir::FW:
+        return os << "fw";
+    case Dir::BW:
+        return os << "bw";
+    case Dir::BIDIR:
+        return os << "bd";
+    default:
+        cerr << "Name of Dir not known";
+        utils::exit_with(utils::ExitCode::SEARCH_UNSUPPORTED);
+    }
+}
 }

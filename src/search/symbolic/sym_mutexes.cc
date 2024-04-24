@@ -136,7 +136,7 @@ void SymMutexes::init(const shared_ptr<AbstractTask> task, bool genMutexBDD, boo
             }
         }
 
-        merge(sym_vars, notMutexBDDs, mergeAndBDD, sym_params.max_mutex_time, sym_params.max_mutex_size);
+        merge(sym_vars, notMutexBDDs, merge_and_BDD, sym_params.max_mutex_time, sym_params.max_mutex_size);
         reverse(notMutexBDDs.begin(), notMutexBDDs.end());
     }
 }

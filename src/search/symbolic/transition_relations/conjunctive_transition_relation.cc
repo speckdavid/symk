@@ -2,6 +2,8 @@
 
 #include "../../tasks/effect_aggregated_task.h"
 
+#include "../sym_utils.h"
+
 #include <numeric>
 #include <set>
 
@@ -37,52 +39,46 @@ void ConjunctiveTransitionRelation::init() {
 }
 
 BDD ConjunctiveTransitionRelation::image(const BDD &from) const {
-    BDD aux = from;
-    BDD res = sym_vars->oneBDD();
-    for (auto const &tr : transitions) {
-        res = from.And(aux);
-    }
-    // Optimize!
-    for (auto const &tr : transitions) {
-        res = from.ExistAbstract(tr.get_exists_vars());
-    }
-    for (auto const &tr : transitions) {
-        res = from.SwapVariables(tr.get_swap_vars(), tr.get_swap_vars_p());
-    }
-    return res;
+    return image(from, 0U);
 }
 
 BDD ConjunctiveTransitionRelation::preimage(const BDD &from) const {
-    utils::exit_with(utils::ExitCode::SEARCH_CRITICAL_ERROR);
-    return sym_vars->zeroBDD();
+    return preimage(from, 0U);
 }
 
-BDD ConjunctiveTransitionRelation::image(const BDD &from, int maxNodes) const {
-    BDD aux = from;
-    BDD res = sym_vars->oneBDD();
+BDD ConjunctiveTransitionRelation::image(const BDD &from, int max_nodes) const {
+    BDD res = from;
     for (auto const &tr : transitions) {
-        res = from.And(aux, maxNodes);
+        res = res.And(tr.get_tr_BDD(), max_nodes);
     }
-    // Optimize!
-    for (auto const &tr : transitions) {
-        res = from.ExistAbstract(tr.get_exists_vars(), maxNodes);
-    }
-    for (auto const &tr : transitions) {
-        res = from.SwapVariables(tr.get_swap_vars(), tr.get_swap_vars_p());
-    }
+    res = res.ExistAbstract(exists_vars);
+    res = res.SwapVariables(swap_vars, swap_vars_p);
     return res;
 }
 
-BDD ConjunctiveTransitionRelation::preimage(const BDD &from, int maxNodes) const {
-    utils::exit_with(utils::ExitCode::SEARCH_CRITICAL_ERROR);
-    return sym_vars->zeroBDD();
+BDD ConjunctiveTransitionRelation::preimage(const BDD &from, int max_nodes) const {
+    BDD res = from;
+    res = res.SwapVariables(swap_vars, swap_vars_p);
+    for (auto const &tr : transitions) {
+        res = res.And(tr.get_tr_BDD(), max_nodes);
+    }
+    res = res.ExistAbstract(exists_bw_vars);
+    return res;
 }
 
 int ConjunctiveTransitionRelation::nodeCount() const {
     return std::accumulate(transitions.begin(), transitions.end(), 0, [](int acc, const auto &tr) {return acc + tr.nodeCount();});
 }
 
+const OperatorID &ConjunctiveTransitionRelation::get_unique_operator_id() const {
+    return operator_id;
+}
+
 int ConjunctiveTransitionRelation::size() const {
     return transitions.size();
+}
+
+bool ConjunctiveTransitionRelation::is_monolithic() const {
+    return size() == 1;
 }
 }

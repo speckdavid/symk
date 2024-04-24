@@ -19,38 +19,8 @@
 #include <vector>
 
 namespace symbolic {
-template<class T>
-T getData(std::string line, const std::string &separator,
-          const std::string &separator_end) {
-    if (separator != "") {
-        line.erase(line.begin(), line.begin() + line.find(separator) + 1);
-    }
-
-    if (separator_end != "") {
-        line.erase(line.begin() + line.find(separator_end), line.end());
-    }
-
-    T res;
-    std::stringstream ss;
-    ss << line;
-    if (!(ss >> res)) {
-        std::cerr << std::endl << "ERROR, could not parse: " << line << std::endl;
-        utils::exit_with(utils::ExitCode::SEARCH_CRITICAL_ERROR);
-    }
-    return res;
-}
-
-template<class T>
-T getData(std::ifstream &file, const std::string &separator) {
-    std::string line;
-    getline(file, line);
-    T res = getData<T>(line, separator, "");
-    return res;
-}
-
 template<class T, class FunctionMerge>
-void mergeAux(std::vector<T> &elems, FunctionMerge f, int maxTime,
-              int maxSize) {
+void mergeAux(std::vector<T> &elems, FunctionMerge f, int maxTime, int maxSize) {
     std::vector<T> result;
     if (maxSize <= 1 || elems.size() <= 1) {
         return;
@@ -98,12 +68,6 @@ void mergeAux(std::vector<T> &elems, FunctionMerge f, int maxTime,
     if (!aux.empty()) {
         elems.insert(elems.end(), aux.begin(), aux.end());
     }
-    /*for(int i = 0; i < aux.size(); i++){
-      elems.push_back(aux[i]);
-      }*/
-
-    //  utils::g_log << "Merged to " << elems.size() << ". Took "<< merge_timer << "
-    //  seconds" << endl;
 }
 
 /*
@@ -111,8 +75,7 @@ void mergeAux(std::vector<T> &elems, FunctionMerge f, int maxTime,
  * Relays on several methods: T, int T.size() and bool T.merge(T, maxSize)
  */
 template<class T, class FunctionMerge>
-void merge(SymVariables *vars, std::vector<T> &elems, FunctionMerge f,
-           int maxTime, int maxSize) {
+void merge(SymVariables *vars, std::vector<T> &elems, FunctionMerge f, int maxTime, int maxSize) {
     vars->set_time_limit(maxTime);
     mergeAux(elems, f, maxTime, maxSize);
     vars->unset_time_limit();
@@ -127,11 +90,10 @@ void merge(std::vector<T> &elems, FunctionMerge f, int maxSize) {
     mergeAux(elems, f, 0, maxSize);
 }
 
-DisjunctiveTransitionRelation mergeTR(DisjunctiveTransitionRelation tr, const DisjunctiveTransitionRelation &tr2,
-                           int maxSize);
-BDD mergeAndBDD(const BDD &bdd, const BDD &bdd2, int maxSize);
-BDD mergeOrBDD(const BDD &bdd, const BDD &bdd2, int maxSize);
+DisjunctiveTransitionRelation disjunctive_tr_merge(DisjunctiveTransitionRelation tr, const DisjunctiveTransitionRelation &tr2, int maxSize);
+DisjunctiveTransitionRelation conjunctive_tr_merge(DisjunctiveTransitionRelation tr, const DisjunctiveTransitionRelation &tr2, int maxSize);
 
-inline std::string dirname(bool fw) {return fw ? "fw" : "bw";}
+BDD merge_and_BDD(const BDD &bdd, const BDD &bdd2, int maxSize);
+BDD merge_or_BDD(const BDD &bdd, const BDD &bdd2, int maxSize);
 }
 #endif

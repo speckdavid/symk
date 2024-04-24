@@ -5,10 +5,10 @@
 
 #include "reconstruction_node.h"
 
+#include "../sym_transition_relations.h"
 #include "../sym_variables.h"
 
 #include "../plan_selection/plan_selector.h"
-#include "../transition_relations/disjunctive_transition_relation.h"
 
 #include "../../plan_manager.h"
 #include "../../state_registry.h"
@@ -48,7 +48,7 @@ protected:
     std::shared_ptr<ClosedList> fw_closed;
     std::shared_ptr<ClosedList> bw_closed;
     std::shared_ptr<PlanSelector> plan_data_base;
-    std::map<int, std::vector<DisjunctiveTransitionRelation>> trs;
+    std::shared_ptr<SymTransitionRelations> sym_transition_relations;
 
     // We would like to use the prio queue implemented in FD but it requires
     // integer values as prio and we have a more complex comparision
@@ -64,7 +64,7 @@ protected:
 
     bool is_solution(const ReconstructionNode &node) const;
 
-    bool task_has_zero_costs() const {return trs.count(0) > 0;}
+    bool task_has_zero_costs() const {return sym_transition_relations->has_zero_cost_transition();}
 
     bool justified_solutions() const {return justified_solutions_pruning;}
 
@@ -82,7 +82,7 @@ public:
     void init(std::shared_ptr<SymVariables> sym_vars,
               std::shared_ptr<symbolic::ClosedList> fw_closed,
               std::shared_ptr<symbolic::ClosedList> bw_closed,
-              std::map<int, std::vector<DisjunctiveTransitionRelation>> &trs,
+              std::shared_ptr<SymTransitionRelations> sym_transition_relations,
               std::shared_ptr<PlanSelector> plan_data_base,
               bool single_solution,
               bool simple_solutions);

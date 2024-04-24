@@ -19,7 +19,8 @@ namespace symbolic {
 /*
  * Represents a conjunctive transition relation (used for conditional effects) with BDDs.
  */
-class ConjunctiveTransitionRelation : TransitionRelation {
+class ConjunctiveTransitionRelation : public TransitionRelation {
+    friend class SymTransitionRelations;
 protected:
     SymVariables *sym_vars; // To call basic BDD creation methods
     const std::shared_ptr<extra_tasks::EffectAggregatedTask> &task; // Use task_proxy to access task information.
@@ -36,12 +37,16 @@ public:
 
     BDD image(const BDD &from) const override;
     BDD preimage(const BDD &from) const override;
-    BDD image(const BDD &from, int maxNodes) const override;
-    BDD preimage(const BDD &from, int maxNodes) const override;
+    BDD image(const BDD &from, int max_nodes) const override;
+    BDD preimage(const BDD &from, int max_nodes) const override;
 
     virtual int nodeCount() const override;
 
+    const OperatorID &get_unique_operator_id() const override;
+
     int size() const;
+
+    bool is_monolithic() const;
 };
 }
 #endif
