@@ -1,5 +1,5 @@
 #include "reconstruction_node.h"
-#include "../transition_relation.h"
+#include "../transition_relations/disjunctive_transition_relation.h"
 #include "../../utils/logging.h"
 
 using namespace std;
@@ -43,22 +43,22 @@ shared_ptr<ReconstructionNode> ReconstructionNode::get_origin_successor() const 
     return cur;
 }
 
-shared_ptr<TransitionRelation> ReconstructionNode::get_to_predecessor_tr() const {
+shared_ptr<DisjunctiveTransitionRelation> ReconstructionNode::get_to_predecessor_tr() const {
     return to_predecessor_tr;
 }
 
-shared_ptr<TransitionRelation> ReconstructionNode::get_to_successor_tr() const {
+shared_ptr<DisjunctiveTransitionRelation> ReconstructionNode::get_to_successor_tr() const {
     return to_successor_tr;
 }
 
 void ReconstructionNode::set_predecessor(const shared_ptr<ReconstructionNode> &predecessor,
-                                         const shared_ptr<TransitionRelation> &to_predecessor_tr) {
+                                         const shared_ptr<DisjunctiveTransitionRelation> &to_predecessor_tr) {
     this->predecessor = predecessor;
     this->to_predecessor_tr = to_predecessor_tr;
 }
 
 void ReconstructionNode::set_successor(const shared_ptr<ReconstructionNode> &successor,
-                                       const shared_ptr<TransitionRelation> &to_successor_tr) {
+                                       const shared_ptr<DisjunctiveTransitionRelation> &to_successor_tr) {
     this->successor = successor;
     this->to_successor_tr = to_successor_tr;
 }

@@ -836,9 +836,13 @@ fast_downward_plugin(
         symbolic/sym_mutexes
         symbolic/sym_parameters
         symbolic/sym_state_space_manager
+        symbolic/sym_transition_relations
         symbolic/sym_utils
         symbolic/sym_variables
-        symbolic/transition_relation
+        symbolic/transition_relations/conjunctive_transition_relation
+        symbolic/transition_relations/transition_relation
+        symbolic/transition_relations/disjunctive_transition_relation
+        tasks/effect_aggregated_task
     DEPENDS SDAC
 )
 

@@ -1,10 +1,9 @@
-#include "transition_relation.h"
+#include "disjunctive_transition_relation.h"
 
-#include "sym_state_space_manager.h"
+#include "../sym_state_space_manager.h"
 
-#include "../task_proxy.h"
-#include "../utils/logging.h"
-#include "../utils/timer.h"
+#include "../../utils/logging.h"
+#include "../../utils/timer.h"
 
 
 #include <algorithm>
@@ -13,16 +12,18 @@
 using namespace std;
 
 namespace symbolic {
-TransitionRelation::TransitionRelation(
-    SymVariables *sVars, OperatorID op_id,
-    const shared_ptr<AbstractTask> &task)
-    : sym_vars(sVars), task_proxy(*task),
-      cost(task_proxy.get_operators()[op_id].get_cost()), tr_bdd(sVars->oneBDD()),
-      exist_vars(sVars->oneBDD()), exists_bw_vars(sVars->oneBDD()) {
+DisjunctiveTransitionRelation::DisjunctiveTransitionRelation(SymVariables *sym_vars, OperatorID op_id, const shared_ptr<AbstractTask> &task)
+    : TransitionRelation(),
+      sym_vars(sym_vars),
+      task_proxy(*task),
+      cost(task_proxy.get_operators()[op_id].get_cost()),
+      tr_bdd(sym_vars->oneBDD()),
+      exists_vars(sym_vars->oneBDD()),
+      exists_bw_vars(sym_vars->oneBDD()) {
     ops_ids.insert(op_id);
 }
 
-void TransitionRelation::init() {
+void DisjunctiveTransitionRelation::init() {
     OperatorProxy op = task_proxy.get_operators()[ops_ids.begin()->get_index()];
 
     for (auto const &pre : op.get_preconditions()) {
@@ -86,55 +87,59 @@ void TransitionRelation::init() {
         }
     }
     assert(swap_vars.size() == swap_vars_p.size());
-    // exist_vars/exists_bw_vars is just the conjunction of swap_vars and swap_vars_p
+    // exists_vars/exists_bw_vars is just the conjunction of swap_vars and swap_vars_p
     for (size_t i = 0; i < swap_vars.size(); ++i) {
-        exist_vars *= swap_vars[i];
+        exists_vars *= swap_vars[i];
         exists_bw_vars *= swap_vars_p[i];
     }
 }
 
-void TransitionRelation::init_from_tr(const TransitionRelation &other) {
+void DisjunctiveTransitionRelation::init_from_tr(const DisjunctiveTransitionRelation &other) {
     tr_bdd = other.get_tr_BDD();
     ops_ids = other.get_operator_ids();
     cost = other.get_cost();
     eff_vars = other.get_eff_vars();
-    exist_vars = other.get_exists_vars();
-    exists_bw_vars = other.get_exist_bw_vars();
+    exists_vars = other.get_exists_vars();
+    exists_bw_vars = other.get_exists_bw_vars();
     swap_vars = other.get_swap_vars();
     swap_vars_p = other.get_swap_vars_p();
 }
 
-void TransitionRelation::add_condition(BDD cond) {
+void DisjunctiveTransitionRelation::add_condition(BDD cond) {
     tr_bdd *= cond;
 }
 
-BDD TransitionRelation::image(const BDD &from) const {
+BDD DisjunctiveTransitionRelation::image(const BDD &from) const {
     BDD aux = from;
-    BDD tmp = tr_bdd.AndAbstract(aux, exist_vars);
+    BDD tmp = tr_bdd.AndAbstract(aux, exists_vars);
     BDD res = tmp.SwapVariables(swap_vars, swap_vars_p);
     return res;
 }
 
-BDD TransitionRelation::image(const BDD &from, int maxNodes) const {
+BDD DisjunctiveTransitionRelation::image(const BDD &from, int maxNodes) const {
     BDD aux = from;
-    BDD tmp = tr_bdd.AndAbstract(aux, exist_vars, maxNodes);
+    BDD tmp = tr_bdd.AndAbstract(aux, exists_vars, maxNodes);
     BDD res = tmp.SwapVariables(swap_vars, swap_vars_p);
     return res;
 }
 
-BDD TransitionRelation::preimage(const BDD &from) const {
+BDD DisjunctiveTransitionRelation::preimage(const BDD &from) const {
     BDD tmp = from.SwapVariables(swap_vars, swap_vars_p);
     BDD res = tr_bdd.AndAbstract(tmp, exists_bw_vars);
     return res;
 }
 
-BDD TransitionRelation::preimage(const BDD &from, int maxNodes) const {
+BDD DisjunctiveTransitionRelation::preimage(const BDD &from, int maxNodes) const {
     BDD tmp = from.SwapVariables(swap_vars, swap_vars_p);
     BDD res = tr_bdd.AndAbstract(tmp, exists_bw_vars, maxNodes);
     return res;
 }
 
-void TransitionRelation::merge(const TransitionRelation &t2, int maxNodes) {
+int DisjunctiveTransitionRelation::nodeCount() const {
+    return tr_bdd.nodeCount();
+}
+
+void DisjunctiveTransitionRelation::merge(const DisjunctiveTransitionRelation &t2, int maxNodes) {
     assert(cost == t2.cost);
     if (cost != t2.cost) {
         cerr << "Error: merging transitions with different cost: " << cost << " "
@@ -175,7 +180,7 @@ void TransitionRelation::merge(const TransitionRelation &t2, int maxNodes) {
     tr_bdd = newTBDD;
 
     eff_vars.swap(newEffVars);
-    exist_vars *= t2.exist_vars;
+    exists_vars *= t2.exists_vars;
     exists_bw_vars *= t2.exists_bw_vars;
 
     for (size_t i = 0; i < t2.swap_vars.size(); i++) {
@@ -190,7 +195,7 @@ void TransitionRelation::merge(const TransitionRelation &t2, int maxNodes) {
 }
 
 // For each op, include relevant mutexes
-void TransitionRelation::edeletion(
+void DisjunctiveTransitionRelation::edeletion(
     const vector<vector<BDD>> &notMutexBDDsByFluentFw,
     const vector<vector<BDD>> &notMutexBDDsByFluentBw,
     const vector<vector<BDD>> &exactlyOneBDDsByFluent) {
@@ -239,7 +244,7 @@ void TransitionRelation::edeletion(
     }
 }
 
-const OperatorID &TransitionRelation::get_unique_operator_id() const {
+const OperatorID &DisjunctiveTransitionRelation::get_unique_operator_id() const {
     assert(ops_ids.size() == 1);
     return *(get_operator_ids().begin());
 }

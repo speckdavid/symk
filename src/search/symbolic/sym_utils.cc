@@ -1,7 +1,7 @@
 #include "sym_utils.h"
 
 namespace symbolic {
-TransitionRelation mergeTR(TransitionRelation tr, const TransitionRelation &tr2,
+DisjunctiveTransitionRelation mergeTR(DisjunctiveTransitionRelation tr, const DisjunctiveTransitionRelation &tr2,
                            int maxSize) {
     tr.merge(tr2, maxSize);
     return tr;

@@ -11,7 +11,7 @@ using Plan = std::vector<OperatorID>;
 
 namespace symbolic {
 class SymSolutionCut;
-class TransitionRelation;
+class DisjunctiveTransitionRelation;
 
 class ReconstructionNode {
 protected:
@@ -24,8 +24,8 @@ protected:
 
     std::shared_ptr<ReconstructionNode> predecessor;
     std::shared_ptr<ReconstructionNode> successor;
-    std::shared_ptr<TransitionRelation> to_predecessor_tr;
-    std::shared_ptr<TransitionRelation> to_successor_tr;
+    std::shared_ptr<DisjunctiveTransitionRelation> to_predecessor_tr;
+    std::shared_ptr<DisjunctiveTransitionRelation> to_successor_tr;
     size_t plan_length;
 
 public:
@@ -41,8 +41,8 @@ public:
 
     std::shared_ptr<ReconstructionNode> get_predecessor() const;
     std::shared_ptr<ReconstructionNode> get_successor() const;
-    std::shared_ptr<TransitionRelation> get_to_predecessor_tr() const;
-    std::shared_ptr<TransitionRelation> get_to_successor_tr() const;
+    std::shared_ptr<DisjunctiveTransitionRelation> get_to_predecessor_tr() const;
+    std::shared_ptr<DisjunctiveTransitionRelation> get_to_successor_tr() const;
     size_t get_plan_length() const {return plan_length;}
 
     std::shared_ptr<ReconstructionNode> get_origin_predecessor() const;
@@ -56,9 +56,9 @@ public:
     void add_visited_states(BDD newly_visited_states) {this->visited_states += newly_visited_states;}
 
     void set_predecessor(const std::shared_ptr<ReconstructionNode> &predecessor,
-                         const std::shared_ptr<TransitionRelation> &to_predecessor_tr);
+                         const std::shared_ptr<DisjunctiveTransitionRelation> &to_predecessor_tr);
     void set_successor(const std::shared_ptr<ReconstructionNode> &successor,
-                       const std::shared_ptr<TransitionRelation> &to_successor_tr);
+                       const std::shared_ptr<DisjunctiveTransitionRelation> &to_successor_tr);
     void set_plan_length(size_t plan_length) {this->plan_length = plan_length;}
 
     bool is_fwd_phase() const;

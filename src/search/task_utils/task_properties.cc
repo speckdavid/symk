@@ -48,6 +48,15 @@ bool has_conditional_effects(TaskProxy task) {
     return get_first_conditional_effects_op_id(task) != -1;
 }
 
+extern bool has_conditional_effects(TaskProxy task, OperatorID op_id) {
+    OperatorProxy op = task.get_operators()[op_id];
+    for (EffectProxy effect : op.get_effects()) {
+        if (!effect.get_conditions().empty())
+            return true;
+    }
+    return false;
+}
+
 void verify_no_conditional_effects(TaskProxy task) {
     int op_id = get_first_conditional_effects_op_id(task);
     if (op_id != -1) {
@@ -175,8 +184,38 @@ void dump_goals(const GoalsProxy &goals) {
                      << goal.get_value() << endl;
     }
 }
+void dump_operator(const OperatorProxy &op) {
+    utils::g_log << "#" << op.get_id() << ": " << op.get_name() << endl;
+    utils::g_log << " pre: [ " << flush;
 
-void dump_task(const TaskProxy &task_proxy) {
+    for (FactProxy pre : op.get_preconditions()) {
+        utils::g_log << pre.get_pair() << " " << flush;
+    }
+    utils::g_log << "]" << endl;
+
+    utils::g_log << " eff:" << endl;
+    for (EffectProxy eff : op.get_effects()) {
+        utils::g_log << " " << eff.get_fact().get_pair() << " if [ " << flush;
+        for (auto cond: eff.get_conditions()) {
+            utils::g_log << cond.get_pair() << " " << flush;
+        }
+        utils::g_log << "]" << endl;
+    }
+}
+
+void dump_operators(const OperatorsProxy &operators) {
+    for (OperatorProxy op : operators) {
+        dump_operator(op);
+    }
+}
+
+void dump_axioms(const AxiomsProxy &axioms) {
+    for (OperatorProxy ax : axioms) {
+        dump_operator(ax);
+    }
+}
+
+void dump_task(const TaskProxy &task_proxy, bool with_operators, bool with_axioms) {
     OperatorsProxy operators = task_proxy.get_operators();
     int min_action_cost = numeric_limits<int>::max();
     int max_action_cost = 0;
@@ -189,12 +228,14 @@ void dump_task(const TaskProxy &task_proxy) {
 
     VariablesProxy variables = task_proxy.get_variables();
     utils::g_log << "Variables (" << variables.size() << "):" << endl;
+    int var_id = 0;
     for (VariableProxy var : variables) {
-        utils::g_log << "  " << var.get_name()
+        utils::g_log << "  #" << var_id << ": " << var.get_name()
                      << " (range " << var.get_domain_size() << ")" << endl;
         for (int val = 0; val < var.get_domain_size(); ++val) {
             utils::g_log << "    " << val << ": " << var.get_fact(val).get_name() << endl;
         }
+        ++var_id;
     }
     State initial_state = task_proxy.get_initial_state();
     utils::g_log << "Initial state (PDDL):" << endl;
@@ -202,6 +243,14 @@ void dump_task(const TaskProxy &task_proxy) {
     utils::g_log << "Initial state (FDR):" << endl;
     dump_fdr(initial_state);
     dump_goals(task_proxy.get_goals());
+    if (with_operators) {
+        utils::g_log << "Operators:" << endl;
+        dump_operators(task_proxy.get_operators());
+    }
+    if (with_axioms) {
+        utils::g_log << "Axioms:" << endl;
+        dump_axioms(task_proxy.get_axioms());
+    }
 }
 
 PerTaskInformation<int_packer::IntPacker> g_state_packers(

@@ -6,6 +6,7 @@
 #include "sym_enums.h"
 #include "sym_mutexes.h"
 #include "sym_parameters.h"
+#include "sym_transition_relations.h"
 #include "sym_utils.h"
 #include "sym_variables.h"
 
@@ -29,7 +30,6 @@ class Options;
 
 namespace symbolic {
 class SymVariables;
-class TransitionRelation;
 
 class SymStateSpaceManager {
 protected:
@@ -37,21 +37,11 @@ protected:
     const SymParameters &sym_params;
     const std::shared_ptr<AbstractTask> task;
 
-    BDD initial_state; // initial state
-    BDD goal; // bdd representing the true (i.e. not simplified) goal-state
-
-    std::map<int, std::vector<TransitionRelation>> individual_transitions; // individual TRs (for plan reconstruction)
-    std::map<int, std::vector<TransitionRelation>> transitions; // Merged TRs
-    int min_transition_cost; // minimum cost of non-zero cost transitions
-    bool has_zero_cost_transition;           // If there is transitions with cost 0
+    BDD initial_state;
+    BDD goal;
 
     SymMutexes sym_mutexes;
-
-    void init_transitions();
-    void init_individual_transitions();
-    void init_merged_transitions();
-    void create_single_trs();
-    void create_single_sdac_trs(std::shared_ptr<extra_tasks::SdacTask> sdac_task, bool fast_creation);
+    SymTransitionRelations sym_transition_relations;
 
     // All the methods may throw exceptions in case the time or nodes are exceeded.
     void zero_preimage(BDD bdd, std::vector<BDD> &res, int max_nodes) const;
@@ -94,21 +84,12 @@ public:
         return bucket.size() <= 1;
     }
 
-    // Methods that require of TRs initialized
-
-    int getMinTransitionCost() const {
-        assert(!transitions.empty());
-        return min_transition_cost;
+    bool hasTransitions0() const {
+        return sym_transition_relations.has_zero_cost_transition();
     }
 
     int getAbsoluteMinTransitionCost() const {
-        assert(!transitions.empty());
-        return has_zero_cost_transition ? 0 : min_transition_cost;
-    }
-
-    bool hasTransitions0() const {
-        assert(!transitions.empty());
-        return has_zero_cost_transition;
+        return sym_transition_relations.get_min_transition_cost();
     }
 
     void zero_image(bool fw, BDD bdd, std::vector<BDD> &res, int max_nodes) {
@@ -134,8 +115,8 @@ public:
     void unsetTimeLimit() {sym_vars->unsetTimeLimit();}
 
     // For plan solution reconstruction
-    const std::map<int, std::vector<TransitionRelation>> &getIndividualTRs() const {
-        return individual_transitions;
+    const std::map<int, std::vector<DisjunctiveTransitionRelation>> &getIndividualTRs() const {
+        return sym_transition_relations.get_individual_transition_relations();
     }
 };
 }

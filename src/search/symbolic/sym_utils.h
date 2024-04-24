@@ -3,9 +3,12 @@
 
 #include "sym_bucket.h"
 #include "sym_variables.h"
-#include "transition_relation.h"
+
+#include "transition_relations/conjunctive_transition_relation.h"
+#include "transition_relations/disjunctive_transition_relation.h"
 
 #include "../utils/timer.h"
+
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -124,7 +127,7 @@ void merge(std::vector<T> &elems, FunctionMerge f, int maxSize) {
     mergeAux(elems, f, 0, maxSize);
 }
 
-TransitionRelation mergeTR(TransitionRelation tr, const TransitionRelation &tr2,
+DisjunctiveTransitionRelation mergeTR(DisjunctiveTransitionRelation tr, const DisjunctiveTransitionRelation &tr2,
                            int maxSize);
 BDD mergeAndBDD(const BDD &bdd, const BDD &bdd2, int maxSize);
 BDD mergeOrBDD(const BDD &bdd, const BDD &bdd2, int maxSize);

@@ -112,7 +112,7 @@ void SymSolutionRegistry::expand_actions(const ReconstructionNode &node) {
             continue;
         }
 
-        for (const TransitionRelation &tr : it->second) {
+        for (const DisjunctiveTransitionRelation &tr : it->second) {
             BDD succ = fwd ? tr.preimage(node.get_states()) : tr.image(node.get_states());
 
             BDD closed_states = cur_closed_list->get_closed_at(new_cost);
@@ -136,22 +136,22 @@ void SymSolutionRegistry::expand_actions(const ReconstructionNode &node) {
             if (fwd) {
                 new_node.set_g(new_cost);
                 new_node.set_h(node.get_h());
-                new_node.set_predecessor(make_shared<ReconstructionNode>(node), make_shared<TransitionRelation>(tr));
+                new_node.set_predecessor(make_shared<ReconstructionNode>(node), make_shared<DisjunctiveTransitionRelation>(tr));
             } else {
                 new_node.set_g(node.get_g());
                 new_node.set_h(new_cost);
-                new_node.set_successor(make_shared<ReconstructionNode>(node), make_shared<TransitionRelation>(tr));
+                new_node.set_successor(make_shared<ReconstructionNode>(node), make_shared<DisjunctiveTransitionRelation>(tr));
             }
 
             // We have sucessfully reconstructed to the initial state
             if (swap_to_bwd_phase(new_node)) {
-                assert(fw_closed->get_start_states() == new_node.get_states());
+                assert(fw_closed->get_start_states() * new_node.get_states() != sym_vars->zeroBDD());
                 BDD middle_state = new_node.get_middle_state(fw_closed->get_start_states());
                 ReconstructionNode bw_node(0, new_node.get_h(),
                                            numeric_limits<int>::max(), middle_state,
                                            new_node.get_visitied_states(),
                                            false, node.get_plan_length() + 1);
-                bw_node.set_predecessor(make_shared<ReconstructionNode>(node), make_shared<TransitionRelation>(tr));
+                bw_node.set_predecessor(make_shared<ReconstructionNode>(node), make_shared<DisjunctiveTransitionRelation>(tr));
 
                 // Add init state to visited states
                 if (simple_solutions()) {
@@ -207,7 +207,7 @@ SymSolutionRegistry::SymSolutionRegistry()
 void SymSolutionRegistry::init(shared_ptr<SymVariables> sym_vars,
                                shared_ptr<symbolic::ClosedList> fw_closed,
                                shared_ptr<symbolic::ClosedList> bw_closed,
-                               map<int, vector<TransitionRelation>> &trs,
+                               map<int, vector<DisjunctiveTransitionRelation>> &trs,
                                shared_ptr<PlanSelector> plan_data_base,
                                bool single_solution,
                                bool simple_solutions) {
