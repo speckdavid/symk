@@ -145,7 +145,7 @@ void SymSolutionRegistry::expand_actions(const ReconstructionNode &node) {
 
             // We have sucessfully reconstructed to the initial state
             if (swap_to_bwd_phase(new_node)) {
-                assert(fw_closed->get_start_states() == new_node.get_states());
+                assert(fw_closed->get_start_states() * new_node.get_states() != sym_vars->zeroBDD());
                 BDD middle_state = new_node.get_middle_state(fw_closed->get_start_states());
                 ReconstructionNode bw_node(0, new_node.get_h(),
                                            numeric_limits<int>::max(), middle_state,
