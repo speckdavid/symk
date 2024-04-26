@@ -19,10 +19,6 @@ SymTransitionRelations::SymTransitionRelations(SymVariables *sym_vars, const Sym
 void SymTransitionRelations::init(const shared_ptr<AbstractTask> &task, const SymMutexes &sym_mutexes) {
     init_individual_transitions(task, sym_mutexes);
 
-    assert(!individual_disj_transitions.empty()
-           || (task_properties::has_conditional_effects(TaskProxy(*task))
-               && is_ce_transition_type_conjunctive(sym_params.ce_transition_type)));
-
     utils::g_log << "Individual transition relations: " << get_size(individual_disj_transitions) + get_size(individual_conj_transitions);
     utils::g_log << " (disj=" << get_size(individual_disj_transitions);
     utils::g_log << ", conj=" << get_size(individual_conj_transitions) << ")" << endl;
@@ -53,8 +49,8 @@ void SymTransitionRelations::init(const shared_ptr<AbstractTask> &task, const Sy
         }
     }
 
-    assert(individual_transitions.begin()->first == transitions.begin()->first);
-    min_transition_cost = individual_transitions.begin()->first;
+
+    min_transition_cost = individual_transitions.empty() ? numeric_limits<int>::max() : individual_transitions.begin()->first;
     utils::g_log << "Merged transition relations: " << get_size(transitions);
     utils::g_log << " (disj=" << get_size(transitions) - get_size(individual_conj_transitions);
     utils::g_log << ", conj=" << get_size(individual_conj_transitions) << ")" << endl;
