@@ -6,7 +6,6 @@
 #include "../../task_proxy.h"
 
 namespace symbolic {
-
 /*
  * Represents a base transition relation with BDDs.
  */
@@ -29,6 +28,5 @@ public:
 };
 
 typedef std::shared_ptr<TransitionRelation> TransitionRelationPtr;
-
 }
 #endif

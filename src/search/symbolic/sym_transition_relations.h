@@ -16,7 +16,6 @@ class SdacTask;
 }
 
 namespace symbolic {
-
 class SymTransitionRelations {
     SymVariables *sym_vars;
     const SymParameters &sym_params;

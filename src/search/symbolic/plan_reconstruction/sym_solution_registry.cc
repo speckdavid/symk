@@ -103,7 +103,7 @@ void SymSolutionRegistry::expand_actions(const ReconstructionNode &node) {
 
     // Traverse in oposite direction to first consider actions with higher costs
     // Mostly relevant for single solution reconstruction
-    const auto& trs = sym_transition_relations->get_individual_transition_relations();
+    const auto &trs = sym_transition_relations->get_individual_transition_relations();
     for (auto it = trs.rbegin(); it != trs.rend(); ++it) {
         int op_cost = it->first;
         int new_cost = cur_cost - op_cost;
