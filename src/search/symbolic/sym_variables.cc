@@ -262,6 +262,15 @@ BDD SymVariables::getCube(const set<int> &vars,
     return res;
 }
 
+void SymVariables::reoder(int max_time) {
+    set_time_limit(max_time);
+    try {
+        Cudd_ReduceHeap(manager->getManager(), CUDD_REORDER_GROUP_SIFT, 0);
+    }  catch (BDDError e) {
+    }
+    unset_time_limit();
+}
+
 void SymVariables::to_dot(const BDD &bdd,
                           const string &file_name) const {
     to_dot(bdd.Add(), file_name);

@@ -74,7 +74,7 @@ void SymParameters::add_options_to_parser(OptionParser &parser) {
     parser.add_enum_option<ConditionalEffectsTransitionType>("ce_transition_type",
                                                              ConditionalEffectsTransitionTypeValues,
                                                              "ce transition type",
-                                                             "MONOLITHIC");
+                                                             "CONJUNCTIVE_EARLY_QUANTIFICATION");
     parser.add_option<int>("max_tr_size", "maximum size of TR BDDs", "100000");
     parser.add_option<int>("max_tr_time", "maximum time (ms) to generate TR BDDs", "60000");
     parser.add_enum_option<MutexType>("mutex_type", MutexTypeValues, "mutex type", "MUTEX_EDELETION");

@@ -168,6 +168,8 @@ public:
         manager->UnsetTimeLimit();
     }
 
+    void reoder(int max_time);
+
     void to_dot(const BDD &bdd, const std::string &file_name) const;
     void to_dot(const ADD &bdd, const std::string &file_name) const;
 
