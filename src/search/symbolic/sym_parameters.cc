@@ -34,7 +34,7 @@ SymParameters::SymParameters(const Options &opts, const shared_ptr<AbstractTask>
                      << endl;
         mutex_type = MutexType::MUTEX_AND;
     }
-    if (ce_transition_type == ConditionalEffectsTransitionType::CONJUNCTIVE
+    if (is_ce_transition_type_conjunctive(ce_transition_type)
         && task_properties::has_conditional_effects(TaskProxy(*task))
         && task_properties::has_sdac_cost_operator(TaskProxy(*task))) {
         utils::g_log << "Conditional effect transition type changed to MONOLITHIC because the domain has "

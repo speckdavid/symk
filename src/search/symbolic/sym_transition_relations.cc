@@ -21,7 +21,7 @@ void SymTransitionRelations::init(const shared_ptr<AbstractTask> &task, const Sy
 
     assert(!individual_disj_transitions.empty()
            || (task_properties::has_conditional_effects(TaskProxy(*task))
-               && sym_params.ce_transition_type == ConditionalEffectsTransitionType::CONJUNCTIVE));
+               && is_ce_transition_type_conjunctive(sym_params.ce_transition_type)));
 
     utils::g_log << "Individual transition relations: " << get_size(individual_disj_transitions) + get_size(individual_conj_transitions);
     utils::g_log << " (disj=" << get_size(individual_disj_transitions);
@@ -55,7 +55,9 @@ void SymTransitionRelations::init(const shared_ptr<AbstractTask> &task, const Sy
 
     assert(individual_transitions.begin()->first == transitions.begin()->first);
     min_transition_cost = individual_transitions.begin()->first;
-    utils::g_log << "Merged transition relations: " << get_size(transitions) << endl;
+    utils::g_log << "Merged transition relations: " << get_size(transitions);
+    utils::g_log << " (disj=" << get_size(transitions) - get_size(individual_conj_transitions);
+    utils::g_log << ", conj=" << get_size(individual_conj_transitions) << ")" << endl;
 }
 
 void SymTransitionRelations::init_individual_transitions(const shared_ptr<AbstractTask> &task, const SymMutexes &sym_mutexes) {
@@ -77,12 +79,15 @@ void SymTransitionRelations::create_single_trs(const shared_ptr<AbstractTask> &t
         effect_aggregated_task = make_shared<extra_tasks::EffectAggregatedTask>(task);
     }
 
+
     for (int i = 0; i < task->get_num_operators(); ++i) {
         int cost = task->get_operator_cost(i, false);
 
-        if (sym_params.ce_transition_type == ConditionalEffectsTransitionType::CONJUNCTIVE
+        if (is_ce_transition_type_conjunctive(sym_params.ce_transition_type)
             && task_properties::has_conditional_effects(task_proxy, OperatorID(i))) {
-            individual_conj_transitions[cost].emplace_back(sym_vars, OperatorID(i), effect_aggregated_task);
+            bool early_quantification = sym_params.ce_transition_type == ConditionalEffectsTransitionType::CONJUNCTIVE_EARLY_QUANTIFICATION;
+            individual_conj_transitions[cost].emplace_back(sym_vars, OperatorID(i), effect_aggregated_task,
+                                                           early_quantification);
             individual_conj_transitions[cost].back().init();
             // if (sym_params.mutex_type == MutexType::MUTEX_EDELETION) {
             //     individual_conj_transitions[cost].back().edeletion(sym_mutexes.notMutexBDDsByFluentFw,
@@ -143,7 +148,7 @@ void SymTransitionRelations::create_single_sdac_trs(const shared_ptr<extra_tasks
 void SymTransitionRelations::create_merged_transitions() {
     for (auto & [cost, tr_vec] : individual_conj_transitions) {
         for (auto &tr : tr_vec) {
-            merge(sym_vars, tr.transitions, conjunctive_tr_merge, sym_params.max_tr_time, sym_params.max_tr_size);
+            tr.merge_transitions(sym_params.max_tr_time, sym_params.max_tr_size);
         }
     }
 
@@ -160,12 +165,12 @@ void SymTransitionRelations::create_merged_transitions() {
 
 void SymTransitionRelations::move_monolithic_conj_transitions() {
     // Temporary map to hold new individual_disj_transitions
-    std::map<int, std::vector<ConjunctiveTransitionRelation>> new_individual_conj_transitions;
+    map<int, vector<ConjunctiveTransitionRelation>> new_individual_conj_transitions;
 
     for (auto & [cost, tr_vec] : individual_conj_transitions) {
         for (auto &conj_tr : tr_vec) {
             if (conj_tr.is_monolithic()) {
-                individual_disj_transitions[cost].push_back(conj_tr.transitions[0]);
+                individual_disj_transitions[cost].push_back(conj_tr.get_transitions().at(0));
             } else {
                 new_individual_conj_transitions[cost].push_back(conj_tr);
             }

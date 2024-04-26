@@ -11,10 +11,10 @@ using namespace std;
 
 namespace extra_tasks {
 struct EffectInfo {
-    std::map<std::pair<int, int>, std::vector<int>> op_var_to_effect_index;
+    map<pair<int, int>, vector<int>> op_var_to_effect_index;
 
     void insert(int op_index, int var, int eff_index) {
-        auto key = std::make_pair(op_index, var);
+        auto key = make_pair(op_index, var);
         op_var_to_effect_index[key].push_back(eff_index);
     }
 
@@ -23,11 +23,11 @@ struct EffectInfo {
             const auto &key = entry.first;
             const auto &effect_indices = entry.second;
 
-            std::cout << "Key: (op=" << key.first << ", var=" << key.second << "), Effect Indices: ";
+            cout << "Key: (op=" << key.first << ", var=" << key.second << "), Effect Indices: ";
             for (int index : effect_indices) {
-                std::cout << index << " ";
+                cout << index << " ";
             }
-            std::cout << std::endl;
+            cout << endl;
         }
     }
 };
@@ -60,7 +60,7 @@ EffectAggregatedTask::EffectAggregatedTask(const shared_ptr<AbstractTask> &paren
     assert(local_to_parent_op_id.size() == local_to_parent_op_id.size());
 }
 
-std::string EffectAggregatedTask::get_operator_cost_function(int index, bool is_axiom) const {
+string EffectAggregatedTask::get_operator_cost_function(int index, bool is_axiom) const {
     if (is_axiom) {
         return parent->get_operator_cost_function(index, is_axiom);
     }
@@ -142,7 +142,7 @@ int EffectAggregatedTask::convert_operator_index_to_parent(int index) const {
     return local_to_parent_op_id[index];
 }
 
-const std::vector<int> &EffectAggregatedTask::get_operators_beloning_to_parent(int index) const {
+const vector<int> &EffectAggregatedTask::get_operators_beloning_to_parent(int index) const {
     return parent_to_local_op_ids[index];
 }
 }
