@@ -49,7 +49,6 @@ void SymTransitionRelations::init(const shared_ptr<AbstractTask> &task, const Sy
         }
     }
 
-
     min_transition_cost = individual_transitions.empty() ? numeric_limits<int>::max() : individual_transitions.begin()->first;
     utils::g_log << "Merged transition relations: " << get_size(transitions);
     utils::g_log << " (disj=" << get_size(transitions) - get_size(individual_conj_transitions);
