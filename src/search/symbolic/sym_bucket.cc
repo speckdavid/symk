@@ -12,15 +12,10 @@ void remove_zero(Bucket &bucket) {
                  end(bucket));
 }
 
-void copyBucket(const Bucket &bucket, Bucket &res) {
+void copy_bucket(const Bucket &bucket, Bucket &res) {
     if (!bucket.empty()) {
         res.insert(end(res), begin(bucket), end(bucket));
     }
-}
-
-void moveBucket(Bucket &bucket, Bucket &res) {
-    copyBucket(bucket, res);
-    Bucket().swap(bucket);
 }
 
 int nodeCount(const Bucket &bucket) {
