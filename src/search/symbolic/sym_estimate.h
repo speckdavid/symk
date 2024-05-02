@@ -7,7 +7,7 @@
 #include <utility>
 
 namespace symbolic {
-class SymParameters;
+struct SymParameters;
 
 class Estimation {
 protected:

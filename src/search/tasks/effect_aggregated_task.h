@@ -29,7 +29,7 @@ public:
     virtual FactPair get_operator_effect_condition(int op_index, int eff_index, int cond_index, bool is_axiom) const override;
     virtual FactPair get_operator_effect(int op_index, int eff_index, bool is_axiom) const override;
 
-    virtual int convert_operator_index_to_parent(int index) const;
+    virtual int convert_operator_index_to_parent(int index) const override;
 
     const std::vector<int> &get_operators_beloning_to_parent(int index) const;
 };

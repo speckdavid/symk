@@ -78,7 +78,7 @@ public:
     UniformCostSearch &operator=(UniformCostSearch &&) = default;
     virtual ~UniformCostSearch() = default;
 
-    virtual bool finished() const {
+    virtual bool finished() const override {
         return open_list.empty() && frontier.empty();
     }
 
@@ -94,11 +94,10 @@ public:
         return fw ? "FW" : "BW";
     }
 
-    virtual void stepImage(int maxTime, int maxNodes);
+    virtual void stepImage(int maxTime, int maxNodes) override;
 
-    bool
-    init(std::shared_ptr<SymStateSpaceManager> manager, bool fw,
-         UniformCostSearch *opposite_search); // Init forward or backward search
+    bool init(std::shared_ptr<SymStateSpaceManager> manager, bool fw,
+              UniformCostSearch *opposite_search); // Init forward or backward search
 
     virtual int getF() const override {
         return open_list.minNextG(frontier, mgr->get_min_transition_cost());

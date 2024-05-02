@@ -32,6 +32,10 @@
 #include <boost/smart_ptr/detail/sp_disable_deprecated.hpp>
 #include <boost/smart_ptr/detail/sp_noexcept.hpp>
 
+#ifndef BOOST_NO_AUTO_PTR
+# include <memory>          // for std::auto_ptr
+#endif
+
 #if !defined(BOOST_SP_NO_ATOMIC_ACCESS)
 #include <boost/smart_ptr/detail/spinlock_pool.hpp>
 #endif
