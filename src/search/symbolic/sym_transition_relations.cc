@@ -110,7 +110,7 @@ void SymTransitionRelations::create_single_sdac_trs(const shared_ptr<extra_tasks
         for (int i = 0; i < sdac_task->get_num_operators(); ++i) {
             const int cost = sdac_task->get_operator_cost(i, false);
             individual_disj_transitions[cost].emplace_back(sym_vars, OperatorID(i), sdac_task);
-            auto cur_tr = individual_disj_transitions[cost].back();
+            auto& cur_tr = individual_disj_transitions[cost].back();
             cur_tr.init();
             cur_tr.add_condition(sdac_task->get_operator_cost_condition(i, false));
         }
@@ -131,7 +131,7 @@ void SymTransitionRelations::create_single_sdac_trs(const shared_ptr<extra_tasks
             const int parent_op_id = sdac_task->convert_operator_index_to_parent(i);
             const int cost = sdac_task->get_operator_cost(i, false);
             individual_disj_transitions[cost].emplace_back(sym_vars, OperatorID(i), sdac_task);
-            auto cur_tr = individual_disj_transitions[cost].back();
+            auto& cur_tr = individual_disj_transitions[cost].back();
             cur_tr.init_from_tr(look_up[parent_op_id]);
             cur_tr.set_cost(cost);
             cur_tr.setOpsIds({OperatorID(i)});
