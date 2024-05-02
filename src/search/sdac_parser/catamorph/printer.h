@@ -6,25 +6,29 @@
 #include "factories.h"
 #include <iomanip>
 #include <iostream>
+#include <numeric>
 #include <string>
 
-#include "../../ext/boost_dependencies/boost/algorithm/string/join.hpp"
-
 namespace sdac_parser {
+std::string join(const std::vector<std::string> &elems, const std::string &sep) {
+    return std::accumulate(std::next(elems.begin()), elems.end(), elems.front(),
+                           [&sep](const std::string &a, const std::string &b) {
+                               return a + sep.data() + b;
+                           });
+}
+
 class Printer {
 private:
     template<typename Tag>
     static std::string print_prefix_op(op<Tag, std::string> const &e,
                                        std::string const &op_repr) {
-        return op_repr + std::string("(") +
-               boost::algorithm::join(e.rands(), " ") + ")";
+        return op_repr + std::string("(") + join(e.rands(), " ") + ")";
     }
 
     template<typename Tag>
     static std::string print_op(op<Tag, std::string> const &e,
                                 std::string const &op_repr) {
-        return std::string("(") + op_repr + " " +
-               boost::algorithm::join(e.rands(), " ") + ")";
+        return std::string("(") + op_repr + " " + join(e.rands(), " ") + ")";
     }
 
     static std::string print_alg(expression_r<std::string> const &e) {

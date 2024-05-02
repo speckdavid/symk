@@ -107,11 +107,11 @@ endif()
 include(ExternalProject)
 
 ### Boost (clang only works with c++14)
-string(REPLACE "-std=c++17" "-std=c++14" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+#string(REPLACE "-std=c++17" "-std=c++14" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 message(STATUS "Building MiniBoost.")
 include_directories(SYSTEM ext/boost_dependencies)
-add_subdirectory(ext/boost_dependencies/libs)
-string(REPLACE "-std=c++14" "-std=c++17" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+#add_subdirectory(ext/boost_dependencies/libs)
+#string(REPLACE "-std=c++14" "-std=c++17" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
 ### Cudd
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/ext/cudd-3.0.0/cudd)

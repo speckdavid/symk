@@ -23,7 +23,7 @@ public:
              symbolic::SymVariables *sym_vars);
     ~SdacTask() = default;
 
-    virtual int get_operator_cost(int index, bool is_axiom) const;
+    virtual int get_operator_cost(int index, bool is_axiom) const override;
     virtual std::string get_operator_name(int index, bool is_axiom) const override;
     virtual int get_num_operators() const override;
     virtual int get_num_operator_preconditions(int index, bool is_axiom) const override;
@@ -37,7 +37,7 @@ public:
     virtual FactPair get_operator_effect(
         int op_index, int eff_index, bool is_axiom) const override;
 
-    virtual int convert_operator_index_to_parent(int index) const;
+    virtual int convert_operator_index_to_parent(int index) const override;
 
 
     BDD get_operator_cost_condition(int index, bool is_axiom) const;
