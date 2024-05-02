@@ -8,7 +8,7 @@ using namespace std;
 
 namespace symbolic {
 BidirectionalSearch::BidirectionalSearch(SymbolicSearch *eng,
-                                         const SymParamsSearch &params,
+                                         const SymParameters &params,
                                          shared_ptr<UniformCostSearch> _fw,
                                          shared_ptr<UniformCostSearch> _bw,
                                          bool alternating)
@@ -36,7 +36,7 @@ UniformCostSearch *BidirectionalSearch::selectBestDirection() {
         Estimation &fw_est = *fw->get_step_estimator();
         Estimation &bw_est = *bw->get_step_estimator();
         if (fw_est.get_failed() && bw_est.get_failed()) {
-            p.increase_bound();
+            sym_params.increase_bound();
             bw_est.set_data(bw_est.get_time(), bw_est.get_nodes(), false);
             return fw.get();
         }

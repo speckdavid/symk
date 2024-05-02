@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <iostream>
 
-#include "sym_params_search.h"
+#include "sym_parameters.h"
 #include "sym_utils.h"
 #include "../utils/logging.h"
 

@@ -33,7 +33,7 @@ void TopkUniformCostSearch::checkFrontierCut(Bucket &bucket, int g) {
 
 void TopkUniformCostSearch::filterFrontier() {
     frontier.filter(closed->get_closed_at(frontier.g()));
-    mgr->filterMutex(frontier.bucket(), fw, initialization());
-    removeZero(frontier.bucket());
+    mgr->filter_mutex(frontier.bucket(), fw, initialization());
+    remove_zero(frontier.bucket());
 }
 } // namespace symbolic

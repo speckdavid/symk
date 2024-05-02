@@ -1,5 +1,4 @@
 #include "reconstruction_node.h"
-#include "../transition_relation.h"
 #include "../../utils/logging.h"
 
 using namespace std;
@@ -43,22 +42,22 @@ shared_ptr<ReconstructionNode> ReconstructionNode::get_origin_successor() const 
     return cur;
 }
 
-shared_ptr<TransitionRelation> ReconstructionNode::get_to_predecessor_tr() const {
+TransitionRelationPtr ReconstructionNode::get_to_predecessor_tr() const {
     return to_predecessor_tr;
 }
 
-shared_ptr<TransitionRelation> ReconstructionNode::get_to_successor_tr() const {
+TransitionRelationPtr ReconstructionNode::get_to_successor_tr() const {
     return to_successor_tr;
 }
 
 void ReconstructionNode::set_predecessor(const shared_ptr<ReconstructionNode> &predecessor,
-                                         const shared_ptr<TransitionRelation> &to_predecessor_tr) {
+                                         const TransitionRelationPtr &to_predecessor_tr) {
     this->predecessor = predecessor;
     this->to_predecessor_tr = to_predecessor_tr;
 }
 
 void ReconstructionNode::set_successor(const shared_ptr<ReconstructionNode> &successor,
-                                       const shared_ptr<TransitionRelation> &to_successor_tr) {
+                                       const TransitionRelationPtr &to_successor_tr) {
     this->successor = successor;
     this->to_successor_tr = to_successor_tr;
 }
@@ -75,14 +74,14 @@ void ReconstructionNode::get_plan(Plan &plan) const {
     Plan suffix_plan;
     while (cur_node->get_successor()) {
         assert(cur_node->get_to_successor_tr());
-        suffix_plan.push_back(cur_node->get_to_successor_tr()->getUniqueOpId());
+        suffix_plan.push_back(cur_node->get_to_successor_tr()->get_unique_operator_id());
         cur_node = cur_node->get_successor();
     }
     reverse(suffix_plan.begin(), suffix_plan.end());
 
     while (cur_node->get_predecessor()) {
         assert(cur_node->get_to_predecessor_tr());
-        plan.push_back(cur_node->get_to_predecessor_tr()->getUniqueOpId());
+        plan.push_back(cur_node->get_to_predecessor_tr()->get_unique_operator_id());
         cur_node = cur_node->get_predecessor();
     }
     plan.insert(plan.end(), suffix_plan.begin(), suffix_plan.end());
@@ -97,7 +96,6 @@ BDD ReconstructionNode::get_middle_state(BDD initial_state) const {
     while (cur_node->get_predecessor()) {
         assert(cur_node->get_to_predecessor_tr());
         cur_state = cur_node->get_to_predecessor_tr()->image(cur_state);
-        assert(cur_node->get_to_predecessor_tr()->get_sym_vars()->numStates(cur_state) == 1);
         cur_node = cur_node->get_predecessor();
     }
     return cur_state;

@@ -42,6 +42,8 @@ extern void verify_no_axioms(TaskProxy task);
 // Runtime: O(n), where n is the number of operators.
 extern bool has_conditional_effects(TaskProxy task);
 
+extern bool has_conditional_effects(TaskProxy task, OperatorID op_id);
+
 /*
   Report an error and exit with ExitCode::UNSUPPORTED if the task has
   conditional effects.
@@ -86,7 +88,7 @@ extern void print_variable_statistics(const TaskProxy &task_proxy);
 extern void dump_pddl(const State &state);
 extern void dump_fdr(const State &state);
 extern void dump_goals(const GoalsProxy &goals);
-extern void dump_task(const TaskProxy &task_proxy);
+extern void dump_task(const TaskProxy &task_proxy, bool with_operators = true, bool with_axioms = true);
 
 extern PerTaskInformation<int_packer::IntPacker> g_state_packers;
 }

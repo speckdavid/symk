@@ -5,7 +5,7 @@
 #include "../plan_reconstruction/sym_solution_registry.h"
 #include "../search_engine.h"
 #include "../sym_enums.h"
-#include "../sym_params_search.h"
+#include "../sym_parameters.h"
 #include "../sym_state_space_manager.h"
 #include "../../option_parser.h"
 
@@ -39,8 +39,7 @@ protected:
 
     std::shared_ptr<SymVariables> vars; // The symbolic variables are declared
 
-    SymParamsMgr mgrParams; // Parameters for SymStateSpaceManager configuration.
-    SymParamsSearch searchParams; // Parameters to search the original state space
+    SymParameters sym_params; // Parameters for symbolic search
 
     int step_num;
     bool lower_bound_increased;

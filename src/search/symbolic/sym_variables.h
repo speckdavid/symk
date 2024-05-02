@@ -157,16 +157,18 @@ public:
 
     inline BDD bddVar(int index) const {return variables[index];}
 
-    inline void setTimeLimit(int maxTime) {
+    inline void set_time_limit(int maxTime) {
         if (maxTime > 0) {
             manager->SetTimeLimit(maxTime);
             manager->ResetStartTime();
         }
     }
 
-    inline void unsetTimeLimit() {
+    inline void unset_time_limit() {
         manager->UnsetTimeLimit();
     }
+
+    void reoder(int max_time);
 
     void to_dot(const BDD &bdd, const std::string &file_name) const;
     void to_dot(const ADD &bdd, const std::string &file_name) const;

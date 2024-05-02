@@ -71,7 +71,7 @@ protected:
 
     //////////////////////////////////////////////////////////////////////////////
 public:
-    UniformCostSearch(SymbolicSearch *eng, const SymParamsSearch &params);
+    UniformCostSearch(SymbolicSearch *eng, const SymParameters &params);
     UniformCostSearch(const UniformCostSearch &) = delete;
     UniformCostSearch(UniformCostSearch &&) = default;
     UniformCostSearch &operator=(const UniformCostSearch &) = delete;
@@ -86,7 +86,7 @@ public:
         /*if (step_estimation.get_failed()) {
             p.increase_bound();
         }
-        stepImage(p.maxAllotedTime, p.maxAllotedNodes);*/
+        stepImage(p.max_alloted_time, p.max_alloted_nodes);*/
         stepImage(0, 0);
     }
 
@@ -101,7 +101,7 @@ public:
          UniformCostSearch *opposite_search); // Init forward or backward search
 
     virtual int getF() const override {
-        return open_list.minNextG(frontier, mgr->getAbsoluteMinTransitionCost());
+        return open_list.minNextG(frontier, mgr->get_min_transition_cost());
     }
 
     virtual int getG() const {
@@ -121,8 +121,8 @@ public:
 
     // void write(const std::string & file) const;
 
-    void filterMutex(Bucket &bucket) {
-        mgr->filterMutex(bucket, fw, initialization());
+    void filter_mutex(Bucket &bucket) {
+        mgr->filter_mutex(bucket, fw, initialization());
     }
 };
 }

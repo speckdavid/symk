@@ -9,7 +9,7 @@ using namespace std;
 namespace symbolic {
 void OpenList::insert(const Bucket &bucket, int g) {
     assert(!bucket.empty());
-    copyBucket(bucket, open[g]);
+    copy_bucket(bucket, open[g]);
 }
 
 void OpenList::insert(const BDD &bdd, int g) {

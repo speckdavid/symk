@@ -31,7 +31,7 @@ add_executable(downward ${PLANNER_SOURCES})
 
 ## == Includes ==
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ext)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/ext)
 
 ## == Libraries ==
 
@@ -70,19 +70,19 @@ if(PLUGIN_LP_SOLVER_ENABLED AND USE_LP)
                 string(TOUPPER ${SOLVER} TMP_SOLVER_UPPER_CASE)
                 mark_as_advanced(TMP_SOLVER_UPPER_CASE)
                 add_definitions("-D COIN_HAS_${TMP_SOLVER_UPPER_CASE}")
-                include_directories(${OSI_${SOLVER}_INCLUDE_DIRS})
+                include_directories(SYSTEM ${OSI_${SOLVER}_INCLUDE_DIRS})
                 target_link_libraries(downward ${OSI_${SOLVER}_LIBRARIES})
             endif()
         endforeach()
 
         # Note that basic OSI libs must be added after (!) all OSI solver libs.
         add_definitions("-D USE_LP")
-        include_directories(${OSI_INCLUDE_DIRS})
+        include_directories(SYSTEM ${OSI_INCLUDE_DIRS})
         target_link_libraries(downward ${OSI_LIBRARIES})
 
         find_package(ZLIB REQUIRED)
         if(ZLIB_FOUND)
-            include_directories(${ZLIB_INCLUDE_DIRS})
+            include_directories(SYSTEM ${ZLIB_INCLUDE_DIRS})
             target_link_libraries(downward ${ZLIB_LIBRARIES})
         endif()
     endif()

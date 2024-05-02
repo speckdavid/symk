@@ -13,7 +13,7 @@ protected:
     virtual void filterFrontier() override;
 
 public:
-    TopkUniformCostSearch(SymbolicSearch *eng, const SymParamsSearch &params)
+    TopkUniformCostSearch(SymbolicSearch *eng, const SymParameters &params)
         : UniformCostSearch(eng, params) {}
 };
 } // namespace symbolic

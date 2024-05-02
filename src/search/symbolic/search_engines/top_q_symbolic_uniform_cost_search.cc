@@ -1,10 +1,12 @@
 #include "top_q_symbolic_uniform_cost_search.h"
 
-#include "../original_state_space.h"
 #include "../plugin.h"
+
+#include "../../option_parser.h"
+
 #include "../searches/bidirectional_search.h"
 #include "../searches/top_k_uniform_cost_search.h"
-#include "../../option_parser.h"
+
 
 using namespace std;
 
@@ -33,7 +35,7 @@ SearchStatus TopqSymbolicUniformCostSearch::step() {
     step_num++;
     // Handling empty plan
     if (step_num == 0) {
-        BDD cut = mgr->getInitialState() * mgr->getGoal();
+        BDD cut = mgr->get_initial_state() * mgr->get_goal();
         if (!cut.IsZero()) {
             new_solution(SymSolutionCut(0, 0, cut));
         }

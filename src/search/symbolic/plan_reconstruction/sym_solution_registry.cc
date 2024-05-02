@@ -103,7 +103,8 @@ void SymSolutionRegistry::expand_actions(const ReconstructionNode &node) {
 
     // Traverse in oposite direction to first consider actions with higher costs
     // Mostly relevant for single solution reconstruction
-    for (auto it = trs.rbegin(); it != trs.rend(); it++) {
+    const auto &trs = sym_transition_relations->get_individual_transition_relations();
+    for (auto it = trs.rbegin(); it != trs.rend(); ++it) {
         int op_cost = it->first;
         int new_cost = cur_cost - op_cost;
 
@@ -112,8 +113,8 @@ void SymSolutionRegistry::expand_actions(const ReconstructionNode &node) {
             continue;
         }
 
-        for (const TransitionRelation &tr : it->second) {
-            BDD succ = fwd ? tr.preimage(node.get_states()) : tr.image(node.get_states());
+        for (auto tr : it->second) {
+            BDD succ = fwd ? tr->preimage(node.get_states()) : tr->image(node.get_states());
 
             BDD closed_states = cur_closed_list->get_closed_at(new_cost);
             BDD intersection = succ * closed_states;
@@ -136,11 +137,11 @@ void SymSolutionRegistry::expand_actions(const ReconstructionNode &node) {
             if (fwd) {
                 new_node.set_g(new_cost);
                 new_node.set_h(node.get_h());
-                new_node.set_predecessor(make_shared<ReconstructionNode>(node), make_shared<TransitionRelation>(tr));
+                new_node.set_predecessor(make_shared<ReconstructionNode>(node), tr);
             } else {
                 new_node.set_g(node.get_g());
                 new_node.set_h(new_cost);
-                new_node.set_successor(make_shared<ReconstructionNode>(node), make_shared<TransitionRelation>(tr));
+                new_node.set_successor(make_shared<ReconstructionNode>(node), tr);
             }
 
             // We have sucessfully reconstructed to the initial state
@@ -151,7 +152,7 @@ void SymSolutionRegistry::expand_actions(const ReconstructionNode &node) {
                                            numeric_limits<int>::max(), middle_state,
                                            new_node.get_visitied_states(),
                                            false, node.get_plan_length() + 1);
-                bw_node.set_predecessor(make_shared<ReconstructionNode>(node), make_shared<TransitionRelation>(tr));
+                bw_node.set_predecessor(make_shared<ReconstructionNode>(node), tr);
 
                 // Add init state to visited states
                 if (simple_solutions()) {
@@ -207,7 +208,7 @@ SymSolutionRegistry::SymSolutionRegistry()
 void SymSolutionRegistry::init(shared_ptr<SymVariables> sym_vars,
                                shared_ptr<symbolic::ClosedList> fw_closed,
                                shared_ptr<symbolic::ClosedList> bw_closed,
-                               map<int, vector<TransitionRelation>> &trs,
+                               shared_ptr<SymTransitionRelations> sym_transition_relations,
                                shared_ptr<PlanSelector> plan_data_base,
                                bool single_solution,
                                bool simple_solutions) {
@@ -215,12 +216,12 @@ void SymSolutionRegistry::init(shared_ptr<SymVariables> sym_vars,
     this->plan_data_base = plan_data_base;
     this->fw_closed = fw_closed;
     this->bw_closed = bw_closed;
-    this->trs = trs;
+    this->sym_transition_relations = sym_transition_relations;
     this->single_solution_pruning = single_solution;
     this->simple_solutions_pruning = simple_solutions;
 
     // If unit costs we simple use sort by remaining cost
-    if (trs.size() == 1) {
+    if (sym_transition_relations->has_unit_cost()) {
         queue = ReconstructionQueue(CompareReconstructionNodes(ReconstructionPriority::REMAINING_COST));
     }
 }

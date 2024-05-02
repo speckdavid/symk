@@ -1,29 +1,32 @@
 #include "symbolic_uniform_cost_search.h"
 
-#include "../original_state_space.h"
 #include "../plugin.h"
+#include "../sym_state_space_manager.h"
+
+#include "../../option_parser.h"
+
 #include "../searches/bidirectional_search.h"
 #include "../searches/uniform_cost_search.h"
-#include "../../option_parser.h"
+
 
 using namespace std;
 
 namespace symbolic {
 void SymbolicUniformCostSearch::initialize() {
     SymbolicSearch::initialize();
-    mgr = make_shared<OriginalStateSpace>(vars.get(), mgrParams, search_task);
+    mgr = make_shared<SymStateSpaceManager>(vars.get(), sym_params, search_task);
 
     unique_ptr<UniformCostSearch> fw_search = nullptr;
     unique_ptr<UniformCostSearch> bw_search = nullptr;
 
     if (fw) {
         fw_search = unique_ptr<UniformCostSearch>(
-            new UniformCostSearch(this, searchParams));
+            new UniformCostSearch(this, sym_params));
     }
 
     if (bw) {
         bw_search = unique_ptr<UniformCostSearch>(
-            new UniformCostSearch(this, searchParams));
+            new UniformCostSearch(this, sym_params));
     }
 
     if (fw) {
@@ -34,19 +37,20 @@ void SymbolicUniformCostSearch::initialize() {
         bw_search->init(mgr, false, fw_search.get());
     }
 
-    auto individual_trs = fw ? fw_search->getStateSpaceShared()->getIndividualTRs() :  bw_search->getStateSpaceShared()->getIndividualTRs();
+    auto sym_trs = fw ? fw_search->getStateSpaceShared()->get_transition_relations()
+            :  bw_search->getStateSpaceShared()->get_transition_relations();
 
     solution_registry->init(vars,
                             fw_search ? fw_search->getClosedShared() : nullptr,
                             bw_search ? bw_search->getClosedShared() : nullptr,
-                            individual_trs,
+                            sym_trs,
                             plan_data_base,
                             single_solution,
                             simple);
 
     if (fw && bw) {
         search = unique_ptr<BidirectionalSearch>(new BidirectionalSearch(
-                                                     this, searchParams, move(fw_search), move(bw_search), alternating));
+                                                     this, sym_params, move(fw_search), move(bw_search), alternating));
     } else {
         search.reset(fw ? fw_search.release() : bw_search.release());
     }
