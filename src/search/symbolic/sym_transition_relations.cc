@@ -172,7 +172,7 @@ void SymTransitionRelations::move_monolithic_conj_transitions() {
         }
     }
 
-    individual_conj_transitions = new_individual_conj_transitions;
+    individual_conj_transitions = move(new_individual_conj_transitions);
 }
 
 template<class T>
