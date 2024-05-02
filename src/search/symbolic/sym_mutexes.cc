@@ -41,8 +41,6 @@ void SymMutexes::init(const shared_ptr<AbstractTask> task, bool genMutexBDD, boo
     vector<BDD> &notMutexBDDs = (fw ? notMutexBDDsFw : notMutexBDDsBw);
 
     // BDD validStates = vars->oneBDD();
-    int num_mutex = 0;
-    int num_invariants = 0;
 
     if (genMutexBDDByFluent) {
         // Initialize structure for notMutexBDDsByFluent
@@ -86,7 +84,6 @@ void SymMutexes::init(const shared_ptr<AbstractTask> task, bool genMutexBDD, boo
             }
 
             if (exactlyOneRelevant) {
-                num_invariants++;
                 if (genMutexBDD) {
                     invariant_bdds_by_fluent[var][val] *= bddInvariant;
                 }
@@ -109,7 +106,6 @@ void SymMutexes::init(const shared_ptr<AbstractTask> task, bool genMutexBDD, boo
                 BDD f2 = sym_vars->preBDD(var2, val2);
                 BDD mBDD = !(f1 * f2);
                 if (genMutexBDD) {
-                    num_mutex++;
                     mBDDByVar[min(var1, var2)] *= mBDD;
                     if (mBDDByVar[min(var1, var2)].nodeCount() > sym_params.max_mutex_size) {
                         notMutexBDDs.push_back(mBDDByVar[min(var1, var2)]);
