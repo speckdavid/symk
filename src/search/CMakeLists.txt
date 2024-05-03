@@ -109,7 +109,7 @@ include(ExternalProject)
 ### Boost
 message(STATUS "Building MiniBoost.")
 include_directories(SYSTEM ext/boost_dependencies)
-add_subdirectory(ext/boost_dependencies/libs)
+#add_subdirectory(ext/boost_dependencies/libs)
 
 ### Cudd
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/ext/cudd-3.0.0/cudd)
