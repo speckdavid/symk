@@ -30,39 +30,18 @@ namespace boost
 
 template<class T> inline void checked_delete(T * x) BOOST_NOEXCEPT
 {
-#if defined(__cpp_static_assert) && __cpp_static_assert >= 200410L
-
-    static_assert( sizeof(T) != 0, "Type must be complete" );
-
-#else
-
-    typedef char type_must_be_complete[ sizeof(T) ];
+    // intentionally complex - simplification causes regressions
+    typedef char type_must_be_complete[ sizeof(T)? 1: -1 ];
     (void) sizeof(type_must_be_complete);
-
-#endif
-
     delete x;
 }
 
 template<class T> inline void checked_array_delete(T * x) BOOST_NOEXCEPT
 {
-#if defined(__cpp_static_assert) && __cpp_static_assert >= 200410L
-
-    static_assert( sizeof(T) != 0, "Type must be complete" );
-
-#else
-
-    typedef char type_must_be_complete[ sizeof(T) ];
+    typedef char type_must_be_complete[ sizeof(T)? 1: -1 ];
     (void) sizeof(type_must_be_complete);
-
-#endif
-
     delete [] x;
 }
-
-// Block unintended ADL
-namespace checked_deleters
-{
 
 template<class T> struct checked_deleter
 {
@@ -86,11 +65,6 @@ template<class T> struct checked_array_deleter
         boost::checked_array_delete(x);
     }
 };
-
-} // namespace checked_deleters
-
-using checked_deleters::checked_deleter;
-using checked_deleters::checked_array_deleter;
 
 } // namespace boost
 

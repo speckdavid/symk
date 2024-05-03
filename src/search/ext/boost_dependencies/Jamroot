@@ -19,23 +19,28 @@
 #   =======                 configured locations (below).
 #
 #   --prefix=<PREFIX>       Install architecture independent files here.
-#                           Default; C:\Boost on Win32
-#                           Default; /usr/local on Unix. Linux, etc.
+#                           Default: C:\Boost on Windows
+#                           Default: /usr/local on Unix, Linux, etc.
 #
 #   --exec-prefix=<EPREFIX> Install architecture dependent files here.
-#                           Default; <PREFIX>
+#                           Default: <PREFIX>
 #
-#   --libdir=<DIR>          Install library files here.
-#                           Default; <EPREFIX>/lib
+#   --libdir=<LIBDIR>       Install library files here.
+#                           Default: <EPREFIX>/lib
 #
 #   --includedir=<HDRDIR>   Install header files here.
-#                           Default; <PREFIX>/include
+#                           Default: <PREFIX>/include
+#
+#   --cmakedir=<CMAKEDIR>   Install CMake configuration files here.
+#                           Default: <LIBDIR>/cmake
+#
+#   --no-cmake-config       Do not install CMake configuration files.
 #
 #   stage                   Build and install only compiled library files to the
 #   =====                   stage directory.
 #
 #   --stagedir=<STAGEDIR>   Install library files here
-#                           Default; ./stage
+#                           Default: ./stage
 #
 # Other Options:
 #
@@ -129,10 +134,21 @@ import xsltproc ;
 import set ;
 import path ;
 import link ;
+import notfile ;
+import virtual-target ;
+import "class" : new ;
+import property-set ;
+import threadapi-feature ;
+import option ;
+# Backslash because of `bcp --namespace`
+import tools/boost\_install/boost-install ;
 
 path-constant BOOST_ROOT : . ;
-constant BOOST_VERSION : 1.64.0 ;
+constant BOOST_VERSION : 1.80.0 ;
 constant BOOST_JAMROOT_MODULE : $(__name__) ;
+
+# Allow subprojects to simply `import config : requires ;` to get access to the requires rule
+modules.poke : BOOST_BUILD_PATH : $(BOOST_ROOT)/libs/config/checks [ modules.peek : BOOST_BUILD_PATH ] ;
 
 boostcpp.set-version $(BOOST_VERSION) ;
 
@@ -169,7 +185,11 @@ project boost
       <toolset>como-linux:<define>_GNU_SOURCE=1
       # When building docs within Boost, we want the standard Boost style
       <xsl:param>boost.defaults=Boost
+      <conditional>@threadapi-feature.detect
     : usage-requirements <include>.
+    : default-build
+      <visibility>hidden
+      <threading>multi
     : build-dir bin.v2
     ;
 
@@ -193,14 +213,16 @@ rule handle-static-runtime ( properties * )
     # dangerous on Windows. Therefore, we disallow it. This might be drastic,
     # but it was disabled for a while without anybody complaining.
 
-    # For CW, static runtime is needed so that std::locale works.
-    if <link>shared in $(properties) && <runtime-link>static in $(properties) &&
-        ! ( <toolset>cw in $(properties) )
+    local argv = [ modules.peek : ARGV ] ;
+
+    if <link>shared in $(properties)
+        && <runtime-link>static in $(properties)
+        # For CW, static runtime is needed so that std::locale works.
+        && ! ( <toolset>cw in $(properties) )
+        && ! --allow-shared-static in $(argv)
     {
-        ECHO "error: link=shared together with runtime-link=static is not allowed" ;
-        ECHO "error: such property combination is either impossible " ;
-        ECHO "error: or too dangerious to be of any use" ;
-        EXIT ;
+        boostcpp.emit-shared-static-warning ;
+        return <build>no ;
     }
 }
 
@@ -222,24 +244,38 @@ local rule explicit-alias ( id : targets + )
 
 # First, the complicated libraries: where the target name in Jamfile is
 # different from its directory name.
-explicit-alias prg_exec_monitor : libs/test/build//_prg_exec_monitor ;
-explicit-alias test_exec_monitor : libs/test/build//_test_exec_monitor ;
-explicit-alias unit_test_framework : libs/test/build//_unit_test_framework ;
+explicit-alias prg_exec_monitor : libs/test/build//boost_prg_exec_monitor ;
+explicit-alias test_exec_monitor : libs/test/build//boost_test_exec_monitor ;
+explicit-alias unit_test_framework : libs/test/build//boost_unit_test_framework ;
 explicit-alias bgl-vis : libs/graps/build//bgl-vis ;
-explicit-alias serialization : libs/serialization/build//_serialization ;
-explicit-alias wserialization : libs/serialization/build//_wserialization ;
+explicit-alias serialization : libs/serialization/build//boost_serialization ;
+explicit-alias wserialization : libs/serialization/build//boost_wserialization ;
 for local l in $(all-libraries)
 {
-    if ! $(l) in test graph serialization
+    if ! $(l) in test graph serialization headers
     {
-        explicit-alias $(l) : libs/$(l)/build//_$(l) ;
+        explicit-alias $(l) : libs/$(l)/build//boost_$(l) ;
     }
 }
 
 # Log has an additional target
-explicit-alias log_setup : libs/log/build//_log_setup ;
+explicit-alias log_setup : libs/log/build//boost_log_setup ;
 
-alias headers : $(all-headers)-headers : : : <include>.  ;
+rule do-nothing { }
+
+rule generate-alias ( project name : property-set : sources * )
+{
+    local action-name = [ $(property-set).get <action> ] ;
+    local m = [ MATCH ^@(.*) : $(action-name) ] ;
+    property-set = [ property-set.empty ] ;
+    local action = [ new action $(sources) : $(m[1]) : $(property-set) ] ;
+    local t = [ new notfile-target $(name) : $(project) : $(action) ] ;
+    return [ virtual-target.register $(t) ] ;
+}
+
+generate headers : $(all-headers)-headers : <generating-rule>@generate-alias <action>@do-nothing : : <include>.  ;
+
+#alias headers : $(all-headers)-headers : : : <include>.  ;
 explicit headers ;
 
 # Make project ids of all libraries known.
@@ -258,37 +294,26 @@ if [ path.exists $(BOOST_ROOT)/libs/wave/tool/build ]
     use-project /boost/libs/wave/tool : libs/wave/tool/build ;
 }
 
+# Make the boost-install rule visible in subprojects
+
 # This rule should be called from libraries' Jamfiles and will create two
 # targets, "install" and "stage", that will install or stage that library. The
 # --prefix option is respected, but --with and --without options, naturally, are
 # ignored.
 #
 # - libraries -- list of library targets to install.
-#
+
 rule boost-install ( libraries * )
 {
-    package.install install
-        : <dependency>/boost//install-proper-headers $(install-requirements)
-        : # No binaries
-        : $(libraries)
-        : # No headers, it is handled by the dependency.
-    ;
-
-    install stage : $(libraries) : <location>$(BOOST_STAGE_LOCATE) ;
-
-    module [ CALLER_MODULE ]
-    {
-        explicit stage ;
-        explicit install ;
-    }
+    boost-install.boost-install $(libraries) ;
 }
 
 # Creates a library target, adding autolink support and also creates
 # stage and install targets via boost-install, above.
 rule boost-lib ( name : sources * : requirements * : default-build * : usage-requirements * )
 {
-    name = _$(name) ;
     autolink = <link>shared:<define>BOOST_$(name:U)_DYN_LINK=1 ;
+    name = boost_$(name) ;
     lib $(name)
         : $(sources)
         : $(requirements) $(autolink)
@@ -299,14 +324,6 @@ rule boost-lib ( name : sources * : requirements * : default-build * : usage-req
 }
 
 
-headers =
-    # The .SUNWCCh files are present in tr1 include directory and have to be
-    # installed (see http://lists.boost.org/Archives/boost/2007/05/121430.php).
-    [ path.glob-tree $(BOOST_ROOT)/boost : *.hpp *.ipp *.h *.inc *.SUNWCCh : CVS .svn ]
-    [ path.glob-tree $(BOOST_ROOT)/boost/compatibility/cpp_c_headers : c* : CVS .svn ]
-    [ path.glob boost/tr1/tr1 : * : bcc32 sun CVS .svn ]
-    ;
-
 # Declare special top-level targets that build and install the desired variants
 # of the libraries.
-boostcpp.declare-targets $(all-libraries) : $(headers) ;
+boostcpp.declare-targets $(all-libraries) ;

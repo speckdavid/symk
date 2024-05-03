@@ -1,5 +1,5 @@
 //
-// Copyright 2013-2024 Antony Polukhin.
+// Copyright 2013-2022 Antony Polukhin.
 //
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -29,9 +29,30 @@
 #include <typeinfo>
 #include <cstring>                                  // std::strcmp, std::strlen, std::strstr
 #include <stdexcept>
-#include <type_traits>
+#include <boost/static_assert.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/core/demangle.hpp>
+#include <boost/type_traits/conditional.hpp>
+#include <boost/type_traits/is_const.hpp>
+#include <boost/type_traits/is_reference.hpp>
+#include <boost/type_traits/is_volatile.hpp>
+#include <boost/type_traits/remove_cv.hpp>
+#include <boost/type_traits/remove_reference.hpp>
+
+#if (defined(_MSC_VER) && _MSC_VER > 1600) \
+    || (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ > 5 && defined(__GXX_EXPERIMENTAL_CXX0X__)) \
+    || (defined(__GNUC__) && __GNUC__ > 4 && __cplusplus >= 201103)
+#   define BOOST_TYPE_INDEX_STD_TYPE_INDEX_HAS_HASH_CODE
+#else
+#   include <boost/container_hash/hash.hpp>
+#endif
+
+#if (defined(__EDG_VERSION__) && __EDG_VERSION__ < 245) \
+        || (defined(__sgi) && defined(_COMPILER_VERSION) && _COMPILER_VERSION <= 744)
+#   include <boost/type_traits/is_signed.hpp>
+#   include <boost/type_traits/make_signed.hpp>
+#   include <boost/type_traits/type_identity.hpp>
+#endif
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
 # pragma once
@@ -65,40 +86,40 @@ private:
     const type_info_t* data_;
 
 public:
-    inline stl_type_index() noexcept
+    inline stl_type_index() BOOST_NOEXCEPT
         : data_(&typeid(void))
     {}
 
-    inline stl_type_index(const type_info_t& data) noexcept
+    inline stl_type_index(const type_info_t& data) BOOST_NOEXCEPT
         : data_(&data)
     {}
 
-    inline const type_info_t&  type_info() const noexcept;
+    inline const type_info_t&  type_info() const BOOST_NOEXCEPT;
 
-    inline const char*  raw_name() const noexcept;
-    inline const char*  name() const noexcept;
+    inline const char*  raw_name() const BOOST_NOEXCEPT;
+    inline const char*  name() const BOOST_NOEXCEPT;
     inline std::string  pretty_name() const;
 
-    inline std::size_t  hash_code() const noexcept;
-    inline bool         equal(const stl_type_index& rhs) const noexcept;
-    inline bool         before(const stl_type_index& rhs) const noexcept;
+    inline std::size_t  hash_code() const BOOST_NOEXCEPT;
+    inline bool         equal(const stl_type_index& rhs) const BOOST_NOEXCEPT;
+    inline bool         before(const stl_type_index& rhs) const BOOST_NOEXCEPT;
 
     template <class T>
-    inline static stl_type_index type_id() noexcept;
+    inline static stl_type_index type_id() BOOST_NOEXCEPT;
 
     template <class T>
-    inline static stl_type_index type_id_with_cvr() noexcept;
+    inline static stl_type_index type_id_with_cvr() BOOST_NOEXCEPT;
 
     template <class T>
-    inline static stl_type_index type_id_runtime(const T& value) noexcept;
+    inline static stl_type_index type_id_runtime(const T& value) BOOST_NOEXCEPT;
 };
 
-inline const stl_type_index::type_info_t& stl_type_index::type_info() const noexcept {
+inline const stl_type_index::type_info_t& stl_type_index::type_info() const BOOST_NOEXCEPT {
     return *data_;
 }
 
 
-inline const char* stl_type_index::raw_name() const noexcept {
+inline const char* stl_type_index::raw_name() const BOOST_NOEXCEPT {
 #ifdef _MSC_VER
     return data_->raw_name();
 #else
@@ -106,7 +127,7 @@ inline const char* stl_type_index::raw_name() const noexcept {
 #endif
 }
 
-inline const char* stl_type_index::name() const noexcept {
+inline const char* stl_type_index::name() const BOOST_NOEXCEPT {
     return data_->name();
 }
 
@@ -159,8 +180,12 @@ inline std::string stl_type_index::pretty_name() const {
 }
 
 
-inline std::size_t stl_type_index::hash_code() const noexcept {
+inline std::size_t stl_type_index::hash_code() const BOOST_NOEXCEPT {
+#ifdef BOOST_TYPE_INDEX_STD_TYPE_INDEX_HAS_HASH_CODE
     return data_->hash_code();
+#else
+    return boost::hash_range(raw_name(), raw_name() + std::strlen(raw_name()));
+#endif
 }
 
 
@@ -178,7 +203,7 @@ inline std::size_t stl_type_index::hash_code() const noexcept {
 
 /// @endcond
 
-inline bool stl_type_index::equal(const stl_type_index& rhs) const noexcept {
+inline bool stl_type_index::equal(const stl_type_index& rhs) const BOOST_NOEXCEPT {
 #ifdef BOOST_TYPE_INDEX_CLASSINFO_COMPARE_BY_NAMES
     return raw_name() == rhs.raw_name() || !std::strcmp(raw_name(), rhs.raw_name());
 #else
@@ -186,7 +211,7 @@ inline bool stl_type_index::equal(const stl_type_index& rhs) const noexcept {
 #endif
 }
 
-inline bool stl_type_index::before(const stl_type_index& rhs) const noexcept {
+inline bool stl_type_index::before(const stl_type_index& rhs) const BOOST_NOEXCEPT {
 #ifdef BOOST_TYPE_INDEX_CLASSINFO_COMPARE_BY_NAMES
     return raw_name() != rhs.raw_name() && std::strcmp(raw_name(), rhs.raw_name()) < 0;
 #else
@@ -198,9 +223,26 @@ inline bool stl_type_index::before(const stl_type_index& rhs) const noexcept {
 
 
 template <class T>
-inline stl_type_index stl_type_index::type_id() noexcept {
-    typedef typename std::remove_reference<T>::type no_ref_t;
-    typedef typename std::remove_cv<no_ref_t>::type no_cvr_t;
+inline stl_type_index stl_type_index::type_id() BOOST_NOEXCEPT {
+    typedef BOOST_DEDUCED_TYPENAME boost::remove_reference<T>::type no_ref_t;
+    typedef BOOST_DEDUCED_TYPENAME boost::remove_cv<no_ref_t>::type no_cvr_prefinal_t;
+
+    #  if (defined(__EDG_VERSION__) && __EDG_VERSION__ < 245) \
+        || (defined(__sgi) && defined(_COMPILER_VERSION) && _COMPILER_VERSION <= 744)
+
+        // Old EDG-based compilers seem to mistakenly distinguish 'integral' from 'signed integral'
+        // in typeid() expressions. Full template specialization for 'integral' fixes that issue:
+        typedef BOOST_DEDUCED_TYPENAME boost::conditional<
+            boost::is_signed<no_cvr_prefinal_t>::value,
+            boost::make_signed<no_cvr_prefinal_t>,
+            boost::type_identity<no_cvr_prefinal_t>
+        >::type no_cvr_prefinal_lazy_t;
+
+        typedef BOOST_DEDUCED_TYPENAME no_cvr_prefinal_t::type no_cvr_t;
+    #else
+        typedef no_cvr_prefinal_t no_cvr_t;
+    #endif
+
     return typeid(no_cvr_t);
 }
 
@@ -209,9 +251,9 @@ namespace detail {
 }
 
 template <class T>
-inline stl_type_index stl_type_index::type_id_with_cvr() noexcept {
-    typedef typename std::conditional<
-        std::is_reference<T>::value ||  std::is_const<T>::value || std::is_volatile<T>::value,
+inline stl_type_index stl_type_index::type_id_with_cvr() BOOST_NOEXCEPT {
+    typedef BOOST_DEDUCED_TYPENAME boost::conditional<
+        boost::is_reference<T>::value ||  boost::is_const<T>::value || boost::is_volatile<T>::value,
         detail::cvr_saver<T>,
         T
     >::type type;
@@ -221,7 +263,7 @@ inline stl_type_index stl_type_index::type_id_with_cvr() noexcept {
 
 
 template <class T>
-inline stl_type_index stl_type_index::type_id_runtime(const T& value) noexcept {
+inline stl_type_index stl_type_index::type_id_runtime(const T& value) BOOST_NOEXCEPT {
 #ifdef BOOST_NO_RTTI
     return value.boost_type_index_type_id_runtime_();
 #else
@@ -230,5 +272,7 @@ inline stl_type_index stl_type_index::type_id_runtime(const T& value) noexcept {
 }
 
 }} // namespace boost::typeindex
+
+#undef BOOST_TYPE_INDEX_STD_TYPE_INDEX_HAS_HASH_CODE
 
 #endif // BOOST_TYPE_INDEX_STL_TYPE_INDEX_HPP

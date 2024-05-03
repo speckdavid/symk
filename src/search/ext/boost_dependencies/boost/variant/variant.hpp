@@ -4,7 +4,7 @@
 //-----------------------------------------------------------------------------
 //
 // Copyright (c) 2002-2003 Eric Friedman, Itay Maman
-// Copyright (c) 2012-2024 Antony Polukhin
+// Copyright (c) 2012-2022 Antony Polukhin
 //
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
@@ -40,6 +40,8 @@
 #include <boost/blank.hpp>
 #include <boost/integer/common_factor_ct.hpp>
 #include <boost/static_assert.hpp>
+#include <boost/preprocessor/cat.hpp>
+#include <boost/preprocessor/repeat.hpp>
 #include <boost/type_traits/aligned_storage.hpp>
 #include <boost/type_traits/alignment_of.hpp>
 #include <boost/type_traits/add_const.hpp>
@@ -219,6 +221,7 @@ public: // metafunction result
 
 };
 
+#ifndef BOOST_NO_CXX11_NOEXCEPT
 ///////////////////////////////////////////////////////////////////////////////
 // (detail) metafunction is_variant_move_noexcept_constructible
 //
@@ -252,6 +255,7 @@ struct is_variant_move_noexcept_assignable {
         iterator_t, end_t
     >::type type;
 };
+#endif // BOOST_NO_CXX11_NOEXCEPT
 
 ///////////////////////////////////////////////////////////////////////////////
 // (detail) metafunction is_variant_constructible_from
@@ -304,6 +308,8 @@ struct is_variant_constructible_from< boost::variant<BOOST_VARIANT_ENUM_PARAMS(T
     is_variant_constructible_from<boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>, Types >
 {};
 
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+
 template <BOOST_VARIANT_ENUM_PARAMS(typename T), class Types>
 struct is_variant_constructible_from< boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>&& , Types >:
     is_variant_constructible_from<boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>, Types >
@@ -313,6 +319,8 @@ template <BOOST_VARIANT_ENUM_PARAMS(typename T), class Types>
 struct is_variant_constructible_from< boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)> const && , Types >:
     is_variant_constructible_from<boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>, Types >
 {};
+
+#endif // #ifndef BOOST_NO_CXX11_RVALUE_REFERENCE
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -458,6 +466,7 @@ public: // internal visitor interface
 //
 // Internal visitor that moves the value it visits into the given buffer.
 //
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
 class move_into
     : public static_visitor<>
 {
@@ -486,6 +495,7 @@ public: // internal visitor interface
         new(storage_) T(::boost::detail::variant::move(operand));
     }
 };
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // (detail) class assign_storage
@@ -1002,11 +1012,13 @@ public: // structors
 
 public: // internal visitor interfaces
 
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+
     //using workaround with is_same<T, T> to prenvent compilation error, because we need to use T in enable_if to make SFINAE work
     template <typename T>
     typename enable_if_c<MoveSemantics && is_same<T, T>::value, result_type>::type internal_visit(T&& operand, int)
     {
-        return visitor_(std::move(operand));
+        return visitor_(::boost::move(operand));
     }
 
     //using workaround with is_same<T, T> to prenvent compilation error, because we need to use T in enable_if to make SFINAE work
@@ -1015,6 +1027,24 @@ public: // internal visitor interfaces
     {
         return visitor_(operand);
     }
+
+#else
+
+    template <typename T>
+    result_type internal_visit(T& operand, int)
+    {
+        return visitor_(operand);
+    }
+
+#   if BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x0564))
+    template <typename T>
+    result_type internal_visit(const T& operand, int)
+    {
+        return visitor_(operand);
+    }
+#   endif //BORLAND
+
+#endif //RVALUE REFERENCES
 
 public: // internal visitor interfaces, cont.
 
@@ -1094,6 +1124,8 @@ private: // helpers, for typedefs (below)
     {
     };
 
+#if !defined(BOOST_VARIANT_NO_TYPE_SEQUENCE_SUPPORT)
+
 private: // helpers, for typedefs (below)
 
     typedef typename mpl::eval_if<
@@ -1137,6 +1169,82 @@ private: // internal typedefs
           internal_types
         >::type internal_T0;
 
+#else // defined(BOOST_VARIANT_NO_TYPE_SEQUENCE_SUPPORT)
+
+private: // helpers, for typedefs (below)
+
+    typedef unwrapped_T0_ T0;
+
+    #define BOOST_VARIANT_AUX_ENABLE_RECURSIVE_TYPEDEFS(z,N,_) \
+        typedef typename mpl::eval_if< \
+              is_recursive_ \
+            , detail::variant::enable_recursive< \
+                  BOOST_PP_CAT(T,N) \
+                , wknd_self_t \
+                > \
+            , mpl::identity< BOOST_PP_CAT(T,N) > \
+            >::type BOOST_PP_CAT(recursive_enabled_T,N); \
+        /**/
+
+    BOOST_PP_REPEAT(
+          BOOST_VARIANT_LIMIT_TYPES
+        , BOOST_VARIANT_AUX_ENABLE_RECURSIVE_TYPEDEFS
+        , _
+        )
+
+    #undef BOOST_VARIANT_AUX_ENABLE_RECURSIVE_TYPEDEFS
+
+    #define BOOST_VARIANT_AUX_UNWRAP_RECURSIVE_TYPEDEFS(z,N,_) \
+        typedef typename unwrap_recursive< \
+              BOOST_PP_CAT(recursive_enabled_T,N) \
+            >::type BOOST_PP_CAT(public_T,N); \
+        /**/
+
+    BOOST_PP_REPEAT(
+          BOOST_VARIANT_LIMIT_TYPES
+        , BOOST_VARIANT_AUX_UNWRAP_RECURSIVE_TYPEDEFS
+        , _
+        )
+
+    #undef BOOST_VARIANT_AUX_UNWRAP_RECURSIVE_TYPEDEFS
+
+public: // public typedefs
+
+    typedef typename detail::variant::make_variant_list<
+          BOOST_VARIANT_ENUM_PARAMS(public_T)
+        >::type types;
+
+private: // helpers, for internal typedefs (below)
+
+    #define BOOST_VARIANT_AUX_MAKE_REFERENCE_CONTENT_TYPEDEFS(z,N,_) \
+        typedef detail::make_reference_content< \
+              BOOST_PP_CAT(recursive_enabled_T,N) \
+            >::type BOOST_PP_CAT(internal_T,N); \
+        /**/
+
+    BOOST_PP_REPEAT(
+          BOOST_VARIANT_LIMIT_TYPES
+        , BOOST_VARIANT_AUX_MAKE_REFERENCE_CONTENT_TYPEDEFS
+        , _
+        )
+
+    #undef BOOST_VARIANT_AUX_MAKE_REFERENCE_CONTENT_TYPEDEFS
+
+private: // internal typedefs
+
+    typedef typename detail::variant::make_variant_list<
+          BOOST_VARIANT_ENUM_PARAMS(internal_T)
+        >::type internal_types;
+
+private: // static precondition assertions
+
+    // NOTE TO USER :
+    // variant< type-sequence > syntax is not supported on this compiler!
+    //
+    BOOST_MPL_ASSERT_NOT(( is_sequence_based_ ));
+
+#endif // BOOST_VARIANT_NO_TYPE_SEQUENCE_SUPPORT workaround
+
 private: // helpers, for representation (below)
 
     typedef typename detail::variant::find_fallback_type<
@@ -1162,6 +1270,7 @@ private: // helpers, for representation (below)
           internal_types, never_uses_backup_flag
         >::type storage_t;
 
+#ifndef BOOST_NO_CXX11_NOEXCEPT
     typedef typename detail::variant::is_variant_move_noexcept_constructible<
         internal_types
     > variant_move_noexcept_constructible;
@@ -1169,6 +1278,8 @@ private: // helpers, for representation (below)
     typedef typename detail::variant::is_variant_move_noexcept_assignable<
         internal_types
     > variant_move_noexcept_assignable;
+
+#endif
 
 private: // helpers, for representation (below)
 
@@ -1360,6 +1471,7 @@ private: // helpers, for structors, cont. (below)
 
     friend class convert_copy_into;
 
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     class convert_move_into
         : public static_visitor<int>
     {
@@ -1425,6 +1537,7 @@ private: // helpers, for structors, cont. (below)
     };
 
     friend class convert_move_into;
+#endif
 
 private: // helpers, for structors, below
 
@@ -1448,6 +1561,7 @@ private: // helpers, for structors, below
             );
     }
 
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     template <typename T>
     typename boost::enable_if<boost::is_rvalue_reference<T&&> >::type convert_construct(
           T&& operand
@@ -1467,6 +1581,7 @@ private: // helpers, for structors, below
                 )
             );
     }
+#endif
 
     template <typename Variant>
     void convert_construct(
@@ -1481,6 +1596,7 @@ private: // helpers, for structors, below
             );
     }
 
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     template <typename Variant>
     typename boost::enable_if<boost::is_rvalue_reference<Variant&&> >::type convert_construct(
           Variant&& operand
@@ -1493,6 +1609,7 @@ private: // helpers, for structors, below
               operand.internal_apply_visitor(visitor)
             );
     }
+#endif
 
     template <typename Variant>
     void convert_construct_variant(Variant& operand)
@@ -1521,6 +1638,7 @@ private: // helpers, for structors, below
             );
     }
 
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     template <typename Variant>
     typename boost::enable_if<boost::is_rvalue_reference<Variant&&> >::type convert_construct_variant(Variant&& operand)
     {
@@ -1547,6 +1665,7 @@ private: // helpers, for structors, below
             , is_foreign_variant()
             );
     }
+#endif
 
     template <BOOST_VARIANT_ENUM_PARAMS(typename U)>
     typename boost::enable_if<mpl::or_<
@@ -1572,6 +1691,7 @@ private: // helpers, for structors, below
         convert_construct_variant(operand);
     }
 
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     template <BOOST_VARIANT_ENUM_PARAMS(typename U)>
     typename boost::enable_if<mpl::or_<
         boost::is_same<boost::variant<BOOST_VARIANT_ENUM_PARAMS(U)>, variant>,
@@ -1583,6 +1703,7 @@ private: // helpers, for structors, below
     {
         convert_construct_variant( detail::variant::move(operand) );
     }
+#endif
 
 public: // structors, cont.
 
@@ -1615,6 +1736,7 @@ public: // structors, cont.
         convert_construct(operand, 1L);
     }
 
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     template <class T>
     variant(T&& operand,
         typename boost::enable_if<mpl::or_<
@@ -1629,6 +1751,7 @@ public: // structors, cont.
     {
         convert_construct( detail::variant::move(operand), 1L);
     }
+#endif
 
 public: // structors, cont.
 
@@ -1643,6 +1766,7 @@ public: // structors, cont.
         indicate_which(operand.which());
     }
 
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     variant(variant&& operand) BOOST_NOEXCEPT_IF(variant_move_noexcept_constructible::type::value)
     {
         // Move the value of operand into *this...
@@ -1652,11 +1776,14 @@ public: // structors, cont.
         // ...and activate the *this's primary storage on success:
         indicate_which(operand.which());
     }
+#endif
 
 private: // helpers, for modifiers (below)
 
+#   if !defined(BOOST_NO_MEMBER_TEMPLATE_FRIENDS)
     template <typename Variant>
     friend class detail::variant::backup_assigner;
+#   endif
 
     // class assigner
     //
@@ -1806,6 +1933,7 @@ private: // helpers, for modifiers (below)
 
     friend class assigner;
 
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     // class move_assigner
     //
     // Internal visitor that "move assigns" the visited value to the given variant
@@ -1923,6 +2051,7 @@ private: // helpers, for modifiers (below)
     };
 
     friend class move_assigner;
+#endif // BOOST_NO_CXX11_RVALUE_REFERENCES
 
     void variant_assign(const variant& rhs)
     {
@@ -1941,6 +2070,7 @@ private: // helpers, for modifiers (below)
         }
     }
 
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     void variant_assign(variant&& rhs)
     {
         // If the contained types are EXACTLY the same...
@@ -1957,6 +2087,7 @@ private: // helpers, for modifiers (below)
             rhs.internal_apply_visitor(visitor);
         }
     }
+#endif // BOOST_NO_CXX11_RVALUE_REFERENCES
 
 private: // helpers, for modifiers (below)
 
@@ -1978,6 +2109,7 @@ private: // helpers, for modifiers (below)
         }
     }
 
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     template <typename T>
     void move_assign(T&& rhs)
     {
@@ -1995,10 +2127,11 @@ private: // helpers, for modifiers (below)
             variant_assign( detail::variant::move(temp) );
         }
     }
+#endif // BOOST_NO_CXX11_RVALUE_REFERENCES
 
 public: // modifiers
 
-#if !BOOST_WORKAROUND(BOOST_CLANG_VERSION, BOOST_TESTED_AT(150000)) || BOOST_CXX_VERSION <= 202002L
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     template <class T>
     typename boost::enable_if<
         boost::mpl::and_<
@@ -2012,7 +2145,7 @@ public: // modifiers
         move_assign( detail::variant::move(rhs) );
         return *this;
     }
-#endif
+#endif // BOOST_NO_CXX11_RVALUE_REFERENCES
 
     template <typename T>
     typename boost::enable_if<
@@ -2034,6 +2167,7 @@ public: // modifiers
         return *this;
     }
 
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     variant& operator=(variant&& rhs)
 #if !defined(__GNUC__) || (__GNUC__ != 4) || (__GNUC_MINOR__ > 6) || defined(__clang__)
         BOOST_NOEXCEPT_IF(variant_move_noexcept_constructible::type::value && variant_move_noexcept_assignable::type::value)
@@ -2042,6 +2176,7 @@ public: // modifiers
         variant_assign( detail::variant::move(rhs) );
         return *this;
     }
+#endif // BOOST_NO_CXX11_RVALUE_REFERENCES
 
     void swap(variant& rhs)
     {
@@ -2227,6 +2362,8 @@ public:
 
 public: // visitation support
 
+#ifndef BOOST_NO_CXX11_REF_QUALIFIERS
+
     template <typename Visitor>
     typename Visitor::result_type
     apply_visitor(Visitor& visitor) &&
@@ -2243,9 +2380,14 @@ public: // visitation support
         return this->internal_apply_visitor(invoker);
     }
 
+#endif
+
     template <typename Visitor>
     typename Visitor::result_type
-    apply_visitor(Visitor& visitor) &
+    apply_visitor(Visitor& visitor)
+#ifndef BOOST_NO_CXX11_REF_QUALIFIERS
+    &
+#endif
     {
         detail::variant::invoke_visitor<Visitor, false> invoker(visitor);
         return this->internal_apply_visitor(invoker);
@@ -2253,7 +2395,10 @@ public: // visitation support
 
     template <typename Visitor>
     typename Visitor::result_type
-    apply_visitor(Visitor& visitor) const &
+    apply_visitor(Visitor& visitor) const
+#ifndef BOOST_NO_CXX11_REF_QUALIFIERS
+    &
+#endif
     {
         detail::variant::invoke_visitor<Visitor, false> invoker(visitor);
         return this->internal_apply_visitor(invoker);

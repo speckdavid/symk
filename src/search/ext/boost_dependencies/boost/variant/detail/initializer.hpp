@@ -22,6 +22,7 @@
 #include <boost/variant/recursive_wrapper_fwd.hpp>
 #include <boost/variant/detail/move.hpp>
 
+#if !defined(BOOST_NO_USING_DECLARATION_OVERLOADS_FROM_TYPENAME_BASE)
 #   include <boost/mpl/aux_/value_wknd.hpp>
 #   include <boost/mpl/int.hpp>
 #   include <boost/mpl/iter_fold.hpp>
@@ -29,7 +30,12 @@
 #   include <boost/mpl/deref.hpp>
 #   include <boost/mpl/pair.hpp>
 #   include <boost/mpl/protect.hpp>
-
+#else
+#   include <boost/variant/variant_fwd.hpp>
+#   include <boost/preprocessor/cat.hpp>
+#   include <boost/preprocessor/enum.hpp>
+#   include <boost/preprocessor/repeat.hpp>
+#endif
 
 namespace boost {
 namespace detail { namespace variant {
@@ -46,6 +52,8 @@ namespace detail { namespace variant {
 // Otherwise, use a preprocessor workaround based on knowledge of the fixed
 // size of the variant's psuedo-variadic template parameter list.
 //
+
+#if !defined(BOOST_NO_USING_DECLARATION_OVERLOADS_FROM_TYPENAME_BASE)
 
 // (detail) quoted metafunction make_initializer_node
 //
@@ -73,6 +81,7 @@ struct make_initializer_node
             typedef typename unwrap_recursive<recursive_enabled_T>::type
                 public_T;
 
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
             typedef boost::is_reference<public_T> 
                 is_reference_content_t;
 
@@ -83,6 +92,10 @@ struct make_initializer_node
 
             typedef typename boost::mpl::if_<is_reference_content_t, disable_overload<public_T>, public_T&& >::type 
                 param2_T;
+#else
+            typedef typename call_traits<public_T>::param_type
+                param_T;
+#endif
 
         public: // static functions
 
@@ -98,6 +111,7 @@ struct make_initializer_node
                 return BOOST_MPL_AUX_VALUE_WKND(index)::value; // which
             }
 
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
             static int initialize(void* dest, param2_T operand)
             {
                 // This assert must newer trigger, because all the reference contents are
@@ -108,6 +122,7 @@ struct make_initializer_node
                 new(dest) value_T( boost::detail::variant::move(operand) );
                 return BOOST_MPL_AUX_VALUE_WKND(index)::value; // which
             }
+#endif
         };
 
         friend class initializer_node;
@@ -135,6 +150,61 @@ public: // static functions
 
 };
 
+#else // defined(BOOST_NO_USING_DECLARATION_OVERLOADS_FROM_TYPENAME_BASE)
+
+    // Obsolete. Remove.
+    #define BOOST_VARIANT_AUX_PP_INITIALIZER_TEMPLATE_PARAMS \
+          BOOST_VARIANT_ENUM_PARAMS(typename recursive_enabled_T) \
+    /**/
+
+    // Obsolete. Remove.
+    #define BOOST_VARIANT_AUX_PP_INITIALIZER_DEFINE_PARAM_T(N) \
+        typedef typename unwrap_recursive< \
+              BOOST_PP_CAT(recursive_enabled_T,N) \
+            >::type BOOST_PP_CAT(public_T,N); \
+        typedef typename call_traits< \
+              BOOST_PP_CAT(public_T,N) \
+            >::param_type BOOST_PP_CAT(param_T,N); \
+    /**/
+
+template < BOOST_VARIANT_ENUM_PARAMS(typename recursive_enabled_T) >
+struct preprocessor_list_initializer
+{
+public: // static functions
+
+    #define BOOST_VARIANT_AUX_PP_INITIALIZE_FUNCTION(z,N,_) \
+        typedef typename unwrap_recursive< \
+              BOOST_PP_CAT(recursive_enabled_T,N) \
+            >::type BOOST_PP_CAT(public_T,N); \
+        typedef typename call_traits< \
+              BOOST_PP_CAT(public_T,N) \
+            >::param_type BOOST_PP_CAT(param_T,N); \
+        static int initialize( \
+              void* dest \
+            , BOOST_PP_CAT(param_T,N) operand \
+            ) \
+        { \
+            typedef typename boost::detail::make_reference_content< \
+                  BOOST_PP_CAT(recursive_enabled_T,N) \
+                >::type internal_T; \
+            \
+            new(dest) internal_T(operand); \
+            return (N); /*which*/ \
+        } \
+        /**/
+
+    BOOST_PP_REPEAT(
+          BOOST_VARIANT_LIMIT_TYPES
+        , BOOST_VARIANT_AUX_PP_INITIALIZE_FUNCTION
+        , _
+        )
+
+    #undef BOOST_VARIANT_AUX_PP_INITIALIZE_FUNCTION
+
+};
+
+#endif // BOOST_NO_USING_DECLARATION_OVERLOADS_FROM_TYPENAME_BASE workaround
+
 }} // namespace detail::variant
 } // namespace boost
 
@@ -145,6 +215,8 @@ public: // static functions
 // bounded types (i.e., T becomes T1, T2, etc.), exposes the initializer
 // most appropriate to the current compiler.
 //
+
+#if !defined(BOOST_NO_USING_DECLARATION_OVERLOADS_FROM_TYPENAME_BASE)
 
 #define BOOST_VARIANT_AUX_INITIALIZER_T( mpl_seq, typename_base ) \
     ::boost::mpl::iter_fold< \
@@ -158,5 +230,20 @@ public: // static functions
             > \
         >::type::first \
     /**/
+
+#else // defined(BOOST_NO_USING_DECLARATION_OVERLOADS_FROM_TYPENAME_BASE)
+
+    // Obsolete. Remove.
+    #define BOOST_VARIANT_AUX_PP_INITIALIZER_TEMPLATE_ARGS(typename_base) \
+          BOOST_VARIANT_ENUM_PARAMS(typename_base) \
+        /**/
+
+#define BOOST_VARIANT_AUX_INITIALIZER_T( mpl_seq, typename_base ) \
+    ::boost::detail::variant::preprocessor_list_initializer< \
+          BOOST_VARIANT_ENUM_PARAMS(typename_base) \
+        > \
+    /**/
+
+#endif // BOOST_NO_USING_DECLARATION_OVERLOADS_FROM_TYPENAME_BASE workaround
 
 #endif // BOOST_VARIANT_DETAIL_INITIALIZER_HPP

@@ -18,7 +18,7 @@
 #include <boost/variant/detail/backup_holder.hpp>
 #include <boost/variant/detail/cast_storage.hpp>
 #include <boost/variant/detail/forced_return.hpp>
-#include <boost/variant/variant_fwd.hpp>
+#include <boost/variant/variant_fwd.hpp> // for BOOST_VARIANT_DO_NOT_USE_VARIADIC_TEMPLATES
 
 #include <boost/mpl/eval_if.hpp>
 #include <boost/mpl/bool.hpp>
@@ -47,10 +47,22 @@
 //
 #if !defined(BOOST_VARIANT_VISITATION_UNROLLING_LIMIT)
 
+#ifndef BOOST_VARIANT_DO_NOT_USE_VARIADIC_TEMPLATES
 #   include <boost/mpl/limits/list.hpp>
 #   define BOOST_VARIANT_VISITATION_UNROLLING_LIMIT   \
         BOOST_MPL_LIMIT_LIST_SIZE
+#else
+#   define BOOST_VARIANT_VISITATION_UNROLLING_LIMIT   \
+        BOOST_VARIANT_LIMIT_TYPES
+#endif
 
+#endif
+
+// Define a compiler generic null pointer value
+#if defined(BOOST_NO_CXX11_NULLPTR)
+#define BOOST_VARIANT_NULL 0
+#else
+#define BOOST_VARIANT_NULL nullptr
 #endif
 
 namespace boost {
@@ -172,7 +184,7 @@ inline typename Visitor::result_type
 visitation_impl(
       int, int, Visitor&, VPCV
     , mpl::true_ // is_apply_visitor_unrolled
-    , NBF, W* = nullptr, S* = nullptr
+    , NBF, W* = BOOST_VARIANT_NULL, S* = BOOST_VARIANT_NULL
     )
 {
     // should never be here at runtime!
@@ -191,7 +203,7 @@ visitation_impl(
     , Visitor& visitor, VoidPtrCV storage
     , mpl::false_ // is_apply_visitor_unrolled
     , NoBackupFlag no_backup_flag
-    , Which* = nullptr, step0* = nullptr
+    , Which* = BOOST_VARIANT_NULL, step0* = BOOST_VARIANT_NULL
     )
 {
     // Typedef apply_visitor_unrolled steps and associated types...

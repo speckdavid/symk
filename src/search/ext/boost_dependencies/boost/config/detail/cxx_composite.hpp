@@ -1,4 +1,4 @@
-//  This file was automatically generated on Fri Oct 13 19:09:38 2023
+//  This file was automatically generated on Sun Jun  5 16:50:18 2022
 //  by libs/config/tools/generate.cpp
 //  Copyright John Maddock 2002-21.
 //  Use, modification and distribution are subject to the 
@@ -81,7 +81,6 @@
 #if defined(BOOST_NO_CXX03)\
    || defined(BOOST_NO_CXX11_ADDRESSOF)\
    || defined(BOOST_NO_CXX11_ALIGNAS)\
-   || defined(BOOST_NO_CXX11_ALIGNOF)\
    || defined(BOOST_NO_CXX11_ALLOCATOR)\
    || defined(BOOST_NO_CXX11_AUTO_DECLARATIONS)\
    || defined(BOOST_NO_CXX11_AUTO_MULTIDECLARATIONS)\
@@ -164,7 +163,6 @@
 #endif
 
 #if defined(BOOST_NO_CXX14)\
-   || defined(BOOST_NO_CXX17_AUTO_NONTYPE_TEMPLATE_PARAMS)\
    || defined(BOOST_NO_CXX17_DEDUCTION_GUIDES)\
    || defined(BOOST_NO_CXX17_FOLD_EXPRESSIONS)\
    || defined(BOOST_NO_CXX17_HDR_ANY)\
@@ -201,18 +199,5 @@
    || defined(BOOST_NO_CXX20_HDR_SYNCSTREAM)\
    || defined(BOOST_NO_CXX20_HDR_VERSION)
 #    define BOOST_NO_CXX20
-#endif
-
-#if defined(BOOST_NO_CXX20)\
-   || defined(BOOST_NO_CXX23_HDR_EXPECTED)\
-   || defined(BOOST_NO_CXX23_HDR_FLAT_MAP)\
-   || defined(BOOST_NO_CXX23_HDR_FLAT_SET)\
-   || defined(BOOST_NO_CXX23_HDR_GENERATOR)\
-   || defined(BOOST_NO_CXX23_HDR_MDSPAN)\
-   || defined(BOOST_NO_CXX23_HDR_PRINT)\
-   || defined(BOOST_NO_CXX23_HDR_SPANSTREAM)\
-   || defined(BOOST_NO_CXX23_HDR_STACKTRACE)\
-   || defined(BOOST_NO_CXX23_HDR_STDFLOAT)
-#    define BOOST_NO_CXX23
 #endif
 
