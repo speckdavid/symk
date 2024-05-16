@@ -16,8 +16,8 @@ We appreciate citations when SymK is used in a scientific context (see [Referenc
   - [Dependencies](#dependencies)
   - [Compiling the SymK Planner](#compiling-the-symk-planner)
   - [Apptainer Image](#apptainer-image)
-- [Single Optimal Solution](#generating-a-single-optimal-solution)
-- [Multiple Solutions](#generating-multiple-solutions)
+- [Single Optimal Solution](#single-optimal-solution)
+- [Multiple Solutions](#multiple-solutions)
   - [Top-k Configurations](#top-k-configurations)
   - [Top-q Configurations](#top-q-configurations)
   - [Loopless Planning](#loopless-planning)
@@ -138,7 +138,7 @@ Finally, if you want to find a plan with your *awesome_selector* selector (the n
 Note, that you can also search for the best **k** plans using your selector.
 
 ## Pitfalls and Troubleshooting
-By default, the planner performs a relevance analysis and removes components such as variables and actions that are irrelevant to achieving the goal. Although such variables and actions can in principle lead to further (simple) plans, they are classified as irrelevant and removed when translating PDDL to SAS+. If you wish to **obtain all plans** (even the non-relevant ones), please use the following options:
+By default, the planner performs a relevance analysis and removes components such as variables and actions that are irrelevant to achieving the goal. Although such variables and actions can in principle lead to further (simple) plans, they are classified as irrelevant and removed when translating PDDL to SAS+. Note that this can have a negative impact on the performance of the planner. If you wish to **obtain all plans** (even the non-relevant ones), please use the following options:
 
 ```console
 ./fast-downward.py --translate --search domain.pddl problem.pddl --translate-options --keep-unimportant-variables --search-options --search "symk-bd(plan_selection=top_k(num_plans=**k**))
