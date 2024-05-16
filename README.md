@@ -16,8 +16,8 @@ We appreciate citations when SymK is used in a scientific context (see [Referenc
   - [Dependencies](#dependencies)
   - [Compiling the SymK Planner](#compiling-the-symk-planner)
   - [Apptainer Image](#apptainer-image)
-- [Generating A Single Optimal Solution](#generating-a-single-optimal-solution)
-- [Generating Multiple Solutions](#generating-multiple-solutions)
+- [Single Optimal Solution](#generating-a-single-optimal-solution)
+- [Multiple Solutions](#generating-multiple-solutions)
   - [Top-k Configurations](#top-k-configurations)
   - [Top-q Configurations](#top-q-configurations)
   - [Loopless Planning](#loopless-planning)
@@ -58,7 +58,7 @@ apptainer build symk.sif Apptainer
 ./symk.sif domain.pddl problem.pddl --search "sym-bd()"
 ```
 
-## Generating A Single Optimal Solution
+## Single Optimal Solution
 We recommend using the following configuration which uses bidirectional search.
 
 ```console
@@ -67,7 +67,9 @@ We recommend using the following configuration which uses bidirectional search.
 
 Other configurations are forward or backward search: `--search "sym-fw()"` or `--search "sym-bw()"`.
 
-## Generating Multiple Solutions
+## Multiple Solutions
+
+**Note:** By default, the planner performs a relevance analysis, eliminating variables and actions that are irrelevant to achieving the goal, thus *avoiding uninteresting plans*. For details on how to disable this optimization, see [Pitfalls and Troubleshooting](#pitfalls-and-troubleshooting).
 
 ### Top-k Configurations
 
