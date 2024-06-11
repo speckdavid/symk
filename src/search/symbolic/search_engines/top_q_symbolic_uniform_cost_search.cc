@@ -136,5 +136,4 @@ public:
 };
 
 static plugins::FeaturePlugin<TopqSymbolicBidirectionalUniformCostSearchFeature> _bd_plugin;
-
 }

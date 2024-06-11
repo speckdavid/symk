@@ -51,5 +51,4 @@ public:
 };
 
 static plugins::FeaturePlugin<ValidationSelectorFeature> _plugin;
-
 }
