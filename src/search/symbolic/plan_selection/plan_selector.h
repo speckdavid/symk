@@ -1,8 +1,8 @@
-#ifndef SYMBOLIC_PLAN_DATABASE_H
-#define SYMBOLIC_PLAN_DATABASE_H
+#ifndef SYMBOLIC_PLAN_SELECTION_H
+#define SYMBOLIC_PLAN_SELECTION_H
 
 #include "../../plan_manager.h"
-#include "../../plugin.h"
+#include "../../plugins/plugin.h"
 #include "../sym_variables.h"
 
 #include "../plan_reconstruction/sym_solution_cut.h"
@@ -12,17 +12,12 @@
 
 class StateRegistry;
 
-namespace options {
-class OptionParser;
-class Options;
-} // namespace options
-
 namespace symbolic {
 class PlanSelector {
 public:
-    static void add_options_to_parser(options::OptionParser &parser);
+    static void add_options_to_feature(plugins::Feature &feature);
 
-    PlanSelector(const options::Options &opts);
+    PlanSelector(const plugins::Options &opts);
 
     virtual ~PlanSelector() {}
 

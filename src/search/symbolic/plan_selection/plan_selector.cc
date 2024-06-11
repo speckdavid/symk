@@ -1,20 +1,18 @@
 #include "plan_selector.h"
 
-#include "../../option_parser.h"
-#include "../../plugin.h"
+#include "../../plugins/plugin.h"
 #include "../../state_registry.h"
 #include "../../task_utils/task_properties.h"
 
 using namespace std;
 
 namespace symbolic {
-void PlanSelector::add_options_to_parser(options::OptionParser &parser) {
-    parser.add_option<bool>("dump_plans", "dump plans to console", "false");
-    parser.add_option<int>("num_plans", "number of plans", "infinity",
-                           Bounds("1", "infinity"));
+void PlanSelector::add_options_to_feature(plugins::Feature &feature) {
+    feature.add_option<bool>("dump_plans", "dump plans to console", "false");
+    feature.add_option<int>("num_plans", "number of plans", "infinity", plugins::Bounds("1", "infinity"));
 }
 
-PlanSelector::PlanSelector(const options::Options &opts)
+PlanSelector::PlanSelector(const plugins::Options &opts)
     : sym_vars(nullptr),
       state_registry(nullptr),
       anytime_completness(false),
@@ -233,5 +231,12 @@ vector<Plan> PlanSelector::get_accepted_plans() const {
     return res;
 }
 
-static PluginTypePlugin<PlanSelector> _type_plugin("PlanDataBase", "");
+static class EvaluatorCategoryPlugin : public plugins::TypedCategoryPlugin<PlanSelector> {
+public:
+    EvaluatorCategoryPlugin() : TypedCategoryPlugin("PlanSelector") {
+        document_synopsis("A plan selector interface for filtering plans of multi plan search. ");
+        allow_variable_binding();
+    }
+}
+_category_plugin;
 }

@@ -1,12 +1,12 @@
-#ifndef SYMBOLIC_UNORDERED_SELECTOR_H
-#define SYMBOLIC_UNORDERED_SELECTOR_H
+#ifndef SYMBOLIC_PLAN_SELECTION_UNORDERED_SELECTOR_H
+#define SYMBOLIC_PLAN_SELECTION_UNORDERED_SELECTOR_H
 
 #include "plan_selector.h"
 
 namespace symbolic {
 class UnorderedSelector : public PlanSelector {
 public:
-    UnorderedSelector(const options::Options &opts);
+    UnorderedSelector(const plugins::Options &opts);
 
     ~UnorderedSelector() {}
 

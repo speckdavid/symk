@@ -1,6 +1,7 @@
 #ifndef UTILS_LOGGING_H
 #define UTILS_LOGGING_H
 
+#include "exceptions.h"
 #include "system.h"
 #include "timer.h"
 
@@ -9,13 +10,13 @@
 #include <string>
 #include <vector>
 
-namespace options {
-class OptionParser;
+namespace plugins {
 class Options;
+class Feature;
 }
 
 namespace utils {
-// See add_log_options_to_parser for documentation.
+// See add_log_options_to_feature for documentation.
 enum class Verbosity {
     SILENT,
     NORMAL,
@@ -31,9 +32,11 @@ enum class Verbosity {
   Internal class encapsulated by LogProxy.
 */
 class Log {
+    static const int TIMER_PRECISION = 6;
     std::ostream &stream;
     const Verbosity verbosity;
     bool line_has_started;
+    void add_prefix() const;
 
 public:
     explicit Log(Verbosity verbosity)
@@ -44,10 +47,8 @@ public:
     Log &operator<<(const T &elem) {
         if (!line_has_started) {
             line_has_started = true;
-            stream << "[t=" << g_timer << ", "
-                   << get_peak_memory_in_kb() << " KB] ";
+            add_prefix();
         }
-
         stream << elem;
         return *this;
     }
@@ -128,18 +129,54 @@ public:
 */
 extern LogProxy g_log;
 
-extern void add_log_options_to_parser(options::OptionParser &parser);
-extern LogProxy get_log_from_options(const options::Options &options);
+extern void add_log_options_to_feature(plugins::Feature &feature);
+extern LogProxy get_log_from_options(const plugins::Options &options);
 extern LogProxy get_silent_log();
 
+class ContextError : public utils::Exception {
+public:
+    explicit ContextError(const std::string &msg);
+};
+
+class Context {
+protected:
+    static const std::string INDENT;
+    size_t initial_stack_size = 0;  // TODO: Can be removed once we got rid of LazyValues
+    std::vector<std::string> block_stack;
+
+public:
+    explicit Context() = default;
+    Context(const Context &context);
+    virtual ~Context();
+    virtual std::string decorate_block_name(const std::string &block_name) const;
+    void enter_block(const std::string &block_name);
+    void leave_block(const std::string &block_name);
+    std::string str() const;
+
+    NO_RETURN
+    virtual void error(const std::string &message) const;
+    virtual void warn(const std::string &message) const;
+};
+
+class MemoryContext : public Context {
+    // The following constants affect the formatting of output.
+    static const int MEM_FIELD_WIDTH = 7;
+    static const int TIME_FIELD_WIDTH = 7;
+public:
+    virtual std::string decorate_block_name(const std::string &block_name) const override;
+};
+
+extern MemoryContext _memory_context;
+
 class TraceBlock {
+    Context &context;
     std::string block_name;
 public:
-    explicit TraceBlock(const std::string &block_name);
+    explicit TraceBlock(Context &context, const std::string &block_name);
     ~TraceBlock();
 };
 
-extern void trace(const std::string &msg = "");
+extern void trace_memory(const std::string &msg = "");
 }
 
 namespace std {

@@ -11,7 +11,7 @@
 using namespace std;
 
 namespace landmarks {
-bool _possibly_fires(const EffectConditionsProxy &conditions, const vector<vector<bool>> &reached) {
+static bool _possibly_fires(const EffectConditionsProxy &conditions, const vector<vector<bool>> &reached) {
     for (FactProxy cond : conditions)
         if (!reached[cond.get_variable().get_id()][cond.get_value()])
             return false;
@@ -129,9 +129,6 @@ static void dump_edge(int from, int to, EdgeType edge, utils::LogProxy &log) {
             break;
         case EdgeType::REASONABLE:
             cout << "\"r\", style=dashed";
-            break;
-        case EdgeType::OBEDIENT_REASONABLE:
-            cout << "\"o_r\", style=dashed";
             break;
         }
         cout << "];\n";

@@ -2,12 +2,9 @@
 
 #include "distances.h"
 #include "factored_transition_system.h"
-#include "label_equivalence_relation.h"
 #include "transition_system.h"
 
-#include "../option_parser.h"
-#include "../plugin.h"
-
+#include "../plugins/plugin.h"
 #include "../utils/collections.h"
 #include "../utils/logging.h"
 #include "../utils/markup.h"
@@ -96,7 +93,7 @@ struct Signature {
 };
 
 
-ShrinkBisimulation::ShrinkBisimulation(const Options &opts)
+ShrinkBisimulation::ShrinkBisimulation(const plugins::Options &opts)
     : greedy(opts.get<bool>("greedy")),
       at_limit(opts.get<AtLimit>("at_limit")) {
 }
@@ -186,9 +183,8 @@ void ShrinkBisimulation::compute_signatures(
                                                 threshold=1),
             label_reduction=exact(before_shrinking=true,before_merging=false)))
     */
-    for (GroupAndTransitions gat : ts) {
-        const LabelGroup &label_group = gat.label_group;
-        const vector<Transition> &transitions = gat.transitions;
+    for (const LocalLabelInfo &local_label_info : ts) {
+        const vector<Transition> &transitions = local_label_info.get_transitions();
         for (const Transition &transition : transitions) {
             assert(signatures[transition.src + 1].state == transition.src);
             bool skip_transition = false;
@@ -199,7 +195,7 @@ void ShrinkBisimulation::compute_signatures(
                     // We skip transitions connected to an irrelevant state.
                     skip_transition = true;
                 } else {
-                    int cost = label_group.get_cost();
+                    int cost = local_label_info.get_cost();
                     assert(target_h + cost >= src_h);
                     skip_transition = (target_h + cost != src_h);
                 }
@@ -380,61 +376,59 @@ void ShrinkBisimulation::dump_strategy_specific_options(utils::LogProxy &log) co
     }
 }
 
-static shared_ptr<ShrinkStrategy>_parse(OptionParser &parser) {
-    parser.document_synopsis(
-        "Bismulation based shrink strategy",
-        "This shrink strategy implements the algorithm described in"
-        " the paper:" + utils::format_conference_reference(
-            {"Raz Nissim", "Joerg Hoffmann", "Malte Helmert"},
-            "Computing Perfect Heuristics in Polynomial Time: On Bisimulation"
-            " and Merge-and-Shrink Abstractions in Optimal Planning.",
-            "https://ai.dmi.unibas.ch/papers/nissim-et-al-ijcai2011.pdf",
-            "Proceedings of the Twenty-Second International Joint Conference"
-            " on Artificial Intelligence (IJCAI 2011)",
-            "1983-1990",
-            "AAAI Press",
-            "2011"));
-    parser.document_note(
-        "shrink_bisimulation(greedy=true)",
-        "Combine this with the merge-and-shrink options max_states=infinity "
-        "and threshold_before_merge=1 and with the linear merge strategy "
-        "reverse_level to obtain the variant 'greedy bisimulation without size "
-        "limit', called M&S-gop in the IJCAI 2011 paper. "
-        "When we last ran experiments on interaction of shrink strategies "
-        "with label reduction, this strategy performed best when used with "
-        "label reduction before shrinking (and no label reduction before "
-        "merging).");
-    parser.document_note(
-        "shrink_bisimulation(greedy=false)",
-        "Combine this with the merge-and-shrink option max_states=N (where N "
-        "is a numerical parameter for which sensible values include 1000, "
-        "10000, 50000, 100000 and 200000) and with the linear merge strategy "
-        "reverse_level to obtain the variant 'exact bisimulation with a size "
-        "limit', called DFP-bop in the IJCAI 2011 paper. "
-        "When we last ran experiments on interaction of shrink strategies "
-        "with label reduction, this strategy performed best when used with "
-        "label reduction before shrinking (and no label reduction before "
-        "merging).");
+class ShrinkBisimulationFeature : public plugins::TypedFeature<ShrinkStrategy, ShrinkBisimulation> {
+public:
+    ShrinkBisimulationFeature() : TypedFeature("shrink_bisimulation") {
+        document_title("Bismulation based shrink strategy");
+        document_synopsis(
+            "This shrink strategy implements the algorithm described in"
+            " the paper:" + utils::format_conference_reference(
+                {"Raz Nissim", "Joerg Hoffmann", "Malte Helmert"},
+                "Computing Perfect Heuristics in Polynomial Time: On Bisimulation"
+                " and Merge-and-Shrink Abstractions in Optimal Planning.",
+                "https://ai.dmi.unibas.ch/papers/nissim-et-al-ijcai2011.pdf",
+                "Proceedings of the Twenty-Second International Joint Conference"
+                " on Artificial Intelligence (IJCAI 2011)",
+                "1983-1990",
+                "AAAI Press",
+                "2011"));
 
-    parser.add_option<bool>("greedy", "use greedy bisimulation", "false");
+        add_option<bool>("greedy", "use greedy bisimulation", "false");
+        add_option<AtLimit>(
+            "at_limit",
+            "what to do when the size limit is hit", "return");
 
-    vector<string> at_limit;
-    at_limit.push_back("RETURN");
-    at_limit.push_back("USE_UP");
-    parser.add_enum_option<AtLimit>(
-        "at_limit", at_limit,
-        "what to do when the size limit is hit", "RETURN");
+        document_note(
+            "shrink_bisimulation(greedy=true)",
+            "Combine this with the merge-and-shrink options max_states=infinity "
+            "and threshold_before_merge=1 and with the linear merge strategy "
+            "reverse_level to obtain the variant 'greedy bisimulation without size "
+            "limit', called M&S-gop in the IJCAI 2011 paper. "
+            "When we last ran experiments on interaction of shrink strategies "
+            "with label reduction, this strategy performed best when used with "
+            "label reduction before shrinking (and no label reduction before "
+            "merging).");
+        document_note(
+            "shrink_bisimulation(greedy=false)",
+            "Combine this with the merge-and-shrink option max_states=N (where N "
+            "is a numerical parameter for which sensible values include 1000, "
+            "10000, 50000, 100000 and 200000) and with the linear merge strategy "
+            "reverse_level to obtain the variant 'exact bisimulation with a size "
+            "limit', called DFP-bop in the IJCAI 2011 paper. "
+            "When we last ran experiments on interaction of shrink strategies "
+            "with label reduction, this strategy performed best when used with "
+            "label reduction before shrinking (and no label reduction before "
+            "merging).");
+    }
+};
 
-    Options opts = parser.parse();
+static plugins::FeaturePlugin<ShrinkBisimulationFeature> _plugin;
 
-    if (parser.help_mode())
-        return nullptr;
-
-    if (parser.dry_run())
-        return nullptr;
-    else
-        return make_shared<ShrinkBisimulation>(opts);
-}
-
-static Plugin<ShrinkStrategy> _plugin("shrink_bisimulation", _parse);
+static plugins::TypedEnumPlugin<AtLimit> _enum_plugin({
+        {"return",
+         "stop without refining the equivalence class further"},
+        {"use_up",
+         "continue refining the equivalence class until "
+         "the size limit is hit"}
+    });
 }

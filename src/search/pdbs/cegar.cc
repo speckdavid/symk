@@ -1,15 +1,16 @@
 #include "cegar.h"
 
+#include "pattern_database_factory.h"
 #include "types.h"
 #include "utils.h"
 
-#include "../option_parser.h"
 #include "../task_proxy.h"
 
+#include "../plugins/plugin.h"
 #include "../task_utils/task_properties.h"
-
 #include "../utils/countdown_timer.h"
 #include "../utils/logging.h"
+#include "../utils/math.h"
 #include "../utils/rng.h"
 
 #include <limits>
@@ -225,10 +226,8 @@ bool CEGAR::time_limit_reached(
 
 unique_ptr<PatternInfo> CEGAR::compute_pattern_info(Pattern &&pattern) const {
     vector<int> op_cost;
-    bool compute_plan = true;
-    shared_ptr<PatternDatabase> pdb =
-        make_shared<PatternDatabase>(task_proxy, pattern, op_cost, compute_plan, rng, use_wildcard_plans);
-    vector<vector<OperatorID>> plan = pdb->extract_wildcard_plan();
+    auto [pdb, plan] = compute_pdb_and_plan(
+        task_proxy, pattern, op_cost, rng, use_wildcard_plans);
 
     bool unsolvable = false;
     State initial_state = task_proxy.get_initial_state();
@@ -275,7 +274,7 @@ void CEGAR::compute_initial_collection() {
   potentially not applicable in the state, and expecting that the operator
   has not conditional effects.
 */
-void apply_op_to_state(vector<int> &state, const OperatorProxy &op) {
+static void apply_op_to_state(vector<int> &state, const OperatorProxy &op) {
     assert(!op.is_axiom());
     for (EffectProxy effect : op.get_effects()) {
         assert(effect.get_conditions().empty());
@@ -715,8 +714,8 @@ PatternInformation generate_pattern_with_cegar(
     return result;
 }
 
-void add_cegar_implementation_notes_to_parser(options::OptionParser &parser) {
-    parser.document_note(
+void add_cegar_implementation_notes_to_feature(plugins::Feature &feature) {
+    feature.document_note(
         "Short description of the CEGAR algorithm",
         "The CEGAR algorithm computes a pattern collection for a given planning "
         "task and a given (sub)set of its goals in a randomized order as "
@@ -731,7 +730,7 @@ void add_cegar_implementation_notes_to_parser(options::OptionParser &parser) {
         "computing regular or wildcard plans, where the latter are sequences of "
         "parallel operators inducing the same abstract transition.",
         true);
-    parser.document_note(
+    feature.document_note(
         "Implementation notes about the CEGAR algorithm",
         "The following describes differences of the implementation to "
         "the original implementation used and described in the paper.\n\n"
@@ -779,8 +778,8 @@ void add_cegar_implementation_notes_to_parser(options::OptionParser &parser) {
         true);
 }
 
-void add_cegar_wildcard_option_to_parser(options::OptionParser &parser) {
-    parser.add_option<bool>(
+void add_cegar_wildcard_option_to_feature(plugins::Feature &feature) {
+    feature.add_option<bool>(
         "use_wildcard_plans",
         "if true, compute wildcard plans which are sequences of sets of "
         "operators that induce the same transition; otherwise compute regular "

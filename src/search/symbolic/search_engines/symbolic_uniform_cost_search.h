@@ -15,7 +15,7 @@ protected:
     virtual SearchStatus step() override {return SymbolicSearch::step();}
 
 public:
-    SymbolicUniformCostSearch(const options::Options &opts, bool fw, bool bw, bool alternating = false);
+    SymbolicUniformCostSearch(const plugins::Options &opts, bool fw, bool bw, bool alternating = false);
     virtual ~SymbolicUniformCostSearch() = default;
 
     virtual void new_solution(const SymSolutionCut &sol) override;

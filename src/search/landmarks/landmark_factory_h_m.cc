@@ -4,9 +4,8 @@
 #include "landmark.h"
 
 #include "../abstract_task.h"
-#include "../option_parser.h"
-#include "../plugin.h"
 
+#include "../plugins/plugin.h"
 #include "../task_utils/task_properties.h"
 #include "../utils/collections.h"
 #include "../utils/logging.h"
@@ -295,7 +294,7 @@ void LandmarkFactoryHM::get_m_sets(const VariablesProxy &variables, int m,
 }
 
 void LandmarkFactoryHM::print_proposition(const VariablesProxy &variables, const FactPair &fluent) const {
-    if (log.is_at_least_normal()) {
+    if (log.is_at_least_verbose()) {
         VariableProxy var = variables[fluent.var];
         FactProxy fact = var.get_fact(fluent.value);
         log << fact.get_name()
@@ -334,7 +333,7 @@ static FluentSet get_operator_postcondition(int num_vars, const OperatorProxy &o
 
 
 void LandmarkFactoryHM::print_pm_op(const VariablesProxy &variables, const PMOp &op) const {
-    if (log.is_at_least_normal()) {
+    if (log.is_at_least_verbose()) {
         set<FactPair> pcs, effs, cond_pc, cond_eff;
         vector<pair<set<FactPair>, set<FactPair>>> conds;
 
@@ -412,7 +411,7 @@ void LandmarkFactoryHM::print_pm_op(const VariablesProxy &variables, const PMOp 
 }
 
 void LandmarkFactoryHM::print_fluentset(const VariablesProxy &variables, const FluentSet &fs) const {
-    if (log.is_at_least_normal()) {
+    if (log.is_at_least_verbose()) {
         log << "( ";
         for (const FactPair &fact : fs) {
             print_proposition(variables, fact);
@@ -569,7 +568,7 @@ bool LandmarkFactoryHM::interesting(const VariablesProxy &variables,
         variables[fact2.var].get_fact(fact2.value));
 }
 
-LandmarkFactoryHM::LandmarkFactoryHM(const options::Options &opts)
+LandmarkFactoryHM::LandmarkFactoryHM(const plugins::Options &opts)
     : LandmarkFactory(opts),
       m_(opts.get<int>("m")),
       conjunctive_landmarks(opts.get<bool>("conjunctive_landmarks")),
@@ -610,7 +609,6 @@ void LandmarkFactoryHM::postprocess(const TaskProxy &task_proxy) {
         discard_all_orderings();
 
     calc_achievers(task_proxy);
-    mk_acyclic_graph();
 }
 
 void LandmarkFactoryHM::discard_conjunctive_landmarks() {
@@ -846,7 +844,7 @@ void LandmarkFactoryHM::compute_h_m_landmarks(const TaskProxy &task_proxy) {
         current_trigger.swap(next_trigger);
         next_trigger.clear();
 
-        if (log.is_at_least_normal()) {
+        if (log.is_at_least_verbose()) {
             log << "Level " << level << " completed." << endl;
         }
         ++level;
@@ -953,7 +951,7 @@ void LandmarkFactoryHM::generate_landmarks(
         int set_index = set_indices_[goal_subset];
 
         if (h_m_table_[set_index].level == -1) {
-            if (log.is_at_least_normal()) {
+            if (log.is_at_least_verbose()) {
                 log << endl << endl << "Subset of goal not reachable !!." << endl << endl << endl;
                 log << "Subset is: ";
                 print_fluentset(variables, h_m_table_[set_index].fluents);
@@ -1010,39 +1008,33 @@ void LandmarkFactoryHM::generate_landmarks(
     postprocess(task_proxy);
 }
 
-bool LandmarkFactoryHM::computes_reasonable_orders() const {
-    return false;
-}
-
 bool LandmarkFactoryHM::supports_conditional_effects() const {
     return false;
 }
 
-static shared_ptr<LandmarkFactory> _parse(OptionParser &parser) {
-    parser.document_synopsis(
-        "h^m Landmarks",
-        "The landmark generation method introduced by "
-        "Keyder, Richter & Helmert (ECAI 2010).");
-    parser.add_option<int>(
-        "m", "subset size (if unsure, use the default of 2)", "2");
-    parser.add_option<bool>(
-        "conjunctive_landmarks",
-        "keep conjunctive landmarks",
-        "true");
-    add_landmark_factory_options_to_parser(parser);
-    add_use_orders_option_to_parser(parser);
-    Options opts = parser.parse();
-    if (parser.help_mode())
-        return nullptr;
+class LandmarkFactoryHMFeature : public plugins::TypedFeature<LandmarkFactory, LandmarkFactoryHM> {
+public:
+    LandmarkFactoryHMFeature() : TypedFeature("lm_hm") {
+        // document_group("");
+        document_title("h^m Landmarks");
+        document_synopsis(
+            "The landmark generation method introduced by "
+            "Keyder, Richter & Helmert (ECAI 2010).");
 
-    parser.document_language_support("conditional_effects",
-                                     "ignored, i.e. not supported");
+        add_option<int>(
+            "m", "subset size (if unsure, use the default of 2)", "2");
+        add_option<bool>(
+            "conjunctive_landmarks",
+            "keep conjunctive landmarks",
+            "true");
+        add_landmark_factory_options_to_feature(*this);
+        add_use_orders_option_to_feature(*this);
 
-    if (parser.dry_run())
-        return nullptr;
-    else
-        return make_shared<LandmarkFactoryHM>(opts);
-}
+        document_language_support(
+            "conditional_effects",
+            "ignored, i.e. not supported");
+    }
+};
 
-static Plugin<LandmarkFactory> _plugin("lm_hm", _parse);
+static plugins::FeaturePlugin<LandmarkFactoryHMFeature> _plugin;
 }

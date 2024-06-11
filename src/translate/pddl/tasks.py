@@ -1,11 +1,23 @@
+from typing import List, Union
+
 from . import axioms
 from . import predicates
-
+from .actions import Action
+from .axioms import Axiom
+from .conditions import Atom, Condition
+from .f_expression import Assign
+from .functions import Function
+from .pddl_types import Type, TypedObject
+from .predicates import Predicate
 
 class Task:
-    def __init__(self, domain_name, task_name, requirements,
-                 types, objects, predicates, functions, init, goal,
-                 actions, axioms, use_metric):
+    def __init__(self, domain_name: str, task_name: str,
+                 requirements: "Requirements",
+                 types: List[Type], objects: List[TypedObject], predicates:
+                 List[Predicate], functions: List[Function],
+                 init: List[Union[Atom, Assign]], goal: Condition,
+                 actions: List[Action], axioms: List[Axiom],
+                 use_metric: bool) -> None:
         self.domain_name = domain_name
         self.task_name = task_name
         self.requirements = requirements
@@ -56,15 +68,22 @@ class Task:
             for axiom in self.axioms:
                 axiom.dump()
 
+
+REQUIREMENT_LABELS = [
+    ":strips", ":adl", ":typing", ":negation", ":equality",
+    ":negative-preconditions", ":disjunctive-preconditions",
+    ":existential-preconditions", ":universal-preconditions",
+    ":quantified-preconditions", ":conditional-effects",
+    ":derived-predicates", ":action-costs"
+]
+
+
 class Requirements:
-    def __init__(self, requirements):
+    def __init__(self, requirements: List[str]):
         self.requirements = requirements
         for req in requirements:
-            assert req in (
-              ":strips", ":adl", ":typing", ":negation", ":equality",
-              ":negative-preconditions", ":disjunctive-preconditions",
-              ":existential-preconditions", ":universal-preconditions",
-              ":quantified-preconditions", ":conditional-effects",
-              ":derived-predicates", ":action-costs"), req
+            if req not in REQUIREMENT_LABELS:
+                raise ValueError(f"Invalid requirement. Got: {req}\n"
+                                 f"Expected: {', '.join(REQUIREMENT_LABELS)}")
     def __str__(self):
         return ", ".join(self.requirements)

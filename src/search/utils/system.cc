@@ -8,7 +8,7 @@ namespace utils {
 const char *get_exit_code_message_reentrant(ExitCode exitcode) {
     switch (exitcode) {
     case ExitCode::SUCCESS:
-        return "Solutions found.";
+        return "Solution found.";
     case ExitCode::SEARCH_CRITICAL_ERROR:
         return "Unexplained error occurred.";
     case ExitCode::SEARCH_INPUT_ERROR:
@@ -44,16 +44,27 @@ bool is_exit_code_error_reentrant(ExitCode exitcode) {
     }
 }
 
-void exit_with(ExitCode exitcode) {
-    report_exit_code_reentrant(exitcode);
-    exit(static_cast<int>(exitcode));
+void report_exit_code(ExitCode exitcode) {
+    const char *message = get_exit_code_message_reentrant(exitcode);
+    bool is_error = is_exit_code_error_reentrant(exitcode);
+    if (message) {
+        ostream &stream = is_error ? cerr : cout;
+        stream << message << endl;
+    } else {
+        cerr << "Exitcode: " << static_cast<int>(exitcode) << endl
+             << "Unknown exitcode." << endl;
+        abort();
+    }
 }
 
-void exit_after_receiving_signal(ExitCode exitcode) {
-    /*
-      In signal handlers, we have to use the "safe function" _Exit() rather
-      than the unsafe function exit().
-    */
+void exit_with(ExitCode exitcode) {
+    report_exit_code(exitcode);
+    throw ExitException(exitcode);
+}
+
+void exit_with_reentrant(ExitCode exitcode) {
+    /* In signal handlers or when we run out of memory, we have to use the
+       "safe function" _Exit() rather than the unsafe function exit(). */
     report_exit_code_reentrant(exitcode);
     _Exit(static_cast<int>(exitcode));
 }

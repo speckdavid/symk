@@ -1,11 +1,9 @@
 #include "top_k_even_selector.h"
 
-#include "../../option_parser.h"
-
 using namespace std;
 
 namespace symbolic {
-TopKEvenSelector::TopKEvenSelector(const options::Options &opts)
+TopKEvenSelector::TopKEvenSelector(const plugins::Options &opts)
     : PlanSelector(opts) {
     anytime_completness = true;
 }
@@ -20,14 +18,14 @@ void TopKEvenSelector::add_plan(const Plan &plan) {
     }
 }
 
-static shared_ptr<PlanSelector> _parse(OptionParser &parser) {
-    PlanSelector::add_options_to_parser(parser);
+class TopKEvenSelectorFeature : public plugins::TypedFeature<PlanSelector, TopKEvenSelector> {
+public:
+    TopKEvenSelectorFeature() : TypedFeature("top_k_even") {
+        document_title("Top-K with even plan length plan selector");
 
-    Options opts = parser.parse();
-    if (parser.dry_run())
-        return nullptr;
-    return make_shared<TopKEvenSelector>(opts);
-}
+        PlanSelector::add_options_to_feature(*this);
+    }
+};
 
-static Plugin<PlanSelector> _plugin("top_k_even", _parse);
+static plugins::FeaturePlugin<TopKEvenSelectorFeature> _plugin;
 }

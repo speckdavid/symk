@@ -2,8 +2,7 @@
 
 #include "domain_transition_graph.h"
 
-#include "../option_parser.h"
-#include "../plugin.h"
+#include "../plugins/plugin.h"
 
 #include "../task_utils/task_properties.h"
 #include "../utils/logging.h"
@@ -99,7 +98,7 @@ struct LocalProblemNode {
           cost(-1),
           expanded(false),
           context(context_size, -1),
-          reached_by(0) {
+          reached_by(nullptr) {
     }
 
     ~LocalProblemNode() {
@@ -223,7 +222,7 @@ void ContextEnhancedAdditiveHeuristic::set_up_local_problem(
         to_node.expanded = false;
         to_node.cost = numeric_limits<int>::max();
         to_node.waiting_list.clear();
-        to_node.reached_by = 0;
+        to_node.reached_by = nullptr;
     }
 
     LocalProblemNode *start = &problem->nodes[start_value];
@@ -360,7 +359,7 @@ void ContextEnhancedAdditiveHeuristic::mark_helpful_transitions(
     assert(node->cost >= 0 && node->cost < numeric_limits<int>::max());
     LocalTransition *first_on_path = node->reached_by;
     if (first_on_path) {
-        node->reached_by = 0; // Clear to avoid revisiting this node later.
+        node->reached_by = nullptr; // Clear to avoid revisiting this node later.
         if (first_on_path->target_cost == first_on_path->action_cost) {
             // Transition possibly applicable.
             const ValueTransitionLabel &label = *first_on_path->label;
@@ -410,7 +409,7 @@ int ContextEnhancedAdditiveHeuristic::compute_heuristic(
 }
 
 ContextEnhancedAdditiveHeuristic::ContextEnhancedAdditiveHeuristic(
-    const Options &opts)
+    const plugins::Options &opts)
     : Heuristic(opts),
       min_action_cost(task_properties::get_min_operator_cost(task_proxy)) {
     if (log.is_at_least_normal()) {
@@ -426,7 +425,7 @@ ContextEnhancedAdditiveHeuristic::ContextEnhancedAdditiveHeuristic(
     VariablesProxy vars = task_proxy.get_variables();
     local_problem_index.resize(vars.size());
     for (VariableProxy var : vars)
-        local_problem_index[var.get_id()].resize(var.get_domain_size(), 0);
+        local_problem_index[var.get_id()].resize(var.get_domain_size(), nullptr);
 }
 
 ContextEnhancedAdditiveHeuristic::~ContextEnhancedAdditiveHeuristic() {
@@ -444,28 +443,27 @@ bool ContextEnhancedAdditiveHeuristic::dead_ends_are_reliable() const {
     return false;
 }
 
-static shared_ptr<Heuristic> _parse(OptionParser &parser) {
-    parser.document_synopsis("Context-enhanced additive heuristic", "");
-    parser.document_language_support("action costs", "supported");
-    parser.document_language_support("conditional effects", "supported");
-    parser.document_language_support(
-        "axioms",
-        "supported (in the sense that the planner won't complain -- "
-        "handling of axioms might be very stupid "
-        "and even render the heuristic unsafe)");
-    parser.document_property("admissible", "no");
-    parser.document_property("consistent", "no");
-    parser.document_property("safe", "no");
-    parser.document_property("preferred operators", "yes");
+class ContextEnhancedAdditiveHeuristicFeature : public plugins::TypedFeature<Evaluator, ContextEnhancedAdditiveHeuristic> {
+public:
+    ContextEnhancedAdditiveHeuristicFeature() : TypedFeature("cea") {
+        document_title("Context-enhanced additive heuristic");
 
-    Heuristic::add_options_to_parser(parser);
-    Options opts = parser.parse();
+        Heuristic::add_options_to_feature(*this);
 
-    if (parser.dry_run())
-        return nullptr;
-    else
-        return make_shared<ContextEnhancedAdditiveHeuristic>(opts);
-}
+        document_language_support("action costs", "supported");
+        document_language_support("conditional effects", "supported");
+        document_language_support(
+            "axioms",
+            "supported (in the sense that the planner won't complain -- "
+            "handling of axioms might be very stupid "
+            "and even render the heuristic unsafe)");
 
-static Plugin<Evaluator> _plugin("cea", _parse);
+        document_property("admissible", "no");
+        document_property("consistent", "no");
+        document_property("safe", "no");
+        document_property("preferred operators", "yes");
+    }
+};
+
+static plugins::FeaturePlugin<ContextEnhancedAdditiveHeuristicFeature> _plugin;
 }

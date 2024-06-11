@@ -2,13 +2,10 @@
 
 #include "distances.h"
 #include "factored_transition_system.h"
-#include "label_equivalence_relation.h"
 #include "labels.h"
 #include "transition_system.h"
 
-#include "../options/option_parser.h"
-#include "../options/plugin.h"
-
+#include "../plugins/plugin.h"
 #include "../utils/markup.h"
 
 #include <cassert>
@@ -16,18 +13,18 @@
 using namespace std;
 
 namespace merge_and_shrink {
-vector<int> MergeScoringFunctionDFP::compute_label_ranks(
-    const FactoredTransitionSystem &fts, int index) const {
+static vector<int> compute_label_ranks(
+    const FactoredTransitionSystem &fts, int index) {
     const TransitionSystem &ts = fts.get_transition_system(index);
     const Distances &distances = fts.get_distances(index);
     assert(distances.are_goal_distances_computed());
-    int num_labels = fts.get_labels().get_size();
+    int num_labels = fts.get_labels().get_num_total_labels();
     // Irrelevant (and inactive, i.e. reduced) labels have a dummy rank of -1
     vector<int> label_ranks(num_labels, -1);
 
-    for (GroupAndTransitions gat : ts) {
-        const LabelGroup &label_group = gat.label_group;
-        const vector<Transition> &transitions = gat.transitions;
+    for (const LocalLabelInfo &local_label_info : ts) {
+        const LabelGroup &label_group = local_label_info.get_label_group();
+        const vector<Transition> &transitions = local_label_info.get_transitions();
         // Relevant labels with no transitions have a rank of infinity.
         int label_rank = INF;
         bool group_relevant = false;
@@ -53,8 +50,8 @@ vector<int> MergeScoringFunctionDFP::compute_label_ranks(
                                  distances.get_goal_distance(transition.target));
             }
         }
-        for (int label_no : label_group) {
-            label_ranks[label_no] = label_rank;
+        for (int label : label_group) {
+            label_ranks[label] = label_rank;
         }
     }
 
@@ -103,38 +100,41 @@ string MergeScoringFunctionDFP::name() const {
     return "dfp";
 }
 
-static shared_ptr<MergeScoringFunction>_parse(options::OptionParser &parser) {
-    parser.document_synopsis(
-        "DFP scoring",
-        "This scoring function computes the 'DFP' score as descrdibed in the "
-        "paper \"Directed model checking with distance-preserving abstractions\" "
-        "by Draeger, Finkbeiner and Podelski (SPIN 2006), adapted to planning in "
-        "the following paper:" + utils::format_conference_reference(
-            {"Silvan Sievers", "Martin Wehrle", "Malte Helmert"},
-            "Generalized Label Reduction for Merge-and-Shrink Heuristics",
-            "https://ai.dmi.unibas.ch/papers/sievers-et-al-aaai2014.pdf",
-            "Proceedings of the 28th AAAI Conference on Artificial"
-            " Intelligence (AAAI 2014)",
-            "2358-2366",
-            "AAAI Press",
-            "2014"));
-    parser.document_note(
-        "Note",
-        "To obtain the configurations called DFP-B-50K described in the paper, "
-        "use the following configuration of the merge-and-shrink heuristic "
-        "and adapt the tie-breaking criteria of {{{total_order}}} as desired:\n"
-        "{{{\nmerge_and_shrink(merge_strategy=merge_stateless(merge_selector="
-        "score_based_filtering(scoring_functions=[goal_relevance,dfp,total_order("
-        "atomic_ts_order=reverse_level,product_ts_order=new_to_old,"
-        "atomic_before_product=true)])),shrink_strategy=shrink_bisimulation("
-        "greedy=false),label_reduction=exact(before_shrinking=true,"
-        "before_merging=false),max_states=50000,threshold_before_merge=1)\n}}}");
+class MergeScoringFunctionDFPFeature : public plugins::TypedFeature<MergeScoringFunction, MergeScoringFunctionDFP> {
+public:
+    MergeScoringFunctionDFPFeature() : TypedFeature("dfp") {
+        document_title("DFP scoring");
+        document_synopsis(
+            "This scoring function computes the 'DFP' score as descrdibed in the "
+            "paper \"Directed model checking with distance-preserving abstractions\" "
+            "by Draeger, Finkbeiner and Podelski (SPIN 2006), adapted to planning in "
+            "the following paper:" + utils::format_conference_reference(
+                {"Silvan Sievers", "Martin Wehrle", "Malte Helmert"},
+                "Generalized Label Reduction for Merge-and-Shrink Heuristics",
+                "https://ai.dmi.unibas.ch/papers/sievers-et-al-aaai2014.pdf",
+                "Proceedings of the 28th AAAI Conference on Artificial"
+                " Intelligence (AAAI 2014)",
+                "2358-2366",
+                "AAAI Press",
+                "2014"));
 
-    if (parser.dry_run())
-        return nullptr;
+        document_note(
+            "Note",
+            "To obtain the configurations called DFP-B-50K described in the paper, "
+            "use the following configuration of the merge-and-shrink heuristic "
+            "and adapt the tie-breaking criteria of {{{total_order}}} as desired:\n"
+            "{{{\nmerge_and_shrink(merge_strategy=merge_stateless(merge_selector="
+            "score_based_filtering(scoring_functions=[goal_relevance,dfp,total_order("
+            "atomic_ts_order=reverse_level,product_ts_order=new_to_old,"
+            "atomic_before_product=true)])),shrink_strategy=shrink_bisimulation("
+            "greedy=false),label_reduction=exact(before_shrinking=true,"
+            "before_merging=false),max_states=50000,threshold_before_merge=1)\n}}}");
+    }
 
-    return make_shared<MergeScoringFunctionDFP>();
-}
+    virtual shared_ptr<MergeScoringFunctionDFP> create_component(const plugins::Options &, const utils::Context &) const override {
+        return make_shared<MergeScoringFunctionDFP>();
+    }
+};
 
-static options::Plugin<MergeScoringFunction> _plugin("dfp", _parse);
+static plugins::FeaturePlugin<MergeScoringFunctionDFPFeature> _plugin;
 }

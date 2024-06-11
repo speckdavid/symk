@@ -3,11 +3,13 @@
 
 
 #include "../plan_reconstruction/sym_solution_registry.h"
-#include "../search_engine.h"
 #include "../sym_enums.h"
 #include "../sym_parameters.h"
 #include "../sym_state_space_manager.h"
-#include "../../option_parser.h"
+
+#include "../../search_algorithm.h"
+
+#include "../../plugins/plugin.h"
 
 #include <memory>
 #include <vector>
@@ -22,7 +24,7 @@ class SymSearch;
 class PlanSelector;
 class SymVariables;
 
-class SymbolicSearch : public SearchEngine {
+class SymbolicSearch : public SearchAlgorithm {
 private:
 protected:
     // Hold a reference to the task implementation and pass it to objects that
@@ -59,7 +61,7 @@ protected:
     virtual SearchStatus step() override;
 
 public:
-    SymbolicSearch(const options::Options &opts);
+    SymbolicSearch(const plugins::Options &opts);
     virtual ~SymbolicSearch() = default;
 
     virtual void setLowerBound(int lower);
@@ -82,7 +84,7 @@ public:
 
     virtual void save_plan_if_necessary() override;
 
-    static void add_options_to_parser(OptionParser &parser);
+    static void add_options_to_feature(plugins::Feature &feature);
 };
 }
 

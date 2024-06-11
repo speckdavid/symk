@@ -1,18 +1,21 @@
 #include "sym_enums.h"
 #include "../utils/system.h"
+#include "../plugins/plugin.h"
 
 using namespace std;
 
 namespace symbolic {
-const vector<string> &MutexTypeValues{
-    "MUTEX_NOT", "MUTEX_AND", "MUTEX_EDELETION",
-};
+static plugins::TypedEnumPlugin<MutexType> _mutex_type_enum_plugin({
+        {"mutex_not", "no mutexes"},
+        {"mutex_and", "mutexes as BDD and used with not and"},
+        {"mutex_edeletion", "mutexes added to transitions relations as edeletion"}
+    });
 
-const vector<string> &ConditionalEffectsTransitionTypeValues{
-    "MONOLITHIC", "CONJUNCTIVE", "CONJUNCTIVE_EARLY_QUANTIFICATION"
-};
-
-const vector<string> &DirValues{"FW", "BW", "BIDIR"};
+static plugins::TypedEnumPlugin<ConditionalEffectsTransitionType> _conditional_effect_transition_type__enum_plugin({
+        {"monolithic", "one transition relation for each action combining all conditional effects"},
+        {"conjunctive", "multiple conjunctive transition relations, one for each conditional effect"},
+        {"conjunctive_early_quantification", "same as conjunctive but with early quantification of variables"}
+    });
 
 ostream &operator<<(ostream &os, const MutexType &m) {
     switch (m) {

@@ -13,7 +13,7 @@
 using namespace std;
 
 namespace symbolic {
-BDD get_exclusive_support(BDD f, BDD g) {
+static BDD get_exclusive_support(BDD f, BDD g) {
     BDD common, only_f, only_g;
     f.ClassifySupport(g, &common, &only_f, &only_g);
     return only_f;

@@ -5,7 +5,7 @@
 #include "../plan_reconstruction/sym_solution_cut.h"
 #include "../search_engines/symbolic_search.h"
 #include "../sym_utils.h"
-#include "../utils/timer.h"
+#include "../../utils/timer.h"
 
 #include <fstream>
 #include <iostream>

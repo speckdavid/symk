@@ -1,8 +1,6 @@
 #include "sym_axiom_compilation.h"
-#include "../option_parser.h"
 #include "../sym_variables.h"
 
-#include "../../plugin.h"
 #include "../../utils/logging.h"
 
 #include <limits>

@@ -1,8 +1,7 @@
-#ifndef SYMBOLIC_ITERATIVE_COST_SELECTOR_H
-#define SYMBOLIC_ITERATIVE_COST_SELECTOR_H
+#ifndef SYMBOLIC_PLAN_SELECTION_ITERATIVE_COST_SELECTOR_H
+#define SYMBOLIC_PLAN_SELECTION_ITERATIVE_COST_SELECTOR_H
 
 #include "plan_selector.h"
-#include "../../option_parser.h"
 #include "../../task_utils/task_properties.h"
 
 using namespace std;
@@ -10,7 +9,7 @@ using namespace std;
 namespace symbolic {
 class IterativeCostSelector : public PlanSelector {
 public:
-    IterativeCostSelector(const options::Options &opts);
+    IterativeCostSelector(const plugins::Options &opts);
     ~IterativeCostSelector() {}
 
     virtual void init(std::shared_ptr<SymVariables> sym_vars,

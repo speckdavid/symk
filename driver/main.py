@@ -1,7 +1,6 @@
 import logging
 import os
 import sys
-import shutil
 
 from . import aliases
 from . import arguments
@@ -10,6 +9,7 @@ from . import limits
 from . import run_components
 from . import util
 from . import __version__
+
 
 def main():
     args = arguments.parse_args()
@@ -55,7 +55,7 @@ def main():
             break
 
     try:
-        logging.info(f"Planner time: {util.get_elapsed_time():.2}s")
+        logging.info(f"Planner time: {util.get_elapsed_time():.2f}s")
     except NotImplementedError:
         # Measuring the runtime of child processes is not supported on Windows.
         pass

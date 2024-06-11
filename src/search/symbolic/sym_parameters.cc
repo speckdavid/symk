@@ -1,15 +1,14 @@
 #include "sym_parameters.h"
 
-#include "../option_parser.h"
+#include "../plugins/plugin.h"
 #include "../task_utils/task_properties.h"
 #include "../utils/logging.h"
 #include "../utils/timer.h"
 
-using options::Options;
 using namespace std;
 
 namespace symbolic {
-SymParameters::SymParameters(const Options &opts, const shared_ptr<AbstractTask> &task)
+SymParameters::SymParameters(const plugins::Options &opts, const shared_ptr<AbstractTask> &task)
     : ce_transition_type(opts.get<ConditionalEffectsTransitionType>("ce_transition_type")),
       max_tr_size(opts.get<int>("max_tr_size")),
       max_tr_time(opts.get<int>("max_tr_time")),
@@ -47,11 +46,11 @@ SymParameters::SymParameters(const Options &opts, const shared_ptr<AbstractTask>
 }
 
 void SymParameters::increase_bound() {
-    max_alloted_nodes *= ratio_alloted_nodes;
+    max_alloted_nodes = static_cast<int>(max_alloted_nodes * ratio_alloted_nodes);
     if (max_alloted_nodes <= 0)
         max_alloted_nodes = 0;
 
-    max_alloted_time *= ratio_alloted_time;
+    max_alloted_time = static_cast<int>(max_alloted_time * ratio_alloted_time);
     if (max_alloted_time <= 0)
         max_alloted_time = 0;
     utils::g_log << "Increase allot limits! "
@@ -70,23 +69,20 @@ void SymParameters::print_options() const {
                  << " nodes: " << ratio_alloted_nodes << endl;
 }
 
-void SymParameters::add_options_to_parser(OptionParser &parser) {
-    parser.add_enum_option<ConditionalEffectsTransitionType>("ce_transition_type",
-                                                             ConditionalEffectsTransitionTypeValues,
-                                                             "ce transition type",
-                                                             "CONJUNCTIVE_EARLY_QUANTIFICATION");
-    parser.add_option<int>("max_tr_size", "maximum size of TR BDDs", "100000");
-    parser.add_option<int>("max_tr_time", "maximum time (ms) to generate TR BDDs", "60000");
-    parser.add_enum_option<MutexType>("mutex_type", MutexTypeValues, "mutex type", "MUTEX_EDELETION");
-    parser.add_option<int>("max_mutex_size", "maximum size of mutex BDDs", "100000");
-    parser.add_option<int>("max_mutex_time", "maximum time (ms) to generate mutex BDDs", "60000");
-    parser.add_option<int>("max_aux_nodes", "maximum size in pop operations", "1000000");
-    parser.add_option<int>("max_aux_time", "maximum time (ms) in pop operations", "2000");
-    parser.add_option<bool>("fast_sdac_generation", "Generates one TR per original operators and reuses it.", "true");
-    parser.add_option<int>("max_alloted_time", "maximum alloted time for an step", to_string(60000));
-    parser.add_option<int>("max_alloted_nodes", "maximum alloted nodes for an step", to_string(10000000));
-    parser.add_option<double>("ratio_alloted_time", "multiplier to decide alloted time for a step", "2.0");
-    parser.add_option<double>("ratio_alloted_nodes", "multiplier to decide alloted nodes for a step", "2.0");
-    parser.add_option<bool>("non_stop", "Removes initial state from closed to avoid backward search to stop.", "false");
+void SymParameters::add_options_to_feature(plugins::Feature &feature) {
+    feature.add_option<ConditionalEffectsTransitionType>("ce_transition_type", "ce transition type", "CONJUNCTIVE_EARLY_QUANTIFICATION");
+    feature.add_option<int>("max_tr_size", "maximum size of TR BDDs", "100000");
+    feature.add_option<int>("max_tr_time", "maximum time (ms) to generate TR BDDs", "60000");
+    feature.add_option<MutexType>("mutex_type", "mutex type", "MUTEX_EDELETION");
+    feature.add_option<int>("max_mutex_size", "maximum size of mutex BDDs", "100000");
+    feature.add_option<int>("max_mutex_time", "maximum time (ms) to generate mutex BDDs", "60000");
+    feature.add_option<int>("max_aux_nodes", "maximum size in pop operations", "1000000");
+    feature.add_option<int>("max_aux_time", "maximum time (ms) in pop operations", "2000");
+    feature.add_option<bool>("fast_sdac_generation", "Generates one TR per original operators and reuses it.", "true");
+    feature.add_option<int>("max_alloted_time", "maximum alloted time for an step", to_string(60000));
+    feature.add_option<int>("max_alloted_nodes", "maximum alloted nodes for an step", to_string(10000000));
+    feature.add_option<double>("ratio_alloted_time", "multiplier to decide alloted time for a step", "2.0");
+    feature.add_option<double>("ratio_alloted_nodes", "multiplier to decide alloted nodes for a step", "2.0");
+    feature.add_option<bool>("non_stop", "Removes initial state from closed to avoid backward search to stop.", "false");
 }
 }
