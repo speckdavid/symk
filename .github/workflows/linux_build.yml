@@ -13,7 +13,6 @@ jobs:
   # Job name
   build:
     name: Linux build
-    if: github.repository == 'speckdavid/symk'
     runs-on: ubuntu-22.04
 
     # Steps represent a sequence of tasks that will be executed as part of the job
