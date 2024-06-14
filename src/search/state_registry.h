@@ -97,9 +97,9 @@
   Usage example 2
   ---------------
   Problem:
-    In the LMcount heuristic each state should store which landmarks are
+    In the landmark heuristics each state should store which landmarks are
     already reached when this state is reached. This should only require
-    additional memory when the LMcount heuristic is used.
+    additional memory when these heuristics are used.
 
   Solution:
     The heuristic object uses an attribute of type PerStateBitset to store for each
@@ -191,6 +191,13 @@ public:
     State lookup_state(StateID id) const;
 
     /*
+      Like lookup_state above, but creates a state with unpacked data,
+      moved in via state_values. It is the caller's responsibility that
+      the unpacked data matches the state's data.
+    */
+    State lookup_state(StateID id, std::vector<int> &&state_values) const;
+
+    /*
       Returns a reference to the initial state and registers it if this was not
       done before. The result is cached internally so subsequent calls are cheap.
     */
@@ -214,8 +221,13 @@ public:
 
     void print_statistics(utils::LogProxy &log) const;
 
-    class const_iterator : public std::iterator<
-                               std::forward_iterator_tag, StateID> {
+    class const_iterator {
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = StateID;
+        using difference_type = ptrdiff_t;
+        using pointer = StateID *;
+        using reference = StateID &;
+
         /*
           We intentionally omit parts of the forward iterator concept
           (e.g. default construction, copy assignment, post-increment)
@@ -237,12 +249,12 @@ public:
             return *this;
         }
 
-        bool operator==(const const_iterator &rhs) {
+        bool operator==(const const_iterator &rhs) const {
             assert(&registry == &rhs.registry);
             return pos == rhs.pos;
         }
 
-        bool operator!=(const const_iterator &rhs) {
+        bool operator!=(const const_iterator &rhs) const {
             return !(*this == rhs);
         }
 

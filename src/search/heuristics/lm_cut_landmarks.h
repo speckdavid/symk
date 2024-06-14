@@ -34,7 +34,9 @@ struct RelaxedOperator {
     RelaxedOperator(std::vector<RelaxedProposition *> &&pre,
                     std::vector<RelaxedProposition *> &&eff,
                     int op_id, int base)
-        : original_op_id(op_id), preconditions(pre), effects(eff), base_cost(base) {
+        : original_op_id(op_id), preconditions(pre), effects(eff), base_cost(base),
+          cost(-1), unsatisfied_preconditions(-1), h_max_supporter_cost(-1),
+          h_max_supporter(nullptr) {
     }
 
     inline void update_h_max_supporter();
@@ -101,8 +103,8 @@ public:
 
       Returns true iff state is detected as a dead end.
     */
-    bool compute_landmarks(const State &state, CostCallback cost_callback,
-                           LandmarkCallback landmark_callback);
+    bool compute_landmarks(const State &state, const CostCallback &cost_callback,
+                           const LandmarkCallback &landmark_callback);
 };
 
 inline void RelaxedOperator::update_h_max_supporter() {

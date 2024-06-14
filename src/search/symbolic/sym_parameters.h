@@ -7,9 +7,9 @@
 
 #include "../abstract_task.h"
 
-namespace options {
+namespace plugins {
 class Options;
-class OptionParser;
+class Feature;
 } // namespace options
 
 namespace symbolic {
@@ -29,11 +29,11 @@ struct SymParameters {
 
     bool non_stop;
 
-    SymParameters(const options::Options &opts, const std::shared_ptr<AbstractTask> &task);
+    SymParameters(const plugins::Options &opts, const std::shared_ptr<AbstractTask> &task);
 
     void increase_bound();
 
-    static void add_options_to_parser(options::OptionParser &parser);
+    static void add_options_to_feature(plugins::Feature &feature);
 
     void print_options() const;
 };

@@ -5,11 +5,6 @@
 #include <string>
 #include <vector>
 
-// Auxiliar file to declare all enumerate values Each enumerate has:
-// its definiton, ostream << operator and an array with representattive
-// strings. The order of the values in the enumerate must correspond
-// with the order in the xxxValues vector
-
 namespace symbolic {
 enum class MutexType {
     MUTEX_NOT,
@@ -17,7 +12,6 @@ enum class MutexType {
     MUTEX_EDELETION,
 };
 std::ostream &operator<<(std::ostream &os, const MutexType &m);
-extern const std::vector<std::string> &MutexTypeValues;
 
 enum class ConditionalEffectsTransitionType {
     MONOLITHIC,
@@ -25,12 +19,10 @@ enum class ConditionalEffectsTransitionType {
     CONJUNCTIVE_EARLY_QUANTIFICATION
 };
 std::ostream &operator<<(std::ostream &os, const ConditionalEffectsTransitionType &ce_type);
-extern const std::vector<std::string> &ConditionalEffectsTransitionTypeValues;
 extern bool is_ce_transition_type_conjunctive(const ConditionalEffectsTransitionType &ce_type);
 
 enum class Dir {FW, BW, BIDIR};
 std::ostream &operator<<(std::ostream &os, const Dir &dir);
-extern const std::vector<std::string> &DirValues;
 
 // We use this enumerate to know why the current operation was truncated
 enum class TruncatedReason {

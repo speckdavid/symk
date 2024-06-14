@@ -1,8 +1,7 @@
-#ifndef SYMBOLIC_NAIVE_SIMPLE_SELECTOR_H
-#define SYMBOLIC_NAIVE_SIMPLE_SELECTOR_H
+#ifndef SYMBOLIC_PLAN_SELECTION_SIMPLE_SELECTOR_H
+#define SYMBOLIC_PLAN_SELECTION_SIMPLE_SELECTOR_H
 
 #include "plan_selector.h"
-#include "../../option_parser.h"
 #include "../../task_utils/task_properties.h"
 
 using namespace std;
@@ -14,7 +13,7 @@ using namespace std;
 namespace symbolic {
 class SimpleSelector : public PlanSelector {
 public:
-    SimpleSelector(const options::Options &opts);
+    SimpleSelector(const plugins::Options &opts);
     ~SimpleSelector() {}
 
     void add_plan(const Plan &plan) override;

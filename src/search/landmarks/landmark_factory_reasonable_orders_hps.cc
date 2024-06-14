@@ -5,15 +5,13 @@
 
 #include "util.h"
 
-#include "../option_parser.h"
-#include "../plugin.h"
-
+#include "../plugins/plugin.h"
 #include "../utils/logging.h"
 #include "../utils/markup.h"
 
 using namespace std;
 namespace landmarks {
-LandmarkFactoryReasonableOrdersHPS::LandmarkFactoryReasonableOrdersHPS(const Options &opts)
+LandmarkFactoryReasonableOrdersHPS::LandmarkFactoryReasonableOrdersHPS(const plugins::Options &opts)
     : LandmarkFactory(opts),
       lm_factory(opts.get<shared_ptr<LandmarkFactory>>("lm_factory")) {
 }
@@ -30,22 +28,13 @@ void LandmarkFactoryReasonableOrdersHPS::generate_landmarks(const shared_ptr<Abs
     if (log.is_at_least_normal()) {
         log << "approx. reasonable orders" << endl;
     }
-    approximate_reasonable_orders(task_proxy, false);
-    if (log.is_at_least_normal()) {
-        log << "approx. obedient reasonable orders" << endl;
-    }
-    approximate_reasonable_orders(task_proxy, true);
-
-    mk_acyclic_graph();
+    approximate_reasonable_orders(task_proxy);
 }
 
 void LandmarkFactoryReasonableOrdersHPS::approximate_reasonable_orders(
-    const TaskProxy &task_proxy, bool obedient_orders) {
+    const TaskProxy &task_proxy) {
     /*
-      Approximate reasonable and obedient reasonable orders according
-      to Hoffmann et al. If flag "obedient_orders" is true, we
-      calculate obedient reasonable orders, otherwise reasonable
-      orders.
+      Approximate reasonable orders according to Hoffmann et al.
 
       If node_p is in goal, then any node2_p which interferes with
       node_p can be reasonably ordered before node_p. Otherwise, if
@@ -61,10 +50,7 @@ void LandmarkFactoryReasonableOrdersHPS::approximate_reasonable_orders(
         if (landmark.disjunctive)
             continue;
 
-        if (landmark.is_true_in_state(initial_state))
-            return;
-
-        if (!obedient_orders && landmark.is_true_in_goal) {
+        if (landmark.is_true_in_goal) {
             for (auto &node2_p : lm_graph->get_nodes()) {
                 const Landmark &landmark2 = node2_p->get_landmark();
                 if (landmark == landmark2 || landmark2.disjunctive)
@@ -86,11 +72,10 @@ void LandmarkFactoryReasonableOrdersHPS::approximate_reasonable_orders(
                         const EdgeType &edge = p.second;
                         if (parent_node.get_landmark().disjunctive)
                             continue;
-                        if ((edge >= EdgeType::NATURAL || (obedient_orders && edge == EdgeType::REASONABLE)) &&
-                            &parent_node != node_p.get()) {
+                        if (edge >= EdgeType::NATURAL && &parent_node != node_p.get()) {
                             // find predecessors or parent and collect in "interesting nodes"
                             interesting_nodes.insert(&parent_node);
-                            collect_ancestors(interesting_nodes, parent_node, obedient_orders);
+                            collect_ancestors(interesting_nodes, parent_node);
                         }
                     }
                 }
@@ -102,10 +87,7 @@ void LandmarkFactoryReasonableOrdersHPS::approximate_reasonable_orders(
                 if (landmark == landmark2 || landmark2.disjunctive)
                     continue;
                 if (interferes(task_proxy, landmark2, landmark)) {
-                    if (!obedient_orders)
-                        edge_add(*node2_p, *node_p, EdgeType::REASONABLE);
-                    else
-                        edge_add(*node2_p, *node_p, EdgeType::OBEDIENT_REASONABLE);
+                    edge_add(*node2_p, *node_p, EdgeType::REASONABLE);
                 }
             }
         }
@@ -223,8 +205,7 @@ bool LandmarkFactoryReasonableOrdersHPS::interferes(
 }
 
 void LandmarkFactoryReasonableOrdersHPS::collect_ancestors(
-    unordered_set<LandmarkNode *> &result,
-    LandmarkNode &node, bool use_reasonable) {
+    unordered_set<LandmarkNode *> &result, LandmarkNode &node) {
     /* Returns all ancestors in the landmark graph of landmark node "start" */
 
     // There could be cycles if use_reasonable == true
@@ -233,24 +214,21 @@ void LandmarkFactoryReasonableOrdersHPS::collect_ancestors(
     for (const auto &p : node.parents) {
         LandmarkNode &parent = *(p.first);
         const EdgeType &edge = p.second;
-        if (edge >= EdgeType::NATURAL || (use_reasonable && edge == EdgeType::REASONABLE))
-            if (closed_nodes.count(&parent) == 0) {
-                open_nodes.push_back(&parent);
-                closed_nodes.insert(&parent);
-                result.insert(&parent);
-            }
+        if (edge >= EdgeType::NATURAL && closed_nodes.count(&parent) == 0) {
+            open_nodes.push_back(&parent);
+            closed_nodes.insert(&parent);
+            result.insert(&parent);
+        }
     }
     while (!open_nodes.empty()) {
         LandmarkNode &node2 = *(open_nodes.front());
         for (const auto &p : node2.parents) {
             LandmarkNode &parent = *(p.first);
             const EdgeType &edge = p.second;
-            if (edge >= EdgeType::NATURAL || (use_reasonable && edge == EdgeType::REASONABLE)) {
-                if (closed_nodes.count(&parent) == 0) {
-                    open_nodes.push_back(&parent);
-                    closed_nodes.insert(&parent);
-                    result.insert(&parent);
-                }
+            if (edge >= EdgeType::NATURAL && closed_nodes.count(&parent) == 0) {
+                open_nodes.push_back(&parent);
+                closed_nodes.insert(&parent);
+                result.insert(&parent);
             }
         }
         open_nodes.pop_front();
@@ -371,41 +349,46 @@ bool LandmarkFactoryReasonableOrdersHPS::effect_always_happens(
     return eff.empty();
 }
 
-bool LandmarkFactoryReasonableOrdersHPS::computes_reasonable_orders() const {
-    return true;
-}
-
 bool LandmarkFactoryReasonableOrdersHPS::supports_conditional_effects() const {
     return lm_factory->supports_conditional_effects();
 }
 
+class LandmarkFactoryReasonableOrdersHPSFeature : public plugins::TypedFeature<LandmarkFactory, LandmarkFactoryReasonableOrdersHPS> {
+public:
+    LandmarkFactoryReasonableOrdersHPSFeature() : TypedFeature("lm_reasonable_orders_hps") {
+        document_title("HPS Orders");
+        document_synopsis(
+            "Adds reasonable orders described in the following paper" +
+            utils::format_journal_reference(
+                {"Jörg Hoffmann", "Julie Porteous", "Laura Sebastia"},
+                "Ordered Landmarks in Planning",
+                "https://jair.org/index.php/jair/article/view/10390/24882",
+                "Journal of Artificial Intelligence Research",
+                "22",
+                "215-278",
+                "2004"));
 
-static shared_ptr<LandmarkFactory> _parse(OptionParser &parser) {
-    parser.document_synopsis(
-        "HPS Orders",
-        "Adds reasonable orders and obedient reasonable orders "
-        "described in the following paper" +
-        utils::format_journal_reference(
-            {"Jörg Hoffmann", "Julie Porteous", "Laura Sebastia"},
-            "Ordered Landmarks in Planning",
-            "https://jair.org/index.php/jair/article/view/10390/24882",
-            "Journal of Artificial Intelligence Research",
-            "22",
-            "215-278",
-            "2004"));
-    parser.add_option<shared_ptr<LandmarkFactory>>("lm_factory");
-    add_landmark_factory_options_to_parser(parser);
-    Options opts = parser.parse();
+        document_note(
+            "Obedient-reasonable orders",
+            "Hoffmann et al. (2004) suggest obedient-reasonable orders in "
+            "addition to reasonable orders. Obedient-reasonable orders were "
+            "later also used by the LAMA planner (Richter and Westphal, 2010). "
+            "They are \"reasonable orders\" under the assumption that all "
+            "(non-obedient) reasonable orders are actually \"natural\", i.e., "
+            "every plan obeys the reasonable orders. We observed "
+            "experimentally that obedient-reasonable orders have minimal "
+            "effect on the performance of LAMA (Büchner et al., 2023) and "
+            "decided to remove them in issue1089.");
 
-    // TODO: correct?
-    parser.document_language_support("conditional_effects",
-                                     "supported if subcomponent supports them");
+        add_option<shared_ptr<LandmarkFactory>>("lm_factory");
+        add_landmark_factory_options_to_feature(*this);
 
-    if (parser.dry_run())
-        return nullptr;
-    else
-        return make_shared<LandmarkFactoryReasonableOrdersHPS>(opts);
-}
+        // TODO: correct?
+        document_language_support(
+            "conditional_effects",
+            "supported if subcomponent supports them");
+    }
+};
 
-static Plugin<LandmarkFactory> _plugin("lm_reasonable_orders_hps", _parse);
+static plugins::FeaturePlugin<LandmarkFactoryReasonableOrdersHPSFeature> _plugin;
 }

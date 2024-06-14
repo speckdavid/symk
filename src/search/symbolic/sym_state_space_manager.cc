@@ -7,8 +7,6 @@
 #include "../mutex_group.h"
 #include "../task_proxy.h"
 
-#include "../options/option_parser.h"
-#include "../options/options.h"
 #include "../tasks/effect_aggregated_task.h"
 #include "../tasks/sdac_task.h"
 #include "../task_utils/task_properties.h"

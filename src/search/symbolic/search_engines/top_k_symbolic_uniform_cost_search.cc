@@ -1,9 +1,6 @@
 #include "top_k_symbolic_uniform_cost_search.h"
 
-#include "../plugin.h"
 #include "../sym_state_space_manager.h"
-
-#include "../../option_parser.h"
 
 #include "../searches/bidirectional_search.h"
 #include "../searches/top_k_uniform_cost_search.h"
@@ -60,8 +57,8 @@ void TopkSymbolicUniformCostSearch::initialize() {
 }
 
 TopkSymbolicUniformCostSearch::TopkSymbolicUniformCostSearch(
-    const options::Options &opts, bool fw, bool bw)
-    : SymbolicUniformCostSearch(opts, fw, bw) {}
+    const plugins::Options &opts, bool fw, bool bw, bool alternating)
+    : SymbolicUniformCostSearch(opts, fw, bw, alternating) {}
 
 void TopkSymbolicUniformCostSearch::new_solution(const SymSolutionCut &sol) {
     if (!solution_registry->found_all_plans()) {
@@ -70,64 +67,55 @@ void TopkSymbolicUniformCostSearch::new_solution(const SymSolutionCut &sol) {
         lower_bound = numeric_limits<int>::max();
     }
 }
-}
-
-static shared_ptr<SearchEngine> _parse_forward_ucs(OptionParser &parser) {
-    parser.document_synopsis("Top-k Symbolic Forward Uniform Cost Search", "");
-    symbolic::SymbolicSearch::add_options_to_parser(parser);
-    parser.add_option<shared_ptr<symbolic::PlanSelector>>(
-        "plan_selection", "plan selection strategy");
-    Options opts = parser.parse();
-
-    shared_ptr<symbolic::SymbolicSearch> engine = nullptr;
-    if (!parser.dry_run()) {
-        engine = make_shared<symbolic::TopkSymbolicUniformCostSearch>(
-            opts, true, false);
-        utils::g_log << "Top-k Symbolic Forward Uniform Cost Search" << endl;
+class TopkSymbolicForwardUniformCostSearchFeature : public plugins::TypedFeature<SearchAlgorithm, TopkSymbolicUniformCostSearch> {
+public:
+    TopkSymbolicForwardUniformCostSearchFeature() : TypedFeature("symk_fw") {
+        document_title("Topk Symbolic Forward Uniform Cost Search");
+        document_synopsis("");
+        symbolic::SymbolicSearch::add_options_to_feature(*this);
+        this->add_option<shared_ptr<symbolic::PlanSelector>>("plan_selection", "plan selection strategy");
     }
 
-    return engine;
-}
+    virtual shared_ptr<TopkSymbolicUniformCostSearch> create_component(const plugins::Options &options, const utils::Context &) const override {
+        utils::g_log << "Search Algorithm: Topk Symbolic Forward Uniform Cost Search" << endl;
+        return make_shared<TopkSymbolicUniformCostSearch>(options, true, false);
+    }
+};
 
-static shared_ptr<SearchEngine> _parse_backward_ucs(OptionParser &parser) {
-    parser.document_synopsis("Top-k Symbolic Backward Uniform Cost Search", "");
-    symbolic::SymbolicSearch::add_options_to_parser(parser);
-    parser.add_option<shared_ptr<symbolic::PlanSelector>>(
-        "plan_selection", "plan selection strategy");
-    Options opts = parser.parse();
+static plugins::FeaturePlugin<TopkSymbolicForwardUniformCostSearchFeature> _fw_plugin;
 
-    shared_ptr<symbolic::SymbolicSearch> engine = nullptr;
-    if (!parser.dry_run()) {
-        engine = make_shared<symbolic::TopkSymbolicUniformCostSearch>(
-            opts, false, true);
-        utils::g_log << "Top-k Symbolic Backward Uniform Cost Search" << endl;
+class TopkSymbolicBackwardUniformCostSearchFeature : public plugins::TypedFeature<SearchAlgorithm, TopkSymbolicUniformCostSearch> {
+public:
+    TopkSymbolicBackwardUniformCostSearchFeature() : TypedFeature("symk_bw") {
+        document_title("Topk Symbolic Backward Uniform Cost Search");
+        document_synopsis("");
+        symbolic::SymbolicSearch::add_options_to_feature(*this);
+        this->add_option<shared_ptr<symbolic::PlanSelector>>("plan_selection", "plan selection strategy");
     }
 
-    return engine;
-}
+    virtual shared_ptr<TopkSymbolicUniformCostSearch> create_component(const plugins::Options &options, const utils::Context &) const override {
+        utils::g_log << "Search Algorithm: Topk Symbolic Backward Uniform Cost Search" << endl;
+        return make_shared<TopkSymbolicUniformCostSearch>(options, false, true);
+    }
+};
 
-static shared_ptr<SearchEngine>
-_parse_bidirectional_ucs(OptionParser &parser) {
-    parser.document_synopsis("Top-k Symbolic Bidirectional Uniform Cost Search",
-                             "");
-    symbolic::SymbolicSearch::add_options_to_parser(parser);
-    parser.add_option<shared_ptr<symbolic::PlanSelector>>(
-        "plan_selection", "plan selection strategy");
-    Options opts = parser.parse();
+static plugins::FeaturePlugin<TopkSymbolicBackwardUniformCostSearchFeature> _bw_plugin;
 
-    shared_ptr<symbolic::SymbolicSearch> engine = nullptr;
-    if (!parser.dry_run()) {
-        engine = make_shared<symbolic::TopkSymbolicUniformCostSearch>(
-            opts, true, true);
-        utils::g_log << "Top-k Symbolic Bidirectional Uniform Cost Search"
-                     << endl;
+class TopkSymbolicBidirectionalUniformCostSearchFeature : public plugins::TypedFeature<SearchAlgorithm, TopkSymbolicUniformCostSearch> {
+public:
+    TopkSymbolicBidirectionalUniformCostSearchFeature() : TypedFeature("symk_bd") {
+        document_title("Topk Symbolic Bidirectional Uniform Cost Search");
+        document_synopsis("");
+        symbolic::SymbolicSearch::add_options_to_feature(*this);
+        this->add_option<shared_ptr<symbolic::PlanSelector>>("plan_selection", "plan selection strategy");
+        this->add_option<bool>("alternating", "alternating", "false");
     }
 
-    return engine;
-}
+    virtual shared_ptr<TopkSymbolicUniformCostSearch> create_component(const plugins::Options &options, const utils::Context &) const override {
+        utils::g_log << "Search Algorithm: Topk Symbolic Bidirectional Uniform Cost Search" << endl;
+        return make_shared<TopkSymbolicUniformCostSearch>(options, true, true, options.get<bool>("alternating"));
+    }
+};
 
-static Plugin<SearchEngine> _plugin_sym_fw_top_k("symk-fw", _parse_forward_ucs);
-static Plugin<SearchEngine> _plugin_sym_bw_top_k("symk-bw",
-                                                 _parse_backward_ucs);
-static Plugin<SearchEngine> _plugin_sym_bd_top_k("symk-bd",
-                                                 _parse_bidirectional_ucs);
+static plugins::FeaturePlugin<TopkSymbolicBidirectionalUniformCostSearchFeature> _bd_plugin;
+}

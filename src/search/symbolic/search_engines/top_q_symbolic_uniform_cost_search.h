@@ -19,12 +19,10 @@ protected:
     virtual SearchStatus step() override;
 
 public:
-    TopqSymbolicUniformCostSearch(const options::Options &opts, bool fw, bool bw);
+    TopqSymbolicUniformCostSearch(const plugins::Options &opts, bool fw, bool bw, bool alternating = false);
     virtual ~TopqSymbolicUniformCostSearch() = default;
 
     virtual void new_solution(const SymSolutionCut &sol) override;
-
-    static void add_options_to_parser(OptionParser &parser);
 };
 }
 

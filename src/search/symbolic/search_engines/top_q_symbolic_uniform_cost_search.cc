@@ -1,9 +1,5 @@
 #include "top_q_symbolic_uniform_cost_search.h"
 
-#include "../plugin.h"
-
-#include "../../option_parser.h"
-
 #include "../searches/bidirectional_search.h"
 #include "../searches/top_k_uniform_cost_search.h"
 
@@ -11,20 +7,18 @@
 using namespace std;
 
 namespace symbolic {
-TopqSymbolicUniformCostSearch::TopqSymbolicUniformCostSearch(
-    const options::Options &opts, bool fw, bool bw)
-    : TopkSymbolicUniformCostSearch(opts, fw, bw),
+TopqSymbolicUniformCostSearch::TopqSymbolicUniformCostSearch(const plugins::Options &opts, bool fw, bool bw, bool alternating)
+    : TopkSymbolicUniformCostSearch(opts, fw, bw, alternating),
       quality_multiplier(opts.get<double>("quality")) {
     utils::g_log << "Quality: " << quality_multiplier << endl;
 }
 
 void TopqSymbolicUniformCostSearch::new_solution(const SymSolutionCut &sol) {
-    if (!(solution_registry->found_all_plans() ||
-          lower_bound > get_quality_bound())) {
+    if (!(solution_registry->found_all_plans() || lower_bound > get_quality_bound())) {
         solution_registry->register_solution(sol);
         if (get_quality_bound() < numeric_limits<double>::infinity()) {
             // utils::g_log << "Quality bound: " << get_quality_bound() << endl;
-            upper_bound = min((double)upper_bound, get_quality_bound() + 1);
+            upper_bound = static_cast<int>(min((double)upper_bound, get_quality_bound() + 1));
         }
     } else {
         lower_bound = numeric_limits<int>::max();
@@ -88,72 +82,58 @@ SearchStatus TopqSymbolicUniformCostSearch::step() {
     return cur_status;
 }
 
-void TopqSymbolicUniformCostSearch::add_options_to_parser(
-    OptionParser &parser) {
-    parser.add_option<double>("quality", "relative quality multiplier",
-                              "infinity", Bounds("1.0", "infinity"));
-}
-} // namespace symbolic
-
-static shared_ptr<SearchEngine> _parse_forward_ucs(OptionParser &parser) {
-    parser.document_synopsis("Top-q Symbolic Forward Uniform Cost Search", "");
-    symbolic::SymbolicSearch::add_options_to_parser(parser);
-    parser.add_option<shared_ptr<symbolic::PlanSelector>>(
-        "plan_selection", "plan selection strategy");
-    symbolic::TopqSymbolicUniformCostSearch::add_options_to_parser(parser);
-    Options opts = parser.parse();
-
-    shared_ptr<symbolic::SymbolicSearch> engine = nullptr;
-    if (!parser.dry_run()) {
-        engine = make_shared<symbolic::TopqSymbolicUniformCostSearch>(
-            opts, true, false);
-        utils::g_log << "Top-q Symbolic Forward Uniform Cost Search" << endl;
+class TopqSymbolicForwardUniformCostSearchFeature : public plugins::TypedFeature<SearchAlgorithm, TopqSymbolicUniformCostSearch> {
+public:
+    TopqSymbolicForwardUniformCostSearchFeature() : TypedFeature("symq_fw") {
+        document_title("Topq Symbolic Forward Uniform Cost Search");
+        document_synopsis("");
+        symbolic::SymbolicSearch::add_options_to_feature(*this);
+        this->add_option<shared_ptr<symbolic::PlanSelector>>("plan_selection", "plan selection strategy");
+        this->add_option<double>("quality", "relative quality multiplier", "1.0", plugins::Bounds("1.0", "infinity"));
     }
 
-    return engine;
-}
+    virtual shared_ptr<TopqSymbolicUniformCostSearch> create_component(const plugins::Options &options, const utils::Context &) const override {
+        utils::g_log << "Search Algorithm: Topq Symbolic Forward Uniform Cost Search" << endl;
+        return make_shared<TopqSymbolicUniformCostSearch>(options, true, false);
+    }
+};
 
-static shared_ptr<SearchEngine> _parse_backward_ucs(OptionParser &parser) {
-    parser.document_synopsis("Top-q Symbolic Backward Uniform Cost Search", "");
-    symbolic::SymbolicSearch::add_options_to_parser(parser);
-    parser.add_option<shared_ptr<symbolic::PlanSelector>>(
-        "plan_selection", "plan selection strategy");
-    symbolic::TopqSymbolicUniformCostSearch::add_options_to_parser(parser);
-    Options opts = parser.parse();
+static plugins::FeaturePlugin<TopqSymbolicForwardUniformCostSearchFeature> _fw_plugin;
 
-    shared_ptr<symbolic::SymbolicSearch> engine = nullptr;
-    if (!parser.dry_run()) {
-        engine = make_shared<symbolic::TopqSymbolicUniformCostSearch>(
-            opts, false, true);
-        utils::g_log << "Top-q Symbolic Backward Uniform Cost Search" << endl;
+class TopqSymbolicBackwardUniformCostSearchFeature : public plugins::TypedFeature<SearchAlgorithm, TopqSymbolicUniformCostSearch> {
+public:
+    TopqSymbolicBackwardUniformCostSearchFeature() : TypedFeature("symq_bw") {
+        document_title("Topq Symbolic Backward Uniform Cost Search");
+        document_synopsis("");
+        symbolic::SymbolicSearch::add_options_to_feature(*this);
+        this->add_option<shared_ptr<symbolic::PlanSelector>>("plan_selection", "plan selection strategy");
+        this->add_option<double>("quality", "relative quality multiplier", "1.0", plugins::Bounds("1.0", "infinity"));
     }
 
-    return engine;
-}
+    virtual shared_ptr<TopqSymbolicUniformCostSearch> create_component(const plugins::Options &options, const utils::Context &) const override {
+        utils::g_log << "Search Algorithm: Topq Symbolic Backward Uniform Cost Search" << endl;
+        return make_shared<TopqSymbolicUniformCostSearch>(options, false, true);
+    }
+};
 
-static shared_ptr<SearchEngine>
-_parse_bidirectional_ucs(OptionParser &parser) {
-    parser.document_synopsis("Top-q Symbolic Bidirectional Uniform Cost Search",
-                             "");
-    symbolic::SymbolicSearch::add_options_to_parser(parser);
-    parser.add_option<shared_ptr<symbolic::PlanSelector>>(
-        "plan_selection", "plan selection strategy");
-    symbolic::TopqSymbolicUniformCostSearch::add_options_to_parser(parser);
-    Options opts = parser.parse();
+static plugins::FeaturePlugin<TopqSymbolicBackwardUniformCostSearchFeature> _bw_plugin;
 
-    shared_ptr<symbolic::SymbolicSearch> engine = nullptr;
-    if (!parser.dry_run()) {
-        engine = make_shared<symbolic::TopqSymbolicUniformCostSearch>(
-            opts, true, true);
-        utils::g_log << "Top-q Symbolic Bidirectional Uniform Cost Search"
-                     << endl;
+class TopqSymbolicBidirectionalUniformCostSearchFeature : public plugins::TypedFeature<SearchAlgorithm, TopqSymbolicUniformCostSearch> {
+public:
+    TopqSymbolicBidirectionalUniformCostSearchFeature() : TypedFeature("symq_bd") {
+        document_title("Topq Symbolic Bidirectional Uniform Cost Search");
+        document_synopsis("");
+        symbolic::SymbolicSearch::add_options_to_feature(*this);
+        this->add_option<shared_ptr<symbolic::PlanSelector>>("plan_selection", "plan selection strategy");
+        this->add_option<double>("quality", "relative quality multiplier", "1.0", plugins::Bounds("1.0", "infinity"));
+        this->add_option<bool>("alternating", "alternating", "false");
     }
 
-    return engine;
-}
+    virtual shared_ptr<TopqSymbolicUniformCostSearch> create_component(const plugins::Options &options, const utils::Context &) const override {
+        utils::g_log << "Search Algorithm: Topq Symbolic Bidirectional Uniform Cost Search" << endl;
+        return make_shared<TopqSymbolicUniformCostSearch>(options, true, true, options.get<bool>("alternating"));
+    }
+};
 
-static Plugin<SearchEngine> _plugin_sym_fw_top_q("symq-fw", _parse_forward_ucs);
-static Plugin<SearchEngine> _plugin_sym_bw_top_q("symq-bw",
-                                                 _parse_backward_ucs);
-static Plugin<SearchEngine> _plugin_sym_bd_top_q("symq-bd",
-                                                 _parse_bidirectional_ucs);
+static plugins::FeaturePlugin<TopqSymbolicBidirectionalUniformCostSearchFeature> _bd_plugin;
+}

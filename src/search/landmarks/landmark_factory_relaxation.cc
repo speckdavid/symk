@@ -8,7 +8,7 @@
 using namespace std;
 
 namespace landmarks {
-LandmarkFactoryRelaxation::LandmarkFactoryRelaxation(const options::Options &opts)
+LandmarkFactoryRelaxation::LandmarkFactoryRelaxation(const plugins::Options &opts)
     : LandmarkFactory(opts) {
 }
 
@@ -23,7 +23,6 @@ void LandmarkFactoryRelaxation::postprocess(
     const TaskProxy &task_proxy, Exploration &exploration) {
     lm_graph->set_landmark_ids();
     calc_achievers(task_proxy, exploration);
-    mk_acyclic_graph();
 }
 
 void LandmarkFactoryRelaxation::discard_noncausal_landmarks(

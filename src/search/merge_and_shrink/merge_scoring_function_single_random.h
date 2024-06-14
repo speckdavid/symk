@@ -5,7 +5,7 @@
 
 #include <memory>
 
-namespace options {
+namespace plugins {
 class Options;
 }
 
@@ -17,11 +17,11 @@ namespace merge_and_shrink {
 class MergeScoringFunctionSingleRandom : public MergeScoringFunction {
     int random_seed; // only for dump options
     std::shared_ptr<utils::RandomNumberGenerator> rng;
-protected:
+
     virtual std::string name() const override;
     virtual void dump_function_specific_options(utils::LogProxy &log) const override;
 public:
-    explicit MergeScoringFunctionSingleRandom(const options::Options &options);
+    explicit MergeScoringFunctionSingleRandom(const plugins::Options &options);
     virtual ~MergeScoringFunctionSingleRandom() override = default;
     virtual std::vector<double> compute_scores(
         const FactoredTransitionSystem &fts,

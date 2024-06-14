@@ -133,7 +133,7 @@ Expression Parser::parseExpression(Lexer &lexer) const {
     Token token = lexer.getNextToken();
     switch (token.type) {
     case Type::CONST:
-        return Factories::cst(stod(token.value));
+        return Factories::cst(stof(token.value));
         break;
     case Type::VAR:
         return Factories::var(token.value);
@@ -329,7 +329,7 @@ void InfixParser::P(Lexer &lexer) {
         consume(lexer);
     } else if (next.type == Type::CONST) {
         // cout<< "Const: "<<next.value<<endl;
-        operands.push(Factories::cst(stod(next.value)));
+        operands.push(Factories::cst(stof(next.value)));
         consume(lexer);
     } else if (next.type == Type::LPAREN) {
         // cout<< "LPAREN: "<<next.value<<endl;
@@ -380,7 +380,7 @@ void InfixParser::LP(Lexer &lexer) {
         operands.push(Factories::var(next.value));
         consume(lexer);
     } else if (next.type == Type::CONST) {
-        operands.push(Factories::cst(stod(next.value)));
+        operands.push(Factories::cst(stof(next.value)));
         consume(lexer);
     } else if (isLogicalUnaryOperator(next)) {
         next.binary = false;

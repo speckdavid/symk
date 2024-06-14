@@ -1,12 +1,12 @@
-#ifndef SYMBOLIC_TOP_K_EVEN_SELECTOR_H
-#define SYMBOLIC_TOP_K_EVEN_SELECTOR_H
+#ifndef SYMBOLIC_PLAN_SELECTION_TOP_K_EVEN_SELECTOR_H
+#define SYMBOLIC_PLAN_SELECTION_TOP_K_EVEN_SELECTOR_H
 
 #include "plan_selector.h"
 
 namespace symbolic {
 class TopKEvenSelector : public PlanSelector {
 public:
-    TopKEvenSelector(const options::Options &opts);
+    TopKEvenSelector(const plugins::Options &opts);
 
     ~TopKEvenSelector() {}
 

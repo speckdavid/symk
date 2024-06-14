@@ -1,8 +1,5 @@
 #include "symbolic_search.h"
 
-#include "../option_parser.h"
-#include "../plugin.h"
-
 #include "../sym_state_space_manager.h"
 #include "../sym_variables.h"
 
@@ -18,8 +15,8 @@ using namespace std;
 using namespace options;
 
 namespace symbolic {
-SymbolicSearch::SymbolicSearch(const options::Options &opts)
-    : SearchEngine(opts),
+SymbolicSearch::SymbolicSearch(const plugins::Options &opts)
+    : SearchAlgorithm(opts),
       task(opts.get<shared_ptr<AbstractTask>>("transform")),
       search_task(task),
       task_proxy(*task),
@@ -68,7 +65,7 @@ void SymbolicSearch::initialize() {
 
         utils::g_log << "Plan Reconstruction: Simple (without loops)" << endl;
         utils::g_log << "Maximal plan cost: " << max_plan_cost << endl;
-        upper_bound = min((double)upper_bound, max_plan_cost + 1);
+        upper_bound = static_cast<int>(min((double)upper_bound, max_plan_cost + 1));
         cout << endl;
     }
 
@@ -163,21 +160,18 @@ void SymbolicSearch::save_plan_if_necessary() {
     }
 }
 
-void SymbolicSearch::add_options_to_parser(OptionParser &parser) {
-    parser.add_option<shared_ptr<AbstractTask>>(
+void SymbolicSearch::add_options_to_feature(plugins::Feature &feature) {
+    feature.add_option<shared_ptr<AbstractTask>>(
         "transform",
         "Optional task transformation for the search."
         " Currently, adapt_costs() and no_transform() are available.",
         "no_transform()");
-    SearchEngine::add_options_to_parser(parser);
-    SymVariables::add_options_to_parser(parser);
-    SymParameters::add_options_to_parser(parser);
-    PlanSelector::add_options_to_parser(parser);
-    parser.add_option<bool>("silent", "silent mode that avoids writing the cost bounds",
-                            "false");
-    parser.add_option<bool>("simple", "simple/loopless plan construction",
-                            "false");
-    parser.add_option<bool>("single_solution", "search for a single solution",
-                            "true");
+    SearchAlgorithm::add_options_to_feature(feature);
+    SymVariables::add_options_to_feature(feature);
+    SymParameters::add_options_to_feature(feature);
+    PlanSelector::add_options_to_feature(feature);
+    feature.add_option<bool>("silent", "silent mode that avoids writing the cost bounds", "false");
+    feature.add_option<bool>("simple", "simple/loopless plan construction", "false");
+    feature.add_option<bool>("single_solution", "search for a single solution", "true");
 }
-} // namespace symbolic
+}

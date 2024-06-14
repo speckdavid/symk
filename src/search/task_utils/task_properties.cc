@@ -184,7 +184,8 @@ void dump_goals(const GoalsProxy &goals) {
                      << goal.get_value() << endl;
     }
 }
-void dump_operator(const OperatorProxy &op) {
+
+static void dump_operator(const OperatorProxy &op) {
     utils::g_log << "#" << op.get_id() << ": " << op.get_name() << endl;
     utils::g_log << " pre: [ " << flush;
 
@@ -203,13 +204,13 @@ void dump_operator(const OperatorProxy &op) {
     }
 }
 
-void dump_operators(const OperatorsProxy &operators) {
+static void dump_operators(const OperatorsProxy &operators) {
     for (OperatorProxy op : operators) {
         dump_operator(op);
     }
 }
 
-void dump_axioms(const AxiomsProxy &axioms) {
+static void dump_axioms(const AxiomsProxy &axioms) {
     for (OperatorProxy ax : axioms) {
         dump_operator(ax);
     }

@@ -9,7 +9,7 @@
 using namespace std;
 
 namespace symbolic {
-IterativeCostSelector::IterativeCostSelector(const options::Options &opts)
+IterativeCostSelector::IterativeCostSelector(const plugins::Options &opts)
     : PlanSelector(opts),
       most_expensive_plan_cost(opts.get<int>("plan_cost_bound")) {
     PlanSelector::anytime_completness = false;
@@ -41,19 +41,19 @@ void IterativeCostSelector::add_plan(const Plan &plan) {
     }
 }
 
-static shared_ptr<PlanSelector> _parse(OptionParser &parser) {
-    PlanSelector::add_options_to_parser(parser);
-    parser.add_option<int>(
-        "plan_cost_bound",
-        "plan cost bound such that only more expansive plans are reconstructed",
-        "-1",
-        Bounds("-1", "infinity"));
+class IterativeCostSelectorFeature : public plugins::TypedFeature<PlanSelector, IterativeCostSelector> {
+public:
+    IterativeCostSelectorFeature() : TypedFeature("iterative_cost") {
+        document_title("Iterative cost plan selector");
 
-    Options opts = parser.parse();
-    if (parser.dry_run())
-        return nullptr;
-    return make_shared<IterativeCostSelector>(opts);
-}
+        PlanSelector::add_options_to_feature(*this);
+        this->add_option<int>(
+            "plan_cost_bound",
+            "plan cost bound such that only more expansive plans are reconstructed",
+            "-1",
+            plugins::Bounds("-1", "infinity"));
+    }
+};
 
-static Plugin<PlanSelector> _plugin("iterative_cost", _parse);
+static plugins::FeaturePlugin<IterativeCostSelectorFeature> _plugin;
 }

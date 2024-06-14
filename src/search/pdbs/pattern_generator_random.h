@@ -10,7 +10,7 @@ class RandomNumberGenerator;
 namespace pdbs {
 class PatternGeneratorRandom : public PatternGenerator {
     const int max_pdb_size;
-    const int max_time;
+    const double max_time;
     const bool bidirectional;
     std::shared_ptr<utils::RandomNumberGenerator> rng;
 
@@ -18,7 +18,7 @@ class PatternGeneratorRandom : public PatternGenerator {
     virtual PatternInformation compute_pattern(
         const std::shared_ptr<AbstractTask> &task) override;
 public:
-    explicit PatternGeneratorRandom(options::Options &opts);
+    explicit PatternGeneratorRandom(const plugins::Options &opts);
 };
 }
 

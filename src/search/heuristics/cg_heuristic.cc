@@ -3,9 +3,7 @@
 #include "cg_cache.h"
 #include "domain_transition_graph.h"
 
-#include "../option_parser.h"
-#include "../plugin.h"
-
+#include "../plugins/plugin.h"
 #include "../task_utils/task_properties.h"
 #include "../utils/logging.h"
 
@@ -18,7 +16,7 @@ using namespace std;
 using namespace domain_transition_graph;
 
 namespace cg_heuristic {
-CGHeuristic::CGHeuristic(const Options &opts)
+CGHeuristic::CGHeuristic(const plugins::Options &opts)
     : Heuristic(opts),
       cache_hits(0),
       cache_misses(0),
@@ -107,10 +105,10 @@ int CGHeuristic::get_transition_cost(const State &state,
     if (start->distances.empty()) {
         // Initialize data of initial node.
         start->distances.resize(dtg->nodes.size(), numeric_limits<int>::max());
-        start->helpful_transitions.resize(dtg->nodes.size(), 0);
+        start->helpful_transitions.resize(dtg->nodes.size(), nullptr);
         start->distances[start_val] = 0;
-        start->reached_from = 0;
-        start->reached_by = 0;
+        start->reached_from = nullptr;
+        start->reached_by = nullptr;
         start->children_state.resize(dtg->local_to_global_child.size());
         for (size_t i = 0; i < dtg->local_to_global_child.size(); ++i) {
             start->children_state[i] =
@@ -190,7 +188,7 @@ int CGHeuristic::get_transition_cost(const State &state,
                         target->reached_from = source;
                         target->reached_by = &label;
 
-                        if (current_helpful_transition == 0) {
+                        if (current_helpful_transition == nullptr) {
                             // This transition starts at the start node;
                             // no helpful transitions recorded yet.
                             start->helpful_transitions[target->value] = &label;
@@ -287,34 +285,32 @@ void CGHeuristic::mark_helpful_transitions(const State &state,
     }
 }
 
-static shared_ptr<Heuristic> _parse(OptionParser &parser) {
-    parser.document_synopsis("Causal graph heuristic", "");
-    parser.document_language_support("action costs", "supported");
-    parser.document_language_support("conditional effects", "supported");
-    parser.document_language_support(
-        "axioms",
-        "supported (in the sense that the planner won't complain -- "
-        "handling of axioms might be very stupid "
-        "and even render the heuristic unsafe)");
-    parser.document_property("admissible", "no");
-    parser.document_property("consistent", "no");
-    parser.document_property("safe", "no");
-    parser.document_property("preferred operators", "yes");
+class CGHeuristicFeature : public plugins::TypedFeature<Evaluator, CGHeuristic> {
+public:
+    CGHeuristicFeature() : TypedFeature("cg") {
+        document_title("Causal graph heuristic");
 
-    parser.add_option<int>(
-        "max_cache_size",
-        "maximum number of cached entries per variable (set to 0 to disable cache)",
-        "1000000",
-        Bounds("0", "infinity"));
+        add_option<int>(
+            "max_cache_size",
+            "maximum number of cached entries per variable (set to 0 to disable cache)",
+            "1000000",
+            plugins::Bounds("0", "infinity"));
+        Heuristic::add_options_to_feature(*this);
 
-    Heuristic::add_options_to_parser(parser);
-    Options opts = parser.parse();
-    if (parser.dry_run())
-        return nullptr;
-    else
-        return make_shared<CGHeuristic>(opts);
-}
+        document_language_support("action costs", "supported");
+        document_language_support("conditional effects", "supported");
+        document_language_support(
+            "axioms",
+            "supported (in the sense that the planner won't complain -- "
+            "handling of axioms might be very stupid "
+            "and even render the heuristic unsafe)");
 
+        document_property("admissible", "no");
+        document_property("consistent", "no");
+        document_property("safe", "no");
+        document_property("preferred operators", "yes");
+    }
+};
 
-static Plugin<Evaluator> _plugin("cg", _parse);
+static plugins::FeaturePlugin<CGHeuristicFeature> _plugin;
 }

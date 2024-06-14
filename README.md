@@ -55,17 +55,17 @@ apptainer pull symk.sif oras://ghcr.io/speckdavid/symk:latest
 apptainer build symk.sif Apptainer
 
 # Then run the desired configuration (for other configurations see below).
-./symk.sif domain.pddl problem.pddl --search "sym-bd()"
+./symk.sif domain.pddl problem.pddl --search "sym_bd()"
 ```
 
 ## Single Optimal Solution
 We recommend using the following configuration which uses bidirectional search.
 
 ```console
-./fast-downward.py domain.pddl problem.pddl --search "sym-bd()"
+./fast-downward.py domain.pddl problem.pddl --search "sym_bd()"
 ```
 
-Other configurations are forward or backward search: `--search "sym-fw()"` or `--search "sym-bw()"`.
+Other configurations are forward or backward search: `--search "sym_fw()"` or `--search "sym_bw()"`.
 
 ## Multiple Solutions
 
@@ -77,7 +77,7 @@ We recommend using the following configuration which uses bidirectional search a
 reports the best **k** plans. Note that you can also specify `num_plans=infinity` if you want to find all possible plans.
 
 ```console
-./fast-downward.py domain.pddl problem.pddl --search "symk-bd(plan_selection=top_k(num_plans=**k**,dump_plans=false))"
+./fast-downward.py domain.pddl problem.pddl --search "symk_bd(plan_selection=top_k(num_plans=**k**,dump_plans=false))"
 ```
 
 Note that with `./fast-downward.py --plan-file sas_plan dom...` you can specify the path and name of the generated plan files (here: `sas_plan`), and by setting the `dump_plans` argument to `true`, all plans found will also be dumped to the console.
@@ -88,21 +88,21 @@ reports the **k** plans with quality bound **q**. Quality `1<=q<=infinity` is a 
 For example, `q=1` reports only the cheapest plans, where `quality=infinity` corresponds to the top-k planning.
 
 ```console
-./fast-downward.py domain.pddl problem.pddl --search "symq-bd(plan_selection=top_k(num_plans=**k**,dump_plans=false),quality=**q**)"
+./fast-downward.py domain.pddl problem.pddl --search "symq_bd(plan_selection=top_k(num_plans=**k**,dump_plans=false),quality=**q**)"
 ```
 
 ### Loopless Planning
 It is possible to generate loopless/simple plans, i.e., plans that do not visit any state more than once. In general, the option to consider and generate only simple plans can be combined with any SymK search engine and with different plan selectors by setting the `simple` parameter to true. See the following two examples and our [ICAPS 2022 Paper](https://gki.informatik.uni-freiburg.de/papers/vontschammer-etal-icaps2022.pdf).
 
 ```console
-./fast-downward.py domain.pddl problem.pddl --search "symk-bd(simple=true,plan_selection=top_k(num_plans=**k**,dump_plans=false))"
+./fast-downward.py domain.pddl problem.pddl --search "symk_bd(simple=true,plan_selection=top_k(num_plans=**k**,dump_plans=false))"
 ```
 
 ```console
-./fast-downward.py domain.pddl problem.pddl --search "symq-bd(simple=true,plan_selection=top_k(num_plans=**k**,dump_plans=false),quality=**q**)"
+./fast-downward.py domain.pddl problem.pddl --search "symq_bd(simple=true,plan_selection=top_k(num_plans=**k**,dump_plans=false),quality=**q**)"
 ```
 ### Other Configurations
-It is possible to run SymK also with forward or backward search instead of bidirectional search, e.g., with `--search "symk-fw(...)"` or `--search "symk-bw(...)"`. Depending on the domain, one of these configurations may be faster than bidirectional search (`"--search symk-bd(...)"`).
+It is possible to run SymK also with forward or backward search instead of bidirectional search, e.g., with `--search "symk_fw(...)"` or `--search "symk_bw(...)"`. Depending on the domain, one of these configurations may be faster than bidirectional search (`"--search symk_bd(...)"`).
 
 ## Plan Selection Framework
 It is possible to create plans until a number of plans or simply a single plan is found that meets certain requirements.
@@ -116,11 +116,11 @@ We recommend to use the following configurations which use bidirectional search.
 
 #### Unordered Top-k:
 ```console
-./fast-downward.py domain.pddl problem.pddl --search "symk-bd(plan_selection=unordered(num_plans=**k**))"
+./fast-downward.py domain.pddl problem.pddl --search "symk_bd(plan_selection=unordered(num_plans=**k**))"
 ```
 #### Unordered Top-q:
 ```console
-./fast-downward.py domain.pddl problem.pddl --search "symq-bd(plan_selection=unordered(num_plans=**k**),quality=**q**)"
+./fast-downward.py domain.pddl problem.pddl --search "symq_bd(plan_selection=unordered(num_plans=**k**),quality=**q**)"
 ```
 
 ### New Plan Selector
@@ -132,7 +132,7 @@ To create your own plan selector, you can copy the *.cc* and *.h* files of one o
 Finally, if you want to find a plan with your *awesome_selector* selector (the name of the selector you specified for the plugin in the *.cc* file), you can use the following command. 
 
 ```console
-./fast-downward.py domain.pddl problem.pddl --search "symk-bd(plan_selection=awesome_selector(num_plans=1))"
+./fast-downward.py domain.pddl problem.pddl --search "symk_bd(plan_selection=awesome_selector(num_plans=1))"
 ```
 
 Note, that you can also search for the best **k** plans using your selector.
@@ -141,7 +141,7 @@ Note, that you can also search for the best **k** plans using your selector.
 By default, the planner performs a relevance analysis and removes components such as variables and actions that are irrelevant to achieving the goal. Although such variables and actions can in principle lead to further (simple) plans, they are classified as irrelevant and removed when translating PDDL to SAS+. Note that this can have a negative impact on the performance of the planner. If you wish to **obtain all plans** (even the non-relevant ones), please use the following options:
 
 ```console
-./fast-downward.py --translate --search domain.pddl problem.pddl --translate-options --keep-unimportant-variables --search-options --search "symk-bd(plan_selection=top_k(num_plans=**k**))
+./fast-downward.py --translate --search domain.pddl problem.pddl --translate-options --keep-unimportant-variables --search-options --search "symk_bd(plan_selection=top_k(num_plans=**k**))
 ```
 
 # References
@@ -167,7 +167,7 @@ We appreciate citations of these sources when used.
  You can find examples of domains with state-dependent action cost [here](https://github.com/speckdavid/SDAC-Benchmarks).
 
 We want to acknowledge that SymK is based on:
- - Fast Downward (22.06): http://www.fast-downward.org/ and [FD_README.md](FD_README.md) 
+ - Fast Downward (23.06+): http://www.fast-downward.org/ and [FD_README.md](FD_README.md) 
  - Symbolic Fast Downward: https://people.cs.aau.dk/~alto/software.html
 
 Finally, SymK uses some external software that can be found in the [src/search/ext](src/search/ext) folder.

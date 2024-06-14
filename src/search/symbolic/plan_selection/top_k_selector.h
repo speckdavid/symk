@@ -1,12 +1,12 @@
-#ifndef SYMBOLIC_TOP_K_SELECTOR_H
-#define SYMBOLIC_TOP_K_SELECTOR_H
+#ifndef SYMBOLIC_PLAN_SELECTION_TOP_K_SELECTOR_H
+#define SYMBOLIC_PLAN_SELECTION_TOP_K_SELECTOR_H
 
 #include "plan_selector.h"
 
 namespace symbolic {
 class TopKSelector : public PlanSelector {
 public:
-    TopKSelector(const options::Options &opts);
+    TopKSelector(const plugins::Options &opts);
 
     ~TopKSelector() {}
 

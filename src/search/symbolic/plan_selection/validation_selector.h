@@ -1,5 +1,5 @@
-#ifndef SYMBOLIC_VALIDATION_SELECTOR_H
-#define SYMBOLIC_VALIDATION_SELECTOR_H
+#ifndef SYMBOLIC_PLAN_SELECTION_VALIDATION_SELECTOR_H
+#define SYMBOLIC_PLAN_SELECTION_VALIDATION_SELECTOR_H
 
 #include "plan_selector.h"
 
@@ -12,7 +12,7 @@ class ValidationSelector : public PlanSelector {
     bool is_valid_plan(const Plan &plan);
 
 public:
-    ValidationSelector(const options::Options &opts);
+    ValidationSelector(const plugins::Options &opts);
 
     ~ValidationSelector() {}
 

@@ -3,7 +3,7 @@
 
 #include "../task_proxy.h"
 
-#include <set>
+#include <unordered_set>
 
 namespace landmarks {
 class Landmark {
@@ -11,7 +11,7 @@ public:
     Landmark(std::vector<FactPair> _facts, bool disjunctive, bool conjunctive,
              bool is_true_in_goal = false, bool is_derived = false)
         : facts(move(_facts)), disjunctive(disjunctive), conjunctive(conjunctive),
-          is_true_in_goal(is_true_in_goal), is_derived(is_derived), cost(1) {
+          is_true_in_goal(is_true_in_goal), is_derived(is_derived) {
         assert(!(conjunctive && disjunctive));
         assert((conjunctive && facts.size() > 1)
                || (disjunctive && facts.size() > 1) || facts.size() == 1);
@@ -31,16 +31,8 @@ public:
     bool is_true_in_goal;
     bool is_derived;
 
-    /*
-      Cost of achieving the landmark (as determined by the landmark factory),
-      is considered infinite if set to *numeric_limits<int>::max()* (currently
-      only set in *LandmarkFactoryRpgSasp::min_cost_for_landmark(..)* if
-      *first_achievers* is empty).
-    */
-    int cost;
-
-    std::set<int> first_achievers;
-    std::set<int> possible_achievers;
+    std::unordered_set<int> first_achievers;
+    std::unordered_set<int> possible_achievers;
 
     bool is_true_in_state(const State &state) const;
 };

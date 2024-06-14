@@ -1,5 +1,5 @@
 #ifndef SDAC_PARSER_GLOBALS_H
-#define SDAC_PARSER_NUMERIC_GLOBALS_H
+#define SDAC_PARSER_GLOBALS_H
 
 #include <vector>
 #include <string>

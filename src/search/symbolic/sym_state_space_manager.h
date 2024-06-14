@@ -23,11 +23,6 @@ namespace extra_tasks {
 class SdacTask;
 }
 
-namespace options {
-class OptionParser;
-class Options;
-}
-
 namespace symbolic {
 class SymVariables;
 
