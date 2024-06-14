@@ -1,10 +1,13 @@
 name: Apptainer
-# Run for all pushes to the master branch and for all pull requests.
+
 on:
   push:
     branches:
       - master
-  pull_request: []
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch: # Optional: allows you to manually trigger the workflow from the GitHub UI
 
 jobs:
   build-image:
