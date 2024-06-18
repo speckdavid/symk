@@ -10,6 +10,22 @@ using namespace std;
 
 namespace symbolic {
 void SymbolicUniformCostSearch::initialize() {
+    if (plan_data_base->get_num_desired_plans() > 1) {
+        cerr << "*****************************************************************************"
+             << "******************************************************************************"
+             << endl;
+        cerr << "*** Error: The symbolic search configuration for finding a single plan (e.g., sym_[fw|bw|bd]) is selected,"
+             << " but multiple plans (" << plan_data_base->get_num_desired_plans() << ") have been requested. ***"
+             << endl;
+        cerr << "*** Please use symk_[fw|bw|bd] or symq_[fw|bw|bd] (note the additional 'k' or 'q') for multiple plans."
+             << "                                                  ***"
+             << endl;
+        cerr << "*****************************************************************************"
+             << "******************************************************************************"
+             << endl << endl;
+        utils::exit_with(utils::ExitCode::SEARCH_INPUT_ERROR);
+    }
+
     SymbolicSearch::initialize();
     mgr = make_shared<SymStateSpaceManager>(vars.get(), sym_params, search_task);
 
