@@ -169,7 +169,6 @@ void SymbolicSearch::add_options_to_feature(plugins::Feature &feature) {
     SearchAlgorithm::add_options_to_feature(feature);
     SymVariables::add_options_to_feature(feature);
     SymParameters::add_options_to_feature(feature);
-    PlanSelector::add_options_to_feature(feature);
     feature.add_option<bool>("silent", "silent mode that avoids writing the cost bounds", "false");
     feature.add_option<bool>("simple", "simple/loopless plan construction", "false");
     feature.add_option<bool>("single_solution", "search for a single solution", "true");
