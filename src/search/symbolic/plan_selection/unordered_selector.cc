@@ -23,6 +23,10 @@ void UnorderedSelector::save_accepted_plan(const Plan &ordered_plan, const Plan 
         first_accepted_plan = ordered_plan;
         first_accepted_plan_cost = calculate_plan_cost(
             ordered_plan, state_registry->get_task_proxy());
+
+        if (!write_plans) {
+            plan_mgr.save_plan(ordered_plan, state_registry->get_task_proxy(), false, num_desired_plans > 1);
+        }
     }
 
     size_t plan_seed = get_hash_value(unordered_plan);
@@ -35,8 +39,14 @@ void UnorderedSelector::save_accepted_plan(const Plan &ordered_plan, const Plan 
 
     if (dump_plans) {
         utils::g_log << endl << "New plan " << num_accepted_plans << ":" << endl;
+        if (!write_plans) {
+            plan_mgr.dump_plan(ordered_plan, state_registry->get_task_proxy());
+        }
     }
-    plan_mgr.save_plan(ordered_plan, state_registry->get_task_proxy(), dump_plans, num_desired_plans > 1);
+
+    if (write_plans) {
+        plan_mgr.save_plan(ordered_plan, state_registry->get_task_proxy(), dump_plans, num_desired_plans > 1);
+    }
 }
 
 class UnorderedSelectorFeature : public plugins::TypedFeature<PlanSelector, UnorderedSelector> {

@@ -9,6 +9,7 @@ using namespace std;
 namespace symbolic {
 void PlanSelector::add_options_to_feature(plugins::Feature &feature) {
     feature.add_option<bool>("dump_plans", "dump plans to console", "false");
+    feature.add_option<bool>("write_plans", "write plans to disk", "true");
     feature.add_option<int>("num_plans", "number of plans", "infinity", plugins::Bounds("1", "infinity"));
 }
 
@@ -17,6 +18,7 @@ PlanSelector::PlanSelector(const plugins::Options &opts)
       state_registry(nullptr),
       anytime_completness(false),
       dump_plans(opts.get<bool>("dump_plans")),
+      write_plans(opts.get<bool>("write_plans")),
       num_desired_plans(opts.get<int>("num_plans")),
       num_accepted_plans(0),
       num_rejected_plans(0),
@@ -131,6 +133,10 @@ void PlanSelector::save_accepted_plan(const Plan &plan) {
         first_accepted_plan = plan;
         first_accepted_plan_cost = calculate_plan_cost(
             plan, state_registry->get_task_proxy());
+
+        if (!write_plans) {
+            plan_mgr.save_plan(plan, state_registry->get_task_proxy(), false, num_desired_plans > 1);
+        }
     }
 
     size_t plan_seed = get_hash_value(plan);
@@ -143,8 +149,14 @@ void PlanSelector::save_accepted_plan(const Plan &plan) {
 
     if (dump_plans) {
         utils::g_log << endl << "New plan " << num_accepted_plans << ":" << endl;
+        if (!write_plans) {
+            plan_mgr.dump_plan(plan, state_registry->get_task_proxy());
+        }
     }
-    plan_mgr.save_plan(plan, state_registry->get_task_proxy(), dump_plans, num_desired_plans > 1);
+
+    if (write_plans) {
+        plan_mgr.save_plan(plan, state_registry->get_task_proxy(), dump_plans, num_desired_plans > 1);
+    }
 }
 
 void PlanSelector::save_rejected_plan(const Plan &plan) {

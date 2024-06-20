@@ -25,7 +25,7 @@ SymbolicSearch::SymbolicSearch(const plugins::Options &opts)
       step_num(-1),
       lower_bound_increased(true),
       lower_bound(0),
-      upper_bound(numeric_limits<int>::max()),
+      upper_bound(bound),
       min_g(0),
       plan_data_base(opts.get<shared_ptr<PlanSelector>>("plan_selection")),
       solution_registry(make_shared<SymSolutionRegistry>()),
@@ -64,8 +64,8 @@ void SymbolicSearch::initialize() {
             task_properties::get_max_operator_cost(task_proxy);
 
         utils::g_log << "Plan Reconstruction: Simple (without loops)" << endl;
-        utils::g_log << "Maximal plan cost: " << max_plan_cost << endl;
         upper_bound = static_cast<int>(min((double)upper_bound, max_plan_cost + 1));
+        utils::g_log << "Maximal plan cost: " << upper_bound << endl;
         cout << endl;
     }
 

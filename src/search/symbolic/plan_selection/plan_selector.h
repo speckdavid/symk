@@ -87,6 +87,7 @@ protected:
     bool anytime_completness;
 
     bool dump_plans;
+    bool write_plans;
 
     int num_desired_plans;
     int num_accepted_plans;
