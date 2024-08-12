@@ -33,7 +33,7 @@ int main(int argc, const char **argv) {
 
     for (int i = 1; i < argc; ++i) {
         string arg = string(argv[i]);
-        if (arg.compare("--no_rel") == 0) {
+        if (arg.compare("--keep-unimportant-variables") == 0) {
             cout << "*** do not perform relevance analysis ***" << endl;
             g_do_not_prune_variables = true;
         } else if (arg.compare("--h2_time_limit") == 0) {
@@ -59,7 +59,7 @@ int main(int argc, const char **argv) {
             expensive_statistics = true;
         } else {
             cerr << "unknown option " << arg << endl << endl;
-            cout << "Usage: ./preprocess [--no_rel] [--no_h2]  [--no_bw_h2] [--augmented_pre] [--stat] < output" << endl;
+            cout << "Usage: ./preprocess [--keep-unimportant-variables] [--no_h2]  [--no_bw_h2] [--augmented_pre] [--stat] < output" << endl;
             exit(2);
         }
     }
@@ -108,7 +108,6 @@ int main(int argc, const char **argv) {
         strip_operators(operators);
         strip_axioms(axioms);
 
-        cout << "Change id of operators: " << operators.size() << endl;
         // 1) Change id of values in operators and axioms to remove unreachable facts from variables
         for (Operator &op: operators) {
             op.remove_unreachable_facts(ordering);
@@ -118,11 +117,9 @@ int main(int argc, const char **argv) {
         // for(int i = 0; i < axioms.size(); ++i){
         //     axioms[i].remove_unreachable_facts();
         // }
-        cout << "Change id of mutexes" << endl;
         for (MutexGroup &mutex : mutexes) {
             mutex.remove_unreachable_facts();
         }
-        cout << "Change id of goals" << endl;
         vector<pair<Variable *, int>> new_goals;
         for (pair<Variable *, int> &goal : goals) {
             if (goal.first->is_necessary()) {

@@ -160,6 +160,10 @@ void SymbolicSearch::save_plan_if_necessary() {
     }
 }
 
+void SymbolicSearch::print_statistics() const {
+    utils::g_log << "Number of plans: " << solution_registry->get_num_found_plans() << endl;
+}
+
 void SymbolicSearch::add_options_to_feature(plugins::Feature &feature) {
     feature.add_option<shared_ptr<AbstractTask>>(
         "transform",
