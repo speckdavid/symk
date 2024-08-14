@@ -80,7 +80,7 @@ public:
 
     virtual void new_solution(const SymSolutionCut &sol);
 
-    virtual void print_statistics() const override {}
+    virtual void print_statistics() const override;
 
     virtual void save_plan_if_necessary() override;
 

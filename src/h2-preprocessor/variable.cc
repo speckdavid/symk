@@ -1,5 +1,6 @@
 #include "variable.h"
 
+#include "causal_graph.h"
 #include "helper_functions.h"
 
 #include <cassert>
@@ -44,7 +45,7 @@ string Variable::get_name() const {
 }
 
 bool Variable::is_necessary() const {
-    return necessary && reachable_values > 1;
+    return g_do_not_prune_variables || (necessary && reachable_values > 1);
 }
 
 void Variable::dump() const {
