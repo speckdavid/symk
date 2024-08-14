@@ -23,9 +23,8 @@ void SymTransitionRelations::init(const shared_ptr<AbstractTask> &task, const Sy
     utils::g_log << " (disj=" << get_size(individual_disj_transitions);
     utils::g_log << ", conj=" << get_size(individual_conj_transitions) << ")" << endl;
 
-    utils::g_log << "Merging transition relations..." << flush;
+    utils::g_log << "Merging transition relations..." << endl;
     create_merged_transitions();
-    utils::g_log << "done!" << endl;
 
     // Fill individual_transitions with individual_disj_transitions
     for (const auto & [cost, tr_vec] : individual_disj_transitions) {
@@ -141,9 +140,10 @@ void SymTransitionRelations::create_single_sdac_trs(const shared_ptr<extra_tasks
 }
 
 void SymTransitionRelations::create_merged_transitions() {
+    utils::g_log << "Conjunctive merging..." << endl;
     for (auto & [cost, tr_vec] : individual_conj_transitions) {
         for (auto &tr : tr_vec) {
-            tr.merge_transitions(sym_params.max_tr_time, sym_params.max_tr_size);
+            tr.merge_transitions(sym_params.max_tr_time / tr_vec.size(), sym_params.max_tr_size);
         }
     }
 
@@ -153,6 +153,7 @@ void SymTransitionRelations::create_merged_transitions() {
 
     disj_transitions = individual_disj_transitions; // Copy
 
+    utils::g_log << "Disjunctive merging..." << endl;
     for (auto it = disj_transitions.begin(); it != disj_transitions.end(); ++it) {
         merge(sym_vars, it->second, disjunctive_tr_merge, sym_params.max_tr_time, sym_params.max_tr_size);
     }

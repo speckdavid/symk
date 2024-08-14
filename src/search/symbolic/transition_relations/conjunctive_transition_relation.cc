@@ -185,8 +185,8 @@ BDD ConjunctiveTransitionRelation::preimage(const BDD &from, int max_nodes) cons
     return res;
 }
 
-void ConjunctiveTransitionRelation::merge_transitions(int max_nodes, int max_time) {
-    merge(sym_vars, transitions, conjunctive_tr_merge, max_nodes, max_time);
+void ConjunctiveTransitionRelation::merge_transitions(int max_time, int max_nodes) {
+    merge(sym_vars, transitions, conjunctive_tr_merge, max_time, max_nodes);
     init_exist_and_swap_vars();
     if (early_quantification) {
         set_early_exists_and_swap_vars();

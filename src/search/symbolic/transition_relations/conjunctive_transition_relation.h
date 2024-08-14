@@ -53,7 +53,7 @@ public:
 
     const OperatorID &get_unique_operator_id() const override;
 
-    void merge_transitions(int max_nodes, int max_time);
+    void merge_transitions(int max_time, int max_nodes);
 
     const std::vector<DisjunctiveTransitionRelation> &get_transitions() const;
 
