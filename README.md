@@ -67,6 +67,8 @@ We recommend using the following configuration which uses bidirectional search.
 
 Other configurations are forward or backward search: `--search "sym_fw()"` or `--search "sym_bw()"`.
 
+If you are interested in more options, you can run `./fast-downward.py --search -- --help sym_bd` to view the help for `sym_bd`.
+
 ## Multiple Solutions
 
 **Note:** By default, the planner performs a relevance analysis, eliminating variables and actions that are irrelevant to achieving the goal, thus *avoiding uninteresting plans*. For details on how to disable this optimization, see [Pitfalls and Troubleshooting](#pitfalls-and-troubleshooting).
@@ -79,6 +81,8 @@ reports the best **k** plans. Note that you can also specify `num_plans=infinity
 ```console
 ./fast-downward.py domain.pddl problem.pddl --search "symk_bd(plan_selection=top_k(num_plans=**k**,dump_plans=false))"
 ```
+
+If you are interested in more options, you can run `./fast-downward.py --search -- --help symk_bd` to view the help for `symk_bd`.
 
 Note that with `./fast-downward.py --plan-file sas_plan dom...` you can specify the path and name of the generated plan files (here: `sas_plan`), and by setting the `dump_plans` argument to `true`, all plans found will also be dumped to the console.
 
