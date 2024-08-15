@@ -82,9 +82,9 @@ reports the best **k** plans. Note that you can also specify `num_plans=infinity
 ./fast-downward.py domain.pddl problem.pddl --search "symk_bd(plan_selection=top_k(num_plans=**k**,dump_plans=false))"
 ```
 
-If you are interested in more options, you can run `./fast-downward.py --search -- --help symk_bd` to view the help for `symk_bd`.
-
 Note that with `./fast-downward.py --plan-file sas_plan dom...` you can specify the path and name of the generated plan files (here: `sas_plan`), and by setting the `dump_plans` argument to `true`, all plans found will also be dumped to the console.
+
+If you are interested in more options, you can run `./fast-downward.py --search -- --help symk_bd` to view the help for `symk_bd`.
 
 ### Top-q Configurations
 We recommend using the following configuration which uses bidirectional search and
@@ -145,7 +145,7 @@ Note, that you can also search for the best **k** plans using your selector.
 By default, the planner performs a relevance analysis and removes components such as variables and actions that are irrelevant to achieving the goal. Although such variables and actions can in principle lead to further (simple) plans, they are classified as irrelevant and removed when translating PDDL to SAS+. Note that this can have a negative impact on the performance of the planner. If you wish to **obtain all plans** (even the non-relevant ones), please use the following options:
 
 ```console
-./fast-downward.py --translate --search domain.pddl problem.pddl --translate-options --keep-unimportant-variables --search-options --search "symk_bd(plan_selection=top_k(num_plans=**k**))"
+./fast-downward.py domain.pddl problem.pddl --translate-options --keep-unimportant-variables --preprocess-options --keep-unimportant-variables --search-options --search "symk_bd(plan_selection=top_k(num_plans=**k**))"
 ```
 
 # References
