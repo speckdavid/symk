@@ -71,6 +71,7 @@ void SymTransitionRelations::create_single_trs(const shared_ptr<AbstractTask> &t
     TaskProxy task_proxy(*task);
     if (task_properties::has_conditional_effects(task_proxy)) {
         effect_aggregated_task = make_shared<extra_tasks::EffectAggregatedTask>(task);
+        task_properties::dump_task(TaskProxy(*effect_aggregated_task));
     }
 
 
