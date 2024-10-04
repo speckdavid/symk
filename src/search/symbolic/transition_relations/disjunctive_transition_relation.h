@@ -38,10 +38,9 @@ public:
 
     void add_condition(BDD cond);
 
-    BDD image(const BDD &from) const override;
-    BDD preimage(const BDD &from) const override;
-    BDD image(const BDD &from, int max_nodes) const override;
-    BDD preimage(const BDD &from, int max_nodes) const override;
+    BDD image(const BDD &from, int max_nodes = 0U) const override;
+    BDD preimage(const BDD &from, int max_nodes = 0U) const override;
+    BDD preimage(const BDD &from, const BDD &constraint_to, int max_nodes = 0U) const override;
 
     virtual int nodeCount() const override;
     const OperatorID &get_unique_operator_id() const override;

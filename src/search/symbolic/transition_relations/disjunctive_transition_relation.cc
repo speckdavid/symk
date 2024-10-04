@@ -109,14 +109,6 @@ void DisjunctiveTransitionRelation::add_condition(BDD cond) {
     tr_bdd *= cond;
 }
 
-BDD DisjunctiveTransitionRelation::image(const BDD &from) const {
-    return image(from, 0U);
-}
-
-BDD DisjunctiveTransitionRelation::preimage(const BDD &from) const {
-    return preimage(from, 0U);
-}
-
 BDD DisjunctiveTransitionRelation::image(const BDD &from, int maxNodes) const {
     BDD aux = from;
     BDD tmp = tr_bdd.AndAbstract(aux, exists_vars, maxNodes);
@@ -126,6 +118,13 @@ BDD DisjunctiveTransitionRelation::image(const BDD &from, int maxNodes) const {
 
 BDD DisjunctiveTransitionRelation::preimage(const BDD &from, int maxNodes) const {
     BDD tmp = from.SwapVariables(swap_vars, swap_vars_p);
+    BDD res = tr_bdd.AndAbstract(tmp, exists_bw_vars, maxNodes);
+    return res;
+}
+
+BDD DisjunctiveTransitionRelation::preimage(const BDD &from, const BDD &constraint_to, int maxNodes) const {
+    BDD tmp = from.SwapVariables(swap_vars, swap_vars_p);
+    tmp *= constraint_to;
     BDD res = tr_bdd.AndAbstract(tmp, exists_bw_vars, maxNodes);
     return res;
 }

@@ -58,7 +58,7 @@ void SymbolicUniformCostSearch::initialize() {
                             bw_search ? bw_search->getClosedShared() : nullptr,
                             sym_trs,
                             plan_data_base,
-                            single_solution,
+                            true,
                             simple);
 
     if (fw && bw) {
@@ -71,7 +71,8 @@ void SymbolicUniformCostSearch::initialize() {
 
 SymbolicUniformCostSearch::SymbolicUniformCostSearch(
     const plugins::Options &opts, bool fw, bool bw, bool alternating)
-    : SymbolicSearch(opts), fw(fw), bw(bw), alternating(alternating) {}
+    : SymbolicSearch(opts), fw(fw), bw(bw), alternating(alternating) {
+}
 
 void SymbolicUniformCostSearch::new_solution(const SymSolutionCut &sol) {
     if (!solution_registry->found_all_plans() && sol.get_f() < upper_bound) {

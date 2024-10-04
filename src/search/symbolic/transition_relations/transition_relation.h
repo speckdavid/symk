@@ -15,10 +15,9 @@ public:
 
     virtual ~TransitionRelation() = default;
 
-    virtual BDD image(const BDD &from) const = 0;
-    virtual BDD preimage(const BDD &from) const = 0;
-    virtual BDD image(const BDD &from, int maxNodes) const = 0;
-    virtual BDD preimage(const BDD &from, int maxNodes) const = 0;
+    virtual BDD image(const BDD &from, int maxNodes = 0U) const = 0;
+    virtual BDD preimage(const BDD &from, int maxNodes = 0U) const = 0;
+    virtual BDD preimage(const BDD &from, const BDD &constraint_to, int max_nodes = 0U) const = 0;
 
     // It's important to retain the name "nodeCount" as BDDs share the same functionality,
     // allowing us to utilize it within the templated merge functions.

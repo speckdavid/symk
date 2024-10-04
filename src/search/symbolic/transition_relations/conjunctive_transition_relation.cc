@@ -13,12 +13,6 @@
 using namespace std;
 
 namespace symbolic {
-static BDD get_exclusive_support(BDD f, BDD g) {
-    BDD common, only_f, only_g;
-    f.ClassifySupport(g, &common, &only_f, &only_g);
-    return only_f;
-}
-
 ConjunctiveTransitionRelation::ConjunctiveTransitionRelation(SymVariables *sym_vars,
                                                              OperatorID op_id,
                                                              const shared_ptr<extra_tasks::EffectAggregatedTask> &task,
@@ -67,100 +61,57 @@ void ConjunctiveTransitionRelation::init_exist_and_swap_vars() {
 
     exists_vars.back() = all_exists_vars;
     exists_bw_vars.back() = all_exists_bw_vars;
+
+    if (early_quantification) {
+        set_early_exists_vars();
+    }
 }
 
-void ConjunctiveTransitionRelation::sort_transition_relations() {
-    auto support = all_exists_vars.SupportIndices();
+void ConjunctiveTransitionRelation::set_early_exists_vars() {
+    unordered_map<int, int> vars_last_occurance;
+    unordered_map<int, int> vars_bw_last_occurance;
 
-    vector<vector<unsigned int>> trs_supports;
-    for (const auto &tr : transitions) {
-        auto tr_support = tr.get_tr_BDD().SupportIndices();
-        vector<unsigned int> tr_exist_support;
-        set_intersection(tr_support.begin(), tr_support.end(), support.begin(), support.end(), back_inserter(tr_exist_support));
-        trs_supports.push_back(tr_exist_support);
+    for (int bdd_var_level : all_exists_vars.SupportIndices()) {
+        vars_last_occurance[bdd_var_level] = -1;
     }
-    assert(trs_supports.size() == transitions.size());
+    for (int bdd_var_level : all_exists_bw_vars.SupportIndices()) {
+        vars_bw_last_occurance[bdd_var_level] = -1;
+    }
 
-    vector<pair<int, vector<unsigned int>>> enumerated_trs_supports;
-    transform(trs_supports.begin(), trs_supports.end(), back_inserter(enumerated_trs_supports),
-              [i = size_t(0)](const auto &elem) mutable {return make_pair(i++, elem);});
-
-    vector<int> new_tr_order;
-
-    while (!enumerated_trs_supports.empty()) {
-        size_t best_id = 0;
-        size_t max_exclusive_vars = 0;
-
-        // unioned support without tr i
-        vector<vector<unsigned int>> trs_others_supports(enumerated_trs_supports.size());
-        for (size_t i = 0; i < enumerated_trs_supports.size(); ++i) {
-            for (size_t j = 0; j < enumerated_trs_supports.size(); ++j) {
-                if (i != j) {
-                    vector<unsigned int> new_set;
-                    set_union(trs_others_supports[j].begin(), trs_others_supports[j].end(),
-                              trs_supports[j].begin(), trs_supports[j].end(), back_inserter(new_set));
-                    trs_others_supports[j] = new_set;
-                }
+    // Track the last occurrence of each variable in the transitions
+    for (size_t tr_id = 0; tr_id < transitions.size(); ++tr_id) {
+        const auto &tr = transitions[tr_id];
+        for (int bdd_var_level : tr.get_tr_BDD().SupportIndices()) {
+            if (vars_last_occurance.count(bdd_var_level)) {
+                vars_last_occurance[bdd_var_level] = tr_id;
             }
         }
-
-        for (size_t i = 0; i < enumerated_trs_supports.size(); ++i) {
-            const auto &cur_support = enumerated_trs_supports[i].second;
-            const auto &others_support = trs_others_supports[i];
-            vector<unsigned int> difference;
-            set_difference(cur_support.begin(), cur_support.end(),
-                           others_support.begin(), others_support.end(), back_inserter(difference));
-            if (difference.size() > max_exclusive_vars) {
-                max_exclusive_vars = difference.size();
-                best_id = i;
+        for (int bdd_var_level : tr.get_tr_BDD().SupportIndices()) {
+            if (vars_bw_last_occurance.count(bdd_var_level)) {
+                vars_bw_last_occurance[bdd_var_level] = tr_id;
             }
         }
-
-        new_tr_order.push_back(enumerated_trs_supports[best_id].first);
-        enumerated_trs_supports.erase(enumerated_trs_supports.begin() + best_id);
     }
 
-    vector<DisjunctiveTransitionRelation> new_transitions;
-    for (int index : new_tr_order) {
-        new_transitions.push_back(transitions[index]);
-    }
-    assert(transitions.size() == new_transitions.size());
-    transitions = new_transitions;
-}
+    // Initialize the BDD vectors with the one BDDs
+    exists_vars = vector<BDD>(transitions.size(), sym_vars->oneBDD());
+    exists_bw_vars = vector<BDD>(transitions.size(), sym_vars->oneBDD());
 
-void ConjunctiveTransitionRelation::set_early_exists_and_swap_vars() {
-    // utils::g_log << "Support sizes: [ ";
-    BDD remaining_exits_vars = all_exists_vars;
-    BDD remaining_exits_bw_vars = all_exists_bw_vars;
-
-    for (size_t tr1_id = 0; tr1_id < transitions.size(); ++tr1_id) {
-        BDD tr1_exist_vars = remaining_exits_vars;
-        BDD tr1_exist_bw_vars = remaining_exits_bw_vars;
-
-        for (size_t tr2_id = tr1_id + 1; tr2_id < transitions.size(); ++tr2_id) {
-            tr1_exist_vars = get_exclusive_support(tr1_exist_vars, transitions[tr2_id].get_tr_BDD());
-            tr1_exist_bw_vars = get_exclusive_support(tr1_exist_bw_vars, transitions[tr2_id].get_tr_BDD());
+    // Add the exist variable to the last TR having the variable in the support
+    for (auto [bdd_var_level, tr_id] : vars_last_occurance) {
+        if (tr_id != -1) {
+            exists_vars[tr_id] *= sym_vars->levelBDD(bdd_var_level);
+        } else {
+            exists_vars[0] *= sym_vars->levelBDD(bdd_var_level);
         }
-        assert(tr1_exist_vars.IsCube());
-        assert(tr1_exist_bw_vars.IsCube());
-
-        remaining_exits_vars = get_exclusive_support(remaining_exits_vars, tr1_exist_vars);
-        remaining_exits_bw_vars = get_exclusive_support(remaining_exits_bw_vars, tr1_exist_bw_vars);
-
-        exists_vars[tr1_id] = tr1_exist_vars;
-        exists_bw_vars[tr1_id] = tr1_exist_bw_vars;
-
-        // utils::g_log << tr1_exist_vars.nodeCount() << ":" << tr1_exist_bw_vars.nodeCount() << " ";
     }
-    // utils::g_log << "]" << endl;
-}
-
-BDD ConjunctiveTransitionRelation::image(const BDD &from) const {
-    return image(from, 0U);
-}
-
-BDD ConjunctiveTransitionRelation::preimage(const BDD &from) const {
-    return preimage(from, 0U);
+    for (auto [bdd_var_level, tr_id] : vars_bw_last_occurance) {
+        if (tr_id != -1) {
+            exists_bw_vars[tr_id] *= sym_vars->levelBDD(bdd_var_level);
+        } else {
+            exists_bw_vars[0] *= sym_vars->levelBDD(bdd_var_level);
+        }
+    }
 }
 
 BDD ConjunctiveTransitionRelation::image(const BDD &from, int max_nodes) const {
@@ -168,6 +119,9 @@ BDD ConjunctiveTransitionRelation::image(const BDD &from, int max_nodes) const {
     for (size_t tr_id = 0; tr_id < transitions.size(); ++tr_id) {
         const auto &tr = transitions[tr_id];
         res = res.AndAbstract(tr.get_tr_BDD(), exists_vars[tr_id], max_nodes);
+        if (res.IsZero()) {
+            return res;
+        }
     }
     // res = res.ExistAbstract(all_exists_vars);
     res = res.SwapVariables(all_swap_vars, all_swap_vars_p);
@@ -180,8 +134,25 @@ BDD ConjunctiveTransitionRelation::preimage(const BDD &from, int max_nodes) cons
     for (size_t tr_id = 0; tr_id < transitions.size(); ++tr_id) {
         const auto &tr = transitions[tr_id];
         res = res.AndAbstract(tr.get_tr_BDD(), exists_bw_vars[tr_id], max_nodes);
+        if (res.IsZero()) {
+            return res;
+        }
     }
     // res = res.ExistAbstract(all_exists_bw_vars);
+    return res;
+}
+
+BDD ConjunctiveTransitionRelation::preimage(const BDD &from, const BDD &constraint_to, int max_nodes) const {
+    BDD res = from;
+    res = res.SwapVariables(all_swap_vars, all_swap_vars_p);
+    res *= constraint_to;
+    for (size_t tr_id = 0; tr_id < transitions.size(); ++tr_id) {
+        const auto &tr = transitions[tr_id];
+        res = res.AndAbstract(tr.get_tr_BDD(), exists_bw_vars[tr_id], max_nodes);
+        if (res.IsZero()) {
+            return res;
+        }
+    }
     return res;
 }
 
@@ -189,7 +160,7 @@ void ConjunctiveTransitionRelation::merge_transitions(int max_time, int max_node
     merge(sym_vars, transitions, conjunctive_tr_merge, max_time, max_nodes);
     init_exist_and_swap_vars();
     if (early_quantification) {
-        set_early_exists_and_swap_vars();
+        set_early_exists_vars();
     }
 }
 

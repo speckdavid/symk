@@ -30,7 +30,6 @@ SymbolicSearch::SymbolicSearch(const plugins::Options &opts)
       plan_data_base(opts.get<shared_ptr<PlanSelector>>("plan_selection")),
       solution_registry(make_shared<SymSolutionRegistry>()),
       simple(opts.get<bool>("simple")),
-      single_solution(opts.get<bool>("single_solution")),
       silent(opts.get<bool>("silent")) {
     cout << endl;
     vars->print_options();
@@ -54,6 +53,7 @@ void SymbolicSearch::initialize() {
     }
 
     if (simple) {
+        utils::g_log << "Plan Reconstruction: Simple (without loops)" << endl;
         // compute upper cost bound
         double num_states = 1;
         for (int var = 0; var < task->get_num_variables(); var++) {
@@ -63,7 +63,6 @@ void SymbolicSearch::initialize() {
             (num_states - 1) *
             task_properties::get_max_operator_cost(task_proxy);
 
-        utils::g_log << "Plan Reconstruction: Simple (without loops)" << endl;
         upper_bound = static_cast<int>(min((double)upper_bound, max_plan_cost + 1));
         utils::g_log << "Maximal plan cost: " << upper_bound << endl;
         cout << endl;
@@ -115,7 +114,7 @@ SearchStatus SymbolicSearch::step() {
         if (step_num > 0) {
             utils::g_log << ", dir: " << search->get_last_dir() << flush;
         }
-        utils::g_log << ", total time: " << utils::g_timer << ", " << flush;
+        utils::g_log << ", reconstruction time: " << solution_registry->get_reconstruction_time() << "s" << flush;
         utils::g_log << endl;
     }
     lower_bound_increased = false;
@@ -175,6 +174,5 @@ void SymbolicSearch::add_options_to_feature(plugins::Feature &feature) {
     SymParameters::add_options_to_feature(feature);
     feature.add_option<bool>("silent", "silent mode that avoids writing the cost bounds", "false");
     feature.add_option<bool>("simple", "simple/loopless plan construction", "false");
-    feature.add_option<bool>("single_solution", "search for a single solution", "true");
 }
 }

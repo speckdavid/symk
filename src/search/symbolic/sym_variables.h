@@ -140,6 +140,10 @@ public:
         return getBDDVars(vars, bdd_index_eff);
     }
 
+    inline BDD levelBDD(int level) const {
+        return manager->bddVar(level);
+    }
+
     inline BDD zeroBDD() const {
         return manager->bddZero();
     }

@@ -114,9 +114,9 @@ void SymSolutionRegistry::expand_actions(const ReconstructionNode &node) {
         }
 
         for (auto tr : it->second) {
-            BDD succ = fwd ? tr->preimage(node.get_states()) : tr->image(node.get_states());
-
             BDD closed_states = cur_closed_list->get_closed_at(new_cost);
+            BDD succ = fwd ? tr->preimage(node.get_states(), closed_states) : tr->image(node.get_states());
+
             BDD intersection = succ * closed_states;
             int layer_id = 0;
             if (op_cost == 0)
@@ -224,6 +224,9 @@ void SymSolutionRegistry::init(shared_ptr<SymVariables> sym_vars,
     if (sym_transition_relations->has_unit_cost()) {
         queue = ReconstructionQueue(CompareReconstructionNodes(ReconstructionPriority::REMAINING_COST));
     }
+
+    reconstruction_timer.stop();
+    reconstruction_timer.reset();
 }
 
 void SymSolutionRegistry::register_solution(const SymSolutionCut &solution) {
@@ -258,7 +261,9 @@ void SymSolutionRegistry::construct_cheaper_solutions(int bound) {
         if (plan_cost >= bound || found_all_plans())
             break;
 
+        reconstruction_timer.resume();
         reconstruct_plans(cuts);
+        reconstruction_timer.stop();
     }
 
     // Erase handled keys

@@ -34,8 +34,7 @@ protected:
     std::vector<BDD> all_swap_vars, all_swap_vars_p; // Swap variables from unprimed to primed
 
     void init_exist_and_swap_vars();
-    void sort_transition_relations();
-    void set_early_exists_and_swap_vars();
+    void set_early_exists_vars();
 
 public:
     ConjunctiveTransitionRelation(SymVariables *sym_vars,
@@ -44,10 +43,9 @@ public:
                                   bool early_quantification);
     void init();
 
-    BDD image(const BDD &from) const override;
-    BDD preimage(const BDD &from) const override;
-    BDD image(const BDD &from, int max_nodes) const override;
-    BDD preimage(const BDD &from, int max_nodes) const override;
+    BDD image(const BDD &from, int max_nodes = 0U) const override;
+    BDD preimage(const BDD &from, int max_nodes = 0U) const override;
+    BDD preimage(const BDD &from, const BDD &constraint_to, int max_nodes = 0U) const override;
 
     virtual int nodeCount() const override;
 

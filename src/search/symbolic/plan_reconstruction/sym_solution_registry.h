@@ -14,6 +14,8 @@
 #include "../../state_registry.h"
 #include "../../task_proxy.h"
 
+#include "../../utils/timer.h"
+
 #include <queue>
 
 namespace symbolic {
@@ -49,6 +51,8 @@ protected:
     std::shared_ptr<ClosedList> bw_closed;
     std::shared_ptr<PlanSelector> plan_data_base;
     std::shared_ptr<SymTransitionRelations> sym_transition_relations;
+
+    utils::Timer reconstruction_timer;
 
     // We would like to use the prio queue implemented in FD but it requires
     // integer values as prio and we have a more complex comparision
@@ -116,6 +120,10 @@ public:
             cheapest = std::min(cheapest, (double)sym_cuts.begin()->first);
         }
         return cheapest;
+    }
+
+    double get_reconstruction_time() const {
+        return reconstruction_timer();
     }
 };
 }

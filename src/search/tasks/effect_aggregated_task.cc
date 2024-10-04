@@ -57,7 +57,6 @@ EffectAggregatedTask::EffectAggregatedTask(const shared_ptr<AbstractTask> &paren
         local_to_parent_op_id.push_back(op_index);
         local_to_parent_eff_ids.push_back(effect);
     }
-    assert(local_to_parent_op_id.size() == local_to_parent_op_id.size());
 }
 
 string EffectAggregatedTask::get_operator_cost_function(int index, bool is_axiom) const {

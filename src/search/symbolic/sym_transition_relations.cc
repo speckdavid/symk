@@ -69,7 +69,7 @@ void SymTransitionRelations::create_single_trs(const shared_ptr<AbstractTask> &t
     // For Conjunctive Transiton Relations in presence of CEs
     shared_ptr<extra_tasks::EffectAggregatedTask> effect_aggregated_task = nullptr;
     TaskProxy task_proxy(*task);
-    if (task_properties::has_conditional_effects(task_proxy)) {
+    if (is_ce_transition_type_conjunctive(sym_params.ce_transition_type) && task_properties::has_conditional_effects(task_proxy)) {
         effect_aggregated_task = make_shared<extra_tasks::EffectAggregatedTask>(task);
     }
 
@@ -82,11 +82,6 @@ void SymTransitionRelations::create_single_trs(const shared_ptr<AbstractTask> &t
             individual_conj_transitions[cost].emplace_back(sym_vars, OperatorID(i), effect_aggregated_task,
                                                            early_quantification);
             individual_conj_transitions[cost].back().init();
-            // if (sym_params.mutex_type == MutexType::MUTEX_EDELETION) {
-            //     individual_conj_transitions[cost].back().edeletion(sym_mutexes.notMutexBDDsByFluentFw,
-            //                                                        sym_mutexes.notMutexBDDsByFluentBw,
-            //                                                        sym_mutexes.exactlyOneBDDsByFluent);
-            // }
         } else {
             individual_disj_transitions[cost].emplace_back(sym_vars, OperatorID(i), task);
             individual_disj_transitions[cost].back().init();
