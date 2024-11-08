@@ -154,19 +154,19 @@ We appreciate citations of these sources when used.
 
 ### Main source
 
- 1. David Speck, Robert Mattmüller, Bernhard Nebel: Symbolic Top-k Planning. AAAI 2020: 9967-9974 [[pdf]](https://rlplab.com/papers/speck-et-al-aaai2020.pdf) [[bib]](https://rlplab.com/papers/speck-et-al-aaai2020.html)
+ 1. David Speck, Robert Mattmüller, Bernhard Nebel: Symbolic Top-k Planning. AAAI 2020: 9967-9974 [[pdf]](https://speckdavid.github.io/assets/pdf/speck-etal-aaai2020.pdf) [[bib & more]](https://speckdavid.github.io/publications/#speck-et-al-aaai2020)
 
 ### Loopless Top-k planning
 
- 2. Julian von Tschammer, Robert Mattmüller, David Speck: Loopless Top-K Planning. ICAPS 2022: 380-384 [[pdf]](https://rlplab.com/papers/vontschammer-et-al-icaps2022.pdf) [[bib]](https://rlplab.com/papers/vontschammer-et-al-icaps2022.html)
+ 2. Julian von Tschammer, Robert Mattmüller, David Speck: Loopless Top-K Planning. ICAPS 2022: 380-384 [[pdf]](https://speckdavid.github.io/assets/pdf/vontschammer-etal-icaps2022.pdf) [[bib & more]](https://speckdavid.github.io/publications/#vontschammer-et-al-icaps2022)
 
 ### Axiom and derived predicate support
 
- 3. David Speck, Florian Geißer, Robert Mattmüller, Álvaro Torralba: Symbolic Planning with Axioms. ICAPS 2019: 464-472 [[pdf]](https://rlplab.com/papers/speck-et-al-icaps2019.pdf) [[bib]](https://rlplab.com/papers/speck-et-al-icaps2019.html)
+ 3. David Speck, Florian Geißer, Robert Mattmüller, Álvaro Torralba: Symbolic Planning with Axioms. ICAPS 2019: 464-472 [[pdf]](https://speckdavid.github.io/assets/pdf/speck-etal-icaps2019.pdf) [[bib & more]](https://speckdavid.github.io/publications/#speck-et-al-icaps2019)
 
 ### State-dependent action cost support
 
- 4. David Speck: Symbolic Search for Optimal Planning with Expressive Extensions. Ph.D. thesis: University of Freiburg (2022) [[pdf]](https://rlplab.com/papers/speck-phd2022.pdf) [[bib]](https://rlplab.com/papers/speck-phd2022.html)
+ 4. David Speck: Symbolic Search for Optimal Planning with Expressive Extensions. Ph.D. thesis: University of Freiburg (2022) [[pdf]](https://speckdavid.github.io/assets/pdf/speck-phd2022.pdf) [[bib & more]](https://speckdavid.github.io/publications/#speck-phd2022)
  
  You can find examples of domains with state-dependent action cost [here](https://github.com/speckdavid/SDAC-Benchmarks).
 
