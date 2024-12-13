@@ -38,3 +38,11 @@ bool State::remove_unreachable_facts() {
     newvalues.swap(values);
     return false;
 }
+
+bool State::is_goal_state(const vector<pair<Variable *, int>> &goals) const {
+    for (const auto & [var, val] : goals) {
+        if (values.at(var) != val)
+            return false;
+    }
+    return true;
+}

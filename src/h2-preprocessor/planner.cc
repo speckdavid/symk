@@ -66,6 +66,8 @@ int main(int argc, const char **argv) {
 
     read_preprocessed_problem_description
         (cin, metric, internal_variables, variables, mutexes, initial_state, goals, operators, axioms);
+
+    bool trivial_solvable = axioms.empty() ? initial_state.is_goal_state(goals) : false;
     //dump_preprocessed_problem_description
     //  (variables, initial_state, goals, operators, axioms);
 
@@ -98,7 +100,7 @@ int main(int argc, const char **argv) {
                                 h2_mutex_time, disable_bw_h2)) {
             // TODO: don't duplicate the code to return an unsolvable task, log and exit here
             cout << "Unsolvable task in preprocessor" << endl;
-            generate_unsolvable_cpp_input();
+            generate_dummy_cpp_input(false);
             cout << "done" << endl;
             return 0;
         }
@@ -132,7 +134,7 @@ int main(int argc, const char **argv) {
         if (initial_state.remove_unreachable_facts()) {
             // TODO: don't duplicate the code to return an unsolvable task, log and exit here
             cout << "Unsolvable task in preprocessor" << endl;
-            generate_unsolvable_cpp_input();
+            generate_dummy_cpp_input(false);
             cout << "done" << endl;
             return 0;
         }
@@ -236,8 +238,8 @@ int main(int argc, const char **argv) {
 
     cout << "Writing output..." << endl;
     if (ordering.empty()) {
-        cout << "Unsolvable task in preprocessor" << endl;
-        generate_unsolvable_cpp_input();
+        cout << (trivial_solvable ? "Solvable " : "Unsolvable ") << "task in preprocessor" << endl;
+        generate_dummy_cpp_input(trivial_solvable);
     } else {
         generate_cpp_input(
             ordering, metric, mutexes, initial_state, goals, operators, axioms);

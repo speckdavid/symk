@@ -202,7 +202,7 @@ void generate_cpp_input(const vector<Variable *> &ordered_vars,
 
     outfile.close();
 }
-void generate_unsolvable_cpp_input() {
+void generate_dummy_cpp_input(bool solvable) {
     ofstream outfile;
     outfile.open("output.sas", ios::out);
     outfile << "begin_version" << endl;
@@ -225,7 +225,7 @@ void generate_unsolvable_cpp_input() {
 
     //Initial state and goal
     outfile << "begin_state" << endl << "0" << endl << "end_state" << endl;
-    outfile << "begin_goal" << endl << "1" << endl << "0 1" << endl << "end_goal" << endl;
+    outfile << "begin_goal" << endl << "1" << endl << "0 " << to_string(!solvable) << endl << "end_goal" << endl;
 
     //Operators
     outfile << "0" << endl;

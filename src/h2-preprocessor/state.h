@@ -18,6 +18,8 @@ public:
     void dump() const;
     // Returns true, if the state contains an unreachable fact
     bool remove_unreachable_facts();
+
+    bool is_goal_state(const vector<pair<Variable *, int>> &goals) const;
 };
 
 #endif
