@@ -1,6 +1,7 @@
 #ifndef OPERATOR_H
 #define OPERATOR_H
 
+#include <cassert>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -48,27 +49,35 @@ public:
             is_conditional_effect = false;
         }
         PrePost(Variable *v, vector<EffCond> ecs, int pr, int po) : var(v), pre(pr),
-                                                                    post(po), effect_conds(ecs) {is_conditional_effect = true; }
+                                                                    post(po), effect_conds(ecs) {is_conditional_effect = true;}
         bool is_conditional() const {
             return is_conditional_effect;
         }
 
-        inline void remove_unreachable_facts() {
-            if (pre != -1)
+        bool has_pre() const {
+            return pre != -1;
+        }
+
+        //returns true if the effect can still be triggered
+        inline bool remove_unreachable_facts() {
+            if (pre != -1) {
                 pre = var->get_new_id(pre);
+            }
             post = var->get_new_id(post);
             if (is_conditional_effect) {
                 vector<EffCond> new_conds;
                 for (EffCond &effect_condition : effect_conds) {
                     if (effect_condition.remove_unreachable_facts()) {
                         new_conds.push_back(effect_condition);
+                    } else {
+                        return false; // The condition cannot be fulfilled
                     }
                 }
                 effect_conds.swap(new_conds);
-                if (effect_conds.empty()) {
-                    is_conditional_effect = false;
-                }
+                //This case cannot happen, if a condition is unreachable then the entire effect is unreachable
+                assert(!effect_conds.empty());
             }
+            return true;
         }
     };
 
@@ -93,8 +102,8 @@ public:
     void dump() const;
     int get_encoding_size() const;
     void generate_cpp_input(ofstream &outfile) const;
-    int get_cost() const {return cost; }
-    string get_name() const {return name; }
+    int get_cost() const {return cost;}
+    string get_name() const {return name;}
     bool has_conditional_effects() const {
         for (const PrePost &effect : pre_post) {
             if (effect.is_conditional())
@@ -105,8 +114,8 @@ public:
     inline void set_spurious() {
         spurious = true;
     }
-    inline const vector<Prevail> &get_prevail() const {return prevail; }
-    inline const vector<PrePost> &get_pre_post() const {return pre_post; }
+    inline const vector<Prevail> &get_prevail() const {return prevail;}
+    inline const vector<PrePost> &get_pre_post() const {return pre_post;}
     inline const std::vector<std::pair<int, int>> &get_augmented_preconditions() const {
         return augmented_preconditions;
     }

@@ -280,10 +280,19 @@ void Operator::remove_unreachable_facts(const vector<Variable *> &variables) {
             newprev.push_back(prev);
         }
     }
-    newprev.swap(prevail);
+    vector<PrePost> newpost;
     for (PrePost &effect : pre_post) {
-        effect.remove_unreachable_facts();
+        if (effect.remove_unreachable_facts()) {
+            newpost.push_back(effect);
+        } else {
+            if (effect.has_pre()) {
+                newprev.push_back({effect.var, effect.pre});
+            }
+        }
     }
+    newpost.swap(pre_post);
+    newprev.swap(prevail);
+
     for (const pair<int, int> &augmented_precondition : augmented_preconditions) {
         int var = augmented_precondition.first;
         int val = augmented_precondition.second;
