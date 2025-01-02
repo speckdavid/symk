@@ -7,6 +7,7 @@
 #include "utils/hash.h"
 #include "mutex_group.h"
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
@@ -38,9 +39,21 @@ struct FactPair {
       found.
     */
     static const FactPair no_fact;
+
+    friend struct std::hash<FactPair>;
 };
 
 std::ostream &operator<<(std::ostream &os, const FactPair &fact_pair);
+
+template<>
+struct std::hash<FactPair> {
+    std::size_t operator()(const FactPair &fp) const {
+        std::size_t h1 = std::hash<int>()(fp.var);
+        std::size_t h2 = std::hash<int>()(fp.value);
+        // Combine the two hashes using XOR and a shift
+        return h1 ^ (h2 << 1);
+    }
+};
 
 namespace utils {
 inline void feed(HashState &hash_state, const FactPair &fact) {

@@ -19,9 +19,9 @@ SymTransitionRelations::SymTransitionRelations(SymVariables *sym_vars, const Sym
 void SymTransitionRelations::init(const shared_ptr<AbstractTask> &task, const SymMutexes &sym_mutexes) {
     init_individual_transitions(task, sym_mutexes);
 
-    utils::g_log << "Individual transition relations: " << get_size(individual_disj_transitions) + get_size(individual_conj_transitions);
-    utils::g_log << " (disj=" << get_size(individual_disj_transitions);
-    utils::g_log << ", conj=" << get_size(individual_conj_transitions) << ")" << endl;
+    utils::g_log << "Individual transition relations: " << get_size(individual_disj_transitions) + get_size(individual_conj_transitions) << endl;
+    utils::g_log << "Individual disjunctive transition relations: " << get_size(individual_disj_transitions) << endl;
+    utils::g_log << "Individual conjunctive transition relations: " << get_size(individual_conj_transitions) << endl;
 
     utils::g_log << "Merging transition relations..." << endl;
     create_merged_transitions();
@@ -49,9 +49,9 @@ void SymTransitionRelations::init(const shared_ptr<AbstractTask> &task, const Sy
     }
 
     min_transition_cost = individual_transitions.empty() ? numeric_limits<int>::max() : individual_transitions.begin()->first;
-    utils::g_log << "Merged transition relations: " << get_size(transitions);
-    utils::g_log << " (disj=" << get_size(transitions) - get_size(individual_conj_transitions);
-    utils::g_log << ", conj=" << get_size(individual_conj_transitions) << ")" << endl;
+    utils::g_log << "Merged transition relations: " << get_size(transitions) << endl;
+    utils::g_log << "Merged disjunctive transition relations: " << get_size(transitions) - get_size(individual_conj_transitions) << endl;
+    utils::g_log << "Merged conjunctive transition relations: " << get_size(individual_conj_transitions) << endl;
 }
 
 void SymTransitionRelations::init_individual_transitions(const shared_ptr<AbstractTask> &task, const SymMutexes &sym_mutexes) {
@@ -63,6 +63,7 @@ void SymTransitionRelations::init_individual_transitions(const shared_ptr<Abstra
         create_single_sdac_trs(sdac_task, sym_params.fast_sdac_generation);
     }
     utils::g_log << "Done!" << endl;
+    utils::g_log << "Number of auxillary variables: " << sym_vars->get_num_aux_variables() << endl;
 }
 
 void SymTransitionRelations::create_single_trs(const shared_ptr<AbstractTask> &task, const SymMutexes &sym_mutexes) {
@@ -78,9 +79,7 @@ void SymTransitionRelations::create_single_trs(const shared_ptr<AbstractTask> &t
 
         if (is_ce_transition_type_conjunctive(sym_params.ce_transition_type)
             && task_properties::has_conditional_effects(task_proxy, OperatorID(i))) {
-            bool early_quantification = sym_params.ce_transition_type == ConditionalEffectsTransitionType::CONJUNCTIVE_EARLY_QUANTIFICATION;
-            individual_conj_transitions[cost].emplace_back(sym_vars, OperatorID(i), effect_aggregated_task,
-                                                           early_quantification);
+            individual_conj_transitions[cost].emplace_back(sym_vars, OperatorID(i), effect_aggregated_task, sym_params.ce_transition_type);
             individual_conj_transitions[cost].back().init();
         } else {
             individual_disj_transitions[cost].emplace_back(sym_vars, OperatorID(i), task);
@@ -134,10 +133,18 @@ void SymTransitionRelations::create_single_sdac_trs(const shared_ptr<extra_tasks
 }
 
 void SymTransitionRelations::create_merged_transitions() {
+    if (sym_params.max_tr_time <= 0 || sym_params.max_tr_size <= 0) {
+        move_monolithic_conj_transitions();
+        disj_transitions = individual_disj_transitions; // Copy
+        return;
+    }
     utils::g_log << "Conjunctive merging..." << endl;
     for (auto & [cost, tr_vec] : individual_conj_transitions) {
+        // For each tr we assign an equal time for merging but at least 1 second
+        double merge_time = tr_vec.size() == 0 ? 0 : sym_params.max_tr_time / tr_vec.size();
+        merge_time = max(merge_time, 1000.0);
         for (auto &tr : tr_vec) {
-            tr.merge_transitions(sym_params.max_tr_time / tr_vec.size(), sym_params.max_tr_size);
+            tr.merge_transitions((int)merge_time, sym_params.max_tr_size);
         }
     }
 

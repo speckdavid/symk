@@ -25,7 +25,7 @@ class DisjunctiveTransitionRelation : public TransitionRelation {
     int cost; // transition cost
     BDD tr_bdd; // bdd for making the relprod
 
-    std::vector<int> eff_vars;   // FD Index of eff variables. Must be sorted!!
+    std::unordered_set<int> eff_vars;   // FD Index of eff variables
     BDD exists_vars, exists_bw_vars; // Cube with variables to existentialize
     std::vector<BDD> swap_vars, swap_vars_p; // Swap variables from unprimed to primed
 
@@ -33,10 +33,20 @@ class DisjunctiveTransitionRelation : public TransitionRelation {
 
 public:
     DisjunctiveTransitionRelation(SymVariables *sym_vars, OperatorID op_id, const std::shared_ptr<AbstractTask> &task);
+    DisjunctiveTransitionRelation(SymVariables *sym_vars, const std::shared_ptr<AbstractTask> &task);
     void init();
     void init_from_tr(const DisjunctiveTransitionRelation &other);
 
-    void add_condition(BDD cond);
+    void add_condition(const ConditionsProxy &conditions);
+    void add_condition(BDD condition);
+    void add_effect(BDD effect);
+    void add_exist_var(int var);
+    void add_exist_var(BDD cube);
+    void add_eff_var(int var);
+    void remove_exist_var(int var);
+    void remove_exist_var(BDD cube);
+    void add_swap_var(int var);
+    void set_tr_BDD(BDD tr_bdd);
 
     BDD image(const BDD &from, int max_nodes = 0U) const override;
     BDD preimage(const BDD &from, int max_nodes = 0U) const override;
@@ -60,7 +70,7 @@ public:
 
     void setOpsIds(const std::set<OperatorID> &operator_ids) {ops_ids = operator_ids;}
 
-    const std::vector<int> &get_eff_vars() const {return eff_vars;}
+    const std::unordered_set<int> &get_eff_vars() const {return eff_vars;}
 
     BDD get_exists_vars() const {return exists_vars;}
     BDD get_exists_bw_vars() const {return exists_bw_vars;}

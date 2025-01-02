@@ -110,7 +110,7 @@ ResultExpansion Frontier::expand_zero(int maxTime, int maxNodes, bool fw) {
             mgr->zero_image(fw, Szero[i], Simg[i][0], maxNodes);
         }
         mgr->unset_time_limit();
-    } catch (BDDError e) {
+    } catch (const BDDError &e) {
         mgr->unset_time_limit();
         return ResultExpansion(true, TruncatedReason::IMAGE_ZERO, image_time());
     }
@@ -130,7 +130,7 @@ ResultExpansion Frontier::expand_cost(int maxTime, int maxNodes, bool fw) {
             mgr->cost_image(fw, S[i], Simg[i], maxNodes);
         }
         mgr->unset_time_limit();
-    } catch (BDDError e) {
+    } catch (const BDDError &e) {
         // Update estimation
         mgr->unset_time_limit();
 

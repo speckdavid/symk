@@ -36,7 +36,7 @@ void mergeAux(std::vector<T> &elems, FunctionMerge f, int maxTime, int maxSize) 
             try {
                 T res = f(elems[last - 1], elems[last], maxSize);
                 elems[last - 1] = res;
-            } catch (BDDError e) {
+            } catch (const BDDError &e) {
                 result.push_back(elems[last]);
             }
             elems.erase(elems.end() - 1);
@@ -46,7 +46,7 @@ void mergeAux(std::vector<T> &elems, FunctionMerge f, int maxTime, int maxSize) 
             try {
                 T res = f(elems[i - 1], elems[i], maxSize);
                 aux.push_back(res);
-            } catch (BDDError e) {
+            } catch (const BDDError &e) {
                 if (elems[i].nodeCount() < elems[i - 1].nodeCount()) {
                     result.push_back(elems[i - 1]);
                     aux.push_back(elems[i]);

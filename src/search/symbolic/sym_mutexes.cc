@@ -10,10 +10,11 @@ SymMutexes::SymMutexes(SymVariables *sym_vars, const SymParameters &sym_params) 
     sym_params(sym_params) {}
 
 void SymMutexes::init(const shared_ptr<AbstractTask> task) {
-    const vector<MutexGroup> &mutex_groups = task->get_mutex_groups();
-    // If (a) is initialized OR not using mutex OR edeletion does not need mutex
     if (sym_params.mutex_type == MutexType::MUTEX_NOT)
         return; // Skip mutex initialization
+
+    const vector<MutexGroup> &mutex_groups = task->get_mutex_groups();
+    // If (a) is initialized OR not using mutex OR edeletion does not need mutex
 
     bool genMutexBDD = true;
     bool genMutexBDDByFluent = (sym_params.mutex_type == MutexType::MUTEX_EDELETION);

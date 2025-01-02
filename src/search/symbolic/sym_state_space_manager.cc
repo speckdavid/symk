@@ -46,6 +46,10 @@ SymStateSpaceManager::SymStateSpaceManager(SymVariables *sym_vars, const SymPara
 
     sym_mutexes.init(task);
     sym_transition_relations.init(task, sym_mutexes);
+
+    if (sym_params.print_symbolic_task_size) {
+        print_symbolic_task_size();
+    }
 }
 
 void SymStateSpaceManager::zero_preimage(BDD bdd, vector<BDD> &res, int node_limit) const {
@@ -121,7 +125,7 @@ int SymStateSpaceManager::filterMutexBucket(vector<BDD> &bucket, bool fw, bool i
             bucket[i] = filter_mutex(bucket[i], fw, max_nodes, initialization);
             numFiltered++;
         }
-    } catch (BDDError e) {
+    } catch (const BDDError &e) {
     }
     unset_time_limit();
 
@@ -138,5 +142,44 @@ void SymStateSpaceManager::merge_bucket(Bucket &bucket) const {
 
 void SymStateSpaceManager::merge_bucket_and(Bucket &bucket) const {
     merge_bucket_and(bucket, sym_params.max_aux_time, sym_params.max_aux_nodes);
+}
+
+void SymStateSpaceManager::print_symbolic_task_size() const {
+    utils::g_log << endl;
+    utils::g_log << "Initial state size: " << initial_state.nodeCount() << endl;
+    utils::g_log << "Goal state size: " << goal.nodeCount() << endl;
+
+    int tr_nodes_sum = 0;
+    int tr_num = 0;
+
+    vector<int> tr_sizes;
+    for (const auto &pair : sym_transition_relations.get_individual_transition_relations()) {
+        for (const auto &tr : pair.second) {
+            int tr_nodes = tr->nodeCount();
+            tr_sizes.push_back(tr_nodes);
+            tr_nodes_sum += tr_nodes;
+            tr_num += tr->size();
+        }
+    }
+
+    sort(tr_sizes.begin(), tr_sizes.end());
+    // Calculate sum
+    utils::g_log << "Transition relation count: " << tr_sizes.size() << endl;
+    utils::g_log << "Transition relation partitioned count: " << tr_num << endl;
+    utils::g_log << "Transition relation min size: " << tr_sizes[0] << endl;
+    utils::g_log << "Transition relation max size: " << tr_sizes.back() << endl;
+    utils::g_log << "Transition relation summed size: " << tr_nodes_sum << endl;
+    utils::g_log << "Transition relation avg size: " << (static_cast<double>(tr_nodes_sum) / tr_sizes.size()) << endl;
+
+    double median;
+    if (tr_sizes.size() % 2 == 0) {
+        median = static_cast<double>(tr_sizes[tr_sizes.size() / 2 - 1] + tr_sizes[tr_sizes.size() / 2]) / 2.0;
+    } else {
+        median = static_cast<double>(tr_sizes[tr_sizes.size() / 2]);
+    }
+    utils::g_log << "Transition relation median size: " << median << endl;
+    utils::g_log << "Symbolic task size: " << (initial_state.nodeCount() + goal.nodeCount() + tr_nodes_sum) << endl;
+    utils::g_log << "Forest size: " << sym_vars->forest_node_count() << endl;
+    utils::g_log << endl;
 }
 }

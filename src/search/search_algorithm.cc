@@ -61,6 +61,8 @@ SearchAlgorithm::SearchAlgorithm(const plugins::Options &opts)
     }
     bound = opts.get<int>("bound");
     task_properties::print_variable_statistics(task_proxy);
+    utils::g_log << "Has conditional effects: " << task_properties::has_conditional_effects(task_proxy) << endl;
+    utils::g_log << "Has axioms: " << task_properties::has_axioms(task_proxy) << endl;
 }
 
 SearchAlgorithm::~SearchAlgorithm() {

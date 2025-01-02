@@ -29,6 +29,8 @@ struct SymParameters {
 
     bool non_stop;
 
+    bool print_symbolic_task_size;
+
     SymParameters(const plugins::Options &opts, const std::shared_ptr<AbstractTask> &task);
 
     void increase_bound();

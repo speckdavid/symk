@@ -106,6 +106,8 @@ public:
     BDD filter_mutex(BDD bdd, bool fw, int maxNodes, bool initialization);
     int filterMutexBucket(std::vector<BDD> &bucket, bool fw, bool initialization, int max_time, int max_nodes);
 
+    void print_symbolic_task_size() const;
+
     void set_time_limit(int maxTime) {sym_vars->set_time_limit(maxTime);}
     void unset_time_limit() {sym_vars->unset_time_limit();}
 

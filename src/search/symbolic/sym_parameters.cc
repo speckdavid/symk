@@ -22,7 +22,8 @@ SymParameters::SymParameters(const plugins::Options &opts, const shared_ptr<Abst
       max_alloted_nodes(opts.get<int>("max_alloted_nodes")),
       ratio_alloted_time(opts.get<double>("ratio_alloted_time")),
       ratio_alloted_nodes(opts.get<double>("ratio_alloted_nodes")),
-      non_stop(opts.get<bool>("non_stop")) {
+      non_stop(opts.get<bool>("non_stop")),
+      print_symbolic_task_size(opts.get<bool>("print_symbolic_task_size")) {
     // Don't use edeletion with conditional effects
     if (mutex_type == MutexType::MUTEX_EDELETION &&
         (task_properties::has_conditional_effects(TaskProxy(*task))
@@ -70,7 +71,7 @@ void SymParameters::print_options() const {
 }
 
 void SymParameters::add_options_to_feature(plugins::Feature &feature) {
-    feature.add_option<ConditionalEffectsTransitionType>("ce_transition_type", "ce transition type", "CONJUNCTIVE_EARLY_QUANTIFICATION");
+    feature.add_option<ConditionalEffectsTransitionType>("ce_transition_type", "ce transition type", "dynamic");
     feature.add_option<int>("max_tr_size", "maximum size of TR BDDs", "100000");
     feature.add_option<int>("max_tr_time", "maximum time (ms) to generate TR BDDs", "60000");
     feature.add_option<MutexType>("mutex_type", "mutex type", "MUTEX_EDELETION");
@@ -84,5 +85,6 @@ void SymParameters::add_options_to_feature(plugins::Feature &feature) {
     feature.add_option<double>("ratio_alloted_time", "multiplier to decide alloted time for a step", "2.0");
     feature.add_option<double>("ratio_alloted_nodes", "multiplier to decide alloted nodes for a step", "2.0");
     feature.add_option<bool>("non_stop", "Removes initial state from closed to avoid backward search to stop.", "false");
+    feature.add_option<bool>("print_symbolic_task_size", "Prints the sizes of the basic symbolic task representation.", "false");
 }
 }

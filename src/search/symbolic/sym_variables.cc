@@ -83,11 +83,18 @@ void SymVariables::init(const vector<int> &v_order) {
     manager->setHandler(exceptionError);
     manager->setTimeoutHandler(exceptionError);
     manager->setNodesExceededHandler(exceptionError);
+    aux_cube = oneBDD();
 
     utils::g_log << "Generating binary variables" << endl;
     // Generate binary_variables
     for (int i = 0; i < _numBDDVars; i++) {
-        variables.push_back(manager->bddVar(i));
+        BDD new_var = manager->bddVar(i);
+        variables.push_back(new_var);
+        if (i % 2 == 0) {
+            pre_variables.push_back(new_var);
+        } else {
+            eff_variables.push_back(new_var);
+        }
     }
 
     preconditionBDDs.resize(num_fd_vars);
@@ -97,19 +104,16 @@ void SymVariables::init(const vector<int> &v_order) {
     validBDD = oneBDD();
     // Generate predicate (precondition (s) and effect (s')) BDDs
     for (int var : var_order) {
-        for (int j = 0; j < task_proxy.get_variables()[var].get_domain_size();
-             j++) {
+        for (int j = 0; j < task_proxy.get_variables()[var].get_domain_size(); j++) {
             preconditionBDDs[var].push_back(createPreconditionBDD(var, j));
             effectBDDs[var].push_back(createEffectBDD(var, j));
         }
         validValues[var] = zeroBDD();
-        for (int j = 0; j < task_proxy.get_variables()[var].get_domain_size();
-             j++) {
+        for (int j = 0; j < task_proxy.get_variables()[var].get_domain_size(); j++) {
             validValues[var] += preconditionBDDs[var][j];
         }
         validBDD *= validValues[var];
-        biimpBDDs[var] =
-            createBiimplicationBDD(bdd_index_pre[var], bdd_index_eff[var]);
+        biimpBDDs[var] = createBiimplicationBDD(bdd_index_pre[var], bdd_index_eff[var]);
     }
 
     utils::g_log << "Symbolic Variables... Done." << endl;
@@ -119,6 +123,20 @@ void SymVariables::init(const vector<int> &v_order) {
                      << endl;
         ax_comp->init_axioms();
         utils::g_log << "Primary Representation... Done!" << endl;
+    }
+
+    // Set variable names
+    vector<string> var_names(numBDDVars * 2);
+    for (int v : var_order) {
+        const auto &variable = task_proxy.get_variables()[v];
+        const string var_name_base = variable.get_name() + "_2^";
+        for (size_t exp = 0; exp < bdd_index_pre[v].size(); ++exp) {
+            const string var_name = var_name_base + to_string(exp);
+            const string var_name_primed = var_name + "_primed";
+
+            manager->pushVariableName(var_name);
+            manager->pushVariableName(var_name_primed);
+        }
     }
 
     if (dynamic_reordering) {
@@ -133,6 +151,16 @@ void SymVariables::init(const vector<int> &v_order) {
         manager->AutodynEnable(Cudd_ReorderingType::CUDD_REORDER_GROUP_SIFT);
         // Mtr_PrintGroups(manager->ReadTree(), 0);
     }
+}
+
+double SymVariables::numStates(const BDD &bdd) const {
+    double result = numeric_limits<double>::infinity();
+    try {
+        result = bdd.CountMinterm(numPrimaryBDDVars);
+    } catch (const BDDError &e) {
+        // BDDError caught while counting minterms.
+    }
+    return result;
 }
 
 State SymVariables::getStateFrom(const BDD &bdd) const {
@@ -206,6 +234,37 @@ BDD SymVariables::getPartialStateBDD(
     return res;
 }
 
+BDD SymVariables::auxBDD(int variable, int value) {
+    assert(value == 0 || value == 1);
+    while ((int)aux_variables.size() <= variable) {
+        aux_variables.push_back(manager->bddVar());
+        aux_cube *= aux_variables.back();
+        manager->pushVariableName("aux" + to_string(variable));
+    }
+    return value == 1 ? aux_variables[variable] : !aux_variables[variable];
+}
+
+BDD SymVariables::get_aux_variables_in_support(BDD bdd) const {
+    BDD common, tmp1, tmp2;
+    bdd.ClassifySupport(get_aux_cube(), &common, &tmp1, &tmp2);
+    return common;
+}
+
+void SymVariables::get_variable_value_bdds(const vector<int> &bdd_vars,
+                                           int value,
+                                           vector<BDD> &value_bdds) const {
+    assert(value_bdds.empty());
+    for (int v : bdd_vars) {
+        assert(v < (int)variables.size());
+        if (value % 2) { // Check if the binary variable is asserted or negated
+            value_bdds.push_back(variables[v]);
+        } else {
+            value_bdds.push_back(!variables[v]);
+        }
+        value /= 2;
+    }
+}
+
 BDD SymVariables::generateBDDVar(const vector<int> &_bddVars,
                                  int value) const {
     BDD res = oneBDD();
@@ -263,7 +322,7 @@ void SymVariables::reoder(int max_time) {
     set_time_limit(max_time);
     try {
         Cudd_ReduceHeap(manager->getManager(), CUDD_REORDER_GROUP_SIFT, 0);
-    }  catch (BDDError e) {
+    }  catch (const BDDError &e) {
     }
     unset_time_limit();
 }
@@ -275,26 +334,19 @@ void SymVariables::to_dot(const BDD &bdd,
 
 void SymVariables::to_dot(const ADD &add,
                           const string &file_name) const {
-    vector<string> var_names(numBDDVars * 2);
-    for (int v : var_order) {
-        int exp = 0;
-        for (int j : bdd_index_pre[v]) {
-            var_names[j] = tasks::g_root_task->get_variable_name(v) + "_2^" +
-                to_string(exp);
-            var_names[j + 1] = tasks::g_root_task->get_variable_name(v) + "_2^" +
-                to_string(exp++) + "_primed";
-        }
+    vector<string> var_names;
+    for (int i = 0; i < manager->ReadSize(); ++i) {
+        var_names.push_back(manager->getVariableName(i));
     }
 
-    vector<char *> names(numBDDVars * 2);
-    for (int i = 0; i < numBDDVars * 2; ++i) {
+    vector<char *> names(manager->ReadSize());
+    for (int i = 0; i < manager->ReadSize(); ++i) {
         names[i] = &var_names[i].front();
     }
     FILE *outfile = fopen(file_name.c_str(), "w");
     DdNode **ddnodearray = (DdNode **)malloc(sizeof(add.getNode()));
     ddnodearray[0] = add.getNode();
-    Cudd_DumpDot(manager->getManager(), 1, ddnodearray, names.data(), NULL,
-                 outfile); // dump the function to .dot file
+    Cudd_DumpDot(manager->getManager(), 1, ddnodearray, names.data(), NULL, outfile);
     free(ddnodearray);
     fclose(outfile);
 }

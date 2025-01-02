@@ -57,19 +57,19 @@ class SymVariables {
     int numBDDVars; // Number of binary variables (just one set, the total number is numBDDVars*2
     int numPrimaryBDDVars; // Number of binary variables that represent the primary variables
     std::vector<BDD> variables; // BDD variables
+    std::vector<BDD> pre_variables; // Unprimed variables
+    std::vector<BDD> eff_variables; // Primed variables
+    std::vector<BDD> aux_variables; // Aux variables for conjunctive partioning
+    BDD aux_cube;
 
     // The variable order must be complete.
     std::vector<int> var_order; // Variable(FD) order in the BDD
     std::vector<std::vector<int>> bdd_index_pre, bdd_index_eff; // vars(BDD) for each var(FD)
 
-    std::vector<std::vector<BDD>>
-    preconditionBDDs;   // BDDs associated with the precondition of a predicate
-    std::vector<std::vector<BDD>>
-    effectBDDs;   // BDDs associated with the effect of a predicate
-    std::vector<BDD>
-    biimpBDDs;   // BDDs associated with the biimplication of one variable(FD)
-    std::vector<BDD>
-    validValues;   // BDD that represents the valid values of all the variables
+    std::vector<std::vector<BDD>> preconditionBDDs;   // BDDs associated with the precondition of a predicate
+    std::vector<std::vector<BDD>> effectBDDs;   // BDDs associated with the effect of a predicate
+    std::vector<BDD> biimpBDDs;   // BDDs associated with the biimplication of one variable(FD)
+    std::vector<BDD> validValues;   // BDD that represents the valid values of all the variables
     BDD validBDD;  // BDD that represents the valid values of all the variables
 
     void init(const std::vector<int> &v_order);
@@ -83,8 +83,18 @@ public:
         return ax_comp;
     }
 
-    double numStates(const BDD &bdd) const {
-        return bdd.CountMinterm(numPrimaryBDDVars);
+    double numStates(const BDD &bdd) const;
+
+    std::vector<BDD> get_variables() {
+        return variables;
+    }
+
+    std::vector<BDD> get_pre_variables() {
+        return pre_variables;
+    }
+
+    std::vector<BDD> get_eff_variables() {
+        return eff_variables;
     }
 
     State getStateFrom(const BDD &bdd) const;
@@ -108,6 +118,26 @@ public:
 
     inline const BDD &effBDD(int variable, int value) const {
         return effectBDDs[variable][value];
+    }
+
+
+    BDD auxBDD(int variable, int value);
+
+    inline BDD get_aux_cube() const {
+        return aux_cube;
+    }
+
+    BDD get_aux_variables_in_support(BDD bdd) const;
+    bool has_aux_variables_in_support(BDD bdd) const {
+        return !get_aux_variables_in_support(bdd).IsOne();
+    }
+
+    void get_variable_value_bdds(const std::vector<int> &bdd_vars,
+                                 int value,
+                                 std::vector<BDD> &value_bdds) const;
+
+    inline int get_num_aux_variables() const {
+        return aux_variables.size();
     }
 
     inline BDD getCubePre(int var) const {return getCube(var, bdd_index_pre);}
@@ -169,6 +199,10 @@ public:
 
     inline void unset_time_limit() {
         manager->UnsetTimeLimit();
+    }
+
+    long forest_node_count() const {
+        return manager->ReadNodeCount();
     }
 
     void reoder(int max_time);

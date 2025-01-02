@@ -23,14 +23,20 @@ DisjunctiveTransitionRelation::DisjunctiveTransitionRelation(SymVariables *sym_v
     ops_ids.insert(op_id);
 }
 
+DisjunctiveTransitionRelation::DisjunctiveTransitionRelation(SymVariables *sym_vars, const shared_ptr<AbstractTask> &task)
+    : TransitionRelation(),
+      sym_vars(sym_vars),
+      task_proxy(*task),
+      cost(-1),
+      tr_bdd(sym_vars->oneBDD()),
+      exists_vars(sym_vars->oneBDD()),
+      exists_bw_vars(sym_vars->oneBDD()) {
+}
+
 void DisjunctiveTransitionRelation::init() {
     OperatorProxy op = task_proxy.get_operators()[ops_ids.begin()->get_index()];
 
-    for (auto const &pre : op.get_preconditions()) {
-        FactPair fact = pre.get_pair();
-        tr_bdd *= sym_vars->get_axiom_compiliation()->get_primary_representation(
-            fact.var, fact.value);
-    }
+    add_condition(op.get_preconditions());
 
     map<int, BDD> effect_conditions;
     map<int, BDD> effects;
@@ -39,9 +45,7 @@ void DisjunctiveTransitionRelation::init() {
     for (auto const &eff : op.get_effects()) {
         FactPair eff_fact = eff.get_fact().get_pair();
         int var = eff_fact.var;
-        if (find(eff_vars.begin(), eff_vars.end(), var) == eff_vars.end()) {
-            eff_vars.push_back(var);
-        }
+        eff_vars.insert(var);
 
         BDD condition = sym_vars->oneBDD();
         BDD ppBDD = sym_vars->effBDD(var, eff_fact.value);
@@ -77,20 +81,9 @@ void DisjunctiveTransitionRelation::init() {
         utils::g_log << "Operator is empty: " << op.get_name() << endl;
     }
 
-    sort(eff_vars.begin(), eff_vars.end());
     for (int var : eff_vars) {
-        for (int bdd_var : sym_vars->vars_index_pre(var)) {
-            swap_vars.push_back(sym_vars->bddVar(bdd_var));
-        }
-        for (int bdd_var : sym_vars->vars_index_eff(var)) {
-            swap_vars_p.push_back(sym_vars->bddVar(bdd_var));
-        }
-    }
-    assert(swap_vars.size() == swap_vars_p.size());
-    // exists_vars/exists_bw_vars is just the conjunction of swap_vars and swap_vars_p
-    for (size_t i = 0; i < swap_vars.size(); ++i) {
-        exists_vars *= swap_vars[i];
-        exists_bw_vars *= swap_vars_p[i];
+        add_exist_var(var);
+        add_swap_var(var);
     }
 }
 
@@ -105,20 +98,92 @@ void DisjunctiveTransitionRelation::init_from_tr(const DisjunctiveTransitionRela
     swap_vars_p = other.get_swap_vars_p();
 }
 
-void DisjunctiveTransitionRelation::add_condition(BDD cond) {
-    tr_bdd *= cond;
+void DisjunctiveTransitionRelation::add_condition(const ConditionsProxy &conditions) {
+    for (FactProxy cond : conditions) {
+        FactPair fact = cond.get_pair();
+        tr_bdd *= sym_vars->get_axiom_compiliation()->get_primary_representation(
+            fact.var, fact.value);
+    }
+}
+
+void DisjunctiveTransitionRelation::add_condition(BDD condition) {
+    tr_bdd *= condition;
+}
+
+void DisjunctiveTransitionRelation::add_effect(BDD effect) {
+    tr_bdd *= effect;
+}
+
+void DisjunctiveTransitionRelation::add_exist_var(int var) {
+    for (int bdd_var : sym_vars->vars_index_pre(var)) {
+        exists_vars *= sym_vars->bddVar(bdd_var);
+    }
+    for (int bdd_var : sym_vars->vars_index_eff(var)) {
+        exists_bw_vars *= sym_vars->bddVar(bdd_var);
+    }
+    assert(exists_vars.IsCube());
+    assert(exists_bw_vars.IsCube());
+}
+
+void DisjunctiveTransitionRelation::add_exist_var(BDD cube) {
+    assert(cube.IsCube());
+    exists_vars *= cube;
+    exists_bw_vars *= cube;
+}
+
+void DisjunctiveTransitionRelation::add_eff_var(int var) {
+    assert(var >= 0 && var < (int)task_proxy.get_variables().size());
+    eff_vars.insert(var);
+}
+
+void DisjunctiveTransitionRelation::remove_exist_var(int var) {
+    BDD cube = sym_vars->oneBDD();
+    for (int bdd_var : sym_vars->vars_index_pre(var)) {
+        cube *= sym_vars->bddVar(bdd_var);
+    }
+    exists_vars = exists_vars.ExistAbstract(cube);
+
+    cube = sym_vars->oneBDD();
+    for (int bdd_var : sym_vars->vars_index_eff(var)) {
+        cube *= sym_vars->bddVar(bdd_var);
+    }
+    exists_bw_vars = exists_bw_vars.ExistAbstract(cube);
+    assert(exists_vars.IsCube());
+    assert(exists_bw_vars.IsCube());
+}
+
+void DisjunctiveTransitionRelation::remove_exist_var(BDD cube) {
+    assert(cube.IsCube());
+    exists_vars = exists_vars.ExistAbstract(cube);
+    exists_bw_vars = exists_bw_vars.ExistAbstract(cube);
+}
+
+void DisjunctiveTransitionRelation::add_swap_var(int var) {
+    for (int bdd_var : sym_vars->vars_index_pre(var)) {
+        swap_vars.push_back(sym_vars->bddVar(bdd_var));
+    }
+    for (int bdd_var : sym_vars->vars_index_eff(var)) {
+        swap_vars_p.push_back(sym_vars->bddVar(bdd_var));
+    }
+    assert(swap_vars.size() == swap_vars_p.size());
+}
+
+void DisjunctiveTransitionRelation::set_tr_BDD(BDD tr_bdd) {
+    this->tr_bdd = tr_bdd;
 }
 
 BDD DisjunctiveTransitionRelation::image(const BDD &from, int maxNodes) const {
     BDD aux = from;
     BDD tmp = tr_bdd.AndAbstract(aux, exists_vars, maxNodes);
     BDD res = tmp.SwapVariables(swap_vars, swap_vars_p);
+    assert(!sym_vars->has_aux_variables_in_support(res));
     return res;
 }
 
 BDD DisjunctiveTransitionRelation::preimage(const BDD &from, int maxNodes) const {
     BDD tmp = from.SwapVariables(swap_vars, swap_vars_p);
     BDD res = tr_bdd.AndAbstract(tmp, exists_bw_vars, maxNodes);
+    assert(!sym_vars->has_aux_variables_in_support(res));
     return res;
 }
 
@@ -126,6 +191,7 @@ BDD DisjunctiveTransitionRelation::preimage(const BDD &from, const BDD &constrai
     BDD tmp = from.SwapVariables(swap_vars, swap_vars_p);
     tmp *= constraint_to;
     BDD res = tr_bdd.AndAbstract(tmp, exists_bw_vars, maxNodes);
+    assert(!sym_vars->has_aux_variables_in_support(res));
     return res;
 }
 
@@ -136,29 +202,27 @@ int DisjunctiveTransitionRelation::nodeCount() const {
 void DisjunctiveTransitionRelation::disjunctive_merge(const DisjunctiveTransitionRelation &t2, int maxNodes) {
     assert(cost == t2.cost);
 
-    // Attempt to generate the new tBDD
-    vector<int> new_eff_vars;
-    set_union(eff_vars.begin(), eff_vars.end(), t2.eff_vars.begin(),
-              t2.eff_vars.end(), back_inserter(new_eff_vars));
-
     BDD new_t_bdd = tr_bdd;
     BDD new_t_bdd2 = t2.tr_bdd;
 
-    vector<int>::const_iterator var1 = eff_vars.begin();
-    vector<int>::const_iterator var2 = t2.eff_vars.begin();
-    for (vector<int>::const_iterator var = new_eff_vars.begin(); var != new_eff_vars.end(); ++var) {
-        if (var1 == eff_vars.end() || *var1 != *var) {
-            new_t_bdd *= sym_vars->biimp(*var);
-        } else {
-            ++var1;
+    unordered_set<int> new_eff_vars;
+    new_eff_vars.insert(get_eff_vars().begin(), get_eff_vars().end());
+    new_eff_vars.insert(t2.get_eff_vars().begin(), t2.get_eff_vars().end());
+
+    for (int var : new_eff_vars) {
+        // Check if var is in eff_vars
+        if (get_eff_vars().find(var) == get_eff_vars().end()) {
+            // var is not in eff_vars
+            new_t_bdd *= sym_vars->biimp(var);
         }
 
-        if (var2 == t2.eff_vars.end() || *var2 != *var) {
-            new_t_bdd2 *= sym_vars->biimp(*var);
-        } else {
-            ++var2;
+        // Check if var is in t2.eff_vars
+        if (t2.get_eff_vars().find(var) == t2.get_eff_vars().end()) {
+            // var is not in t2_eff_vars
+            new_t_bdd2 *= sym_vars->biimp(var);
         }
     }
+
     new_t_bdd = new_t_bdd.Or(new_t_bdd2, maxNodes);
 
     if (new_t_bdd.nodeCount() > maxNodes) {
@@ -186,10 +250,6 @@ void DisjunctiveTransitionRelation::conjunctive_merge(const DisjunctiveTransitio
     assert(get_unique_operator_id() == t2.get_unique_operator_id());
 
     // Attempt to generate the new tBDD
-    vector<int> new_eff_vars;
-    set_union(eff_vars.begin(), eff_vars.end(), t2.eff_vars.begin(),
-              t2.eff_vars.end(), back_inserter(new_eff_vars));
-
     BDD new_t_bdd = tr_bdd;
     BDD new_t_bdd2 = t2.tr_bdd;
 
@@ -200,7 +260,7 @@ void DisjunctiveTransitionRelation::conjunctive_merge(const DisjunctiveTransitio
     }
 
     tr_bdd = new_t_bdd;
-    eff_vars.swap(new_eff_vars);
+    eff_vars.insert(t2.get_eff_vars().begin(), t2.get_eff_vars().end());
     exists_vars *= t2.exists_vars;
     exists_bw_vars *= t2.exists_bw_vars;
 

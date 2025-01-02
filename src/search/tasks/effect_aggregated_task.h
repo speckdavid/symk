@@ -6,6 +6,13 @@
 #include <map>
 #include <set>
 
+/*
+* Used for conunctive transition partioning. Each operator contains all (condiitonal) effect for a praticular variable v.
+* Furthermore, each operator contains the global precondition. This could be modeled differently by having a seperate
+* precondition operator (= transition relation). However, it seems to be beneficial this way because in theory we can remove
+* unsat conditional effects. For the complexity it does not make a difference.
+*/
+
 
 namespace extra_tasks {
 class EffectAggregatedTask : public tasks::DelegatingTask {
