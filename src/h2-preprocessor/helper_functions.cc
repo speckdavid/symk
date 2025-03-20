@@ -153,9 +153,10 @@ void generate_cpp_input(const vector<Variable *> &ordered_vars,
                         const State &initial_state,
                         const vector<pair<Variable *, int>> &goals,
                         const vector<Operator> &operators,
-                        const vector<Axiom> &axioms) {
+                        const vector<Axiom> &axioms,
+                        const string &file_name) {
     ofstream outfile;
-    outfile.open("output.sas", ios::out);
+    outfile.open(file_name, ios::out);
 
     outfile << "begin_version" << endl;
     outfile << PRE_FILE_VERSION << endl;
@@ -202,9 +203,9 @@ void generate_cpp_input(const vector<Variable *> &ordered_vars,
 
     outfile.close();
 }
-void generate_dummy_cpp_input(bool solvable) {
+void generate_dummy_cpp_input(bool solvable, const string &file_name) {
     ofstream outfile;
-    outfile.open("output.sas", ios::out);
+    outfile.open(file_name, ios::out);
     outfile << "begin_version" << endl;
     outfile << PRE_FILE_VERSION << endl;
     outfile << "end_version" << endl;

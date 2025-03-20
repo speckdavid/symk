@@ -1,8 +1,8 @@
 /* Main file, keeps all important variables.
  * Calls functions from "helper_functions" to read in input (variables, operators,
  * goals, initial state),
- * then calls functions to build causal graph and domain_transition_graphs
- * finally prints output to file "output.sas"
+ * then calls functions to simplify the task
+ * finally prints output to the specified file (detualt="output.sas")
  */
 
 #include "helper_functions.h"
@@ -21,6 +21,7 @@ int main(int argc, const char **argv) {
     bool include_augmented_preconditions = false;
     bool expensive_statistics = false;
     bool disable_bw_h2 = false;
+    string output_file = "output.sas";
 
     bool metric;
     vector<Variable *> variables;
@@ -41,12 +42,25 @@ int main(int argc, const char **argv) {
             if (i < argc) {
                 try {
                     h2_mutex_time = atoi(argv[i]);
-                }catch (std::invalid_argument &) {
+                } catch (std::invalid_argument &) {
                     cerr << "please specify the number of seconds after --h2_time_limit" << endl;
                     exit(2);
                 }
             } else {
                 cerr << "please specify the number of seconds after --h2_time_limit" << endl;
+                exit(2);
+            }
+        } else if (arg.compare("--sas-file") == 0) {
+            i++;
+            if (i < argc) {
+                try {
+                    output_file = argv[i];
+                } catch (std::invalid_argument &) {
+                    cerr << "please specify a file name after --sas-file" << endl;
+                    exit(2);
+                }
+            } else {
+                cerr << "please specify a file name after --sas-file" << endl;
                 exit(2);
             }
         } else if (arg.compare("--no_h2") == 0) {
@@ -59,7 +73,7 @@ int main(int argc, const char **argv) {
             expensive_statistics = true;
         } else {
             cerr << "unknown option " << arg << endl << endl;
-            cout << "Usage: ./preprocess [--keep-unimportant-variables] [--no_h2]  [--no_bw_h2] [--augmented_pre] [--stat] < output" << endl;
+            cout << "Usage: ./preprocess [--keep-unimportant-variables] [--sas-file] [--h2_time_limit TIME_IN_SEC] [--no_h2]  [--no_bw_h2] [--augmented_pre] [--stat] < output" << endl;
             exit(2);
         }
     }
@@ -100,7 +114,7 @@ int main(int argc, const char **argv) {
                                 h2_mutex_time, disable_bw_h2)) {
             // TODO: don't duplicate the code to return an unsolvable task, log and exit here
             cout << "Unsolvable task in preprocessor" << endl;
-            generate_dummy_cpp_input(false);
+            generate_dummy_cpp_input(false, output_file);
             cout << "done" << endl;
             return 0;
         }
@@ -134,7 +148,7 @@ int main(int argc, const char **argv) {
         if (initial_state.remove_unreachable_facts()) {
             // TODO: don't duplicate the code to return an unsolvable task, log and exit here
             cout << "Unsolvable task in preprocessor" << endl;
-            generate_dummy_cpp_input(false);
+            generate_dummy_cpp_input(false, output_file);
             cout << "done" << endl;
             return 0;
         }
@@ -239,10 +253,17 @@ int main(int argc, const char **argv) {
     cout << "Writing output..." << endl;
     if (ordering.empty()) {
         cout << (trivial_solvable ? "Solvable " : "Unsolvable ") << "task in preprocessor" << endl;
-        generate_dummy_cpp_input(trivial_solvable);
+        generate_dummy_cpp_input(trivial_solvable, output_file);
     } else {
         generate_cpp_input(
-            ordering, metric, mutexes, initial_state, goals, operators, axioms);
+            ordering,
+            metric,
+            mutexes,
+            initial_state,
+            goals,
+            operators,
+            axioms,
+            output_file);
     }
     cout << "done" << endl;
 }

@@ -241,8 +241,6 @@ def _set_components_and_inputs(parser, args):
         args.components.append("validate")
 
     args.translate_inputs = []
-    args.preprocess_input = "output.sas"
-    args.search_input = "output.sas"
 
     assert args.components
     first = args.components[0]
@@ -282,7 +280,7 @@ def _set_components_and_inputs(parser, args):
         assert False, first
 
 
-def _set_translator_output_options(parser, args):
+def _set_translator_preprocessor_output_options(parser, args):
     if any("--sas-file" in opt for opt in args.translate_options):
         print_usage_and_exit_with_driver_input_error(
             parser, "Cannot pass the \"--sas-file\" option to translate.py from the "
@@ -290,6 +288,9 @@ def _set_translator_output_options(parser, args):
 
     args.search_input = args.sas_file
     args.translate_options += ["--sas-file", args.search_input]
+
+    args.preprocess_input = args.sas_file
+    args.preprocess_options += ["--sas-file", args.search_input]
 
 
 def _get_time_limit_in_seconds(limit, parser):
@@ -475,7 +476,7 @@ def parse_args():
             ("--portfolio", args.portfolio is not None),
             ("options for search component", bool(args.search_options))])
 
-    _set_translator_output_options(parser, args)
+    _set_translator_preprocessor_output_options(parser, args)
 
     _convert_limits_to_ints(parser, args)
 
