@@ -17,12 +17,14 @@ using namespace std;
 
 namespace merge_and_shrink {
 MergeScoringFunctionMIASM::MergeScoringFunctionMIASM(
-    const plugins::Options &options)
-    : use_caching(options.get<bool>("use_caching")),
-      shrink_strategy(options.get<shared_ptr<ShrinkStrategy>>("shrink_strategy")),
-      max_states(options.get<int>("max_states")),
-      max_states_before_merge(options.get<int>("max_states_before_merge")),
-      shrink_threshold_before_merge(options.get<int>("threshold_before_merge")),
+    shared_ptr<ShrinkStrategy> shrink_strategy, int max_states,
+    int max_states_before_merge, int threshold_before_merge,
+    bool use_caching)
+    : use_caching(use_caching),
+      shrink_strategy(move(shrink_strategy)),
+      max_states(max_states),
+      max_states_before_merge(max_states_before_merge),
+      shrink_threshold_before_merge(threshold_before_merge),
       silent_log(utils::get_silent_log()) {
 }
 
@@ -49,7 +51,7 @@ vector<double> MergeScoringFunctionMIASM::compute_scores(
                 silent_log);
 
             // Compute distances for the product and count the alive states.
-            unique_ptr<Distances> distances = utils::make_unique_ptr<Distances>(*product);
+            unique_ptr<Distances> distances = make_unique<Distances>(*product);
             const bool compute_init_distances = true;
             const bool compute_goal_distances = true;
             distances->compute_distances(compute_init_distances, compute_goal_distances, silent_log);
@@ -97,7 +99,8 @@ string MergeScoringFunctionMIASM::name() const {
     return "miasm";
 }
 
-class MergeScoringFunctionMIASMFeature : public plugins::TypedFeature<MergeScoringFunction, MergeScoringFunctionMIASM> {
+class MergeScoringFunctionMIASMFeature
+    : public plugins::TypedFeature<MergeScoringFunction, MergeScoringFunctionMIASM> {
 public:
     MergeScoringFunctionMIASMFeature() : TypedFeature("sf_miasm") {
         document_title("MIASM");
@@ -166,10 +169,14 @@ public:
             "true");
     }
 
-    virtual shared_ptr<MergeScoringFunctionMIASM> create_component(const plugins::Options &options, const utils::Context &context) const override {
-        plugins::Options options_copy(options);
-        handle_shrink_limit_options_defaults(options_copy, context);
-        return make_shared<MergeScoringFunctionMIASM>(options_copy);
+    virtual shared_ptr<MergeScoringFunctionMIASM>
+    create_component(const plugins::Options &opts) const override {
+        return plugins::make_shared_from_arg_tuples<MergeScoringFunctionMIASM>(
+            opts.get<shared_ptr<ShrinkStrategy>>("shrink_strategy"),
+            get_transition_system_size_limit_arguments_from_options(
+                opts),
+            opts.get<bool>("use_caching")
+            );
     }
 };
 

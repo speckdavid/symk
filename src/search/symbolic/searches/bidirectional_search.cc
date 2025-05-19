@@ -1,6 +1,6 @@
 #include "bidirectional_search.h"
 
-#include "../search_engines/symbolic_search.h"
+#include "../search_algorithms/symbolic_search.h"
 
 #include <memory>
 

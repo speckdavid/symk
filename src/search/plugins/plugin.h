@@ -6,8 +6,10 @@
 #include "plugin_info.h"
 #include "raw_registry.h"
 
+#include "../utils/component_errors.h"
 #include "../utils/strings.h"
 #include "../utils/system.h"
+#include "../utils/tuples.h"
 
 #include <string>
 #include <typeindex>
@@ -79,8 +81,8 @@ template<typename Constructed>
 class FeatureWithDefault : public Feature {
 protected:
     using Feature::Feature;
-    virtual std::shared_ptr<Constructed> create_component(
-        const Options &options, const utils::Context &) const {
+    virtual std::shared_ptr<Constructed>
+    create_component(const Options &options) const {
         return std::make_shared<Constructed>(options);
     }
 };
@@ -89,8 +91,8 @@ template<typename Constructed>
 class FeatureWithoutDefault : public Feature {
 protected:
     using Feature::Feature;
-    virtual std::shared_ptr<Constructed> create_component(
-        const Options &, const utils::Context &) const = 0;
+    virtual std::shared_ptr<Constructed>
+    create_component(const Options &) const = 0;
 };
 
 template<typename Constructed>
@@ -110,10 +112,32 @@ public:
     }
 
     Any construct(const Options &options, const utils::Context &context) const override {
-        std::shared_ptr<Base> ptr = this->create_component(options, context);
+        std::shared_ptr<Base> ptr;
+        try {
+            ptr = this->create_component(options);
+        } catch (const utils::ComponentArgumentError &e) {
+            context.error(e.get_message());
+        }
         return Any(ptr);
     }
 };
+
+/*
+  Expects constructor arguments of T. Consecutive arguments may be
+  grouped in a tuple. All tuples in the arguments will be flattened
+  before calling the constructor. The resulting arguments will be used
+  as arguments to make_shared.
+*/
+template<typename T, typename ... Arguments>
+std::shared_ptr<T> make_shared_from_arg_tuples(Arguments... arguments) {
+    return std::apply(
+        [](auto &&... flattened_args) {
+            return std::make_shared<T>(
+                std::forward<decltype(flattened_args)>(flattened_args) ...);
+        },
+        utils::flatten_tuple(
+            std::tuple<Arguments...>(std::forward<Arguments>(arguments) ...)));
+}
 
 class Plugin {
 public:

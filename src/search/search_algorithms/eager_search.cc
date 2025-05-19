@@ -19,15 +19,22 @@
 using namespace std;
 
 namespace eager_search {
-EagerSearch::EagerSearch(const plugins::Options &opts)
-    : SearchAlgorithm(opts),
-      reopen_closed_nodes(opts.get<bool>("reopen_closed")),
-      open_list(opts.get<shared_ptr<OpenListFactory>>("open")->
-                create_state_open_list()),
-      f_evaluator(opts.get<shared_ptr<Evaluator>>("f_eval", nullptr)),
-      preferred_operator_evaluators(opts.get_list<shared_ptr<Evaluator>>("preferred")),
-      lazy_evaluator(opts.get<shared_ptr<Evaluator>>("lazy_evaluator", nullptr)),
-      pruning_method(opts.get<shared_ptr<PruningMethod>>("pruning")) {
+EagerSearch::EagerSearch(
+    const shared_ptr<OpenListFactory> &open, bool reopen_closed,
+    const shared_ptr<Evaluator> &f_eval,
+    const vector<shared_ptr<Evaluator>> &preferred,
+    const shared_ptr<PruningMethod> &pruning,
+    const shared_ptr<Evaluator> &lazy_evaluator, OperatorCost cost_type,
+    int bound, double max_time, const string &description,
+    utils::Verbosity verbosity)
+    : SearchAlgorithm(
+          cost_type, bound, max_time, description, verbosity),
+      reopen_closed_nodes(reopen_closed),
+      open_list(open->create_state_open_list()),
+      f_evaluator(f_eval),     // default nullptr
+      preferred_operator_evaluators(preferred),
+      lazy_evaluator(lazy_evaluator),     // default nullptr
+      pruning_method(pruning) {
     if (lazy_evaluator && !lazy_evaluator->does_cache_estimates()) {
         cerr << "lazy_evaluator must cache its estimates" << endl;
         utils::exit_with(utils::ExitCode::SEARCH_INPUT_ERROR);
@@ -137,15 +144,16 @@ SearchStatus EagerSearch::step() {
               With lazy evaluators (and only with these) we can have dead nodes
               in the open list.
 
-              For example, consider a state s that is reached twice before it is expanded.
-              The first time we insert it into the open list, we compute a finite
-              heuristic value. The second time we insert it, the cached value is reused.
+              For example, consider a state s that is reached twice before it is
+              expanded. The first time we insert it into the open list, we
+              compute a finite heuristic value. The second time we insert it,
+              the cached value is reused.
 
-              During first expansion, the heuristic value is recomputed and might become
-              infinite, for example because the reevaluation uses a stronger heuristic or
-              because the heuristic is path-dependent and we have accumulated more
-              information in the meantime. Then upon second expansion we have a dead-end
-              node which we must ignore.
+              During first expansion, the heuristic value is recomputed and
+              might become infinite, for example because the reevaluation uses a
+              stronger heuristic or because the heuristic is path-dependent and
+              we have accumulated more information in the meantime. Then upon
+              second expansion we have a dead-end node which we must ignore.
             */
             if (node->is_dead_end())
                 continue;
@@ -214,12 +222,14 @@ SearchStatus EagerSearch::step() {
             continue;
 
         if (succ_node.is_new()) {
-            // We have not seen this state before.
-            // Evaluate and create a new node.
+            /*
+              We have not seen this state before.
+              Evaluate and create a new node.
 
-            // Careful: succ_node.get_g() is not available here yet,
-            // hence the stupid computation of succ_g.
-            // TODO: Make this less fragile.
+              Careful: succ_node.get_g() is not available here yet,
+              hence the stupid computation of succ_g.
+              TODO: Make this less fragile.
+            */
             int succ_g = node->get_g() + get_adjusted_cost(op);
 
             EvaluationContext succ_eval_context(
@@ -231,7 +241,7 @@ SearchStatus EagerSearch::step() {
                 statistics.inc_dead_ends();
                 continue;
             }
-            succ_node.open(*node, op, get_adjusted_cost(op));
+            succ_node.open_new_node(*node, op, get_adjusted_cost(op));
 
             open_list->insert(succ_eval_context, succ_state.get_id());
             if (search_progress.check_progress(succ_eval_context)) {
@@ -240,49 +250,42 @@ SearchStatus EagerSearch::step() {
             }
         } else if (succ_node.get_g() > node->get_g() + get_adjusted_cost(op)) {
             // We found a new cheapest path to an open or closed state.
-            if (reopen_closed_nodes) {
-                if (succ_node.is_closed()) {
-                    /*
-                      TODO: It would be nice if we had a way to test
-                      that reopening is expected behaviour, i.e., exit
-                      with an error when this is something where
-                      reopening should not occur (e.g. A* with a
-                      consistent heuristic).
-                    */
-                    statistics.inc_reopened();
-                }
-                succ_node.reopen(*node, op, get_adjusted_cost(op));
-
+            if (succ_node.is_open()) {
+                succ_node.update_open_node_parent(
+                    *node, op, get_adjusted_cost(op));
                 EvaluationContext succ_eval_context(
                     succ_state, succ_node.get_g(), is_preferred, &statistics);
-
+                open_list->insert(succ_eval_context, succ_state.get_id());
+            } else if (succ_node.is_closed() && reopen_closed_nodes) {
                 /*
-                  Note: our old code used to retrieve the h value from
-                  the search node here. Our new code recomputes it as
-                  necessary, thus avoiding the incredible ugliness of
-                  the old "set_evaluator_value" approach, which also
-                  did not generalize properly to settings with more
-                  than one evaluator.
-
-                  Reopening should not happen all that frequently, so
-                  the performance impact of this is hopefully not that
-                  large. In the medium term, we want the evaluators to
-                  remember evaluator values for states themselves if
-                  desired by the user, so that such recomputations
-                  will just involve a look-up by the Evaluator object
-                  rather than a recomputation of the evaluator value
-                  from scratch.
+                  TODO: It would be nice if we had a way to test
+                  that reopening is expected behaviour, i.e., exit
+                  with an error when this is something where
+                  reopening should not occur (e.g. A* with a
+                  consistent heuristic).
                 */
+                statistics.inc_reopened();
+                succ_node.reopen_closed_node(*node, op, get_adjusted_cost(op));
+                EvaluationContext succ_eval_context(
+                    succ_state, succ_node.get_g(), is_preferred, &statistics);
                 open_list->insert(succ_eval_context, succ_state.get_id());
             } else {
-                // If we do not reopen closed nodes, we just update the parent pointers.
-                // Note that this could cause an incompatibility between
-                // the g-value and the actual path that is traced back.
-                succ_node.update_parent(*node, op, get_adjusted_cost(op));
+                /*
+                  If we do not reopen closed nodes, we just update the parent
+                  pointers. Note that this could cause an incompatibility
+                  between the g-value and the actual path that is traced back.
+                */
+                assert(succ_node.is_closed() && !reopen_closed_nodes);
+                succ_node.update_closed_node_parent(
+                    *node, op, get_adjusted_cost(op));
             }
+        } else {
+            /*
+              We found an equally or more expensive path to an open or closed
+              state.
+            */
         }
     }
-
     return IN_PROGRESS;
 }
 
@@ -312,8 +315,22 @@ void EagerSearch::update_f_value_statistics(EvaluationContext &eval_context) {
     }
 }
 
-void add_options_to_feature(plugins::Feature &feature) {
-    SearchAlgorithm::add_pruning_option(feature);
-    SearchAlgorithm::add_options_to_feature(feature);
+void add_eager_search_options_to_feature(
+    plugins::Feature &feature, const string &description) {
+    add_search_pruning_options_to_feature(feature);
+    // We do not add a lazy_evaluator options here
+    // because it is only used for astar but not the other plugins.
+    add_search_algorithm_options_to_feature(feature, description);
+}
+
+tuple<shared_ptr<PruningMethod>, shared_ptr<Evaluator>, OperatorCost,
+      int, double, string, utils::Verbosity>
+get_eager_search_arguments_from_options(const plugins::Options &opts) {
+    return tuple_cat(
+        get_search_pruning_arguments_from_options(opts),
+        make_tuple(opts.get<shared_ptr<Evaluator>>(
+                       "lazy_evaluator", nullptr)),
+        get_search_algorithm_arguments_from_options(opts)
+        );
 }
 }

@@ -5,7 +5,6 @@
 #include "../lp/lp_solver.h"
 #include "../plugins/plugin.h"
 #include "../utils/markup.h"
-#include "../utils/memory.h"
 
 #include <cassert>
 
@@ -16,7 +15,7 @@ void LMCutConstraints::initialize_constraints(
     const shared_ptr<AbstractTask> &task, lp::LinearProgram &) {
     TaskProxy task_proxy(*task);
     landmark_generator =
-        utils::make_unique_ptr<lm_cut_heuristic::LandmarkCutLandmarks>(task_proxy);
+        make_unique<lm_cut_heuristic::LandmarkCutLandmarks>(task_proxy);
 }
 
 
@@ -44,7 +43,8 @@ bool LMCutConstraints::update_constraints(const State &state,
     }
 }
 
-class LMCutConstraintsFeature : public plugins::TypedFeature<ConstraintGenerator, LMCutConstraints> {
+class LMCutConstraintsFeature
+    : public plugins::TypedFeature<ConstraintGenerator, LMCutConstraints> {
 public:
     LMCutConstraintsFeature() : TypedFeature("lmcut_constraints") {
         document_title("LM-cut landmark constraints");
@@ -74,7 +74,8 @@ public:
                 "2013"));
     }
 
-    virtual shared_ptr<LMCutConstraints> create_component(const plugins::Options &, const utils::Context &) const override {
+    virtual shared_ptr<LMCutConstraints>
+    create_component(const plugins::Options &) const override {
         return make_shared<LMCutConstraints>();
     }
 };

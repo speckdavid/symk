@@ -1,6 +1,7 @@
 #include "iterated_search.h"
 
 #include "../plugins/plugin.h"
+#include "../utils/component_errors.h"
 #include "../utils/logging.h"
 
 #include <iostream>
@@ -19,6 +20,7 @@ IteratedSearch::IteratedSearch(const plugins::Options &opts)
       last_phase_found_solution(false),
       best_bound(bound),
       iterated_found_solution(false) {
+    utils::verify_list_not_empty(algorithm_configs, "algorithm_configs");
 }
 
 shared_ptr<SearchAlgorithm> IteratedSearch::get_search_algorithm(
@@ -47,9 +49,7 @@ shared_ptr<SearchAlgorithm> IteratedSearch::create_current_phase() {
            this overrides continue_on_fail.
         */
         if (repeat_last_phase && last_phase_found_solution) {
-            return get_search_algorithm(
-                algorithm_configs.size() -
-                1);
+            return get_search_algorithm(algorithm_configs.size() - 1);
         } else {
             return nullptr;
         }
@@ -63,7 +63,7 @@ SearchStatus IteratedSearch::step() {
     if (!current_search) {
         return found_solution() ? SOLVED : FAILED;
     }
-    if (pass_bound) {
+    if (pass_bound && best_bound < current_search->get_bound()) {
         current_search->set_bound(best_bound);
     }
     ++phase;
@@ -129,7 +129,8 @@ void IteratedSearch::save_plan_if_necessary() {
     // each successful search iteration.
 }
 
-class IteratedSearchFeature : public plugins::TypedFeature<SearchAlgorithm, IteratedSearch> {
+class IteratedSearchFeature
+    : public plugins::TypedFeature<SearchAlgorithm, IteratedSearch> {
 public:
     IteratedSearchFeature() : TypedFeature("iterated") {
         document_title("Iterated search");
@@ -142,8 +143,10 @@ public:
             true);
         add_option<bool>(
             "pass_bound",
-            "use bound from previous search. The bound is the real cost "
-            "of the plan found before, regardless of the cost_type parameter.",
+            "use the bound of iterated search as a bound for its component "
+            "search algorithms, unless these already have a lower bound set. "
+            "The iterated search bound is tightened whenever a component finds "
+            "a cheaper plan.",
             "true");
         add_option<bool>(
             "repeat_last",
@@ -157,13 +160,14 @@ public:
             "continue_on_solve",
             "continue search after solution found",
             "true");
-        SearchAlgorithm::add_options_to_feature(*this);
+        add_search_algorithm_options_to_feature(*this, "iterated");
 
         document_note(
             "Note 1",
             "We don't cache heuristic values between search iterations at"
             " the moment. If you perform a LAMA-style iterative search,"
-            " heuristic values will be computed multiple times.");
+            " heuristic values and other per-state information will be computed"
+            " multiple times.");
         document_note(
             "Note 2",
             "The configuration\n```\n"
@@ -172,22 +176,17 @@ public:
             "lazy_wastar([ipdb()],w=2), lazy_wastar([ipdb()],w=1)])\"\n"
             "```\nwould perform the preprocessing phase of the ipdb heuristic "
             "5 times (once before each iteration).\n\n"
-            "To avoid this, use heuristic predefinition, which avoids duplicate "
-            "preprocessing, as follows:\n```\n"
-            "--evaluator \"h=ipdb()\" --search "
-            "\"iterated([lazy_wastar([h],w=10), lazy_wastar([h],w=5), lazy_wastar([h],w=3), "
-            "lazy_wastar([h],w=2), lazy_wastar([h],w=1)])\"\n"
+            "To avoid this, use heuristic predefinition, which avoids "
+            "duplicate preprocessing, as follows:\n```\n"
+            "\"let(h,ipdb(),iterated([lazy_wastar([h],w=10), "
+            "lazy_wastar([h],w=5), lazy_wastar([h],w=3), lazy_wastar([h],w=2), "
+            "lazy_wastar([h],w=1)]))\"\n"
             "```");
-        document_note(
-            "Note 3",
-            "If you reuse the same landmark count heuristic "
-            "(using heuristic predefinition) between iterations, "
-            "the path data (that is, landmark status for each visited state) "
-            "will be saved between iterations.");
     }
 
-    virtual shared_ptr<IteratedSearch> create_component(const plugins::Options &options, const utils::Context &context) const override {
-        plugins::Options options_copy(options);
+    virtual shared_ptr<IteratedSearch>
+    create_component(const plugins::Options &opts) const override {
+        plugins::Options options_copy(opts);
         /*
           The options entry 'algorithm_configs' is a LazyValue representing a list
           of search algorithms. But iterated search expects a list of LazyValues,
@@ -200,9 +199,8 @@ public:
           the builder is a light-weight operation.
         */
         vector<parser::LazyValue> algorithm_configs =
-            options.get<parser::LazyValue>("algorithm_configs").construct_lazy_list();
+            opts.get<parser::LazyValue>("algorithm_configs").construct_lazy_list();
         options_copy.set("algorithm_configs", algorithm_configs);
-        plugins::verify_list_non_empty<parser::LazyValue>(context, options_copy, "algorithm_configs");
         return make_shared<IteratedSearch>(options_copy);
     }
 };

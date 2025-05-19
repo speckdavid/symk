@@ -53,9 +53,6 @@ LandmarkCutLandmarks::LandmarkCutLandmarks(const TaskProxy &task_proxy) {
     }
 }
 
-LandmarkCutLandmarks::~LandmarkCutLandmarks() {
-}
-
 void LandmarkCutLandmarks::build_relaxed_operator(const OperatorProxy &op) {
     vector<RelaxedProposition *> precondition;
     vector<RelaxedProposition *> effects;
@@ -291,9 +288,7 @@ bool LandmarkCutLandmarks::compute_landmarks(
     if (artificial_goal.status == UNREACHED)
         return true;
 
-    int num_iterations = 0;
     while (artificial_goal.h_max_cost != 0) {
-        ++num_iterations;
         mark_goal_plateau(&artificial_goal);
         assert(cut.empty());
         second_exploration(state, second_exploration_queue, cut);

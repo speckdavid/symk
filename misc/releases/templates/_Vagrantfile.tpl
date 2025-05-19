@@ -20,7 +20,7 @@ Vagrant.configure("2") do |config|
   provision_env = {}
   if !ENV["DOWNWARD_LP_INSTALLERS"].nil?
       cplex_installer = ENV["DOWNWARD_LP_INSTALLERS"] + "/cplex_studio2211.linux_x86_64.bin"
-      if File.exists?(cplex_installer)
+      if File.file?(cplex_installer)
           config.vm.synced_folder ENV["DOWNWARD_LP_INSTALLERS"], "/lp", :mount_options => ["ro"]
           provision_env["CPLEX_INSTALLER"] = "/lp/" + File.basename(cplex_installer)
       end
@@ -56,9 +56,8 @@ Vagrant.configure("2") do |config|
 		export soplex_DIR="/opt/soplex"
 	EOM
     source /etc/profile.d/downward-soplex.sh
-    git clone --branch master https://github.com/scipopt/soplex.git soplex
+    git clone --depth 1 --branch release-710 https://github.com/scipopt/soplex.git soplex
     cd soplex
-    git checkout a5df081
     cmake -DCMAKE_INSTALL_PREFIX="$soplex_DIR" -S . -B build
     cmake --build build
     cmake --install build
@@ -66,7 +65,7 @@ Vagrant.configure("2") do |config|
     cd /home/vagrant
 
     if ! [ -e downward ] ; then
-        git clone --branch TAG https://github.com/aibasel/downward.git downward
+        git clone --branch BRANCH https://github.com/aibasel/downward.git downward
         ./downward/build.py release debug
         chown -R vagrant.vagrant downward
     fi

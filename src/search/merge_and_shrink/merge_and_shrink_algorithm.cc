@@ -15,6 +15,7 @@
 
 #include "../plugins/plugin.h"
 #include "../task_utils/task_properties.h"
+#include "../utils/component_errors.h"
 #include "../utils/countdown_timer.h"
 #include "../utils/markup.h"
 #include "../utils/math.h"
@@ -36,22 +37,80 @@ namespace merge_and_shrink {
 static void log_progress(const utils::Timer &timer, const string &msg, utils::LogProxy &log) {
     log << "M&S algorithm timer: " << timer << " (" << msg << ")" << endl;
 }
+MergeAndShrinkAlgorithm::MergeAndShrinkAlgorithm(
+    const shared_ptr<MergeStrategyFactory> &merge_strategy,
+    const shared_ptr<ShrinkStrategy> &shrink_strategy,
+    const shared_ptr<LabelReduction> &label_reduction,
+    bool prune_unreachable_states, bool prune_irrelevant_states,
+    int max_states, int max_states_before_merge,
+    int threshold_before_merge, double main_loop_max_time,
+    utils::Verbosity verbosity)
+    : merge_strategy_factory(merge_strategy),
+      shrink_strategy(shrink_strategy),
+      label_reduction(label_reduction),
+      max_states(max_states),
+      max_states_before_merge(max_states_before_merge),
+      shrink_threshold_before_merge(threshold_before_merge),
+      prune_unreachable_states(prune_unreachable_states),
+      prune_irrelevant_states(prune_irrelevant_states),
+      log(utils::get_log_for_verbosity(verbosity)),
+      main_loop_max_time(main_loop_max_time),
+      starting_peak_memory(0) {
+    handle_shrink_limit_defaults();
+    // Asserting fields (not parameters).
+    assert(this->max_states_before_merge >= 1);
+    assert(this->max_states >= this->max_states_before_merge);
+}
 
-MergeAndShrinkAlgorithm::MergeAndShrinkAlgorithm(const plugins::Options &opts) :
-    merge_strategy_factory(opts.get<shared_ptr<MergeStrategyFactory>>("merge_strategy")),
-    shrink_strategy(opts.get<shared_ptr<ShrinkStrategy>>("shrink_strategy")),
-    label_reduction(opts.get<shared_ptr<LabelReduction>>("label_reduction", nullptr)),
-    max_states(opts.get<int>("max_states")),
-    max_states_before_merge(opts.get<int>("max_states_before_merge")),
-    shrink_threshold_before_merge(opts.get<int>("threshold_before_merge")),
-    prune_unreachable_states(opts.get<bool>("prune_unreachable_states")),
-    prune_irrelevant_states(opts.get<bool>("prune_irrelevant_states")),
-    log(utils::get_log_from_options(opts)),
-    main_loop_max_time(opts.get<double>("main_loop_max_time")),
-    starting_peak_memory(0) {
-    assert(max_states_before_merge > 0);
-    assert(max_states >= max_states_before_merge);
-    assert(shrink_threshold_before_merge <= max_states_before_merge);
+void MergeAndShrinkAlgorithm::handle_shrink_limit_defaults() {
+    // If none of the two state limits has been set: set default limit.
+    if (max_states == -1 && max_states_before_merge == -1) {
+        max_states = 50000;
+    }
+
+    // If one of the max_states options has not been set, set the other
+    // so that it imposes no further limits.
+    if (max_states_before_merge == -1) {
+        max_states_before_merge = max_states;
+    } else if (max_states == -1) {
+        if (utils::is_product_within_limit(
+                max_states_before_merge, max_states_before_merge, INF)) {
+            max_states = max_states_before_merge * max_states_before_merge;
+        } else {
+            max_states = INF;
+        }
+    }
+
+    if (max_states_before_merge > max_states) {
+        max_states_before_merge = max_states;
+        if (log.is_warning()) {
+            log << "WARNING: "
+                << "max_states_before_merge exceeds max_states, "
+                << "correcting max_states_before_merge." << endl;
+        }
+    }
+
+    utils::verify_argument(max_states >= 1,
+                           "Transition system size must be at least 1.");
+
+    utils::verify_argument(max_states_before_merge >= 1,
+                           "Transition system size before merge must be at least 1.");
+
+    if (shrink_threshold_before_merge == -1) {
+        shrink_threshold_before_merge = max_states;
+    }
+
+    utils::verify_argument(shrink_threshold_before_merge >= 1,
+                           "Threshold must be at least 1.");
+
+    if (shrink_threshold_before_merge > max_states) {
+        shrink_threshold_before_merge = max_states;
+        if (log.is_warning()) {
+            log << "WARNING: "
+                << "threshold exceeds max_states, "
+                << "correcting threshold." << endl;
+        }
+    }
 }
 
 void MergeAndShrinkAlgorithm::report_peak_memory_delta(bool final) const {
@@ -194,7 +253,6 @@ void MergeAndShrinkAlgorithm::main_loop(
                 << timer.get_elapsed_time()
                 << " (" << msg << ")" << endl;
         };
-    int iteration_counter = 0;
     while (fts.get_num_active_entries() > 1) {
         // Choose next transition systems to merge
         pair<int, int> merge_indices = merge_strategy->get_next();
@@ -315,8 +373,6 @@ void MergeAndShrinkAlgorithm::main_loop(
         if (log.is_at_least_normal()) {
             log << endl;
         }
-
-        ++iteration_counter;
     }
 
     log << "End of merge-and-shrink algorithm, statistics:" << endl;
@@ -453,6 +509,23 @@ void add_merge_and_shrink_algorithm_options_to_feature(plugins::Feature &feature
         Bounds("0.0", "infinity"));
 }
 
+tuple<shared_ptr<MergeStrategyFactory>, shared_ptr<ShrinkStrategy>,
+      shared_ptr<LabelReduction>, bool, bool, int, int, int, double>
+get_merge_and_shrink_algorithm_arguments_from_options(
+    const plugins::Options &opts) {
+    return tuple_cat(
+        make_tuple(
+            opts.get<shared_ptr<MergeStrategyFactory>>("merge_strategy"),
+            opts.get<shared_ptr<ShrinkStrategy>>("shrink_strategy"),
+            opts.get<shared_ptr<LabelReduction>>(
+                "label_reduction", nullptr),
+            opts.get<bool>("prune_unreachable_states"),
+            opts.get<bool>("prune_irrelevant_states")),
+        get_transition_system_size_limit_arguments_from_options(opts),
+        make_tuple(opts.get<double>("main_loop_max_time"))
+        );
+}
+
 void add_transition_system_size_limit_options_to_feature(plugins::Feature &feature) {
     feature.add_option<int>(
         "max_states",
@@ -474,57 +547,13 @@ void add_transition_system_size_limit_options_to_feature(plugins::Feature &featu
         Bounds("-1", "infinity"));
 }
 
-void handle_shrink_limit_options_defaults(plugins::Options &opts, const utils::Context &context) {
-    int max_states = opts.get<int>("max_states");
-    int max_states_before_merge = opts.get<int>("max_states_before_merge");
-    int threshold = opts.get<int>("threshold_before_merge");
-
-    // If none of the two state limits has been set: set default limit.
-    if (max_states == -1 && max_states_before_merge == -1) {
-        max_states = 50000;
-    }
-
-    // If exactly one of the max_states options has been set, set the other
-    // so that it imposes no further limits.
-    if (max_states_before_merge == -1) {
-        max_states_before_merge = max_states;
-    } else if (max_states == -1) {
-        int n = max_states_before_merge;
-        if (utils::is_product_within_limit(n, n, INF)) {
-            max_states = n * n;
-        } else {
-            max_states = INF;
-        }
-    }
-
-    if (max_states_before_merge > max_states) {
-        context.warn(
-            "warning: max_states_before_merge exceeds max_states, correcting.");
-        max_states_before_merge = max_states;
-    }
-
-    if (max_states < 1) {
-        context.error("Transition system size must be at least 1");
-    }
-
-    if (max_states_before_merge < 1) {
-        context.error("Transition system size before merge must be at least 1");
-    }
-
-    if (threshold == -1) {
-        threshold = max_states;
-    }
-    if (threshold < 1) {
-        context.error("Threshold must be at least 1");
-    }
-    if (threshold > max_states) {
-        context.warn(
-            "warning: threshold exceeds max_states, correcting");
-        threshold = max_states;
-    }
-
-    opts.set<int>("max_states", max_states);
-    opts.set<int>("max_states_before_merge", max_states_before_merge);
-    opts.set<int>("threshold_before_merge", threshold);
+tuple<int, int, int>
+get_transition_system_size_limit_arguments_from_options(
+    const plugins::Options &opts) {
+    return make_tuple(
+        opts.get<int>("max_states"),
+        opts.get<int>("max_states_before_merge"),
+        opts.get<int>("threshold_before_merge")
+        );
 }
 }

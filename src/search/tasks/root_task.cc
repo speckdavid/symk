@@ -535,12 +535,14 @@ void read_root_task(istream &in) {
     g_root_task = make_shared<RootTask>(in);
 }
 
-class RootTaskFeature : public plugins::TypedFeature<AbstractTask, AbstractTask> {
+class RootTaskFeature
+    : public plugins::TypedFeature<AbstractTask, AbstractTask> {
 public:
     RootTaskFeature() : TypedFeature("no_transform") {
     }
 
-    virtual shared_ptr<AbstractTask> create_component(const plugins::Options &, const utils::Context &) const override {
+    virtual shared_ptr<AbstractTask>
+    create_component(const plugins::Options &) const override {
         return g_root_task;
     }
 };

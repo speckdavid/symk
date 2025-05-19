@@ -11,8 +11,13 @@ using namespace std;
 
 namespace ff_heuristic {
 // construction and destruction
-FFHeuristic::FFHeuristic(const plugins::Options &opts)
-    : AdditiveHeuristic(opts),
+FFHeuristic::FFHeuristic(
+    tasks::AxiomHandlingType axioms,
+    const shared_ptr<AbstractTask> &transform, bool cache_estimates,
+    const string &description, utils::Verbosity verbosity)
+    : AdditiveHeuristic(
+          axioms, transform, cache_estimates, description,
+          verbosity),
       relaxed_plan(task_proxy.get_operators().size(), false) {
     if (log.is_at_least_normal()) {
         log << "Initializing FF heuristic..." << endl;
@@ -69,25 +74,29 @@ int FFHeuristic::compute_heuristic(const State &ancestor_state) {
     return h_ff;
 }
 
-class FFHeuristicFeature : public plugins::TypedFeature<Evaluator, FFHeuristic> {
+class FFHeuristicFeature
+    : public plugins::TypedFeature<Evaluator, FFHeuristic> {
 public:
     FFHeuristicFeature() : TypedFeature("ff") {
         document_title("FF heuristic");
 
-        Heuristic::add_options_to_feature(*this);
+        relaxation_heuristic::add_relaxation_heuristic_options_to_feature(*this, "ff");
 
         document_language_support("action costs", "supported");
         document_language_support("conditional effects", "supported");
-        document_language_support(
-            "axioms",
-            "supported (in the sense that the planner won't complain -- "
-            "handling of axioms might be very stupid "
-            "and even render the heuristic unsafe)");
+        document_language_support("axioms", "supported");
 
         document_property("admissible", "no");
         document_property("consistent", "no");
-        document_property("safe", "yes for tasks without axioms");
+        document_property("safe", "yes");
         document_property("preferred operators", "yes");
+    }
+
+    virtual shared_ptr<FFHeuristic>
+    create_component(const plugins::Options &opts) const override {
+        return plugins::make_shared_from_arg_tuples<FFHeuristic>(
+            relaxation_heuristic::get_relaxation_heuristic_arguments_from_options(opts)
+            );
     }
 };
 

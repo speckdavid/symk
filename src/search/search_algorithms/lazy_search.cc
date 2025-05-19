@@ -17,14 +17,20 @@
 using namespace std;
 
 namespace lazy_search {
-LazySearch::LazySearch(const plugins::Options &opts)
-    : SearchAlgorithm(opts),
-      open_list(opts.get<shared_ptr<OpenListFactory>>("open")->
-                create_edge_open_list()),
-      reopen_closed_nodes(opts.get<bool>("reopen_closed")),
-      randomize_successors(opts.get<bool>("randomize_successors")),
-      preferred_successors_first(opts.get<bool>("preferred_successors_first")),
-      rng(utils::parse_rng_from_options(opts)),
+LazySearch::LazySearch(
+    const shared_ptr<OpenListFactory> &open, bool reopen_closed,
+    const vector<shared_ptr<Evaluator>> &preferred,
+    bool randomize_successors, bool preferred_successors_first,
+    int random_seed, OperatorCost cost_type, int bound, double max_time,
+    const string &description, utils::Verbosity verbosity)
+    : SearchAlgorithm(
+          cost_type, bound, max_time, description, verbosity),
+      open_list(open->create_edge_open_list()),
+      reopen_closed_nodes(reopen_closed),
+      randomize_successors(randomize_successors),
+      preferred_successors_first(preferred_successors_first),
+      rng(utils::get_rng(random_seed)),
+      preferred_operator_evaluators(preferred),
       current_state(state_registry.get_initial_state()),
       current_predecessor_id(StateID::no_state),
       current_operator_id(OperatorID::no_operator),
@@ -40,11 +46,6 @@ LazySearch::LazySearch(const plugins::Options &opts)
              << "Please use symbolic search." << endl;
         utils::exit_with(utils::ExitCode::SEARCH_INPUT_ERROR);
     }
-}
-
-void LazySearch::set_preferred_operator_evaluators(
-    vector<shared_ptr<Evaluator>> &evaluators) {
-    preferred_operator_evaluators = evaluators;
 }
 
 void LazySearch::initialize() {
@@ -155,8 +156,8 @@ SearchStatus LazySearch::fetch_next_state() {
 SearchStatus LazySearch::step() {
     // Invariants:
     // - current_state is the next state for which we want to compute the heuristic.
-    // - current_predecessor is a permanent pointer to the predecessor of that state.
-    // - current_operator is the operator which leads to current_state from predecessor.
+    // - current_predecessor_id is the state ID of the predecessor of that state.
+    // - current_operator_id is the ID of the operator which leads to current_state from predecessor.
     // - current_g is the g value of the current state according to the cost_type
     // - current_real_g is the g value of the current state (using real costs)
 
@@ -177,7 +178,6 @@ SearchStatus LazySearch::step() {
         }
         statistics.inc_evaluated_states();
         if (!open_list->is_dead_end(current_eval_context)) {
-            // TODO: Generalize code for using multiple evaluators.
             if (current_predecessor_id == StateID::no_state) {
                 node.open_initial();
                 if (search_progress.check_progress(current_eval_context))
@@ -187,10 +187,13 @@ SearchStatus LazySearch::step() {
                 SearchNode parent_node = search_space.get_node(parent_state);
                 OperatorProxy current_operator = task_proxy.get_operators()[current_operator_id];
                 if (reopen) {
-                    node.reopen(parent_node, current_operator, get_adjusted_cost(current_operator));
+                    node.reopen_closed_node(parent_node, current_operator,
+                                            get_adjusted_cost(
+                                                current_operator));
                     statistics.inc_reopened();
                 } else {
-                    node.open(parent_node, current_operator, get_adjusted_cost(current_operator));
+                    node.open_new_node(parent_node, current_operator,
+                                       get_adjusted_cost(current_operator));
                 }
             }
             node.close();
