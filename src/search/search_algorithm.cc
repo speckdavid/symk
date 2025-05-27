@@ -55,6 +55,7 @@ SearchAlgorithm::SearchAlgorithm(
       bound(bound),
       cost_type(cost_type),
       is_unit_cost(task_properties::is_unit_cost(task_proxy)),
+      has_sdac_cost(task_properties::has_sdac_cost_operator(task_proxy)),
       max_time(max_time) {
     if (bound < 0) {
         cerr << "error: negative cost bound " << bound << endl;
