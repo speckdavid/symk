@@ -62,8 +62,6 @@ public:
 
     BDD states_on_path(const Plan &plan);
 
-    void dump_first_accepted_plan() const;
-
     const Plan &get_first_accepted_plan() const;
 
     double get_first_plan_cost() const {return first_accepted_plan_cost;}
@@ -75,7 +73,6 @@ public:
 protected:
     std::shared_ptr<SymVariables> sym_vars;
     std::shared_ptr<StateRegistry> state_registry;   // used for explicit stuff
-
 
     // Determines if it possible/desired to proof that no more (accepted)
     // plans exits
@@ -93,6 +90,9 @@ protected:
     int num_accepted_plans;
     int num_rejected_plans;
 
+    TaskProxy plan_mgr_task_proxy;
+    PlanManager plan_mgr;
+
     std::unordered_map<size_t, std::vector<Plan>> hashes_accepted_plans;
     std::unordered_map<size_t, std::vector<Plan>> hashes_rejected_plans;
 
@@ -101,8 +101,6 @@ protected:
 
     BDD states_accepted_goal_paths;
 
-    PlanManager plan_mgr;
-    bool task_hash_zero_cost_actions;
 
     void save_accepted_plan(const Plan &plan);
     void save_rejected_plan(const Plan &plan);

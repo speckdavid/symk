@@ -9,6 +9,7 @@
 #include "../searches/uniform_cost_search.h"
 
 #include "../../task_utils/task_properties.h"
+#include "../../tasks/cost_adapted_task.h"
 #include "../../tasks/sdac_task.h"
 
 using namespace std;
@@ -45,11 +46,21 @@ void SymbolicSearch::initialize() {
     cout << endl;
 
     if (has_sdac_cost) {
+        if (cost_type != OperatorCost::NORMAL) {
+            cerr << "Cost type is currently not supported for sdac tasks!" << endl;
+            utils::exit_with(utils::ExitCode::SEARCH_UNSUPPORTED);
+        }
+
         utils::g_log << "Creating sdac task..." << endl;
         search_task = make_shared<extra_tasks::SdacTask>(task, vars.get());
         utils::g_log << "#Operators with sdac: " << task->get_num_operators() << endl;
         utils::g_log << "#Operators without sdac: " << search_task->get_num_operators() << endl;
         cout << endl;
+    }
+
+    if (cost_type != OperatorCost::NORMAL) {
+        utils::g_log << "Cost transformation: " << cost_type << endl;
+        search_task = make_shared<tasks::CostAdaptedTask>(search_task, cost_type);
     }
 
     if (simple) {

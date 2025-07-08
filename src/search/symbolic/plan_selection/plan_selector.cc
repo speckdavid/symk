@@ -2,6 +2,7 @@
 
 #include "../../plugins/plugin.h"
 #include "../../state_registry.h"
+#include "../../tasks/sdac_task.h"
 #include "../../task_utils/task_properties.h"
 
 using namespace std;
@@ -22,6 +23,7 @@ PlanSelector::PlanSelector(const plugins::Options &opts)
       num_desired_plans(opts.get<int>("num_plans")),
       num_accepted_plans(0),
       num_rejected_plans(0),
+      plan_mgr_task_proxy(*tasks::g_root_task),
       first_accepted_plan_cost(numeric_limits<double>::infinity()) {}
 
 void PlanSelector::init(shared_ptr<SymVariables> sym_vars,
@@ -31,6 +33,11 @@ void PlanSelector::init(shared_ptr<SymVariables> sym_vars,
     state_registry = make_shared<StateRegistry>(TaskProxy(*task));
     plan_mgr = plan_manager;
     states_accepted_goal_paths = sym_vars->zeroBDD();
+
+    if (task_properties::has_sdac_cost_operator(plan_mgr_task_proxy)) {
+        assert(dynamic_pointer_cast<extra_tasks::SdacTask>(task) != nullptr);
+        plan_mgr_task_proxy = TaskProxy(*task);
+    }
 }
 
 bool PlanSelector::has_accepted_plan(const Plan &plan) const {
@@ -53,11 +60,6 @@ bool PlanSelector::has_rejected_plan(const Plan &plan) const {
         return false;
     }
     return true;
-}
-
-void PlanSelector::dump_first_accepted_plan() const {
-    plan_mgr.dump_plan(first_accepted_plan,
-                       state_registry->get_task_proxy());
 }
 
 const Plan &PlanSelector::get_first_accepted_plan() const {
@@ -135,7 +137,7 @@ void PlanSelector::save_accepted_plan(const Plan &plan) {
             plan, state_registry->get_task_proxy());
 
         if (!write_plans) {
-            plan_mgr.save_plan(plan, state_registry->get_task_proxy(), false, num_desired_plans > 1);
+            plan_mgr.save_plan(plan, plan_mgr_task_proxy, false, num_desired_plans > 1);
         }
     }
 
@@ -150,12 +152,12 @@ void PlanSelector::save_accepted_plan(const Plan &plan) {
     if (dump_plans) {
         utils::g_log << endl << "New plan " << num_accepted_plans << ":" << endl;
         if (!write_plans) {
-            plan_mgr.dump_plan(plan, state_registry->get_task_proxy());
+            plan_mgr.dump_plan(plan, plan_mgr_task_proxy);
         }
     }
 
     if (write_plans) {
-        plan_mgr.save_plan(plan, state_registry->get_task_proxy(), dump_plans, num_desired_plans > 1);
+        plan_mgr.save_plan(plan, plan_mgr_task_proxy, dump_plans, num_desired_plans > 1);
     }
 }
 

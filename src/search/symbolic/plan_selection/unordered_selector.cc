@@ -25,7 +25,7 @@ void UnorderedSelector::save_accepted_plan(const Plan &ordered_plan, const Plan 
             ordered_plan, state_registry->get_task_proxy());
 
         if (!write_plans) {
-            plan_mgr.save_plan(ordered_plan, state_registry->get_task_proxy(), false, num_desired_plans > 1);
+            plan_mgr.save_plan(ordered_plan, plan_mgr_task_proxy, false, num_desired_plans > 1);
         }
     }
 
@@ -40,12 +40,12 @@ void UnorderedSelector::save_accepted_plan(const Plan &ordered_plan, const Plan 
     if (dump_plans) {
         utils::g_log << endl << "New plan " << num_accepted_plans << ":" << endl;
         if (!write_plans) {
-            plan_mgr.dump_plan(ordered_plan, state_registry->get_task_proxy());
+            plan_mgr.dump_plan(ordered_plan, plan_mgr_task_proxy);
         }
     }
 
     if (write_plans) {
-        plan_mgr.save_plan(ordered_plan, state_registry->get_task_proxy(), dump_plans, num_desired_plans > 1);
+        plan_mgr.save_plan(ordered_plan, plan_mgr_task_proxy, dump_plans, num_desired_plans > 1);
     }
 }
 
