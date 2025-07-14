@@ -6,6 +6,7 @@
 #include "../heuristic.h"
 
 #include "../algorithms/priority_queues.h"
+#include "../tasks/default_value_axioms_task.h"
 
 #include <vector>
 
@@ -50,7 +51,11 @@ class ContextEnhancedAdditiveHeuristic : public Heuristic {
 protected:
     virtual int compute_heuristic(const State &ancestor_state) override;
 public:
-    explicit ContextEnhancedAdditiveHeuristic(const plugins::Options &opts);
+    ContextEnhancedAdditiveHeuristic(
+        tasks::AxiomHandlingType axioms,
+        const std::shared_ptr<AbstractTask> &transform,
+        bool cache_estimates, const std::string &description,
+        utils::Verbosity verbosity);
     ~ContextEnhancedAdditiveHeuristic();
     virtual bool dead_ends_are_reliable() const override;
 };

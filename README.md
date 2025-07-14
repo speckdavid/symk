@@ -149,32 +149,45 @@ By default, the planner performs a relevance analysis and removes components suc
 ```
 
 # References
-Note that several components of SymK have been developed and published separately. 
-We appreciate citations of these sources when used.
+Several components of **SymK** have been developed and published separately.  
+If you use this software, we kindly ask you to cite the relevant publications listed below.
 
-### Main source
+## Main Reference
 
- 1. David Speck, Robert Mattmüller, Bernhard Nebel: Symbolic Top-k Planning. AAAI 2020: 9967-9974 [[pdf]](https://speckdavid.github.io/assets/pdf/speck-etal-aaai2020.pdf) [[bib & more]](https://speckdavid.github.io/publications/#speck-et-al-aaai2020)
+ - David Speck, Robert Mattmüller, Bernhard Nebel: *Symbolic Top-k Planning*. AAAI 2020: 9967-9974 [[pdf]](https://speckdavid.github.io/assets/pdf/speck-etal-aaai2020.pdf) [[bib & more]](https://speckdavid.github.io/publications/#speck-et-al-aaai2020)
 
-### Loopless Top-k planning
+## Component-Specific References
 
- 2. Julian von Tschammer, Robert Mattmüller, David Speck: Loopless Top-K Planning. ICAPS 2022: 380-384 [[pdf]](https://speckdavid.github.io/assets/pdf/vontschammer-etal-icaps2022.pdf) [[bib & more]](https://speckdavid.github.io/publications/#vontschammer-et-al-icaps2022)
+### Loopless Top-k Planning
 
-### Axiom and derived predicate support
+ - Julian von Tschammer, Robert Mattmüller, David Speck: *Loopless Top-K Planning*. ICAPS 2022: 380-384 [[pdf]](https://speckdavid.github.io/assets/pdf/vontschammer-etal-icaps2022.pdf) [[bib & more]](https://speckdavid.github.io/publications/#vontschammer-et-al-icaps2022)
 
- 3. David Speck, Florian Geißer, Robert Mattmüller, Álvaro Torralba: Symbolic Planning with Axioms. ICAPS 2019: 464-472 [[pdf]](https://speckdavid.github.io/assets/pdf/speck-etal-icaps2019.pdf) [[bib & more]](https://speckdavid.github.io/publications/#speck-et-al-icaps2019)
+### Conditional Effects Support
 
-### State-dependent action cost support
-
- 4. David Speck: Symbolic Search for Optimal Planning with Expressive Extensions. Ph.D. thesis: University of Freiburg (2022) [[pdf]](https://speckdavid.github.io/assets/pdf/speck-phd2022.pdf) [[bib & more]](https://speckdavid.github.io/publications/#speck-phd2022)
+ - For tasks **without** axioms and state-dependent costs: David Speck, Malte Helmert: *On Performance Guarantees for Symbolic Search in Classical Planning*. ECAI 2025 [[bib & more]](https://speckdavid.github.io/publications/#speck-helmert-ecai2025)
  
- You can find examples of domains with state-dependent action cost [here](https://github.com/speckdavid/SDAC-Benchmarks).
+ - For tasks **with** axioms and/or state-dependent costs: David Speck, Jendrik Seipp, Álvaro Torralba: *Symbolic Search for Cost-Optimal Planning with Expressive Model Extensions*. JAIR. 82: 1349-1405 (2025) [[pdf]](https://speckdavid.github.io/assets/pdf/speck-et-al-jair2025.pdf) [[bib & more]](https://speckdavid.github.io/publications/#speck-et-al-jair2025)
 
-We want to acknowledge that SymK is based on:
- - Fast Downward (23.06+): http://www.fast-downward.org/ and [FD_README.md](FD_README.md) 
- - Symbolic Fast Downward: https://people.cs.aau.dk/~alto/software.html
+### Axiom and Derived Predicate Support
 
-Finally, SymK uses some external software that can be found in the [src/search/ext](src/search/ext) folder.
+ - **Overview:** David Speck, Jendrik Seipp, Álvaro Torralba: *Symbolic Search for Cost-Optimal Planning with Expressive Model Extensions*. JAIR. 82: 1349-1405 (2025) [[pdf]](https://speckdavid.github.io/assets/pdf/speck-et-al-jair2025.pdf) [[bib & more]](https://speckdavid.github.io/publications/#speck-et-al-jair2025)
+
+ - **Original paper:** David Speck, Florian Geißer, Robert Mattmüller, Álvaro Torralba: *Symbolic Planning with Axioms*. ICAPS 2019: 464-472 [[pdf]](https://speckdavid.github.io/assets/pdf/speck-etal-icaps2019.pdf) [[bib & more]](https://speckdavid.github.io/publications/#speck-et-al-icaps2019)
+
+
+### State-Dependent Action Costs Support
+
+ - David Speck, Jendrik Seipp, Álvaro Torralba: *Symbolic Search for Cost-Optimal Planning with Expressive Model Extensions*. JAIR. 82: 1349-1405 (2025) [[pdf]](https://speckdavid.github.io/assets/pdf/speck-et-al-jair2025.pdf) [[bib & more]](https://speckdavid.github.io/publications/#speck-et-al-jair2025)
+ 
+Example domains with state-dependent action costs can be found [here](https://github.com/speckdavid/SDAC-Benchmarks). (Note: currently, only SAS files with state-dependent action costs are supported.) A version of SymK with PDDL support for state-dependent action costs (and PDDL domains with state-dependent action costs) is available [on Zenodo](https://zenodo.org/records/12624112).
+
+## Acknowledgments
+
+**SymK** builds upon and extends several existing systems:
+
+- [**Fast Downward (24.06+)**](http://www.fast-downward.org/) -- see also [`FD_README.md`](FD_README.md) for licensing and usage information.
+- [**Symbolic Fast Downward**](https://people.cs.aau.dk/~alto/software.html) by Álvaro Torralba.
+- Additional third-party components used by SymK can be found in the [`src/search/ext`](src/search/ext) directory.
 
 # License
 

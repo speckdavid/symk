@@ -409,8 +409,12 @@ int ContextEnhancedAdditiveHeuristic::compute_heuristic(
 }
 
 ContextEnhancedAdditiveHeuristic::ContextEnhancedAdditiveHeuristic(
-    const plugins::Options &opts)
-    : Heuristic(opts),
+    tasks::AxiomHandlingType axioms,
+    const shared_ptr<AbstractTask> &transform, bool cache_estimates,
+    const string &description, utils::Verbosity verbosity)
+    : Heuristic(tasks::get_default_value_axioms_task_if_needed(
+                    transform, axioms),
+                cache_estimates, description, verbosity),
       min_action_cost(task_properties::get_min_operator_cost(task_proxy)) {
     if (log.is_at_least_normal()) {
         log << "Initializing context-enhanced additive heuristic..." << endl;
@@ -443,25 +447,31 @@ bool ContextEnhancedAdditiveHeuristic::dead_ends_are_reliable() const {
     return false;
 }
 
-class ContextEnhancedAdditiveHeuristicFeature : public plugins::TypedFeature<Evaluator, ContextEnhancedAdditiveHeuristic> {
+class ContextEnhancedAdditiveHeuristicFeature
+    : public plugins::TypedFeature<Evaluator, ContextEnhancedAdditiveHeuristic> {
 public:
     ContextEnhancedAdditiveHeuristicFeature() : TypedFeature("cea") {
         document_title("Context-enhanced additive heuristic");
 
-        Heuristic::add_options_to_feature(*this);
+        tasks::add_axioms_option_to_feature(*this);
+        add_heuristic_options_to_feature(*this, "cea");
 
         document_language_support("action costs", "supported");
         document_language_support("conditional effects", "supported");
-        document_language_support(
-            "axioms",
-            "supported (in the sense that the planner won't complain -- "
-            "handling of axioms might be very stupid "
-            "and even render the heuristic unsafe)");
+        document_language_support("axioms", "supported");
 
         document_property("admissible", "no");
         document_property("consistent", "no");
         document_property("safe", "no");
         document_property("preferred operators", "yes");
+    }
+
+    virtual shared_ptr<ContextEnhancedAdditiveHeuristic>
+    create_component(const plugins::Options &opts) const override {
+        return plugins::make_shared_from_arg_tuples<ContextEnhancedAdditiveHeuristic>(
+            tasks::get_axioms_arguments_from_options(opts),
+            get_heuristic_arguments_from_options(opts)
+            );
     }
 };
 

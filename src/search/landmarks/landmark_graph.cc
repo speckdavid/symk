@@ -2,8 +2,6 @@
 
 #include "landmark.h"
 
-#include "../utils/memory.h"
-
 #include <cassert>
 #include <list>
 #include <set>
@@ -26,21 +24,6 @@ int LandmarkGraph::get_num_edges() const {
 
 LandmarkNode *LandmarkGraph::get_node(int i) const {
     return nodes[i].get();
-}
-
-LandmarkNode *LandmarkGraph::get_node(const FactPair &fact) const {
-    /* Return pointer to landmark node that corresponds to the given fact,
-       or nullptr if no such landmark exists. */
-    LandmarkNode *node_p = nullptr;
-    auto it = simple_landmarks_to_nodes.find(fact);
-    if (it != simple_landmarks_to_nodes.end())
-        node_p = it->second;
-    else {
-        auto it2 = disjunctive_landmarks_to_nodes.find(fact);
-        if (it2 != disjunctive_landmarks_to_nodes.end())
-            node_p = it2->second;
-    }
-    return node_p;
 }
 
 LandmarkNode &LandmarkGraph::get_simple_landmark(const FactPair &fact) const {
@@ -108,7 +91,7 @@ LandmarkNode &LandmarkGraph::add_landmark(Landmark &&landmark) {
                          return !contains_landmark(lm_fact);
                      }));
     unique_ptr<LandmarkNode> new_node =
-        utils::make_unique_ptr<LandmarkNode>(move(landmark));
+        make_unique<LandmarkNode>(move(landmark));
     LandmarkNode *new_node_p = new_node.get();
     const Landmark &lm = new_node->get_landmark();
     nodes.push_back(move(new_node));

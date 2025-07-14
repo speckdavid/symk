@@ -379,18 +379,14 @@ def translate_strips_axiom(axiom, dictionary, ranges, mutex_dict, mutex_ranges):
                                              ranges, mutex_dict, mutex_ranges)
     if conditions is None:
         return []
-    if axiom.effect.negated:
-        [(var, _)] = dictionary[axiom.effect.positive()]
-        effect = (var, ranges[var] - 1)
-    else:
-        [effect] = dictionary[axiom.effect]
-        # Here we exploit that due to the invariant analysis algorithm derived
-        # variables cannot have more than one representation in the dictionary,
-        # even with the full encoding. They can never be part of a non-trivial
-        # mutex group.
-    axioms = []
-    for condition in conditions:
-        axioms.append(sas_tasks.SASAxiom(condition.items(), effect))
+    assert not axiom.effect.negated
+    [effect] = dictionary[axiom.effect]
+    # Here we exploit that due to the invariant analysis algorithm derived
+    # variables cannot have more than one representation in the dictionary,
+    # even with the full encoding. They can never be part of a non-trivial
+    # mutex group.
+    axioms = [sas_tasks.SASAxiom(condition.items(), effect)
+              for condition in conditions]
     return axioms
 
 
@@ -463,8 +459,7 @@ def translate_task(
         implied_facts: Dict[VarValPair, List[VarValPair]]) -> sas_tasks.SASTask:
     with timers.timing("Processing axioms", block=True):
         axioms, axiom_layer_dict = axiom_rules.handle_axioms(actions, axioms, goals,
-                                                             options.layer_strategy,
-                                                             options.add_negative_axioms)
+                                                             options.layer_strategy)
 
     if options.dump_task:
         # Remove init facts that don't occur in strips_to_sas: they're constant.

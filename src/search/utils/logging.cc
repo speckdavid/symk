@@ -29,19 +29,20 @@ void add_log_options_to_feature(plugins::Feature &feature) {
         "normal");
 }
 
-LogProxy get_log_from_options(const plugins::Options &options) {
-    /* NOTE: We return (a proxy to) the global log if all options match the
-       default values of the global log. */
-    if (options.get<Verbosity>("verbosity") == Verbosity::NORMAL) {
+tuple<Verbosity> get_log_arguments_from_options(
+    const plugins::Options &opts) {
+    return make_tuple<Verbosity>(opts.get<Verbosity>("verbosity"));
+}
+
+LogProxy get_log_for_verbosity(const Verbosity &verbosity) {
+    if (verbosity == Verbosity::NORMAL) {
         return LogProxy(global_log);
     }
-    return LogProxy(make_shared<Log>(options.get<Verbosity>("verbosity")));
+    return LogProxy(make_shared<Log>(verbosity));
 }
 
 LogProxy get_silent_log() {
-    plugins::Options opts;
-    opts.set<utils::Verbosity>("verbosity", utils::Verbosity::SILENT);
-    return utils::get_log_from_options(opts);
+    return utils::get_log_for_verbosity(utils::Verbosity::SILENT);
 }
 
 ContextError::ContextError(const string &msg)
@@ -49,6 +50,10 @@ ContextError::ContextError(const string &msg)
 }
 
 const string Context::INDENT = "  ";
+
+Context::Context()
+    : initial_stack_size(0) {
+}
 
 Context::Context(const Context &context)
     : initial_stack_size(context.block_stack.size()),

@@ -1,5 +1,6 @@
 #include "landmark_factory_rpg_sasp.h"
 
+#include "exploration.h"
 #include "landmark.h"
 #include "landmark_graph.h"
 #include "util.h"
@@ -11,17 +12,16 @@
 #include "../utils/system.h"
 
 #include <cassert>
-#include <limits>
 
 using namespace std;
 using utils::ExitCode;
 
 namespace landmarks {
-LandmarkFactoryRpgSasp::LandmarkFactoryRpgSasp(const plugins::Options &opts)
-    : LandmarkFactoryRelaxation(opts),
-      disjunctive_landmarks(opts.get<bool>("disjunctive_landmarks")),
-      use_orders(opts.get<bool>("use_orders")),
-      only_causal_landmarks(opts.get<bool>("only_causal_landmarks")) {
+LandmarkFactoryRpgSasp::LandmarkFactoryRpgSasp(
+    bool disjunctive_landmarks, bool use_orders, utils::Verbosity verbosity)
+    : LandmarkFactoryRelaxation(verbosity),
+      disjunctive_landmarks(disjunctive_landmarks),
+      use_orders(use_orders) {
 }
 
 void LandmarkFactoryRpgSasp::build_dtg_successors(const TaskProxy &task_proxy) {
@@ -131,12 +131,12 @@ void LandmarkFactoryRpgSasp::get_greedy_preconditions_for_lm(
                         current_cond.emplace(effect_condition.get_variable().get_id(),
                                              effect_condition.get_value());
                 }
+                if (init) {
+                    init = false;
+                    intersection = current_cond;
+                } else
+                    intersection = _intersect(intersection, current_cond);
             }
-            if (init) {
-                init = false;
-                intersection = current_cond;
-            } else
-                intersection = _intersect(intersection, current_cond);
         }
     }
     result.insert(intersection.begin(), intersection.end());
@@ -173,6 +173,7 @@ void LandmarkFactoryRpgSasp::found_simple_lm_and_order(
 
         // Retrieve incoming edges from disj_lm
         vector<LandmarkNode *> predecessors;
+        predecessors.reserve(disj_lm->parents.size());
         for (auto &pred : disj_lm->parents) {
             predecessors.push_back(pred.first);
         }
@@ -419,7 +420,7 @@ void LandmarkFactoryRpgSasp::generate_relaxed_landmarks(
               achieving the landmark.
             */
             vector<vector<bool>> reached =
-                compute_relaxed_reachability(exploration, landmark);
+                exploration.compute_relaxed_reachability(landmark.facts, false);
             /*
               Use this information to determine all operators that can
               possibly achieve *landmark* for the first time, and collect
@@ -462,10 +463,6 @@ void LandmarkFactoryRpgSasp::generate_relaxed_landmarks(
 
     if (!use_orders) {
         discard_all_orderings();
-    }
-
-    if (only_causal_landmarks) {
-        discard_noncausal_landmarks(task_proxy, exploration);
     }
 }
 
@@ -631,7 +628,8 @@ bool LandmarkFactoryRpgSasp::supports_conditional_effects() const {
     return true;
 }
 
-class LandmarkFactoryRpgSaspFeature : public plugins::TypedFeature<LandmarkFactory, LandmarkFactoryRpgSasp> {
+class LandmarkFactoryRpgSaspFeature
+    : public plugins::TypedFeature<LandmarkFactory, LandmarkFactoryRpgSasp> {
 public:
     LandmarkFactoryRpgSaspFeature() : TypedFeature("lm_rhw") {
         document_title("RHW Landmarks");
@@ -643,13 +641,20 @@ public:
             "disjunctive_landmarks",
             "keep disjunctive landmarks",
             "true");
-        add_landmark_factory_options_to_feature(*this);
         add_use_orders_option_to_feature(*this);
-        add_only_causal_landmarks_option_to_feature(*this);
+        add_landmark_factory_options_to_feature(*this);
 
         document_language_support(
             "conditional_effects",
             "supported");
+    }
+
+    virtual shared_ptr<LandmarkFactoryRpgSasp>
+    create_component(const plugins::Options &opts) const override {
+        return plugins::make_shared_from_arg_tuples<LandmarkFactoryRpgSasp>(
+            opts.get<bool>("disjunctive_landmarks"),
+            get_use_orders_arguments_from_options(opts),
+            get_landmark_factory_arguments_from_options(opts));
     }
 };
 

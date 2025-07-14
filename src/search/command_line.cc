@@ -89,7 +89,7 @@ static shared_ptr<SearchAlgorithm> parse_cmd_line_aux(const vector<string> &args
     SearchPtr search_algorithm = nullptr;
     // TODO: Remove code duplication.
     for (size_t i = 0; i < args.size(); ++i) {
-        string arg = args[i];
+        const string &arg = args[i];
         bool is_last = (i == args.size() - 1);
         if (arg == "--search") {
             if (search_algorithm)
@@ -97,13 +97,15 @@ static shared_ptr<SearchAlgorithm> parse_cmd_line_aux(const vector<string> &args
             if (is_last)
                 input_error("missing argument after --search");
             ++i;
-            string search_arg = args[i];
+            const string &search_arg = args[i];
             try {
                 parser::TokenStream tokens = parser::split_tokens(search_arg);
                 parser::ASTNodePtr parsed = parser::parse(tokens);
                 parser::DecoratedASTNodePtr decorated = parsed->decorate();
                 plugins::Any constructed = decorated->construct();
                 search_algorithm = plugins::any_cast<SearchPtr>(constructed);
+            } catch (const plugins::BadAnyCast &) {
+                input_error("Could not interpret the argument of --search as a search algorithm.");
             } catch (const utils::ContextError &e) {
                 input_error(e.get_message());
             }
@@ -112,7 +114,7 @@ static shared_ptr<SearchAlgorithm> parse_cmd_line_aux(const vector<string> &args
             bool txt2tags = false;
             vector<string> plugin_names;
             for (size_t j = i + 1; j < args.size(); ++j) {
-                string help_arg = args[j];
+                const string &help_arg = args[j];
                 if (help_arg == "--txt2tags") {
                     txt2tags = true;
                 } else {
@@ -122,11 +124,9 @@ static shared_ptr<SearchAlgorithm> parse_cmd_line_aux(const vector<string> &args
             plugins::Registry registry = plugins::RawRegistry::instance()->construct_registry();
             unique_ptr<plugins::DocPrinter> doc_printer;
             if (txt2tags)
-                doc_printer = utils::make_unique_ptr<plugins::Txt2TagsPrinter>(
-                    cout, registry);
+                doc_printer = make_unique<plugins::Txt2TagsPrinter>(cout, registry);
             else
-                doc_printer = utils::make_unique_ptr<plugins::PlainPrinter>(
-                    cout, registry);
+                doc_printer = make_unique<plugins::PlainPrinter>(cout, registry);
             if (plugin_names.empty()) {
                 doc_printer->print_all();
             } else {

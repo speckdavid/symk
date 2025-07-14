@@ -16,8 +16,14 @@ using namespace std;
 using namespace domain_transition_graph;
 
 namespace cg_heuristic {
-CGHeuristic::CGHeuristic(const plugins::Options &opts)
-    : Heuristic(opts),
+CGHeuristic::CGHeuristic(
+    int max_cache_size, tasks::AxiomHandlingType axioms,
+    const shared_ptr<AbstractTask> &transform,
+    bool cache_estimates, const string &description,
+    utils::Verbosity verbosity)
+    : Heuristic(tasks::get_default_value_axioms_task_if_needed(
+                    transform, axioms),
+                cache_estimates, description, verbosity),
       cache_hits(0),
       cache_misses(0),
       helpful_transition_extraction_counter(0),
@@ -26,22 +32,18 @@ CGHeuristic::CGHeuristic(const plugins::Options &opts)
         log << "Initializing causal graph heuristic..." << endl;
     }
 
-    int max_cache_size = opts.get<int>("max_cache_size");
     if (max_cache_size > 0)
-        cache = utils::make_unique_ptr<CGCache>(task_proxy, max_cache_size, log);
+        cache = make_unique<CGCache>(task_proxy, max_cache_size, log);
 
     unsigned int num_vars = task_proxy.get_variables().size();
     prio_queues.reserve(num_vars);
     for (size_t i = 0; i < num_vars; ++i)
-        prio_queues.push_back(utils::make_unique_ptr<ValueNodeQueue>());
+        prio_queues.push_back(make_unique<ValueNodeQueue>());
 
     function<bool(int, int)> pruning_condition =
         [](int dtg_var, int cond_var) {return dtg_var <= cond_var;};
     DTGFactory factory(task_proxy, false, pruning_condition);
     transition_graphs = factory.build_dtgs();
-}
-
-CGHeuristic::~CGHeuristic() {
 }
 
 bool CGHeuristic::dead_ends_are_reliable() const {
@@ -285,7 +287,8 @@ void CGHeuristic::mark_helpful_transitions(const State &state,
     }
 }
 
-class CGHeuristicFeature : public plugins::TypedFeature<Evaluator, CGHeuristic> {
+class CGHeuristicFeature
+    : public plugins::TypedFeature<Evaluator, CGHeuristic> {
 public:
     CGHeuristicFeature() : TypedFeature("cg") {
         document_title("Causal graph heuristic");
@@ -295,20 +298,26 @@ public:
             "maximum number of cached entries per variable (set to 0 to disable cache)",
             "1000000",
             plugins::Bounds("0", "infinity"));
-        Heuristic::add_options_to_feature(*this);
+        tasks::add_axioms_option_to_feature(*this);
+        add_heuristic_options_to_feature(*this, "cg");
 
         document_language_support("action costs", "supported");
         document_language_support("conditional effects", "supported");
-        document_language_support(
-            "axioms",
-            "supported (in the sense that the planner won't complain -- "
-            "handling of axioms might be very stupid "
-            "and even render the heuristic unsafe)");
+        document_language_support("axioms", "supported");
 
         document_property("admissible", "no");
         document_property("consistent", "no");
         document_property("safe", "no");
         document_property("preferred operators", "yes");
+    }
+
+    virtual shared_ptr<CGHeuristic>
+    create_component(const plugins::Options &opts) const override {
+        return plugins::make_shared_from_arg_tuples<CGHeuristic>(
+            opts.get<int>("max_cache_size"),
+            tasks::get_axioms_arguments_from_options(opts),
+            get_heuristic_arguments_from_options(opts)
+            );
     }
 };
 

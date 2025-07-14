@@ -5,7 +5,6 @@
 #include "../landmarks/landmark_factory_h_m.h"
 #include "../landmarks/landmark_graph.h"
 #include "../utils/logging.h"
-#include "../utils/memory.h"
 
 #include <algorithm>
 
@@ -19,14 +18,10 @@ static FactPair get_fact(const Landmark &landmark) {
     return landmark.facts[0];
 }
 
-shared_ptr<LandmarkGraph> get_landmark_graph(const shared_ptr<AbstractTask> &task) {
-    plugins::Options hm_opts;
-    hm_opts.set<int>("m", 1);
-    hm_opts.set<bool>("only_causal_landmarks", false);
-    hm_opts.set<bool>("conjunctive_landmarks", false);
-    hm_opts.set<bool>("use_orders", true);
-    hm_opts.set<utils::Verbosity>("verbosity", utils::Verbosity::SILENT);
-    LandmarkFactoryHM lm_graph_factory(hm_opts);
+shared_ptr<LandmarkGraph> get_landmark_graph(
+    const shared_ptr<AbstractTask> &task) {
+    LandmarkFactoryHM lm_graph_factory(
+        1, false, true, utils::Verbosity::SILENT);
 
     return lm_graph_factory.compute_lm_graph(task);
 }
@@ -42,10 +37,23 @@ vector<FactPair> get_fact_landmarks(const LandmarkGraph &graph) {
     return facts;
 }
 
-VarToValues get_prev_landmarks(const LandmarkGraph &graph, const FactPair &fact) {
+utils::HashMap<FactPair, LandmarkNode *> get_fact_to_landmark_map(
+    const shared_ptr<LandmarkGraph> &graph) {
+    const LandmarkGraph::Nodes &nodes = graph->get_nodes();
+    // All landmarks are simple, i.e., each has exactly one fact.
+    assert(all_of(nodes.begin(), nodes.end(), [](auto &node) {
+                      return node->get_landmark().facts.size() == 1;
+                  }));
+    utils::HashMap<FactPair, landmarks::LandmarkNode *> fact_to_landmark_map;
+    for (auto &node : nodes) {
+        const FactPair &fact = node->get_landmark().facts[0];
+        fact_to_landmark_map[fact] = node.get();
+    }
+    return fact_to_landmark_map;
+}
+
+VarToValues get_prev_landmarks(const LandmarkNode *node) {
     VarToValues groups;
-    LandmarkNode *node = graph.get_node(fact);
-    assert(node);
     vector<const LandmarkNode *> open;
     unordered_set<const LandmarkNode *> closed;
     for (const auto &parent_and_edge : node->parents) {

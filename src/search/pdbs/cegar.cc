@@ -253,7 +253,7 @@ unique_ptr<PatternInfo> CEGAR::compute_pattern_info(Pattern &&pattern) const {
             log << "##### End of plan #####" << endl;
         }
     }
-    return utils::make_unique_ptr<PatternInfo>(move(pdb), move(plan), unsolvable);
+    return make_unique<PatternInfo>(move(pdb), move(plan), unsolvable);
 }
 
 void CEGAR::compute_initial_collection() {
@@ -785,5 +785,9 @@ void add_cegar_wildcard_option_to_feature(plugins::Feature &feature) {
         "operators that induce the same transition; otherwise compute regular "
         "plans which are sequences of single operators",
         "true");
+}
+tuple<bool> get_cegar_wildcard_arguments_from_options(
+    const plugins::Options &opts) {
+    return make_tuple(opts.get<bool>("use_wildcard_plans"));
 }
 }

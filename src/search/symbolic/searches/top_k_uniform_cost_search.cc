@@ -1,6 +1,6 @@
 #include "top_k_uniform_cost_search.h"
 #include "../closed_list.h"
-#include "../search_engines/symbolic_search.h"
+#include "../search_algorithms/symbolic_search.h"
 
 namespace symbolic {
 bool TopkUniformCostSearch::provable_no_more_plans() {
@@ -36,4 +36,4 @@ void TopkUniformCostSearch::filterFrontier() {
     mgr->filter_mutex(frontier.bucket(), fw, initialization());
     remove_zero(frontier.bucket());
 }
-} // namespace symbolic
+}
