@@ -444,6 +444,15 @@ create_fast_downward_library(
 )
 
 create_fast_downward_library(
+    NAME astar_count
+    HELP "Astar count search"
+    SOURCES
+        search_algorithms/astar_count
+    DEPENDS
+        eager_search
+)
+
+create_fast_downward_library(
     NAME plugin_astar
     HELP "A* search"
     SOURCES
