@@ -119,4 +119,21 @@ create_astar_open_list_factory_and_f_eval(
             evals, false, false);
     return make_pair(open, f);
 }
+
+pair<shared_ptr<OpenListFactory>, const shared_ptr<Evaluator>>
+create_astar_count_open_list_factory_and_f_eval(
+    const shared_ptr<Evaluator> &h_eval, utils::Verbosity verbosity
+    ) {
+    shared_ptr<GEval> g = make_shared<GEval>("astar_count.g_eval", verbosity);
+    shared_ptr<Evaluator> f =
+        make_shared<SumEval>(
+            vector<shared_ptr<Evaluator>>({g, h_eval}),
+            "astar_count.f_eval", verbosity);
+    vector<shared_ptr<Evaluator>> evals = {f, g};
+
+    shared_ptr<OpenListFactory> open =
+        make_shared<tiebreaking_open_list::TieBreakingOpenListFactory>(
+            evals, false, false);
+    return make_pair(open, f);
+}
 }
