@@ -9,9 +9,6 @@
 #include "../task_utils/successor_generator.h"
 #include "../task_utils/task_properties.h"
 
-#include <optional>
-
-
 using namespace std;
 
 namespace astar_count {
@@ -54,29 +51,22 @@ void AStarCount::initialize() {
 }
 
 SearchStatus AStarCount::step() {
-    optional<SearchNode> node;
-    while (true) {
-        if (open_list->empty()) {
-            log << "Number of plans: " << num_paths_to_goals << endl;
-            return found_solution() ? SOLVED : FAILED;
-        }
-        StateID id = open_list->remove_min();
-        State s = state_registry.lookup_state(id);
-        node.emplace(search_space.get_node(s));
+    optional<SearchNode> node = pop_min_node();
 
-        if (node->is_closed())
-            continue;
-
-        EvaluationContext eval_context(s, node->get_g(), false, &statistics);
-
-        node->close();
-        assert(!node->is_dead_end());
-        update_f_value_statistics(eval_context);
-        statistics.inc_expanded();
-        break;
+    if (!node.has_value()) {
+        assert(open_list->empty());
+        log << "Number of plans: " << num_paths_to_goals << endl;
+        return found_solution() ? SOLVED : FAILED;
     }
 
     const State &s = node->get_state();
+    EvaluationContext eval_context(s, node->get_g(), false, &statistics);
+
+    node->close();
+    assert(!node->is_dead_end());
+    update_f_value_statistics(eval_context);
+    statistics.inc_expanded();
+
     if (task_properties::is_goal_state(task_proxy, s)) {
         num_paths_to_goals += state_cost_to_path_count[{s.get_id().get_value(), node->get_real_g()}];
         if (!found_solution()) {
@@ -84,12 +74,20 @@ SearchStatus AStarCount::step() {
         }
     }
 
+    assert(node.has_value());
+    expand(*node);
+
+    return IN_PROGRESS;
+}
+
+void AStarCount::expand(const SearchNode &node) {
+    const State &s = node.get_state();
     vector<OperatorID> applicable_ops;
     successor_generator.generate_applicable_ops(s, applicable_ops);
 
     for (OperatorID op_id : applicable_ops) {
         OperatorProxy op = task_proxy.get_operators()[op_id];
-        if ((node->get_real_g() + op.get_cost()) >= bound)
+        if ((node.get_real_g() + op.get_cost()) >= bound)
             continue;
 
         State succ_state = state_registry.get_successor_state(s, op);
@@ -101,7 +99,7 @@ SearchStatus AStarCount::step() {
         if (succ_node.is_dead_end())
             continue;
 
-        int succ_g = node->get_g() + get_adjusted_cost(op);
+        int succ_g = node.get_g() + get_adjusted_cost(op);
 
         if (succ_node.is_new()) {
             EvaluationContext succ_eval_context(succ_state, succ_g, false, &statistics);
@@ -112,12 +110,12 @@ SearchStatus AStarCount::step() {
                 statistics.inc_dead_ends();
                 continue;
             }
-            succ_node.open_new_node(*node, op, get_adjusted_cost(op));
+            succ_node.open_new_node(node, op, get_adjusted_cost(op));
 
             open_list->insert(succ_eval_context, succ_state.get_id());
             if (search_progress.check_progress(succ_eval_context))
                 statistics.print_checkpoint_line(succ_node.get_g());
-        } else if (succ_node.get_g() > node->get_g() + get_adjusted_cost(op)) {
+        } else if (succ_node.get_g() > node.get_g() + get_adjusted_cost(op)) {
             if (succ_node.is_closed()) {
                 // We found a new cheapest path to a closed state.
                 cerr << "Found a new cheapest path to an open closed state! "
@@ -125,7 +123,7 @@ SearchStatus AStarCount::step() {
                 utils::exit_with(utils::ExitCode::SEARCH_CRITICAL_ERROR);
             }
             assert(succ_node.is_open());
-            succ_node.update_open_node_parent(*node, op, get_adjusted_cost(op));
+            succ_node.update_open_node_parent(node, op, get_adjusted_cost(op));
             EvaluationContext succ_eval_context(succ_state, succ_node.get_g(), false, &statistics);
             open_list->insert(succ_eval_context, succ_state.get_id());
         } else {
@@ -137,9 +135,22 @@ SearchStatus AStarCount::step() {
 
         // TODO: If we plan to count all the solutions beyond the optimal cost, we need to reexpand states with
         // higher costs than the lowest reachable ones. Should be possible by "reopening"
-        update_path_count_for_state(succ_state, s, succ_g, node->get_g());
+        update_path_count_for_state(succ_state, s, succ_g, node.get_g());
     }
-    return IN_PROGRESS;
+}
+
+optional<SearchNode> AStarCount::pop_min_node() {
+    optional<SearchNode> node;
+    while (!open_list->empty()) {
+        StateID id = open_list->remove_min();
+        State s = state_registry.lookup_state(id);
+        node.emplace(search_space.get_node(s));
+
+        if (node->is_closed())
+            continue;
+        return node;
+    }
+    return optional<SearchNode>();
 }
 
 void AStarCount::update_path_count_for_state(const State &state, const State &parent,

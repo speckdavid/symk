@@ -5,16 +5,19 @@
 #include "../search_algorithm.h"
 #include "../utils/hash.h"
 
+#include <optional>
+
 namespace astar_count {
 class AStarCount : public SearchAlgorithm {
+    size_t num_paths_to_goals;
+
     void update_path_count_for_state(const State &state, const State &parent,
                                      int state_g, int parent_g);
 
     void start_f_value_statistics(EvaluationContext &eval_context);
     void update_f_value_statistics(EvaluationContext &eval_context);
 
-    size_t num_paths_to_goals;
-
+    void expand(const SearchNode &node);
 protected:
     std::unique_ptr<StateOpenList> open_list;
     std::shared_ptr<Evaluator> f_evaluator;
@@ -23,6 +26,8 @@ protected:
 
     virtual void initialize() override;
     virtual SearchStatus step() override;
+
+    std::optional<SearchNode> pop_min_node();
 
 public:
     explicit AStarCount(const std::shared_ptr<Evaluator> &h_eval,
