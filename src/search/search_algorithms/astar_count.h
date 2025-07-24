@@ -22,7 +22,7 @@ protected:
     std::unique_ptr<StateOpenList> open_list;
     std::shared_ptr<Evaluator> f_evaluator;
 
-    utils::HashMap<std::pair<int, int>, int> state_cost_to_path_count;
+    utils::HashMap<std::pair<int, int>, size_t> state_cost_to_path_count;
 
     virtual void initialize() override;
     virtual SearchStatus step() override;

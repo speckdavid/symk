@@ -55,7 +55,6 @@ SearchStatus AStarCount::step() {
 
     if (!node.has_value()) {
         assert(open_list->empty());
-        log << "Number of plans: " << num_paths_to_goals << endl;
         return found_solution() ? SOLVED : FAILED;
     }
 
@@ -140,17 +139,16 @@ void AStarCount::expand(const SearchNode &node) {
 }
 
 optional<SearchNode> AStarCount::pop_min_node() {
-    optional<SearchNode> node;
     while (!open_list->empty()) {
         StateID id = open_list->remove_min();
         State s = state_registry.lookup_state(id);
-        node.emplace(search_space.get_node(s));
+        SearchNode node = search_space.get_node(s);
 
-        if (node->is_closed())
+        if (node.is_closed())
             continue;
         return node;
     }
-    return optional<SearchNode>();
+    return nullopt;
 }
 
 void AStarCount::update_path_count_for_state(const State &state, const State &parent,
@@ -161,6 +159,7 @@ void AStarCount::update_path_count_for_state(const State &state, const State &pa
 }
 
 void AStarCount::print_statistics() const {
+    log << "Number of plans: " << num_paths_to_goals << endl;
     statistics.print_detailed_statistics();
     search_space.print_statistics();
 }
