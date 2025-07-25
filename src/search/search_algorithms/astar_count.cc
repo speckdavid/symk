@@ -11,6 +11,10 @@
 
 using namespace std;
 
+// TODO: If we have a relative bound and no absolut, we may get nodes in the open list which are
+// to costly. So, we can stop early when the bound is exceeded. Q: Do we need tie breaking [f,g,h]
+// In particular the h in the end? probably not but valuable to thing about it.
+
 namespace astar_count {
 AStarCount::AStarCount(const shared_ptr<Evaluator> &h_eval,
                        OperatorCost cost_type, int bound, double max_time,
@@ -109,6 +113,8 @@ void AStarCount::expand(const SearchNode &node) {
                 statistics.inc_dead_ends();
                 continue;
             }
+            if (succ_eval_context.get_evaluator_value_or_infinity(f_evaluator.get()) >= bound)
+                continue;
             succ_node.open_new_node(node, op, get_adjusted_cost(op));
 
             open_list->insert(succ_eval_context, succ_state.get_id());
@@ -124,6 +130,7 @@ void AStarCount::expand(const SearchNode &node) {
             assert(succ_node.is_open());
             succ_node.update_open_node_parent(node, op, get_adjusted_cost(op));
             EvaluationContext succ_eval_context(succ_state, succ_node.get_g(), false, &statistics);
+            assert(succ_eval_context.get_evaluator_value_or_infinity(f_evaluator.get()) < bound);
             open_list->insert(succ_eval_context, succ_state.get_id());
         } else {
             /*
