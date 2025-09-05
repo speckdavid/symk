@@ -62,6 +62,11 @@ SearchStatus AStarCount::step() {
         return found_solution() ? SOLVED : FAILED;
     }
 
+    // More expansive than the dynamic bound
+    if (node->get_real_g() >= bound) {
+        return IN_PROGRESS;
+    }
+
     const State &s = node->get_state();
     EvaluationContext eval_context(s, node->get_g(), false, &statistics);
 
@@ -74,6 +79,9 @@ SearchStatus AStarCount::step() {
         num_paths_to_goals += state_cost_to_path_count[{s.get_id().get_value(), node->get_real_g()}];
         if (!found_solution()) {
             check_goal_and_set_plan(s);
+        }
+        if (bound == numeric_limits<int>::max()) {
+            bound = min(bound, node->get_real_g());
         }
     }
 
@@ -137,10 +145,11 @@ void AStarCount::expand(const SearchNode &node) {
               We found an equally or more expensive path to an open or closed
               state.
             */
+
+            // TODO: If we plan to count all the solutions beyond the optimal cost, we need to reexpand states with
+            // higher costs than the lowest reachable ones. Should be possible by "reopening"
         }
 
-        // TODO: If we plan to count all the solutions beyond the optimal cost, we need to reexpand states with
-        // higher costs than the lowest reachable ones. Should be possible by "reopening"
         update_path_count_for_state(succ_state, s, succ_g, node.get_g());
     }
 }
