@@ -23,6 +23,8 @@ protected:
     std::shared_ptr<Evaluator> f_evaluator;
 
     utils::HashMap<std::pair<int, int>, size_t> state_cost_to_path_count;
+    // If we also want to store the number of actions in use, we can think of an ADD
+    // or EVMDD for each action which share information over states
 
     virtual void initialize() override;
     virtual SearchStatus step() override;
