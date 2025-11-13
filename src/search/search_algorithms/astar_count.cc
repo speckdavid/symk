@@ -20,7 +20,7 @@ AStarCount::AStarCount(const shared_ptr<Evaluator> &h_eval,
                        OperatorCost cost_type, int bound, double max_time,
                        const string &description, utils::Verbosity verbosity) :
     SearchAlgorithm(cost_type, bound, max_time, description, verbosity),
-    num_paths_to_goals(0) {
+    num_goal_paths(0) {
     auto [open_list_factory, eval] = search_common::create_astar_count_open_list_factory_and_f_eval(h_eval, verbosity);
     open_list = open_list_factory->create_state_open_list();
     f_evaluator = eval;
@@ -33,7 +33,7 @@ void AStarCount::initialize() {
     assert(open_list);
 
     State initial_state = state_registry.get_initial_state();
-    state_cost_to_path_count[{initial_state.get_id().get_value(), 0}] = 1;
+    state_cost_to_path_count[initial_state.get_id().get_value()][0] = 1;
 
     EvaluationContext eval_context(initial_state, 0, true, &statistics);
 
@@ -76,7 +76,14 @@ SearchStatus AStarCount::step() {
     statistics.inc_expanded();
 
     if (task_properties::is_goal_state(task_proxy, s)) {
-        num_paths_to_goals += state_cost_to_path_count[{s.get_id().get_value(), node->get_real_g()}];
+        num_goal_paths += state_cost_to_path_count[s.get_id().get_value()][node->get_real_g()];
+
+        for (const OperatorProxy &op: task_proxy.get_operators()) {
+            utils::g_log << op.get_name() << ": " << state_cost_operator_to_path_count[s.get_id().get_value()][node->get_real_g()][op.get_id()] << endl;
+            num_operator_on_goal_path[op.get_id()] +=
+                state_cost_operator_to_path_count[s.get_id().get_value()][node->get_real_g()][op.get_id()];
+        }
+
         if (!found_solution()) {
             check_goal_and_set_plan(s);
         }
@@ -150,7 +157,7 @@ void AStarCount::expand(const SearchNode &node) {
             // higher costs than the lowest reachable ones. Should be possible by "reopening"
         }
 
-        update_path_count_for_state(succ_state, s, succ_g, node.get_g());
+        update_path_count_for_state(succ_state, s, succ_g, node.get_g(), op_id);
     }
 }
 
@@ -160,22 +167,44 @@ optional<SearchNode> AStarCount::pop_min_node() {
         State s = state_registry.lookup_state(id);
         SearchNode node = search_space.get_node(s);
 
-        if (node.is_closed())
+        if (node.is_closed()) {
+            cout << s.get_id() << endl;
             continue;
+        }
         return node;
     }
     return nullopt;
 }
 
 void AStarCount::update_path_count_for_state(const State &state, const State &parent,
-                                             int state_g, int parent_g) {
+                                             int state_g, int parent_g,
+                                             const OperatorID &operator_id) {
     assert(state_g >= parent_g);
-    int parent_count = state_cost_to_path_count[{parent.get_id().get_value(), parent_g}];
-    state_cost_to_path_count[{state.get_id().get_value(), state_g}] += parent_count;
+
+    auto state_id = state.get_id().get_value();
+    auto parent_id = parent.get_id().get_value();
+
+    // Update total path count
+    int parent_count = state_cost_to_path_count[parent_id][parent_g];
+    state_cost_to_path_count[state_id][state_g] += parent_count;
+
+    // Update path counts per operator
+    auto &state_op_counts = state_cost_operator_to_path_count[state_id][state_g];
+    const auto &parent_op_counts = state_cost_operator_to_path_count[parent_id][parent_g];
+
+    for (const auto &[op_id, count] : parent_op_counts) {
+        state_op_counts[op_id] += count;
+    }
+
+    // Increment the count for the operator that led to this state
+    state_op_counts[operator_id.get_index()] += parent_count;
 }
 
 void AStarCount::print_statistics() const {
-    log << "Number of plans: " << num_paths_to_goals << endl;
+    log << "Number of plans: " << num_goal_paths << endl;
+    for (const OperatorProxy &op : task_proxy.get_operators()) {
+        utils::g_log << op.get_name() << ": " << num_operator_on_goal_path.at(op.get_id()) << endl;
+    }
     statistics.print_detailed_statistics();
     search_space.print_statistics();
 }

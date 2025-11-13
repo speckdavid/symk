@@ -9,10 +9,12 @@
 
 namespace astar_count {
 class AStarCount : public SearchAlgorithm {
-    size_t num_paths_to_goals;
+    size_t num_goal_paths;
+    utils::HashMap<int, size_t> num_operator_on_goal_path;
 
     void update_path_count_for_state(const State &state, const State &parent,
-                                     int state_g, int parent_g);
+                                     int state_g, int parent_g,
+                                     const OperatorID &operator_id);
 
     void start_f_value_statistics(EvaluationContext &eval_context);
     void update_f_value_statistics(EvaluationContext &eval_context);
@@ -22,7 +24,8 @@ protected:
     std::unique_ptr<StateOpenList> open_list;
     std::shared_ptr<Evaluator> f_evaluator;
 
-    utils::HashMap<std::pair<int, int>, size_t> state_cost_to_path_count;
+    utils::HashMap<int, utils::HashMap<int, size_t>> state_cost_to_path_count;
+    utils::HashMap<int, utils::HashMap<int, utils::HashMap<int, int>>> state_cost_operator_to_path_count;
 
     virtual void initialize() override;
     virtual SearchStatus step() override;
