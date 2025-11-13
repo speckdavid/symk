@@ -26,6 +26,8 @@ protected:
 
     utils::HashMap<int, utils::HashMap<int, size_t>> state_cost_to_path_count;
     utils::HashMap<int, utils::HashMap<int, utils::HashMap<int, int>>> state_cost_operator_to_path_count;
+    // If we also want to store the number of actions in use, we can think of an ADD
+    // or EVMDD for each action which share information over states
 
     virtual void initialize() override;
     virtual SearchStatus step() override;
