@@ -1,23 +1,21 @@
-#include <cstdlib>
-#include <iostream>
-#include <fstream>
-
-#include <string>
-#include <vector>
-#include <fstream>
-
 #include "helper_functions.h"
-#include "state.h"
+
+#include "axiom.h"
 #include "mutex_group.h"
 #include "operator.h"
-#include "axiom.h"
+#include "state.h"
 #include "variable.h"
+
+#include <cstdlib>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <vector>
 
 using namespace std;
 
 static const int SAS_FILE_VERSION = 3;
 static const int PRE_FILE_VERSION = SAS_FILE_VERSION;
-
 
 void check_magic(istream &in, string magic) {
     string word;
@@ -53,8 +51,9 @@ void read_metric(istream &in, bool &metric) {
     check_magic(in, "end_metric");
 }
 
-void read_variables(istream &in, vector<Variable> &internal_variables,
-                    vector<Variable *> &variables) {
+void read_variables(
+    istream &in, vector<Variable> &internal_variables,
+    vector<Variable *> &variables) {
     int count;
     in >> count;
     internal_variables.reserve(count);
@@ -65,16 +64,18 @@ void read_variables(istream &in, vector<Variable> &internal_variables,
     }
 }
 
-void read_mutexes(istream &in, vector<MutexGroup> &mutexes,
-                  const vector<Variable *> &variables) {
+void read_mutexes(
+    istream &in, vector<MutexGroup> &mutexes,
+    const vector<Variable *> &variables) {
     size_t count;
     in >> count;
     for (size_t i = 0; i < count; ++i)
         mutexes.push_back(MutexGroup(in, variables));
 }
 
-void read_goal(istream &in, const vector<Variable *> &variables,
-               vector<pair<Variable *, int>> &goals) {
+void read_goal(
+    istream &in, const vector<Variable *> &variables,
+    vector<pair<Variable *, int>> &goals) {
     check_magic(in, "begin_goal");
     int count;
     in >> count;
@@ -89,35 +90,31 @@ void read_goal(istream &in, const vector<Variable *> &variables,
 void dump_goal(const vector<pair<Variable *, int>> &goals) {
     cout << "Goal Conditions:" << endl;
     for (const auto &goal : goals)
-        cout << "  " << goal.first->get_name() << ": "
-             << goal.second << endl;
+        cout << "  " << goal.first->get_name() << ": " << goal.second << endl;
 }
 
-void read_operators(istream &in, const vector<Variable *> &variables,
-                    vector<Operator> &operators) {
+void read_operators(
+    istream &in, const vector<Variable *> &variables,
+    vector<Operator> &operators) {
     int count;
     in >> count;
     for (int i = 0; i < count; i++)
         operators.push_back(Operator(in, variables));
 }
 
-void read_axioms(istream &in, const vector<Variable *> &variables,
-                 vector<Axiom> &axioms) {
+void read_axioms(
+    istream &in, const vector<Variable *> &variables, vector<Axiom> &axioms) {
     int count;
     in >> count;
     for (int i = 0; i < count; i++)
         axioms.push_back(Axiom(in, variables));
 }
 
-void read_preprocessed_problem_description(istream &in,
-                                           bool &metric,
-                                           vector<Variable> &internal_variables,
-                                           vector<Variable *> &variables,
-                                           vector<MutexGroup> &mutexes,
-                                           State &initial_state,
-                                           vector<pair<Variable *, int>> &goals,
-                                           vector<Operator> &operators,
-                                           vector<Axiom> &axioms) {
+void read_preprocessed_problem_description(
+    istream &in, bool &metric, vector<Variable> &internal_variables,
+    vector<Variable *> &variables, vector<MutexGroup> &mutexes,
+    State &initial_state, vector<pair<Variable *, int>> &goals,
+    vector<Operator> &operators, vector<Axiom> &axioms) {
     read_and_verify_version(in);
     read_metric(in, metric);
     read_variables(in, internal_variables, variables);
@@ -128,11 +125,10 @@ void read_preprocessed_problem_description(istream &in,
     read_axioms(in, variables, axioms);
 }
 
-void dump_preprocessed_problem_description(const vector<Variable *> &variables,
-                                           const State &initial_state,
-                                           const vector<pair<Variable *, int>> &goals,
-                                           const vector<Operator> &operators,
-                                           const vector<Axiom> &axioms) {
+void dump_preprocessed_problem_description(
+    const vector<Variable *> &variables, const State &initial_state,
+    const vector<pair<Variable *, int>> &goals,
+    const vector<Operator> &operators, const vector<Axiom> &axioms) {
     cout << "Variables (" << variables.size() << "):" << endl;
     for (Variable *var : variables)
         var->dump();
@@ -147,14 +143,12 @@ void dump_preprocessed_problem_description(const vector<Variable *> &variables,
         axiom.dump();
 }
 
-void generate_cpp_input(const vector<Variable *> &ordered_vars,
-                        const bool &metric,
-                        const vector<MutexGroup> &mutexes,
-                        const State &initial_state,
-                        const vector<pair<Variable *, int>> &goals,
-                        const vector<Operator> &operators,
-                        const vector<Axiom> &axioms,
-                        const string &file_name) {
+void generate_cpp_input(
+    const vector<Variable *> &ordered_vars, const bool &metric,
+    const vector<MutexGroup> &mutexes, const State &initial_state,
+    const vector<pair<Variable *, int>> &goals,
+    const vector<Operator> &operators, const vector<Axiom> &axioms,
+    const string &file_name) {
     ofstream outfile;
     outfile.open(file_name, ios::out);
 
@@ -177,7 +171,7 @@ void generate_cpp_input(const vector<Variable *> &ordered_vars,
 
     outfile << "begin_state" << endl;
     for (Variable *var : ordered_vars)
-        outfile << initial_state[var] << endl;  // for axioms default value
+        outfile << initial_state[var] << endl; // for axioms default value
     outfile << "end_state" << endl;
 
     vector<int> ordered_goal_values;
@@ -212,8 +206,9 @@ void generate_dummy_cpp_input(bool solvable, const string &file_name) {
 
     outfile << "begin_metric" << endl << "1" << endl << "end_metric" << endl;
 
-    //variables
-    outfile << "1" << endl << "begin_variable" << endl
+    // variables
+    outfile << "1" << endl
+            << "begin_variable" << endl
             << "var0" << endl
             << "-1" << endl
             << "2" << endl
@@ -221,17 +216,20 @@ void generate_dummy_cpp_input(bool solvable, const string &file_name) {
             << "Atom dummy(val2)" << endl
             << "end_variable" << endl;
 
-    //Mutexes
+    // Mutexes
     outfile << "0" << endl;
 
-    //Initial state and goal
+    // Initial state and goal
     outfile << "begin_state" << endl << "0" << endl << "end_state" << endl;
-    outfile << "begin_goal" << endl << "1" << endl << "0 " << to_string(!solvable) << endl << "end_goal" << endl;
+    outfile << "begin_goal" << endl
+            << "1" << endl
+            << "0 " << to_string(!solvable) << endl
+            << "end_goal" << endl;
 
-    //Operators
+    // Operators
     outfile << "0" << endl;
 
-    //Axioms
+    // Axioms
     outfile << "0" << endl;
 
     outfile.close();

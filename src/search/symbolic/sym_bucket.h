@@ -1,8 +1,10 @@
 #ifndef SYMBOLIC_SYM_BUCKET_H
 #define SYMBOLIC_SYM_BUCKET_H
 
-#include "mtr.h"
+// clang-format off
+#include "mtr.h" // required before cuddObj.hh
 #include "cuddObj.hh"
+// clang-format on
 
 #include <vector>
 

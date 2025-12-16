@@ -10,8 +10,8 @@ vector<int> MaxDAG::get_result() {
         for (int i = 0; i < num_nodes; i++) {
             cout << "From " << i << ":";
             for (const auto &trans : weighted_graph[i])
-                cout << " " << trans.first
-                     << " [weight " << trans.second << "]";
+                cout << " " << trans.first << " [weight " << trans.second
+                     << "]";
             cout << endl;
         }
     }
@@ -29,7 +29,8 @@ vector<int> MaxDAG::get_result() {
     multimap<int, int> heap;
     for (int node = 0; node < num_nodes; node++) {
         if (debug)
-            cout << "node " << node << " has " << incoming_weights[node] << " edges" << endl;
+            cout << "node " << node << " has " << incoming_weights[node]
+                 << " edges" << endl;
         HeapPosition pos = heap.insert(make_pair(incoming_weights[node], node));
         heap_positions.push_back(pos);
     }
@@ -52,12 +53,15 @@ vector<int> MaxDAG::get_result() {
                 int arc_weight = succ.second;
                 while (arc_weight >= 100000)
                     arc_weight -= 100000;
-                //cout << "Looking at arc from " << removed << " to " << target << endl;
+                // cout << "Looking at arc from " << removed << " to " << target
+                // << endl;
                 int new_weight = heap_positions[target]->first - arc_weight;
                 heap.erase(heap_positions[target]);
-                heap_positions[target] = heap.insert(make_pair(new_weight, target));
+                heap_positions[target] =
+                    heap.insert(make_pair(new_weight, target));
                 if (debug)
-                    cout << "node " << target << " has now " << new_weight << " edges " << endl;
+                    cout << "node " << target << " has now " << new_weight
+                         << " edges " << endl;
             }
         }
     }

@@ -2,10 +2,11 @@
 
 #include "../closed_list.h"
 #include "../frontier.h"
+#include "../sym_utils.h"
+
+#include "../../utils/timer.h"
 #include "../plan_reconstruction/sym_solution_cut.h"
 #include "../search_algorithms/symbolic_search.h"
-#include "../sym_utils.h"
-#include "../../utils/timer.h"
 
 #include <fstream>
 #include <iostream>
@@ -15,8 +16,8 @@
 using namespace std;
 
 namespace symbolic {
-UniformCostSearch::UniformCostSearch(SymbolicSearch *eng,
-                                     const SymParameters &params)
+UniformCostSearch::UniformCostSearch(
+    SymbolicSearch *eng, const SymParameters &params)
     : SymSearch(eng, params),
       fw(true),
       step_estimation(0, 0, false),
@@ -24,8 +25,9 @@ UniformCostSearch::UniformCostSearch(SymbolicSearch *eng,
       lastStepCost(true) {
 }
 
-bool UniformCostSearch::init(shared_ptr<SymStateSpaceManager> manager,
-                             bool forward, UniformCostSearch *opposite_search) {
+bool UniformCostSearch::init(
+    shared_ptr<SymStateSpaceManager> manager, bool forward,
+    UniformCostSearch *opposite_search) {
     mgr = manager;
     fw = forward;
     lastStepCost = true;
@@ -73,7 +75,9 @@ void UniformCostSearch::checkFrontierCut(Bucket &bucket, int g) {
     }
 }
 
-bool UniformCostSearch::provable_no_more_plans() {return open_list.empty();}
+bool UniformCostSearch::provable_no_more_plans() {
+    return open_list.empty();
+}
 
 bool UniformCostSearch::prepareBucket() {
     if (!frontier.bucketReady()) {
@@ -122,9 +126,11 @@ void UniformCostSearch::stepImage(int maxTime, int maxNodes) {
         return;
     }
 
-    Result prepare_res = frontier.prepare(maxTime, maxNodes, fw, initialization());
+    Result prepare_res =
+        frontier.prepare(maxTime, maxNodes, fw, initialization());
     if (!prepare_res.ok) {
-        step_estimation.set_data(step_timer(), frontier.nodes(), !prepare_res.ok);
+        step_estimation.set_data(
+            step_timer(), frontier.nodes(), !prepare_res.ok);
         return;
     }
 
@@ -137,8 +143,8 @@ void UniformCostSearch::stepImage(int maxTime, int maxNodes) {
 
     if (res_expansion.ok) {
         lastStepCost = false; // Must be set to false before calling checkCut
-        // Process Simg, removing duplicates and computing h. Store in Sfilter and
-        // reopen. Include new states in the open list
+        // Process Simg, removing duplicates and computing h. Store in Sfilter
+        // and reopen. Include new states in the open list
         for (auto &resImage : res_expansion.buckets) {
             for (auto &pairCostBDDs : resImage) {
                 int cost = frontier.g() + pairCostBDDs.first;

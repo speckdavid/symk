@@ -1,16 +1,16 @@
 #include "sym_utils.h"
 
 namespace symbolic {
-DisjunctiveTransitionRelation disjunctive_tr_merge(DisjunctiveTransitionRelation tr,
-                                                   const DisjunctiveTransitionRelation &tr2,
-                                                   int maxSize) {
+DisjunctiveTransitionRelation disjunctive_tr_merge(
+    DisjunctiveTransitionRelation tr, const DisjunctiveTransitionRelation &tr2,
+    int maxSize) {
     tr.disjunctive_merge(tr2, maxSize);
     return tr;
 }
 
-DisjunctiveTransitionRelation conjunctive_tr_merge(DisjunctiveTransitionRelation tr,
-                                                   const DisjunctiveTransitionRelation &tr2,
-                                                   int maxSize) {
+DisjunctiveTransitionRelation conjunctive_tr_merge(
+    DisjunctiveTransitionRelation tr, const DisjunctiveTransitionRelation &tr2,
+    int maxSize) {
     tr.conjunctive_merge(tr2, maxSize);
     return tr;
 }

@@ -1,10 +1,10 @@
 #ifndef SYMBOLIC_PLAN_SELECTION_H
 #define SYMBOLIC_PLAN_SELECTION_H
 
-#include "../../plan_manager.h"
-#include "../../plugins/plugin.h"
 #include "../sym_variables.h"
 
+#include "../../plan_manager.h"
+#include "../../plugins/plugin.h"
 #include "../plan_reconstruction/sym_solution_cut.h"
 
 #include <memory>
@@ -19,11 +19,12 @@ public:
 
     PlanSelector(const plugins::Options &opts);
 
-    virtual ~PlanSelector() {}
+    virtual ~PlanSelector() {
+    }
 
-    virtual void init(std::shared_ptr<SymVariables> sym_vars,
-                      const std::shared_ptr<AbstractTask> &task,
-                      PlanManager &plan_manager);
+    virtual void init(
+        std::shared_ptr<SymVariables> sym_vars,
+        const std::shared_ptr<AbstractTask> &task, PlanManager &plan_manager);
 
     virtual void add_plan(const Plan &plan) = 0;
 
@@ -35,11 +36,17 @@ public:
 
     std::pair<int, int> get_first_zero_cost_loop(const Plan &plan) const;
 
-    int get_num_desired_plans() const {return num_desired_plans;}
+    int get_num_desired_plans() const {
+        return num_desired_plans;
+    }
 
-    int get_num_accepted_plans() const {return num_accepted_plans;}
+    int get_num_accepted_plans() const {
+        return num_accepted_plans;
+    }
 
-    int get_num_rejected_plans() const {return num_rejected_plans;}
+    int get_num_rejected_plans() const {
+        return num_rejected_plans;
+    }
 
     bool found_enough_plans() const {
         return num_accepted_plans >= num_desired_plans;
@@ -51,7 +58,7 @@ public:
 
     BDD get_states_accepted_goal_path() const {
         return anytime_completness ? states_accepted_goal_paths
-               : sym_vars->oneBDD();
+                                   : sym_vars->oneBDD();
     }
 
     int get_num_reported_plan() const {
@@ -64,7 +71,9 @@ public:
 
     const Plan &get_first_accepted_plan() const;
 
-    double get_first_plan_cost() const {return first_accepted_plan_cost;}
+    double get_first_plan_cost() const {
+        return first_accepted_plan_cost;
+    }
 
     virtual void print_options() const;
 
@@ -72,7 +81,7 @@ public:
 
 protected:
     std::shared_ptr<SymVariables> sym_vars;
-    std::shared_ptr<StateRegistry> state_registry;   // used for explicit stuff
+    std::shared_ptr<StateRegistry> state_registry; // used for explicit stuff
 
     // Determines if it possible/desired to proof that no more (accepted)
     // plans exits
@@ -100,7 +109,6 @@ protected:
     double first_accepted_plan_cost;
 
     BDD states_accepted_goal_paths;
-
 
     void save_accepted_plan(const Plan &plan);
     void save_rejected_plan(const Plan &plan);

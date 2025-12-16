@@ -2,18 +2,16 @@ name: Apptainer
 
 on:
   push:
-    branches:
-      - master
+    branches: [master]
   pull_request:
-    branches:
-      - master
+    branches: [master]
   workflow_dispatch: # Optional: allows you to manually trigger the workflow from the GitHub UI
 
 jobs:
   build-image:
     name: Build Apptainer image
     if: github.repository == 'speckdavid/symk'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Check out code

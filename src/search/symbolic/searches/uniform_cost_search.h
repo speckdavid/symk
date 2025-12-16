@@ -2,6 +2,7 @@
 #define SYMBOLIC_UNIFORM_COST_SEARCH_H
 
 #include "sym_search.h"
+
 #include "../closed_list.h"
 #include "../frontier.h"
 #include "../open_list.h"
@@ -49,9 +50,12 @@ protected:
 
     int last_g_cost;
 
-    void violated(TruncatedReason reason, double time, int maxTime, int maxNodes);
+    void violated(
+        TruncatedReason reason, double time, int maxTime, int maxNodes);
 
-    bool initialization() const {return frontier.g() == 0 && lastStepCost;}
+    bool initialization() const {
+        return frontier.g() == 0 && lastStepCost;
+    }
 
     /*
      * Check if we can proof that no more plans exist
@@ -96,8 +100,9 @@ public:
 
     virtual void stepImage(int maxTime, int maxNodes) override;
 
-    bool init(std::shared_ptr<SymStateSpaceManager> manager, bool fw,
-              UniformCostSearch *opposite_search); // Init forward or backward search
+    bool init(
+        std::shared_ptr<SymStateSpaceManager> manager, bool fw,
+        UniformCostSearch *opposite_search); // Init forward or backward search
 
     virtual int getF() const override {
         return open_list.minNextG(frontier, mgr->get_min_transition_cost());
@@ -107,16 +112,20 @@ public:
         return frontier.empty() ? open_list.minG() : frontier.g();
     }
 
-    std::shared_ptr<ClosedList> getClosedShared() const {return closed;}
+    std::shared_ptr<ClosedList> getClosedShared() const {
+        return closed;
+    }
 
     void filterDuplicates(Bucket &bucket);
 
-    // Returns the nodes that have been expanded by the algorithm (closed without
-    // the current frontier)
+    // Returns the nodes that have been expanded by the algorithm (closed
+    // without the current frontier)
     BDD getExpanded() const;
     void getNotExpanded(Bucket &res) const;
 
-    Estimation *get_step_estimator() {return &step_estimation;}
+    Estimation *get_step_estimator() {
+        return &step_estimation;
+    }
 
     // void write(const std::string & file) const;
 

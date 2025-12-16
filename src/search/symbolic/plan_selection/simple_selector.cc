@@ -1,7 +1,7 @@
 #include "simple_selector.h"
 
-#include "../../task_utils/task_properties.h"
 #include "../../state_registry.h"
+#include "../../task_utils/task_properties.h"
 
 #include <iostream>
 #include <stdio.h>
@@ -44,7 +44,8 @@ bool SimpleSelector::is_simple(const Plan &plan) {
     return true;
 }
 
-class SimpleSelectorFeature : public plugins::TypedFeature<PlanSelector, SimpleSelector> {
+class SimpleSelectorFeature
+    : public plugins::TypedFeature<PlanSelector, SimpleSelector> {
 public:
     SimpleSelectorFeature() : TypedFeature("simple") {
         document_title("Simple (loopless) plan selector");

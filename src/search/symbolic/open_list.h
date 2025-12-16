@@ -2,10 +2,10 @@
 #define SYMBOLIC_OPEN_LIST_H
 
 #include "sym_bucket.h"
-#include <cassert>
-#include <map>
 
+#include <cassert>
 #include <iostream>
+#include <map>
 
 namespace symbolic {
 class SymStateSpaceManager;

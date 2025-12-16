@@ -8,11 +8,14 @@ class TopKEvenSelector : public PlanSelector {
 public:
     TopKEvenSelector(const plugins::Options &opts);
 
-    ~TopKEvenSelector() {}
+    ~TopKEvenSelector() {
+    }
 
     void add_plan(const Plan &plan) override;
 
-    std::string tag() const override {return "Top-K (even plan length)";}
+    std::string tag() const override {
+        return "Top-K (even plan length)";
+    }
 };
 }
 

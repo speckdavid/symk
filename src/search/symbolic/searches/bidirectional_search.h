@@ -15,10 +15,10 @@ private:
     UniformCostSearch *selectBestDirection();
 
 public:
-    BidirectionalSearch(SymbolicSearch *eng, const SymParameters &params,
-                        std::shared_ptr<UniformCostSearch> fw,
-                        std::shared_ptr<UniformCostSearch> bw,
-                        bool alternating = false);
+    BidirectionalSearch(
+        SymbolicSearch *eng, const SymParameters &params,
+        std::shared_ptr<UniformCostSearch> fw,
+        std::shared_ptr<UniformCostSearch> bw, bool alternating = false);
 
     virtual bool finished() const override;
 
@@ -31,18 +31,24 @@ public:
     virtual void stepImage(int maxTime, int maxNodes) override;
 
     virtual int getF() const override {
-        return std::max<int>(std::max<int>(fw->getF(), bw->getF()),
-                             fw->getG() + bw->getG() + std::min(1, mgr->get_min_transition_cost()));
+        return std::max<int>(
+            std::max<int>(fw->getF(), bw->getF()),
+            fw->getG() + bw->getG() +
+                std::min(1, mgr->get_min_transition_cost()));
     }
 
     bool isExpFor(BidirectionalSearch *bdExp) const;
 
-    inline UniformCostSearch *getFw() const {return fw.get();}
+    inline UniformCostSearch *getFw() const {
+        return fw.get();
+    }
 
-    inline UniformCostSearch *getBw() const {return bw.get();}
+    inline UniformCostSearch *getBw() const {
+        return bw.get();
+    }
 
-    friend std::ostream &operator<<(std::ostream &os,
-                                    const BidirectionalSearch &other);
+    friend std::ostream &operator<<(
+        std::ostream &os, const BidirectionalSearch &other);
 };
 }
 #endif

@@ -14,11 +14,14 @@ class ValidationSelector : public PlanSelector {
 public:
     ValidationSelector(const plugins::Options &opts);
 
-    ~ValidationSelector() {}
+    ~ValidationSelector() {
+    }
 
     void add_plan(const Plan &plan) override;
 
-    std::string tag() const override {return "Validation";}
+    std::string tag() const override {
+        return "Validation";
+    }
 };
 }
 

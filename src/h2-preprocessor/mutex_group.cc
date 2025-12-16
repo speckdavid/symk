@@ -6,8 +6,9 @@
 #include <fstream>
 #include <iostream>
 
-MutexGroup::MutexGroup(istream &in, const vector<Variable *> &variables) : dir(FW) {
-    //Mutex groups detected in the translator are "fw" mutexes
+MutexGroup::MutexGroup(istream &in, const vector<Variable *> &variables)
+    : dir(FW) {
+    // Mutex groups detected in the translator are "fw" mutexes
     int size;
     check_magic(in, "begin_mutex_group");
     in >> size;
@@ -18,9 +19,9 @@ MutexGroup::MutexGroup(istream &in, const vector<Variable *> &variables) : dir(F
     }
     check_magic(in, "end_mutex_group");
 }
-MutexGroup::MutexGroup(const vector<pair<int, int>> &f,
-                       const vector<Variable *> &variables,
-                       bool regression) {
+MutexGroup::MutexGroup(
+    const vector<pair<int, int>> &f, const vector<Variable *> &variables,
+    bool regression) {
     if (regression) {
         dir = BW;
     } else {
@@ -48,19 +49,18 @@ void MutexGroup::dump() const {
     for (const auto &fact : facts) {
         const Variable *var = fact.first;
         int value = fact.second;
-        cout << "   " << var->get_name() << " = " << value
-             << " (" << var->get_fact_name(value) << ")" << endl;
+        cout << "   " << var->get_name() << " = " << value << " ("
+             << var->get_fact_name(value) << ")" << endl;
     }
 }
 
 void MutexGroup::generate_cpp_input(ofstream &outfile) const {
-    string groupname = "mutex";
     string dirname = dir == FW ? "fw" : "bw";
-    outfile << "begin_mutex_group" << endl << groupname << endl << dirname << endl
+    outfile << "begin_mutex_group" << endl
+            << dirname << endl
             << facts.size() << endl;
     for (const auto &fact : facts) {
-        outfile << fact.first->get_level()
-                << " " << fact.second << endl;
+        outfile << fact.first->get_level() << " " << fact.second << endl;
     }
     outfile << "end_mutex_group" << endl;
 }
@@ -93,23 +93,24 @@ void strip_mutexes(vector<MutexGroup> &mutexes) {
             mutexes[new_index++] = mutex;
     }
     mutexes.erase(mutexes.begin() + new_index, mutexes.end());
-    cout << mutexes.size() << " of " << old_count
-         << " mutex groups necessary." << endl;
+    cout << mutexes.size() << " of " << old_count << " mutex groups necessary."
+         << endl;
 }
 
 void MutexGroup::remove_unreachable_facts() {
     vector<pair<const Variable *, int>> newfacts;
     for (const pair<const Variable *, int> &fact : facts) {
-        if (fact.first->is_necessary() && fact.first->is_reachable(fact.second)) {
-            newfacts.push_back(make_pair(fact.first, fact.first->get_new_id(fact.second)));
+        if (fact.first->is_necessary() &&
+            fact.first->is_reachable(fact.second)) {
+            newfacts.push_back(
+                make_pair(fact.first, fact.first->get_new_id(fact.second)));
         }
     }
     newfacts.swap(facts);
 }
 
-
-
-void MutexGroup::get_mutex_group(vector<pair<int, int>> &invariant_group) const {
+void MutexGroup::get_mutex_group(
+    vector<pair<int, int>> &invariant_group) const {
     invariant_group.reserve(facts.size());
     for (size_t j = 0; j < facts.size(); ++j) {
         int var = facts[j].first->get_level();

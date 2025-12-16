@@ -7,6 +7,12 @@ namespace landmarks {
 class LandmarkSumHeuristic : public LandmarkHeuristic {
     const bool dead_ends_reliable;
 
+    /*
+      We compute landmark achiever costs under the assumption that landmark
+      node IDs go from 0 to the number of landmarks - 1, therefore the entry at
+      index i in the following vectors corresponds to the entry for the landmark
+      with ID i.
+    */
     std::vector<int> min_first_achiever_costs;
     std::vector<int> min_possible_achiever_costs;
 
@@ -19,9 +25,9 @@ public:
     LandmarkSumHeuristic(
         const std::shared_ptr<LandmarkFactory> &lm_factory, bool pref,
         bool prog_goal, bool prog_gn, bool prog_r,
-        const std::shared_ptr<AbstractTask> &transform,
-        bool cache_estimates, const std::string &description,
-        utils::Verbosity verbosity, tasks::AxiomHandlingType axioms);
+        const std::shared_ptr<AbstractTask> &transform, bool cache_estimates,
+        const std::string &description, utils::Verbosity verbosity,
+        tasks::AxiomHandlingType axioms);
 
     virtual bool dead_ends_are_reliable() const override;
 };

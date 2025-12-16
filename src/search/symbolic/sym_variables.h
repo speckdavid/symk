@@ -3,11 +3,9 @@
 
 #include "sym_bucket.h"
 
-#include "sym_axiom/sym_axiom_compilation.h"
 #include "../tasks/root_task.h"
 #include "../utils/timer.h"
-#include "../sdac_parser/catamorph/expression.h"
-#include "../sdac_parser/catamorph/catamorph.h"
+#include "sym_axiom/sym_axiom_compilation.h"
 
 #include <cassert>
 #include <fstream>
@@ -45,8 +43,8 @@ class SymVariables {
     // Var order used by the algorithm.
     // const VariableOrderType variable_ordering;
     // Parameters to initialize the CUDD manager
-    const long cudd_init_nodes;          // Number of initial nodes
-    const long cudd_init_cache_size;     // Initial cache size
+    const long cudd_init_nodes; // Number of initial nodes
+    const long cudd_init_cache_size; // Initial cache size
     const long cudd_init_available_memory; // Maximum available memory (bytes)
     const bool gamer_ordering;
     const bool dynamic_reordering;
@@ -54,8 +52,10 @@ class SymVariables {
     Cudd *manager; // manager associated with this symbolic search
     std::shared_ptr<SymAxiomCompilation> ax_comp; // used for axioms
 
-    int numBDDVars; // Number of binary variables (just one set, the total number is numBDDVars*2
-    int numPrimaryBDDVars; // Number of binary variables that represent the primary variables
+    int numBDDVars; // Number of binary variables (just one set, the total
+                    // number is numBDDVars*2
+    int numPrimaryBDDVars; // Number of binary variables that represent the
+                           // primary variables
     std::vector<BDD> variables; // BDD variables
     std::vector<BDD> pre_variables; // Unprimed variables
     std::vector<BDD> eff_variables; // Primed variables
@@ -64,18 +64,26 @@ class SymVariables {
 
     // The variable order must be complete.
     std::vector<int> var_order; // Variable(FD) order in the BDD
-    std::vector<std::vector<int>> bdd_index_pre, bdd_index_eff; // vars(BDD) for each var(FD)
+    std::vector<std::vector<int>> bdd_index_pre,
+        bdd_index_eff; // vars(BDD) for each var(FD)
 
-    std::vector<std::vector<BDD>> preconditionBDDs;   // BDDs associated with the precondition of a predicate
-    std::vector<std::vector<BDD>> effectBDDs;   // BDDs associated with the effect of a predicate
-    std::vector<BDD> biimpBDDs;   // BDDs associated with the biimplication of one variable(FD)
-    std::vector<BDD> validValues;   // BDD that represents the valid values of all the variables
-    BDD validBDD;  // BDD that represents the valid values of all the variables
+    std::vector<std::vector<BDD>>
+        preconditionBDDs; // BDDs associated with the precondition of a
+                          // predicate
+    std::vector<std::vector<BDD>>
+        effectBDDs; // BDDs associated with the effect of a predicate
+    std::vector<BDD>
+        biimpBDDs; // BDDs associated with the biimplication of one variable(FD)
+    std::vector<BDD> validValues; // BDD that represents the valid values of all
+                                  // the variables
+    BDD validBDD; // BDD that represents the valid values of all the variables
 
     void init(const std::vector<int> &v_order);
 
 public:
-    SymVariables(const plugins::Options &opts, const std::shared_ptr<AbstractTask> &task);
+    SymVariables(
+        const plugins::Options &opts,
+        const std::shared_ptr<AbstractTask> &task);
 
     void init();
 
@@ -120,7 +128,6 @@ public:
         return effectBDDs[variable][value];
     }
 
-
     BDD auxBDD(int variable, int value);
 
     inline BDD get_aux_cube() const {
@@ -132,27 +139,33 @@ public:
         return !get_aux_variables_in_support(bdd).IsOne();
     }
 
-    void get_variable_value_bdds(const std::vector<int> &bdd_vars,
-                                 int value,
-                                 std::vector<BDD> &value_bdds) const;
+    void get_variable_value_bdds(
+        const std::vector<int> &bdd_vars, int value,
+        std::vector<BDD> &value_bdds) const;
 
     inline int get_num_aux_variables() const {
         return aux_variables.size();
     }
 
-    inline BDD getCubePre(int var) const {return getCube(var, bdd_index_pre);}
+    inline BDD getCubePre(int var) const {
+        return getCube(var, bdd_index_pre);
+    }
 
     inline BDD getCubePre(const std::set<int> &vars) const {
         return getCube(vars, bdd_index_pre);
     }
 
-    inline BDD getCubeEff(int var) const {return getCube(var, bdd_index_eff);}
+    inline BDD getCubeEff(int var) const {
+        return getCube(var, bdd_index_eff);
+    }
 
     inline BDD getCubeEff(const std::set<int> &vars) const {
         return getCube(vars, bdd_index_eff);
     }
 
-    inline const BDD &biimp(int variable) const {return biimpBDDs[variable];}
+    inline const BDD &biimp(int variable) const {
+        return biimpBDDs[variable];
+    }
 
     inline std::vector<BDD> getBDDVarsPre() const {
         return getBDDVars(var_order, bdd_index_pre);
@@ -186,9 +199,13 @@ public:
         return manager->constant(c);
     }
 
-    inline BDD validStates() const {return validBDD;}
+    inline BDD validStates() const {
+        return validBDD;
+    }
 
-    inline BDD bddVar(int index) const {return variables[index];}
+    inline BDD bddVar(int index) const {
+        return variables[index];
+    }
 
     inline void set_time_limit(int maxTime) {
         if (maxTime > 0) {
@@ -219,13 +236,14 @@ private:
     // Generates value for bddVars.
     BDD generateBDDVar(const std::vector<int> &_bddVars, int value) const;
     BDD getCube(int var, const std::vector<std::vector<int>> &v_index) const;
-    BDD getCube(const std::set<int> &vars,
-                const std::vector<std::vector<int>> &v_index) const;
-    BDD createBiimplicationBDD(const std::vector<int> &vars,
-                               const std::vector<int> &vars2) const;
-    std::vector<BDD>
-    getBDDVars(const std::vector<int> &vars,
-               const std::vector<std::vector<int>> &v_index) const;
+    BDD getCube(
+        const std::set<int> &vars,
+        const std::vector<std::vector<int>> &v_index) const;
+    BDD createBiimplicationBDD(
+        const std::vector<int> &vars, const std::vector<int> &vars2) const;
+    std::vector<BDD> getBDDVars(
+        const std::vector<int> &vars,
+        const std::vector<std::vector<int>> &v_index) const;
 
     inline BDD createPreconditionBDD(int variable, int value) const {
         return generateBDDVar(bdd_index_pre[variable], value);
@@ -235,7 +253,9 @@ private:
         return generateBDDVar(bdd_index_eff[variable], value);
     }
 
-    inline int getNumBDDVars() const {return numBDDVars;}
+    inline int getNumBDDVars() const {
+        return numBDDVars;
+    }
 };
 }
 

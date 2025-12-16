@@ -4,10 +4,9 @@
 #include "sym_bucket.h"
 #include "sym_variables.h"
 
+#include "../utils/timer.h"
 #include "transition_relations/conjunctive_transition_relation.h"
 #include "transition_relations/disjunctive_transition_relation.h"
-
-#include "../utils/timer.h"
 
 #include <fstream>
 #include <iostream>
@@ -20,17 +19,20 @@
 
 namespace symbolic {
 template<class T, class FunctionMerge>
-void mergeAux(std::vector<T> &elems, FunctionMerge f, int maxTime, int maxSize) {
+void mergeAux(
+    std::vector<T> &elems, FunctionMerge f, int maxTime, int maxSize) {
     std::vector<T> result;
     if (maxSize <= 1 || elems.size() <= 1) {
         return;
     }
     utils::Timer merge_timer;
-    //  utils::g_log << "Merging " << elems.size() << ", maxSize: " << maxSize << endl;
+    //  utils::g_log << "Merging " << elems.size() << ", maxSize: " << maxSize
+    //  << endl;
 
     // Merge Elements
     std::vector<T> aux;
-    while (elems.size() > 1 && (maxTime == 0 || merge_timer() * 1000 < maxTime)) {
+    while (elems.size() > 1 &&
+           (maxTime == 0 || merge_timer() * 1000 < maxTime)) {
         if (elems.size() % 2 == 1) { // Ensure an even number
             int last = elems.size() - 1;
             try {
@@ -75,7 +77,9 @@ void mergeAux(std::vector<T> &elems, FunctionMerge f, int maxTime, int maxSize) 
  * Relays on several methods: T, int T.size() and bool T.merge(T, maxSize)
  */
 template<class T, class FunctionMerge>
-void merge(SymVariables *vars, std::vector<T> &elems, FunctionMerge f, int maxTime, int maxSize) {
+void merge(
+    SymVariables *vars, std::vector<T> &elems, FunctionMerge f, int maxTime,
+    int maxSize) {
     vars->set_time_limit(maxTime);
     mergeAux(elems, f, maxTime, maxSize);
     vars->unset_time_limit();
@@ -90,8 +94,12 @@ void merge(std::vector<T> &elems, FunctionMerge f, int maxSize) {
     mergeAux(elems, f, 0, maxSize);
 }
 
-DisjunctiveTransitionRelation disjunctive_tr_merge(DisjunctiveTransitionRelation tr, const DisjunctiveTransitionRelation &tr2, int maxSize);
-DisjunctiveTransitionRelation conjunctive_tr_merge(DisjunctiveTransitionRelation tr, const DisjunctiveTransitionRelation &tr2, int maxSize);
+DisjunctiveTransitionRelation disjunctive_tr_merge(
+    DisjunctiveTransitionRelation tr, const DisjunctiveTransitionRelation &tr2,
+    int maxSize);
+DisjunctiveTransitionRelation conjunctive_tr_merge(
+    DisjunctiveTransitionRelation tr, const DisjunctiveTransitionRelation &tr2,
+    int maxSize);
 
 BDD merge_and_BDD(const BDD &bdd, const BDD &bdd2, int maxSize);
 BDD merge_or_BDD(const BDD &bdd, const BDD &bdd2, int maxSize);

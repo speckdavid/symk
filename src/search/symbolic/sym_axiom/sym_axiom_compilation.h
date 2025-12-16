@@ -1,8 +1,10 @@
 #ifndef SEARCH_SYMBOLIC_SYM_AXIOM_SYM_AXIOM_COMPILATION_H_
 #define SEARCH_SYMBOLIC_SYM_AXIOM_SYM_AXIOM_COMPILATION_H_
 
-#include "../../task_proxy.h"
 #include "cuddObj.hh"
+
+#include "../../task_proxy.h"
+
 #include <map>
 #include <memory>
 
@@ -11,9 +13,10 @@ class SymVariables;
 
 class SymAxiomCompilation {
 public:
-    // We need to use a raw pointer of sym_vars. Otherwise we get a cylic pointer
-    // issue as SymAxiomComplation only lives in SymVariables
-    SymAxiomCompilation(SymVariables *sym_vars, const std::shared_ptr<AbstractTask> &task);
+    // We need to use a raw pointer of sym_vars. Otherwise we get a cylic
+    // pointer issue as SymAxiomComplation only lives in SymVariables
+    SymAxiomCompilation(
+        SymVariables *sym_vars, const std::shared_ptr<AbstractTask> &task);
 
     bool is_derived_variable(int var) const;
     bool is_in_body(int var, int axiom_id) const;
