@@ -2,7 +2,6 @@
 
 #include "../../plugins/plugin.h"
 #include "../../state_registry.h"
-#include "../../tasks/sdac_task.h"
 #include "../../task_utils/task_properties.h"
 
 using namespace std;
@@ -11,7 +10,9 @@ namespace symbolic {
 void PlanSelector::add_options_to_feature(plugins::Feature &feature) {
     feature.add_option<bool>("dump_plans", "dump plans to console", "false");
     feature.add_option<bool>("write_plans", "write plans to disk", "true");
-    feature.add_option<int>("num_plans", "number of plans", "infinity", plugins::Bounds("1", "infinity"));
+    feature.add_option<int>(
+        "num_plans", "number of plans", "infinity",
+        plugins::Bounds("1", "infinity"));
 }
 
 PlanSelector::PlanSelector(const plugins::Options &opts)
@@ -24,20 +25,16 @@ PlanSelector::PlanSelector(const plugins::Options &opts)
       num_accepted_plans(0),
       num_rejected_plans(0),
       plan_mgr_task_proxy(*tasks::g_root_task),
-      first_accepted_plan_cost(numeric_limits<double>::infinity()) {}
+      first_accepted_plan_cost(numeric_limits<double>::infinity()) {
+}
 
-void PlanSelector::init(shared_ptr<SymVariables> sym_vars,
-                        const shared_ptr<AbstractTask> &task,
-                        PlanManager &plan_manager) {
+void PlanSelector::init(
+    shared_ptr<SymVariables> sym_vars, const shared_ptr<AbstractTask> &task,
+    PlanManager &plan_manager) {
     this->sym_vars = sym_vars;
     state_registry = make_shared<StateRegistry>(TaskProxy(*task));
     plan_mgr = plan_manager;
     states_accepted_goal_paths = sym_vars->zeroBDD();
-
-    if (task_properties::has_sdac_cost_operator(plan_mgr_task_proxy)) {
-        assert(dynamic_pointer_cast<extra_tasks::SdacTask>(task) != nullptr);
-        plan_mgr_task_proxy = TaskProxy(*task);
-    }
 }
 
 bool PlanSelector::has_accepted_plan(const Plan &plan) const {
@@ -71,8 +68,8 @@ void PlanSelector::print_options() const {
     utils::g_log << "Plan files: " << plan_mgr.get_plan_filename() << endl;
 }
 
-size_t PlanSelector::different(const vector<Plan> &plans,
-                               const Plan &plan) const {
+size_t PlanSelector::different(
+    const vector<Plan> &plans, const Plan &plan) const {
     for (auto &cur : plans) {
         if (cur.size() == plan.size()) {
             bool same = true;
@@ -94,10 +91,10 @@ BDD PlanSelector::get_final_state(const Plan &plan) const {
     State cur = state_registry->get_initial_state();
     for (auto &op : plan) {
         assert(task_properties::is_applicable(
-                   state_registry->get_task_proxy().get_operators()[op.get_index()], cur));
+            state_registry->get_task_proxy().get_operators()[op.get_index()],
+            cur));
         cur = state_registry->get_successor_state(
-            cur,
-            state_registry->get_task_proxy().get_operators()[op]);
+            cur, state_registry->get_task_proxy().get_operators()[op]);
     }
     return sym_vars->getStateBDD(cur);
 }
@@ -110,8 +107,7 @@ BDD PlanSelector::states_on_path(const Plan &plan) {
     BDD path_states = sym_vars->getStateBDD(cur);
     for (auto &op : plan) {
         cur = state_registry->get_successor_state(
-            cur,
-            state_registry->get_task_proxy().get_operators()[op]);
+            cur, state_registry->get_task_proxy().get_operators()[op]);
         path_states += sym_vars->getStateBDD(cur);
     }
     return path_states;
@@ -133,11 +129,12 @@ size_t PlanSelector::get_hash_value(const Plan &plan) const {
 void PlanSelector::save_accepted_plan(const Plan &plan) {
     if (num_accepted_plans == 0) {
         first_accepted_plan = plan;
-        first_accepted_plan_cost = calculate_plan_cost(
-            plan, state_registry->get_task_proxy());
+        first_accepted_plan_cost =
+            calculate_plan_cost(plan, state_registry->get_task_proxy());
 
         if (!write_plans) {
-            plan_mgr.save_plan(plan, plan_mgr_task_proxy, false, num_desired_plans > 1);
+            plan_mgr.save_plan(
+                plan, plan_mgr_task_proxy, false, num_desired_plans > 1);
         }
     }
 
@@ -150,14 +147,16 @@ void PlanSelector::save_accepted_plan(const Plan &plan) {
     num_accepted_plans++;
 
     if (dump_plans) {
-        utils::g_log << endl << "New plan " << num_accepted_plans << ":" << endl;
+        utils::g_log << endl
+                     << "New plan " << num_accepted_plans << ":" << endl;
         if (!write_plans) {
             plan_mgr.dump_plan(plan, plan_mgr_task_proxy);
         }
     }
 
     if (write_plans) {
-        plan_mgr.save_plan(plan, plan_mgr_task_proxy, dump_plans, num_desired_plans > 1);
+        plan_mgr.save_plan(
+            plan, plan_mgr_task_proxy, dump_plans, num_desired_plans > 1);
     }
 }
 
@@ -176,14 +175,11 @@ bool PlanSelector::has_zero_cost_loop(const Plan &plan) const {
     BDD zero_reachable = sym_vars->getStateBDD(cur);
     for (auto &op : plan) {
         cur = state_registry->get_successor_state(
-            cur,
-            state_registry->get_task_proxy().get_operators()[op]);
+            cur, state_registry->get_task_proxy().get_operators()[op]);
         BDD new_state = sym_vars->getStateBDD(cur);
 
-        if (state_registry
-            ->get_task_proxy()
-            .get_operators()[op]
-            .get_cost() != 0) {
+        if (state_registry->get_task_proxy().get_operators()[op].get_cost() !=
+            0) {
             zero_reachable = new_state;
         } else {
             BDD intersection = zero_reachable * new_state;
@@ -197,17 +193,15 @@ bool PlanSelector::has_zero_cost_loop(const Plan &plan) const {
     return false;
 }
 
-pair<int, int>
-PlanSelector::get_first_zero_cost_loop(const Plan &plan) const {
+pair<int, int> PlanSelector::get_first_zero_cost_loop(const Plan &plan) const {
     pair<int, int> zero_cost_op_seq(-1, -1);
     int last_zero_op_state = 0;
     vector<State> states;
     states.push_back(state_registry->get_initial_state());
     for (size_t op_i = 0; op_i < plan.size(); ++op_i) {
         State succ = state_registry->get_successor_state(
-            states.back(), state_registry
-            ->get_task_proxy()
-            .get_operators()[plan[op_i]]);
+            states.back(),
+            state_registry->get_task_proxy().get_operators()[plan[op_i]]);
 
         for (size_t state_i = last_zero_op_state; state_i < states.size();
              ++state_i) {
@@ -217,10 +211,9 @@ PlanSelector::get_first_zero_cost_loop(const Plan &plan) const {
                 break;
             }
         }
-        if (state_registry
-            ->get_task_proxy()
-            .get_operators()[plan[op_i]]
-            .get_cost() != 0) {
+        if (state_registry->get_task_proxy()
+                .get_operators()[plan[op_i]]
+                .get_cost() != 0) {
             last_zero_op_state = states.size() - 1;
         }
 
@@ -245,12 +238,13 @@ vector<Plan> PlanSelector::get_accepted_plans() const {
     return res;
 }
 
-static class EvaluatorCategoryPlugin : public plugins::TypedCategoryPlugin<PlanSelector> {
+static class EvaluatorCategoryPlugin
+    : public plugins::TypedCategoryPlugin<PlanSelector> {
 public:
     EvaluatorCategoryPlugin() : TypedCategoryPlugin("PlanSelector") {
-        document_synopsis("A plan selector interface for filtering plans of multi plan search. ");
+        document_synopsis(
+            "A plan selector interface for filtering plans of multi plan search. ");
         allow_variable_binding();
     }
-}
-_category_plugin;
+} _category_plugin;
 }

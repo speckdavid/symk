@@ -1,6 +1,7 @@
 #include "opt_order.h"
 
 #include "../task_proxy.h"
+
 #include "../task_utils/causal_graph.h"
 #include "../tasks/root_task.h"
 #include "../utils/logging.h"
@@ -60,8 +61,8 @@ void InfluenceGraph::get_ordering(vector<int> &ordering) const {
     utils::g_log << "done!" << " [t=" << timer << "]" << endl;
 }
 
-void InfluenceGraph::randomize(vector<int> &ordering,
-                               vector<int> &new_order) const {
+void InfluenceGraph::randomize(
+    vector<int> &ordering, vector<int> &new_order) const {
     for (size_t i = 0; i < ordering.size(); i++) {
         int rnd_pos = rng->random(ordering.size() - i);
         int pos = -1;
@@ -84,8 +85,8 @@ void InfluenceGraph::randomize(vector<int> &ordering,
     }
 }
 
-double InfluenceGraph::optimize_variable_ordering_gamer(vector<int> &order,
-                                                        int iterations) const {
+double InfluenceGraph::optimize_variable_ordering_gamer(
+    vector<int> &order, int iterations) const {
     double totalDistance = compute_function(order);
 
     double oldTotalDistance = totalDistance;
@@ -103,12 +104,14 @@ double InfluenceGraph::optimize_variable_ordering_gamer(vector<int> &order,
                 continue;
 
             if (influence(order[i], order[swapIndex1]))
-                totalDistance += (-(i - swapIndex1) * (i - swapIndex1) +
-                                  (i - swapIndex2) * (i - swapIndex2));
+                totalDistance +=
+                    (-(i - swapIndex1) * (i - swapIndex1) +
+                     (i - swapIndex2) * (i - swapIndex2));
 
             if (influence(order[i], order[swapIndex2]))
-                totalDistance += (-(i - swapIndex2) * (i - swapIndex2) +
-                                  (i - swapIndex1) * (i - swapIndex1));
+                totalDistance +=
+                    (-(i - swapIndex2) * (i - swapIndex2) +
+                     (i - swapIndex1) * (i - swapIndex1));
         }
 
         // Apply the swap if it is worthy
@@ -119,9 +122,9 @@ double InfluenceGraph::optimize_variable_ordering_gamer(vector<int> &order,
             oldTotalDistance = totalDistance;
 
             /*if(totalDistance != compute_function(order)){
-              cerr << "Error computing total distance: " << totalDistance << " " <<
-            compute_function(order) << endl; exit(-1); }else{ utils::g_log << "Bien: " <<
-            totalDistance << endl;
+              cerr << "Error computing total distance: " << totalDistance << " "
+            << compute_function(order) << endl; exit(-1); }else{ utils::g_log <<
+            "Bien: " << totalDistance << endl;
             }*/
         } else {
             totalDistance = oldTotalDistance;
@@ -164,10 +167,10 @@ void InfluenceGraph::optimize_variable_ordering_gamer(
         int partition = rng->random(partition_begin.size());
         if (partition_sizes[partition] <= 1)
             continue;
-        int swapIndex1 =
-            partition_begin[partition] + rng->random(partition_sizes[partition]);
-        int swapIndex2 =
-            partition_begin[partition] + rng->random(partition_sizes[partition]);
+        int swapIndex1 = partition_begin[partition] +
+                         rng->random(partition_sizes[partition]);
+        int swapIndex2 = partition_begin[partition] +
+                         rng->random(partition_sizes[partition]);
         if (swapIndex1 == swapIndex2)
             continue;
 
@@ -177,12 +180,14 @@ void InfluenceGraph::optimize_variable_ordering_gamer(
                 continue;
 
             if (influence(order[i], order[swapIndex1]))
-                totalDistance += (-(i - swapIndex1) * (i - swapIndex1) +
-                                  (i - swapIndex2) * (i - swapIndex2));
+                totalDistance +=
+                    (-(i - swapIndex1) * (i - swapIndex1) +
+                     (i - swapIndex2) * (i - swapIndex2));
 
             if (influence(order[i], order[swapIndex2]))
-                totalDistance += (-(i - swapIndex2) * (i - swapIndex2) +
-                                  (i - swapIndex1) * (i - swapIndex1));
+                totalDistance +=
+                    (-(i - swapIndex2) * (i - swapIndex2) +
+                     (i - swapIndex1) * (i - swapIndex1));
         }
 
         // Apply the swap if it is worthy
@@ -193,9 +198,9 @@ void InfluenceGraph::optimize_variable_ordering_gamer(
             oldTotalDistance = totalDistance;
 
             /*if(totalDistance != compute_function(order)){
-              cerr << "Error computing total distance: " << totalDistance << " " <<
-            compute_function(order) << endl; exit(-1); }else{ utils::g_log << "Bien: " <<
-            totalDistance << endl;
+              cerr << "Error computing total distance: " << totalDistance << " "
+            << compute_function(order) << endl; exit(-1); }else{ utils::g_log <<
+            "Bien: " << totalDistance << endl;
             }*/
         } else {
             totalDistance = oldTotalDistance;

@@ -9,7 +9,6 @@
 #include <iostream>
 #include <sstream>
 
-
 using namespace std;
 
 int calculate_plan_cost(const Plan &plan, const TaskProxy &task_proxy) {
@@ -31,29 +30,31 @@ void PlanManager::set_plan_filename(const string &plan_filename_) {
     plan_filename = plan_filename_;
 }
 
-void PlanManager::set_num_previously_generated_plans(int num_previously_generated_plans_) {
+void PlanManager::set_num_previously_generated_plans(
+    int num_previously_generated_plans_) {
     num_previously_generated_plans = num_previously_generated_plans_;
 }
 
-void PlanManager::set_is_part_of_anytime_portfolio(bool is_part_of_anytime_portfolio_) {
+void PlanManager::set_is_part_of_anytime_portfolio(
+    bool is_part_of_anytime_portfolio_) {
     is_part_of_anytime_portfolio = is_part_of_anytime_portfolio_;
 }
 
-void PlanManager::dump_plan(const Plan &plan,
-                            const TaskProxy &task_proxy) const {
+void PlanManager::dump_plan(
+    const Plan &plan, const TaskProxy &task_proxy) const {
     OperatorsProxy operators = task_proxy.get_operators();
     for (OperatorID op_id : plan) {
-        cout << operators[op_id].get_name() << " (" << operators[op_id].get_cost()
-             << ")" << endl;
+        cout << operators[op_id].get_name() << " ("
+             << operators[op_id].get_cost() << ")" << endl;
     }
     int plan_cost = calculate_plan_cost(plan, task_proxy);
     utils::g_log << "Plan length: " << plan.size() << " step(s)." << endl;
     utils::g_log << "Plan cost: " << plan_cost << endl;
 }
 
-void PlanManager::save_plan(const Plan &plan, const TaskProxy &task_proxy,
-                            bool dump_plan,
-                            bool generates_multiple_plan_files) {
+void PlanManager::save_plan(
+    const Plan &plan, const TaskProxy &task_proxy, bool dump_plan,
+    bool generates_multiple_plan_files) {
     ostringstream filename;
     filename << plan_filename;
     int plan_number = num_previously_generated_plans + 1;
@@ -70,8 +71,8 @@ void PlanManager::save_plan(const Plan &plan, const TaskProxy &task_proxy,
     OperatorsProxy operators = task_proxy.get_operators();
     for (OperatorID op_id : plan) {
         if (dump_plan) {
-            cout << operators[op_id].get_name() << " (" << operators[op_id].get_cost()
-                 << ")" << endl;
+            cout << operators[op_id].get_name() << " ("
+                 << operators[op_id].get_cost() << ")" << endl;
         }
         outfile << "(" << operators[op_id].get_name() << ")" << endl;
     }

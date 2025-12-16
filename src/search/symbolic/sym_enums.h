@@ -21,12 +21,20 @@ enum class ConditionalEffectsTransitionType {
     EFF_BASED_CONJUNCTIVE_EARLY_QUANTIFICATION,
     DYNAMIC,
 };
-std::ostream &operator<<(std::ostream &os, const ConditionalEffectsTransitionType &ce_type);
-extern bool is_ce_transition_type_early_quantification(const ConditionalEffectsTransitionType &ce_type);
-extern bool is_ce_transition_type_variable_based(const ConditionalEffectsTransitionType &ce_type);
-extern bool is_ce_transition_type_conjunctive(const ConditionalEffectsTransitionType &ce_type);
+std::ostream &operator<<(
+    std::ostream &os, const ConditionalEffectsTransitionType &ce_type);
+extern bool is_ce_transition_type_early_quantification(
+    const ConditionalEffectsTransitionType &ce_type);
+extern bool is_ce_transition_type_variable_based(
+    const ConditionalEffectsTransitionType &ce_type);
+extern bool is_ce_transition_type_conjunctive(
+    const ConditionalEffectsTransitionType &ce_type);
 
-enum class Dir {FW, BW, BIDIR};
+enum class Dir {
+    FW,
+    BW,
+    BIDIR
+};
 std::ostream &operator<<(std::ostream &os, const Dir &dir);
 
 // We use this enumerate to know why the current operation was truncated

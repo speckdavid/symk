@@ -6,7 +6,7 @@ The main extensions are described below.
 
 
 With SymK, it is possible to find a *single optimal plan* or a *set of k different best plans* with the lowest cost for a given planning task. 
-In addition, SymK natively supports a variety of PDDL features that are rarely supported by other planners, such as conditional effects, derived predicates with axioms, and state-dependent action costs.
+In addition, SymK natively supports a variety of PDDL features that are rarely supported by other planners, such as conditional effects and derived predicates with axioms.
 See this readme file for more information on running SymK and the various configurations. 
 We appreciate citations when SymK is used in a scientific context (see [References](#references) for more details).
 
@@ -145,7 +145,7 @@ Note, that you can also search for the best **k** plans using your selector.
 By default, the planner performs a relevance analysis and removes components such as variables and actions that are irrelevant to achieving the goal. Although such variables and actions can in principle lead to further (simple) plans, they are classified as irrelevant and removed when translating PDDL to SAS+. If you wish to **obtain all plans** (even the non-relevant ones), please use the following options. Note that this can have a negative impact on the performance of the planner.
 
 ```console
-./fast-downward.py domain.pddl problem.pddl --translate-options --keep-unimportant-variables --preprocess-options --keep-unimportant-variables --search-options --search "symk_bd(plan_selection=top_k(num_plans=**k**))"
+./fast-downward.py --translate --search domain.pddl problem.pddl --translate-options --keep-no-ops --search-options --search "symk_bd(plan_selection=top_k(num_plans=**k**))"
 ```
 
 # References
@@ -164,9 +164,7 @@ If you use this software, we kindly ask you to cite the relevant publications li
 
 ### Conditional Effects Support
 
- - For tasks **without** axioms and state-dependent costs: David Speck, Malte Helmert: *On Performance Guarantees for Symbolic Search in Classical Planning*. ECAI 2025 [[bib & more]](https://speckdavid.github.io/publications/#speck-helmert-ecai2025)
- 
- - For tasks **with** axioms and/or state-dependent costs: David Speck, Jendrik Seipp, Álvaro Torralba: *Symbolic Search for Cost-Optimal Planning with Expressive Model Extensions*. JAIR. 82: 1349-1405 (2025) [[pdf]](https://speckdavid.github.io/assets/pdf/speck-et-al-jair2025.pdf) [[bib & more]](https://speckdavid.github.io/publications/#speck-et-al-jair2025)
+ - David Speck, Malte Helmert: *On Performance Guarantees for Symbolic Search in Classical Planning*. ECAI 2025 [[bib & more]](https://speckdavid.github.io/publications/#speck-helmert-ecai2025)
 
 ### Axiom and Derived Predicate Support
 
@@ -175,17 +173,26 @@ If you use this software, we kindly ask you to cite the relevant publications li
  - **Original paper:** David Speck, Florian Geißer, Robert Mattmüller, Álvaro Torralba: *Symbolic Planning with Axioms*. ICAPS 2019: 464-472 [[pdf]](https://speckdavid.github.io/assets/pdf/speck-etal-icaps2019.pdf) [[bib & more]](https://speckdavid.github.io/publications/#speck-et-al-icaps2019)
 
 
-### State-Dependent Action Costs Support
+### State-Dependent Action Costs, Oversubscribed Goals, and More
 
+We dropped support for state-dependent action costs and oversubscription planning because it was too much effort to maintain everything in a single codebase.
+However, you can still find versions of SymK that support both features in the following resources (based on older versions of SymK):
+
+#### State-Dependent Action Costs
+
+ - **Planner**: [[zenodo]](https://zenodo.org/records/12624112)
  - David Speck, Jendrik Seipp, Álvaro Torralba: *Symbolic Search for Cost-Optimal Planning with Expressive Model Extensions*. JAIR. 82: 1349-1405 (2025) [[pdf]](https://speckdavid.github.io/assets/pdf/speck-et-al-jair2025.pdf) [[bib & more]](https://speckdavid.github.io/publications/#speck-et-al-jair2025)
- 
-Example domains with state-dependent action costs can be found [here](https://github.com/speckdavid/SDAC-Benchmarks). (Note: currently, only SAS files with state-dependent action costs are supported.) A version of SymK with PDDL support for state-dependent action costs (and PDDL domains with state-dependent action costs) is available [on Zenodo](https://zenodo.org/records/12624112).
+
+#### Oversubscription Planning
+
+ - **Planner**: [[github]](https://github.com/speckdavid/symbolic-osp)
+ - David Speck, Michael Katz: Symbolic Search for Oversubscription Planning. AAAI 2021: 11972-11980 [[pdf]](https://speckdavid.github.io/assets/pdf/speck-katz-aaai2021.pdf) [[bib & more]](https://speckdavid.github.io/publications/#speck-katz-aaai2021)
 
 ## Acknowledgments
 
 **SymK** builds upon and extends several existing systems:
 
-- [**Fast Downward (24.06+)**](http://www.fast-downward.org/) -- see also [`FD_README.md`](FD_README.md) for licensing and usage information.
+- [**Fast Downward (24.06+)**](http://www.fast-downward.org/): see also [`FD_README.md`](FD_README.md) for licensing and usage information.
 - [**Symbolic Fast Downward**](https://people.cs.aau.dk/~alto/software.html) by Álvaro Torralba.
 - Additional third-party components used by SymK can be found in the [`src/search/ext`](src/search/ext) directory.
 

@@ -7,12 +7,13 @@
 #include <set>
 
 /*
-* Used for conunctive transition partioning. Each operator contains all (condiitonal) effect for a praticular variable v.
-* Furthermore, each operator contains the global precondition. This could be modeled differently by having a seperate
-* precondition operator (= transition relation). However, it seems to be beneficial this way because in theory we can remove
-* unsat conditional effects. For the complexity it does not make a difference.
-*/
-
+ * Used for conunctive transition partioning. Each operator contains all
+ * (condiitonal) effect for a praticular variable v. Furthermore, each operator
+ * contains the global precondition. This could be modeled differently by having
+ * a seperate precondition operator (= transition relation). However, it seems
+ * to be beneficial this way because in theory we can remove unsat conditional
+ * effects. For the complexity it does not make a difference.
+ */
 
 namespace extra_tasks {
 class EffectAggregatedTask : public tasks::DelegatingTask {
@@ -26,15 +27,22 @@ public:
     ~EffectAggregatedTask() = default;
 
     virtual int get_operator_cost(int index, bool is_axiom) const override;
-    virtual std::string get_operator_cost_function(int index, bool is_axiom) const override;
-    virtual std::string get_operator_name(int index, bool is_axiom) const override;
+    virtual std::string get_operator_name(
+        int index, bool is_axiom) const override;
     virtual int get_num_operators() const override;
-    virtual int get_num_operator_preconditions(int index, bool is_axiom) const override;
-    virtual FactPair get_operator_precondition(int op_index, int fact_index, bool is_axiom) const override;
-    virtual int get_num_operator_effects(int op_index, bool is_axiom) const override;
-    virtual int get_num_operator_effect_conditions(int op_index, int eff_index, bool is_axiom) const override;
-    virtual FactPair get_operator_effect_condition(int op_index, int eff_index, int cond_index, bool is_axiom) const override;
-    virtual FactPair get_operator_effect(int op_index, int eff_index, bool is_axiom) const override;
+    virtual int get_num_operator_preconditions(
+        int index, bool is_axiom) const override;
+    virtual FactPair get_operator_precondition(
+        int op_index, int fact_index, bool is_axiom) const override;
+    virtual int get_num_operator_effects(
+        int op_index, bool is_axiom) const override;
+    virtual int get_num_operator_effect_conditions(
+        int op_index, int eff_index, bool is_axiom) const override;
+    virtual FactPair get_operator_effect_condition(
+        int op_index, int eff_index, int cond_index,
+        bool is_axiom) const override;
+    virtual FactPair get_operator_effect(
+        int op_index, int eff_index, bool is_axiom) const override;
 
     virtual int convert_operator_index_to_parent(int index) const override;
 

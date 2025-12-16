@@ -36,7 +36,8 @@ class SCC {
 
     void dfs(int vertex);
 public:
-    SCC(const vector<vector<int>> &theGraph) : graph(theGraph) {}
+    SCC(const vector<vector<int>> &theGraph) : graph(theGraph) {
+    }
     vector<vector<int>> get_result();
 };
 #endif

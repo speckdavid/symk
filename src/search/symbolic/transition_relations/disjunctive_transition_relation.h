@@ -25,15 +25,19 @@ class DisjunctiveTransitionRelation : public TransitionRelation {
     int cost; // transition cost
     BDD tr_bdd; // bdd for making the relprod
 
-    std::unordered_set<int> eff_vars;   // FD Index of eff variables
+    std::unordered_set<int> eff_vars; // FD Index of eff variables
     BDD exists_vars, exists_bw_vars; // Cube with variables to existentialize
-    std::vector<BDD> swap_vars, swap_vars_p; // Swap variables from unprimed to primed
+    std::vector<BDD> swap_vars,
+        swap_vars_p; // Swap variables from unprimed to primed
 
     std::set<OperatorID> ops_ids; // List of operators represented by the TR
 
 public:
-    DisjunctiveTransitionRelation(SymVariables *sym_vars, OperatorID op_id, const std::shared_ptr<AbstractTask> &task);
-    DisjunctiveTransitionRelation(SymVariables *sym_vars, const std::shared_ptr<AbstractTask> &task);
+    DisjunctiveTransitionRelation(
+        SymVariables *sym_vars, OperatorID op_id,
+        const std::shared_ptr<AbstractTask> &task);
+    DisjunctiveTransitionRelation(
+        SymVariables *sym_vars, const std::shared_ptr<AbstractTask> &task);
     void init();
     void init_from_tr(const DisjunctiveTransitionRelation &other);
 
@@ -50,36 +54,62 @@ public:
 
     BDD image(const BDD &from, int max_nodes = 0U) const override;
     BDD preimage(const BDD &from, int max_nodes = 0U) const override;
-    BDD preimage(const BDD &from, const BDD &constraint_to, int max_nodes = 0U) const override;
+    BDD preimage(const BDD &from, const BDD &constraint_to, int max_nodes = 0U)
+        const override;
 
     virtual int nodeCount() const override;
     const OperatorID &get_unique_operator_id() const override;
 
-    void edeletion(const std::vector<std::vector<BDD>> &notMutexBDDsByFluentFw,
-                   const std::vector<std::vector<BDD>> &notMutexBDDsByFluentBw,
-                   const std::vector<std::vector<BDD>> &exactlyOneBDDsByFluent);
+    void edeletion(
+        const std::vector<std::vector<BDD>> &notMutexBDDsByFluentFw,
+        const std::vector<std::vector<BDD>> &notMutexBDDsByFluentBw,
+        const std::vector<std::vector<BDD>> &exactlyOneBDDsByFluent);
 
-    void disjunctive_merge(const DisjunctiveTransitionRelation &t2, int max_nodes);
-    void conjunctive_merge(const DisjunctiveTransitionRelation &t2, int max_nodes);
+    void disjunctive_merge(
+        const DisjunctiveTransitionRelation &t2, int max_nodes);
+    void conjunctive_merge(
+        const DisjunctiveTransitionRelation &t2, int max_nodes);
 
-    int get_cost() const {return cost;}
+    int get_cost() const {
+        return cost;
+    }
 
-    void set_cost(int cost_) {cost = cost_;}
+    void set_cost(int cost_) {
+        cost = cost_;
+    }
 
-    const std::set<OperatorID> &get_operator_ids() const {return ops_ids;}
+    const std::set<OperatorID> &get_operator_ids() const {
+        return ops_ids;
+    }
 
-    void setOpsIds(const std::set<OperatorID> &operator_ids) {ops_ids = operator_ids;}
+    void setOpsIds(const std::set<OperatorID> &operator_ids) {
+        ops_ids = operator_ids;
+    }
 
-    const std::unordered_set<int> &get_eff_vars() const {return eff_vars;}
+    const std::unordered_set<int> &get_eff_vars() const {
+        return eff_vars;
+    }
 
-    BDD get_exists_vars() const {return exists_vars;}
-    BDD get_exists_bw_vars() const {return exists_bw_vars;}
-    const std::vector<BDD> &get_swap_vars() const {return swap_vars;}
-    const std::vector<BDD> &get_swap_vars_p() const {return swap_vars_p;}
+    BDD get_exists_vars() const {
+        return exists_vars;
+    }
+    BDD get_exists_bw_vars() const {
+        return exists_bw_vars;
+    }
+    const std::vector<BDD> &get_swap_vars() const {
+        return swap_vars;
+    }
+    const std::vector<BDD> &get_swap_vars_p() const {
+        return swap_vars_p;
+    }
 
-    BDD get_tr_BDD() const {return tr_bdd;}
+    BDD get_tr_BDD() const {
+        return tr_bdd;
+    }
 
-    SymVariables *get_sym_vars() const {return sym_vars;}
+    SymVariables *get_sym_vars() const {
+        return sym_vars;
+    }
 };
 }
 #endif

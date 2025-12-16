@@ -1,28 +1,33 @@
 #ifndef MUTEX_GROUP_H
 #define MUTEX_GROUP_H
 
-#include <iostream>
-#include <vector>
 #include "operator.h"
 #include "state.h"
+
+#include <iostream>
+#include <vector>
 using namespace std;
 
 class Variable;
 
-enum Dir {FW, BW};
+enum Dir {
+    FW,
+    BW
+};
 class MutexGroup {
-    //Direction of the mutex.
-    // Fw mutexes are not reachable from the initial state (should be pruned in bw search)
-    // Bw mutexes cannot reach the goal (should be pruned in fw search)
-    // Both mutex groups contain fw and bw mutexes so they should be pruned in both directions
+    // Direction of the mutex.
+    //  Fw mutexes are not reachable from the initial state (should be pruned in
+    //  bw search) Bw mutexes cannot reach the goal (should be pruned in fw
+    //  search) Both mutex groups contain fw and bw mutexes so they should be
+    //  pruned in both directions
     Dir dir;
     vector<pair<const Variable *, int>> facts;
 public:
     MutexGroup(istream &in, const vector<Variable *> &variables);
 
-    MutexGroup(const vector<pair<int, int>> &f,
-               const vector<Variable *> &variables,
-               bool regression);
+    MutexGroup(
+        const vector<pair<int, int>> &f, const vector<Variable *> &variables,
+        bool regression);
 
     MutexGroup(const Variable *var);
     void strip_unimportant_facts();

@@ -7,7 +7,6 @@ from . import cleanup
 from . import limits
 from . import run_components
 from . import util
-from . import __version__
 
 
 def main():
@@ -18,7 +17,7 @@ def main():
     logging.debug(f"processed args: {args}")
 
     if args.version:
-        print(__version__)
+        run_components.report_version(args.build)
         sys.exit()
 
     if args.show_aliases:
@@ -48,7 +47,7 @@ def main():
         else:
             assert False, f"Error: unhandled component: {component}"
         print(f"{component} exit code: {exitcode}")
-        print()
+        print(flush=True)
         if not continue_execution:
             print(f"Driver aborting after {component}")
             break

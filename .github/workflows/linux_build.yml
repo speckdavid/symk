@@ -2,11 +2,9 @@ name: Linux build
 
 on:
   push:
-    branches:
-      - master
+    branches: [master]
   pull_request:
-    branches:
-      - master
+    branches: [master]
   workflow_dispatch: # Optional: allows you to manually trigger the workflow from the GitHub UI
 
 jobs:

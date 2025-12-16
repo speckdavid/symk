@@ -1,5 +1,6 @@
 #include "command_line.h"
 
+#include "git_revision.h"
 #include "plan_manager.h"
 #include "search_algorithm.h"
 
@@ -23,7 +24,6 @@ static void input_error(const string &msg) {
     utils::exit_with(utils::ExitCode::SEARCH_INPUT_ERROR);
 }
 
-
 static int parse_int_arg(const string &name, const string &value) {
     try {
         return stoi(value);
@@ -34,7 +34,8 @@ static int parse_int_arg(const string &name, const string &value) {
     }
 }
 
-static vector<string> replace_old_style_predefinitions(const vector<string> &args) {
+static vector<string> replace_old_style_predefinitions(
+    const vector<string> &args) {
     vector<string> new_args;
     int num_predefinitions = 0;
     bool has_search_argument = false;
@@ -44,9 +45,11 @@ static vector<string> replace_old_style_predefinitions(const vector<string> &arg
         string arg = args[i];
         bool is_last = (i == args.size() - 1);
 
-        if (arg == "--evaluator" || arg == "--heuristic" || arg == "--landmarks") {
+        if (arg == "--evaluator" || arg == "--heuristic" ||
+            arg == "--landmarks") {
             if (has_search_argument)
-                input_error("predefinitions are forbidden after the '--search' argument");
+                input_error(
+                    "predefinitions are forbidden after the '--search' argument");
             if (is_last)
                 input_error("missing argument after " + arg);
             ++i;
@@ -56,7 +59,8 @@ static vector<string> replace_old_style_predefinitions(const vector<string> &arg
             string key = predefinition[0];
             string definition = predefinition[1];
             if (!utils::is_alpha_numeric(key))
-                input_error("predefinition key has to be alphanumeric: '" + key + "'");
+                input_error(
+                    "predefinition key has to be alphanumeric: '" + key + "'");
             new_search_argument << "let(" << key << "," << definition << ",";
             num_predefinitions++;
         } else if (arg == "--search") {
@@ -80,7 +84,8 @@ static vector<string> replace_old_style_predefinitions(const vector<string> &arg
     return new_args;
 }
 
-static shared_ptr<SearchAlgorithm> parse_cmd_line_aux(const vector<string> &args) {
+static shared_ptr<SearchAlgorithm> parse_cmd_line_aux(
+    const vector<string> &args) {
     string plan_filename = "sas_plan";
     int num_previously_generated_plans = 0;
     bool is_part_of_anytime_portfolio = false;
@@ -105,7 +110,8 @@ static shared_ptr<SearchAlgorithm> parse_cmd_line_aux(const vector<string> &args
                 plugins::Any constructed = decorated->construct();
                 search_algorithm = plugins::any_cast<SearchPtr>(constructed);
             } catch (const plugins::BadAnyCast &) {
-                input_error("Could not interpret the argument of --search as a search algorithm.");
+                input_error(
+                    "Could not interpret the argument of --search as a search algorithm.");
             } catch (const utils::ContextError &e) {
                 input_error(e.get_message());
             }
@@ -121,12 +127,15 @@ static shared_ptr<SearchAlgorithm> parse_cmd_line_aux(const vector<string> &args
                     plugin_names.push_back(help_arg);
                 }
             }
-            plugins::Registry registry = plugins::RawRegistry::instance()->construct_registry();
+            plugins::Registry registry =
+                plugins::RawRegistry::instance()->construct_registry();
             unique_ptr<plugins::DocPrinter> doc_printer;
             if (txt2tags)
-                doc_printer = make_unique<plugins::Txt2TagsPrinter>(cout, registry);
+                doc_printer =
+                    make_unique<plugins::Txt2TagsPrinter>(cout, registry);
             else
-                doc_printer = make_unique<plugins::PlainPrinter>(cout, registry);
+                doc_printer =
+                    make_unique<plugins::PlainPrinter>(cout, registry);
             if (plugin_names.empty()) {
                 doc_printer->print_all();
             } else {
@@ -143,12 +152,14 @@ static shared_ptr<SearchAlgorithm> parse_cmd_line_aux(const vector<string> &args
             plan_filename = args[i];
         } else if (arg == "--internal-previous-portfolio-plans") {
             if (is_last)
-                input_error("missing argument after --internal-previous-portfolio-plans");
+                input_error(
+                    "missing argument after --internal-previous-portfolio-plans");
             ++i;
             is_part_of_anytime_portfolio = true;
             num_previously_generated_plans = parse_int_arg(arg, args[i]);
             if (num_previously_generated_plans < 0)
-                input_error("argument for --internal-previous-portfolio-plans must be positive");
+                input_error(
+                    "argument for --internal-previous-portfolio-plans must be positive");
         } else {
             input_error("unknown option " + arg);
         }
@@ -157,8 +168,10 @@ static shared_ptr<SearchAlgorithm> parse_cmd_line_aux(const vector<string> &args
     if (search_algorithm) {
         PlanManager &plan_manager = search_algorithm->get_plan_manager();
         plan_manager.set_plan_filename(plan_filename);
-        plan_manager.set_num_previously_generated_plans(num_previously_generated_plans);
-        plan_manager.set_is_part_of_anytime_portfolio(is_part_of_anytime_portfolio);
+        plan_manager.set_num_previously_generated_plans(
+            num_previously_generated_plans);
+        plan_manager.set_is_part_of_anytime_portfolio(
+            is_part_of_anytime_portfolio);
     }
     return search_algorithm;
 }
@@ -184,18 +197,23 @@ shared_ptr<SearchAlgorithm> parse_cmd_line(
     return parse_cmd_line_aux(args);
 }
 
+string get_revision_info() {
+    return string("Search code revision: ") + g_git_revision;
+}
 
-string usage(const string &progname) {
-    return "usage: \n" +
-           progname + " [OPTIONS] --search SEARCH < OUTPUT\n\n"
+string get_usage(const string &progname) {
+    return "usage: \n" + progname +
+           " [OPTIONS] --search SEARCH < OUTPUT\n\n"
            "* SEARCH (SearchAlgorithm): configuration of the search algorithm\n"
            "* OUTPUT (filename): translator output\n\n"
            "Options:\n"
            "--help [NAME]\n"
-           "    Prints help for all heuristics, open lists, etc. called NAME.\n"
-           "    Without parameter: prints help for everything available\n"
+           "    Print help for all heuristics, open lists, etc. called NAME.\n"
+           "    Without parameter: print help for everything available\n"
+           "--internal-git-revision\n"
+           "    Print the revision of the code used to build this binary.\n"
            "--internal-plan-file FILENAME\n"
-           "    Plan will be output to a file called FILENAME\n\n"
+           "    Output the plan to a file called FILENAME\n\n"
            "--internal-previous-portfolio-plans COUNTER\n"
            "    This planner call is part of a portfolio which already created\n"
            "    plan files FILENAME.1 up to FILENAME.COUNTER.\n"

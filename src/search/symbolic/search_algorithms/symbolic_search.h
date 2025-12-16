@@ -1,15 +1,13 @@
 #ifndef SYMBOLIC_SEARCH_ALGORITHMS_SYMBOLIC_SEARCH_H
 #define SYMBOLIC_SEARCH_ALGORITHMS_SYMBOLIC_SEARCH_H
 
-
-#include "../plan_reconstruction/sym_solution_registry.h"
 #include "../sym_enums.h"
 #include "../sym_parameters.h"
 #include "../sym_state_space_manager.h"
 
-#include "../../search_algorithm.h"
-
 #include "../../plugins/plugin.h"
+#include "../../search_algorithm.h"
+#include "../plan_reconstruction/sym_solution_registry.h"
 
 #include <memory>
 #include <vector>
@@ -47,7 +45,7 @@ protected:
     bool lower_bound_increased;
     int lower_bound; // Lower bound of search (incl. min-action costs)
     int upper_bound; // Upper bound of search (not use by top_k)
-    int min_g;     // min g costs of open lists
+    int min_g; // min g costs of open lists
 
     std::shared_ptr<PlanSelector> plan_data_base;
     std::shared_ptr<SymSolutionRegistry> solution_registry; // Solution registry
@@ -65,13 +63,21 @@ public:
 
     virtual void setLowerBound(int lower);
 
-    virtual void setMinG(int g) {min_g = std::max(g, min_g);}
+    virtual void setMinG(int g) {
+        min_g = std::max(g, min_g);
+    }
 
-    virtual bool solved() const {return lower_bound >= upper_bound;}
+    virtual bool solved() const {
+        return lower_bound >= upper_bound;
+    }
 
-    virtual int getLowerBound() const {return lower_bound;}
+    virtual int getLowerBound() const {
+        return lower_bound;
+    }
 
-    virtual int getMinG() const {return min_g;}
+    virtual int getMinG() const {
+        return min_g;
+    }
 
     virtual BDD get_states_on_goal_paths() const {
         return solution_registry->get_states_on_goal_paths();

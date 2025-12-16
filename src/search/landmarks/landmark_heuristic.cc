@@ -14,67 +14,17 @@ using namespace std;
 
 namespace landmarks {
 LandmarkHeuristic::LandmarkHeuristic(
-    bool use_preferred_operators,
-    const shared_ptr<AbstractTask> &transform, bool cache_estimates,
-    const string &description, utils::Verbosity verbosity)
+    bool use_preferred_operators, const shared_ptr<AbstractTask> &transform,
+    bool cache_estimates, const string &description, utils::Verbosity verbosity)
     : Heuristic(transform, cache_estimates, description, verbosity),
+      initial_landmark_graph_has_cycle_of_natural_orderings(false),
       use_preferred_operators(use_preferred_operators),
       successor_generator(nullptr) {
 }
 
-void LandmarkHeuristic::initialize(
-    const shared_ptr<LandmarkFactory> &lm_factory, bool prog_goal,
-    bool prog_gn, bool prog_r) {
-    /*
-      Actually, we should test if this is the root task or a
-      task that *only* transforms costs and/or adds negated axioms.
-      However, there is currently no good way to do this, so we use
-      this incomplete, slightly less safe test.
-    */
-    if (task != tasks::g_root_task
-        && dynamic_cast<tasks::CostAdaptedTask *>(task.get()) == nullptr
-        && dynamic_cast<tasks::DefaultValueAxiomsTask *>(task.get()) == nullptr) {
-        cerr << "The landmark heuristics currently only support "
-             << "task transformations that modify the operator costs "
-             << "or add negated axioms. See issues 845, 686 and 454 "
-             << "for details." << endl;
-        utils::exit_with(utils::ExitCode::SEARCH_UNSUPPORTED);
-    }
-
-    compute_landmark_graph(lm_factory);
-    lm_status_manager = make_unique<LandmarkStatusManager>(
-        *lm_graph, prog_goal, prog_gn, prog_r);
-
-    initial_landmark_graph_has_cycle_of_natural_orderings =
-        landmark_graph_has_cycle_of_natural_orderings();
-    if (initial_landmark_graph_has_cycle_of_natural_orderings
-        && log.is_at_least_normal()) {
-        log << "Landmark graph contains a cycle of natural orderings." << endl;
-    }
-
-    if (use_preferred_operators) {
-        compute_landmarks_achieved_by_fact();
-        /* Ideally, we should reuse the successor generator of the main
-           task in cases where it's compatible. See issue564. */
-        successor_generator =
-            make_unique<successor_generator::SuccessorGenerator>(task_proxy);
-    }
-}
-
-bool LandmarkHeuristic::landmark_graph_has_cycle_of_natural_orderings() {
-    int num_landmarks = lm_graph->get_num_landmarks();
-    vector<bool> closed(num_landmarks, false);
-    vector<bool> visited(num_landmarks, false);
-    for (auto &node : lm_graph->get_nodes()) {
-        if (depth_first_search_for_cycle_of_natural_orderings(
-                *node, closed, visited)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool LandmarkHeuristic::depth_first_search_for_cycle_of_natural_orderings(
+/* TODO: We would prefer the following two functions to be implemented
+    somewhere else as more generic graph algorithms. */
+static bool depth_first_search_for_cycle_of_natural_orderings(
     const LandmarkNode &node, vector<bool> &closed, vector<bool> &visited) {
     int id = node.get_id();
     if (closed[id]) {
@@ -85,7 +35,7 @@ bool LandmarkHeuristic::depth_first_search_for_cycle_of_natural_orderings(
 
     visited[id] = true;
     for (auto &child : node.children) {
-        if (child.second >= EdgeType::NATURAL) {
+        if (child.second >= OrderingType::NATURAL) {
             if (depth_first_search_for_cycle_of_natural_orderings(
                     *child.first, closed, visited)) {
                 return true;
@@ -96,34 +46,88 @@ bool LandmarkHeuristic::depth_first_search_for_cycle_of_natural_orderings(
     return false;
 }
 
+static bool landmark_graph_has_cycle_of_natural_orderings(
+    const LandmarkGraph &landmark_graph) {
+    const int num_landmarks = landmark_graph.get_num_landmarks();
+    vector<bool> closed(num_landmarks, false);
+    vector<bool> visited(num_landmarks, false);
+    for (const auto &node : landmark_graph) {
+        if (depth_first_search_for_cycle_of_natural_orderings(
+                *node, closed, visited)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void LandmarkHeuristic::initialize(
+    const shared_ptr<LandmarkFactory> &landmark_factory, bool prog_goal,
+    bool prog_gn, bool prog_r) {
+    /*
+      Actually, we should test if this is the root task or a task that *only*
+      transforms costs and/or adds negated axioms. However, there is currently
+      no good way to do this, so we use this incomplete, slightly less safe
+      test.
+    */
+    if (task != tasks::g_root_task &&
+        dynamic_cast<tasks::CostAdaptedTask *>(task.get()) == nullptr &&
+        dynamic_cast<tasks::DefaultValueAxiomsTask *>(task.get()) == nullptr) {
+        cerr << "The landmark heuristics currently only support "
+             << "task transformations that modify the operator costs "
+             << "or add negated axioms. See issues 845, 686 and 454 "
+             << "for details." << endl;
+        utils::exit_with(utils::ExitCode::SEARCH_UNSUPPORTED);
+    }
+
+    compute_landmark_graph(landmark_factory);
+    landmark_status_manager = make_unique<LandmarkStatusManager>(
+        *landmark_graph, prog_goal, prog_gn, prog_r);
+
+    initial_landmark_graph_has_cycle_of_natural_orderings =
+        landmark_graph_has_cycle_of_natural_orderings(*landmark_graph);
+    if (initial_landmark_graph_has_cycle_of_natural_orderings &&
+        log.is_at_least_normal()) {
+        log << "Landmark graph contains a cycle of natural orderings." << endl;
+    }
+
+    if (use_preferred_operators) {
+        compute_landmarks_achieved_by_atom();
+        /* Ideally, we should reuse the successor generator of the main
+           task in cases where it's compatible. See issue564. */
+        successor_generator =
+            make_unique<successor_generator::SuccessorGenerator>(task_proxy);
+    }
+}
+
 void LandmarkHeuristic::compute_landmark_graph(
-    const shared_ptr<LandmarkFactory> &lm_factory) {
-    utils::Timer lm_graph_timer;
+    const shared_ptr<LandmarkFactory> &landmark_factory) {
+    utils::Timer landmark_graph_timer;
     if (log.is_at_least_normal()) {
         log << "Generating landmark graph..." << endl;
     }
 
-    lm_graph = lm_factory->compute_lm_graph(task);
-    assert(lm_factory->achievers_are_calculated());
+    landmark_graph = landmark_factory->compute_landmark_graph(task);
+    assert(landmark_factory->achievers_are_calculated());
 
     if (log.is_at_least_normal()) {
-        log << "Landmark graph generation time: " << lm_graph_timer << endl;
-        log << "Landmark graph contains " << lm_graph->get_num_landmarks()
+        log << "Landmark graph generation time: " << landmark_graph_timer
+            << endl;
+        log << "Landmark graph contains " << landmark_graph->get_num_landmarks()
             << " landmarks, of which "
-            << lm_graph->get_num_disjunctive_landmarks()
+            << landmark_graph->get_num_disjunctive_landmarks()
             << " are disjunctive and "
-            << lm_graph->get_num_conjunctive_landmarks()
+            << landmark_graph->get_num_conjunctive_landmarks()
             << " are conjunctive." << endl;
-        log << "Landmark graph contains " << lm_graph->get_num_edges()
+        log << "Landmark graph contains " << landmark_graph->get_num_orderings()
             << " orderings." << endl;
     }
 }
 
-void LandmarkHeuristic::compute_landmarks_achieved_by_fact() {
-    for (const auto &node : lm_graph->get_nodes()) {
+void LandmarkHeuristic::compute_landmarks_achieved_by_atom() {
+    for (const auto &node : *landmark_graph) {
         const int id = node->get_id();
-        const Landmark &lm = node->get_landmark();
-        if (lm.conjunctive) {
+        const Landmark &landmark = node->get_landmark();
+        if (landmark.type == CONJUNCTIVE) {
             /*
               TODO: We currently have no way to declare operators preferred
                based on conjunctive landmarks. We consider this a bug and want
@@ -131,11 +135,11 @@ void LandmarkHeuristic::compute_landmarks_achieved_by_fact() {
             */
             continue;
         }
-        for (const auto &fact_pair : lm.facts) {
-            if (landmarks_achieved_by_fact.contains(fact_pair)) {
-                landmarks_achieved_by_fact[fact_pair].insert(id);
+        for (const auto &atom : landmark.atoms) {
+            if (landmarks_achieved_by_atom.contains(atom)) {
+                landmarks_achieved_by_atom[atom].insert(id);
             } else {
-                landmarks_achieved_by_fact[fact_pair] = {id};
+                landmarks_achieved_by_atom[atom] = {id};
             }
         }
     }
@@ -147,9 +151,9 @@ bool LandmarkHeuristic::operator_is_preferred(
         if (!does_fire(effect, state)) {
             continue;
         }
-        const FactPair fact_pair = effect.get_fact().get_pair();
-        if (landmarks_achieved_by_fact.contains(fact_pair)) {
-            for (const int id : landmarks_achieved_by_fact[fact_pair]) {
+        const FactPair atom = effect.get_fact().get_pair();
+        if (landmarks_achieved_by_atom.contains(atom)) {
+            for (const int id : landmarks_achieved_by_atom[atom]) {
                 if (future.test(id)) {
                     return true;
                 }
@@ -202,7 +206,7 @@ int LandmarkHeuristic::compute_heuristic(const State &ancestor_state) {
     int h = get_heuristic_value(ancestor_state);
     if (use_preferred_operators) {
         ConstBitsetView future =
-            lm_status_manager->get_future_landmarks(ancestor_state);
+            landmark_status_manager->get_future_landmarks(ancestor_state);
         State state = convert_ancestor_state(ancestor_state);
         generate_preferred_operators(state, future);
     }
@@ -210,12 +214,12 @@ int LandmarkHeuristic::compute_heuristic(const State &ancestor_state) {
 }
 
 void LandmarkHeuristic::notify_initial_state(const State &initial_state) {
-    lm_status_manager->progress_initial_state(initial_state);
+    landmark_status_manager->progress_initial_state(initial_state);
 }
 
 void LandmarkHeuristic::notify_state_transition(
     const State &parent_state, OperatorID op_id, const State &state) {
-    lm_status_manager->progress(parent_state, op_id, state);
+    landmark_status_manager->progress(parent_state, op_id, state);
     if (cache_evaluator_values) {
         /* TODO:  It may be more efficient to check that the past landmark
             set has actually changed and only then mark the h value as dirty. */
@@ -226,51 +230,44 @@ void LandmarkHeuristic::notify_state_transition(
 void add_landmark_heuristic_options_to_feature(
     plugins::Feature &feature, const string &description) {
     feature.document_synopsis(
-        "Landmark progression is implemented according to the following paper:"
-        + utils::format_conference_reference(
-            {"Clemens Büchner", "Thomas Keller", "Salomé Eriksson", "Malte Helmert"},
+        "Landmark progression is implemented according to the following paper:" +
+        utils::format_conference_reference(
+            {"Clemens Büchner", "Thomas Keller", "Salomé Eriksson",
+             "Malte Helmert"},
             "Landmarks Progression in Heuristic Search",
             "https://ai.dmi.unibas.ch/papers/buechner-et-al-icaps2023.pdf",
             "Proceedings of the Thirty-Third International Conference on "
             "Automated Planning and Scheduling (ICAPS 2023)",
-            "70-79",
-            "AAAI Press",
-            "2023"));
+            "70-79", "AAAI Press", "2023"));
 
     feature.add_option<shared_ptr<LandmarkFactory>>(
-        "lm_factory",
-        "the set of landmarks to use for this heuristic. "
-        "The set of landmarks can be specified here, "
-        "or predefined (see LandmarkFactory).");
+        "lm_factory", "the set of landmarks to use for this heuristic. "
+                      "The set of landmarks can be specified here, "
+                      "or predefined (see LandmarkFactory).");
     feature.add_option<bool>(
-        "pref",
-        "enable preferred operators (see note below)",
-        "false");
+        "pref", "enable preferred operators (see note below)", "false");
     /* TODO: Do we really want these options or should we just always progress
         everything we can? */
-    feature.add_option<bool>(
-        "prog_goal", "Use goal progression.", "true");
+    feature.add_option<bool>("prog_goal", "Use goal progression.", "true");
     feature.add_option<bool>(
         "prog_gn", "Use greedy-necessary ordering progression.", "true");
     feature.add_option<bool>(
         "prog_r", "Use reasonable ordering progression.", "true");
     add_heuristic_options_to_feature(feature, description);
 
-    feature.document_property("preferred operators",
-                              "yes (if enabled; see ``pref`` option)");
+    feature.document_property(
+        "preferred operators", "yes (if enabled; see ``pref`` option)");
 }
 
-tuple<shared_ptr<LandmarkFactory>, bool, bool, bool, bool,
-      shared_ptr<AbstractTask>, bool, string, utils::Verbosity>
-get_landmark_heuristic_arguments_from_options(
-    const plugins::Options &opts) {
+tuple<
+    shared_ptr<LandmarkFactory>, bool, bool, bool, bool,
+    shared_ptr<AbstractTask>, bool, string, utils::Verbosity>
+get_landmark_heuristic_arguments_from_options(const plugins::Options &opts) {
     return tuple_cat(
         make_tuple(
             opts.get<shared_ptr<LandmarkFactory>>("lm_factory"),
-            opts.get<bool>("pref"),
-            opts.get<bool>("prog_goal"),
-            opts.get<bool>("prog_gn"),
-            opts.get<bool>("prog_r")),
+            opts.get<bool>("pref"), opts.get<bool>("prog_goal"),
+            opts.get<bool>("prog_gn"), opts.get<bool>("prog_r")),
         get_heuristic_arguments_from_options(opts));
 }
 }

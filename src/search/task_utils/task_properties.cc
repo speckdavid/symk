@@ -10,7 +10,6 @@
 using namespace std;
 using utils::ExitCode;
 
-
 namespace task_properties {
 bool is_unit_cost(TaskProxy task) {
     for (OperatorProxy op : task.get_operators()) {
@@ -26,12 +25,11 @@ bool has_axioms(TaskProxy task) {
 
 void verify_no_axioms(TaskProxy task) {
     if (has_axioms(task)) {
-        cerr << "This configuration does not support axioms!"
-             << endl << "Terminating." << endl;
+        cerr << "This configuration does not support axioms!" << endl
+             << "Terminating." << endl;
         utils::exit_with(ExitCode::SEARCH_UNSUPPORTED);
     }
 }
-
 
 static int get_first_conditional_effects_op_id(TaskProxy task) {
     for (OperatorProxy op : task.get_operators()) {
@@ -76,21 +74,11 @@ bool has_zero_cost_operator(TaskProxy task_proxy) {
     return false;
 }
 
-bool has_sdac_cost_operator(TaskProxy task_proxy) {
-    for (OperatorProxy op : task_proxy.get_operators()) {
-        bool sdac = op.get_cost_function().find_first_not_of("0123456789")
-            != string::npos;
-        if (sdac) {
-            return true;
-        }
-    }
-    return false;
-}
-
 void verify_no_zero_cost_operator(TaskProxy task_proxy) {
     if (has_zero_cost_operator(task_proxy)) {
         cerr << "This configuration does not support zero operation cost "
-             << endl << "Terminating." << endl;
+             << endl
+             << "Terminating." << endl;
         utils::exit_with(ExitCode::SEARCH_UNSUPPORTED);
     }
 }
@@ -156,7 +144,8 @@ void print_variable_statistics(const TaskProxy &task_proxy) {
     utils::g_log << "Variables: " << variables.size() << endl;
     utils::g_log << "FactPairs: " << num_facts << endl;
     utils::g_log << "Bytes per state: "
-                 << state_packer.get_num_bins() * sizeof(int_packer::IntPacker::Bin)
+                 << state_packer.get_num_bins() *
+                        sizeof(int_packer::IntPacker::Bin)
                  << endl;
 }
 
@@ -171,8 +160,8 @@ void dump_pddl(const State &state) {
 void dump_fdr(const State &state) {
     for (FactProxy fact : state) {
         VariableProxy var = fact.get_variable();
-        utils::g_log << "  #" << var.get_id() << " [" << var.get_name() << "] -> "
-                     << fact.get_value() << endl;
+        utils::g_log << "  #" << var.get_id() << " [" << var.get_name()
+                     << "] -> " << fact.get_value() << endl;
     }
 }
 
@@ -196,7 +185,7 @@ static void dump_operator(const OperatorProxy &op) {
     utils::g_log << " eff:" << endl;
     for (EffectProxy eff : op.get_effects()) {
         utils::g_log << " " << eff.get_fact().get_pair() << " if [ " << flush;
-        for (auto cond: eff.get_conditions()) {
+        for (auto cond : eff.get_conditions()) {
             utils::g_log << cond.get_pair() << " " << flush;
         }
         utils::g_log << "]" << endl;
@@ -215,7 +204,8 @@ static void dump_axioms(const AxiomsProxy &axioms) {
     }
 }
 
-void dump_task(const TaskProxy &task_proxy, bool with_operators, bool with_axioms) {
+void dump_task(
+    const TaskProxy &task_proxy, bool with_operators, bool with_axioms) {
     OperatorsProxy operators = task_proxy.get_operators();
     int min_action_cost = numeric_limits<int>::max();
     int max_action_cost = 0;
@@ -230,10 +220,11 @@ void dump_task(const TaskProxy &task_proxy, bool with_operators, bool with_axiom
     utils::g_log << "Variables (" << variables.size() << "):" << endl;
     int var_id = 0;
     for (VariableProxy var : variables) {
-        utils::g_log << "  #" << var_id << ": " << var.get_name()
-                     << " (range " << var.get_domain_size() << ")" << endl;
+        utils::g_log << "  " << var.get_name() << " (range "
+                     << var.get_domain_size() << ")" << endl;
         for (int val = 0; val < var.get_domain_size(); ++val) {
-            utils::g_log << "    " << val << ": " << var.get_fact(val).get_name() << endl;
+            utils::g_log << "    " << val << ": "
+                         << var.get_fact(val).get_name() << endl;
         }
         ++var_id;
     }
@@ -262,6 +253,5 @@ PerTaskInformation<int_packer::IntPacker> g_state_packers(
             variable_ranges.push_back(var.get_domain_size());
         }
         return make_unique<int_packer::IntPacker>(variable_ranges);
-    }
-    );
+    });
 }
