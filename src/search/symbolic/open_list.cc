@@ -18,8 +18,9 @@ void OpenList::insert(const BDD &bdd, int g) {
 }
 
 int OpenList::minNextG(const Frontier &frontier, int min_action_cost) const {
-    int next_g = (frontier.empty() ? numeric_limits<int>::max()
-                  : frontier.g() + min_action_cost);
+    int next_g =
+        (frontier.empty() ? numeric_limits<int>::max()
+                          : frontier.g() + min_action_cost);
     if (!open.empty()) {
         return min(next_g, open.begin()->first);
     }

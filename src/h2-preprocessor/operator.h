@@ -1,14 +1,15 @@
 #ifndef OPERATOR_H
 #define OPERATOR_H
 
+#include "variable.h"
+
 #include <cassert>
-#include <iostream>
 #include <fstream>
-#include <string>
-#include <vector>
+#include <iostream>
 #include <list>
 #include <set>
-#include "variable.h"
+#include <string>
+#include <vector>
 using namespace std;
 
 class H2Mutexes;
@@ -16,20 +17,22 @@ class H2Mutexes;
 class Operator {
 public:
     class Prevail {
-public:
+    public:
         Variable *var;
         int prev;
-        Prevail(Variable *v, int p) : var(v), prev(p) {}
+        Prevail(Variable *v, int p) : var(v), prev(p) {
+        }
         inline void remove_unreachable_facts() {
             prev = var->get_new_id(prev);
         }
     };
     class EffCond {
-public:
+    public:
         Variable *var;
         int cond;
-        EffCond(Variable *v, int c) : var(v), cond(c) {}
-        //return true if the condition is reachable
+        EffCond(Variable *v, int c) : var(v), cond(c) {
+        }
+        // return true if the condition is reachable
         inline bool remove_unreachable_facts() {
             if (var->is_reachable(cond)) {
                 cond = var->get_new_id(cond);
@@ -40,7 +43,7 @@ public:
         }
     };
     class PrePost {
-public:
+    public:
         Variable *var;
         int pre, post;
         bool is_conditional_effect;
@@ -48,8 +51,10 @@ public:
         PrePost(Variable *v, int pr, int po) : var(v), pre(pr), post(po) {
             is_conditional_effect = false;
         }
-        PrePost(Variable *v, vector<EffCond> ecs, int pr, int po) : var(v), pre(pr),
-                                                                    post(po), effect_conds(ecs) {is_conditional_effect = true;}
+        PrePost(Variable *v, vector<EffCond> ecs, int pr, int po)
+            : var(v), pre(pr), post(po), effect_conds(ecs) {
+            is_conditional_effect = true;
+        }
         bool is_conditional() const {
             return is_conditional_effect;
         }
@@ -58,7 +63,7 @@ public:
             return pre != -1;
         }
 
-        //returns true if the effect can still be triggered
+        // returns true if the effect can still be triggered
         inline bool remove_unreachable_facts() {
             if (pre != -1) {
                 pre = var->get_new_id(pre);
@@ -74,7 +79,8 @@ public:
                     }
                 }
                 effect_conds.swap(new_conds);
-                //This case cannot happen, if a condition is unreachable then the entire effect is unreachable
+                // This case cannot happen, if a condition is unreachable then
+                // the entire effect is unreachable
                 assert(!effect_conds.empty());
             }
             return true;
@@ -83,8 +89,8 @@ public:
 
 private:
     string name;
-    vector<Prevail> prevail;  // var, val
-    vector<PrePost> pre_post;  // var, old-val, new-val
+    vector<Prevail> prevail; // var, val
+    vector<PrePost> pre_post; // var, old-val, new-val
     int cost;
     bool spurious;
 
@@ -102,8 +108,12 @@ public:
     void dump() const;
     int get_encoding_size() const;
     void generate_cpp_input(ofstream &outfile) const;
-    int get_cost() const {return cost;}
-    string get_name() const {return name;}
+    int get_cost() const {
+        return cost;
+    }
+    string get_name() const {
+        return name;
+    }
     bool has_conditional_effects() const {
         for (const PrePost &effect : pre_post) {
             if (effect.is_conditional())
@@ -114,13 +124,19 @@ public:
     inline void set_spurious() {
         spurious = true;
     }
-    inline const vector<Prevail> &get_prevail() const {return prevail;}
-    inline const vector<PrePost> &get_pre_post() const {return pre_post;}
-    inline const std::vector<std::pair<int, int>> &get_augmented_preconditions() const {
+    inline const vector<Prevail> &get_prevail() const {
+        return prevail;
+    }
+    inline const vector<PrePost> &get_pre_post() const {
+        return pre_post;
+    }
+    inline const std::vector<std::pair<int, int>> &
+    get_augmented_preconditions() const {
         return augmented_preconditions;
     }
 
-    inline const std::vector<std::pair<int, int>> &get_potential_preconditions() const {
+    inline const std::vector<std::pair<int, int>> &
+    get_potential_preconditions() const {
         return potential_preconditions;
     }
 

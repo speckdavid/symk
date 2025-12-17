@@ -1,8 +1,9 @@
 #ifndef SYMBOLIC_FRONTIER_H
 #define SYMBOLIC_FRONTIER_H
 
-#include "searches/sym_search.h"
 #include "sym_bucket.h"
+
+#include "searches/sym_search.h"
 
 #include <cassert>
 #include <map>
@@ -16,36 +17,40 @@ public:
     TruncatedReason truncated_reason;
     double time_spent;
 
-    Result(double t) : ok(true), time_spent(t) {}
+    Result(double t) : ok(true), time_spent(t) {
+    }
     Result(TruncatedReason reason, double t)
-        : ok(false), truncated_reason(reason), time_spent(t) {}
+        : ok(false), truncated_reason(reason), time_spent(t) {
+    }
 };
 
 class ResultExpansion : public Result {
 public:
     bool step_zero;
     std::vector<std::map<int, Bucket>> buckets;
-    ResultExpansion(bool step_zero_, std::vector<std::map<int, Bucket>> &buckets_,
-                    double t)
+    ResultExpansion(
+        bool step_zero_, std::vector<std::map<int, Bucket>> &buckets_, double t)
         : Result(t), step_zero(step_zero_) {
         buckets.swap(buckets_);
     }
 
     ResultExpansion(bool step_zero_, TruncatedReason reason, double t)
-        : Result(reason, t), step_zero(step_zero_) {}
+        : Result(reason, t), step_zero(step_zero_) {
+    }
 };
 
 class Frontier { // Current states extracted from the open list
     SymStateSpaceManager *mgr;
 
-    Bucket Sfilter; // current g-bucket without duplicates and h-classified (still
-                    // not filtered mutexes)
+    Bucket Sfilter; // current g-bucket without duplicates and h-classified
+                    // (still not filtered mutexes)
     Bucket Smerge; // bucket before applying merge
     Bucket Szero; // bucket to expand 0-cost transitions
-    Bucket S;     // bucket to expand cost transitions
+    Bucket S; // bucket to expand cost transitions
 
-    // bucket to store temporary image results in expand_zero() and expand_cost()
-    // For each BDD in Szero or S, stores a map with pairs <cost, resImage>
+    // bucket to store temporary image results in expand_zero() and
+    // expand_cost() For each BDD in Szero or S, stores a map with pairs <cost,
+    // resImage>
     std::vector<std::map<int, Bucket>> Simg;
 
     int g_value;
@@ -69,7 +74,9 @@ public:
     int nodes() const;
     int buckets() const;
 
-    int g() const {return g_value;}
+    int g() const {
+        return g_value;
+    }
 
     Bucket &prepared_bucket() {
         assert(Sfilter.empty());

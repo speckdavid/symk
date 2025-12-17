@@ -52,7 +52,6 @@ extern bool has_conditional_effects(TaskProxy task, OperatorID op_id);
 extern void verify_no_conditional_effects(TaskProxy task);
 
 extern bool has_zero_cost_operator(TaskProxy task);
-extern bool has_sdac_cost_operator(TaskProxy task);
 
 extern void verify_no_zero_cost_operator(TaskProxy task_proxy);
 
@@ -88,7 +87,9 @@ extern void print_variable_statistics(const TaskProxy &task_proxy);
 extern void dump_pddl(const State &state);
 extern void dump_fdr(const State &state);
 extern void dump_goals(const GoalsProxy &goals);
-extern void dump_task(const TaskProxy &task_proxy, bool with_operators = true, bool with_axioms = true);
+extern void dump_task(
+    const TaskProxy &task_proxy, bool with_operators = true,
+    bool with_axioms = true);
 
 extern PerTaskInformation<int_packer::IntPacker> g_state_packers;
 }

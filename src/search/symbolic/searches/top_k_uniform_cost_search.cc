@@ -1,5 +1,7 @@
 #include "top_k_uniform_cost_search.h"
+
 #include "../closed_list.h"
+
 #include "../search_algorithms/symbolic_search.h"
 
 namespace symbolic {

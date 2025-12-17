@@ -8,11 +8,14 @@ class TopKSelector : public PlanSelector {
 public:
     TopKSelector(const plugins::Options &opts);
 
-    ~TopKSelector() {}
+    ~TopKSelector() {
+    }
 
     void add_plan(const Plan &plan) override;
 
-    std::string tag() const override {return "Top-K";}
+    std::string tag() const override {
+        return "Top-K";
+    }
 };
 }
 

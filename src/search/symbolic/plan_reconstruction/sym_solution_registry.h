@@ -1,37 +1,36 @@
 #ifndef SYMBOLIC_PLAN_RECONSTRUCTION_SYM_SOLUTION_REGISTRY_H
 #define SYMBOLIC_PLAN_RECONSTRUCTION_SYM_SOLUTION_REGISTRY_H
 
-#include "sym_solution_cut.h"
-
 #include "reconstruction_node.h"
+#include "sym_solution_cut.h"
 
 #include "../sym_transition_relations.h"
 #include "../sym_variables.h"
 
-#include "../plan_selection/plan_selector.h"
-
 #include "../../plan_manager.h"
 #include "../../state_registry.h"
 #include "../../task_proxy.h"
-
 #include "../../utils/timer.h"
+#include "../plan_selection/plan_selector.h"
 
 #include <queue>
 
 namespace symbolic {
 // We would like to use the prio queue implemented in FD but it requires
 // integer values as prio and we have a more complex comparision
-typedef std::priority_queue<ReconstructionNode, std::vector<ReconstructionNode>, CompareReconstructionNodes> ReconstructionQueue;
+typedef std::priority_queue<
+    ReconstructionNode, std::vector<ReconstructionNode>,
+    CompareReconstructionNodes>
+    ReconstructionQueue;
 
 enum class PlanPruning {
-    /* Multiple combinable options to specify which plans are allowed to be part of
-    the solution set. The Plan reconstruction will optimize to prune partial plans that
-    can not fullfill the contraints. */
+    /* Multiple combinable options to specify which plans are allowed to be part
+    of the solution set. The Plan reconstruction will optimize to prune partial
+    plans that can not fullfill the contraints. */
     SINGLE_SOLUTION = 0,
     SIMPLE_SOLUTIONS = 1,
     JUSTIFIED = 2
 };
-
 
 class UniformCostSearch;
 class ClosedList;
@@ -42,7 +41,6 @@ protected:
     bool justified_solutions_pruning;
     bool single_solution_pruning;
     bool simple_solutions_pruning;
-
 
     std::map<int, std::vector<SymSolutionCut>> sym_cuts;
 
@@ -68,28 +66,37 @@ protected:
 
     bool is_solution(const ReconstructionNode &node) const;
 
-    bool task_has_zero_costs() const {return sym_transition_relations->has_zero_cost_transition();}
+    bool task_has_zero_costs() const {
+        return sym_transition_relations->has_zero_cost_transition();
+    }
 
-    bool justified_solutions() const {return justified_solutions_pruning;}
+    bool justified_solutions() const {
+        return justified_solutions_pruning;
+    }
 
-    bool simple_solutions() const {return simple_solutions_pruning;}
+    bool simple_solutions() const {
+        return simple_solutions_pruning;
+    }
 
-    bool single_solution() const {return single_solution_pruning;}
+    bool single_solution() const {
+        return single_solution_pruning;
+    }
 
     bool no_pruning() const {
-        return !single_solution() && !justified_solutions() && !simple_solutions();
+        return !single_solution() && !justified_solutions() &&
+               !simple_solutions();
     }
 
 public:
     SymSolutionRegistry();
 
-    void init(std::shared_ptr<SymVariables> sym_vars,
-              std::shared_ptr<symbolic::ClosedList> fw_closed,
-              std::shared_ptr<symbolic::ClosedList> bw_closed,
-              std::shared_ptr<SymTransitionRelations> sym_transition_relations,
-              std::shared_ptr<PlanSelector> plan_data_base,
-              bool single_solution,
-              bool simple_solutions);
+    void init(
+        std::shared_ptr<SymVariables> sym_vars,
+        std::shared_ptr<symbolic::ClosedList> fw_closed,
+        std::shared_ptr<symbolic::ClosedList> bw_closed,
+        std::shared_ptr<SymTransitionRelations> sym_transition_relations,
+        std::shared_ptr<PlanSelector> plan_data_base, bool single_solution,
+        bool simple_solutions);
 
     virtual ~SymSolutionRegistry() = default;
 
@@ -114,7 +121,8 @@ public:
     double cheapest_solution_cost_found() const {
         double cheapest = std::numeric_limits<double>::infinity();
         if (plan_data_base) {
-            cheapest = std::min(cheapest, plan_data_base->get_first_plan_cost());
+            cheapest =
+                std::min(cheapest, plan_data_base->get_first_plan_cost());
         }
         if (sym_cuts.size() > 0) {
             cheapest = std::min(cheapest, (double)sym_cuts.begin()->first);

@@ -5,9 +5,9 @@
 using namespace std;
 
 namespace symbolic {
-SymMutexes::SymMutexes(SymVariables *sym_vars, const SymParameters &sym_params) :
-    sym_vars(sym_vars),
-    sym_params(sym_params) {}
+SymMutexes::SymMutexes(SymVariables *sym_vars, const SymParameters &sym_params)
+    : sym_vars(sym_vars), sym_params(sym_params) {
+}
 
 void SymMutexes::init(const shared_ptr<AbstractTask> task) {
     if (sym_params.mutex_type == MutexType::MUTEX_NOT)
@@ -17,7 +17,8 @@ void SymMutexes::init(const shared_ptr<AbstractTask> task) {
     // If (a) is initialized OR not using mutex OR edeletion does not need mutex
 
     bool genMutexBDD = true;
-    bool genMutexBDDByFluent = (sym_params.mutex_type == MutexType::MUTEX_EDELETION);
+    bool genMutexBDDByFluent =
+        (sym_params.mutex_type == MutexType::MUTEX_EDELETION);
 
     if (genMutexBDDByFluent) {
         // Initialize structure for exactlyOneBDDsByFluent (common to both
@@ -34,10 +35,13 @@ void SymMutexes::init(const shared_ptr<AbstractTask> task) {
     init(task, genMutexBDD, genMutexBDDByFluent, true);
 }
 
-void SymMutexes::init(const shared_ptr<AbstractTask> task, bool genMutexBDD, bool genMutexBDDByFluent, bool fw) {
+void SymMutexes::init(
+    const shared_ptr<AbstractTask> task, bool genMutexBDD,
+    bool genMutexBDDByFluent, bool fw) {
     const vector<MutexGroup> &mutex_groups = task->get_mutex_groups();
 
-    vector<vector<BDD>> &notMutexBDDsByFluent = (fw ? notMutexBDDsByFluentFw : notMutexBDDsByFluentBw);
+    vector<vector<BDD>> &notMutexBDDsByFluent =
+        (fw ? notMutexBDDsByFluentFw : notMutexBDDsByFluentBw);
 
     vector<BDD> &notMutexBDDs = (fw ? notMutexBDDsFw : notMutexBDDsBw);
 
@@ -70,31 +74,6 @@ void SymMutexes::init(const shared_ptr<AbstractTask> task, bool genMutexBDD, boo
         if (mg.pruneFW() != fw)
             continue;
         const vector<FactPair> &invariant_group = mg.getFacts();
-        if (mg.isExactlyOne()) {
-            BDD bddInvariant = sym_vars->zeroBDD();
-            int var = numeric_limits<int>::max();
-            int val = 0;
-            bool exactlyOneRelevant = true;
-
-            for (auto &fluent : invariant_group) {
-                bddInvariant += sym_vars->preBDD(fluent.var, fluent.value);
-                if (fluent.var < var) {
-                    var = fluent.var;
-                    val = fluent.value;
-                }
-            }
-
-            if (exactlyOneRelevant) {
-                if (genMutexBDD) {
-                    invariant_bdds_by_fluent[var][val] *= bddInvariant;
-                }
-                if (genMutexBDDByFluent) {
-                    for (auto &fluent : invariant_group) {
-                        exactlyOneBDDsByFluent[fluent.var][fluent.value] *= bddInvariant;
-                    }
-                }
-            }
-        }
 
         for (size_t i = 0; i < invariant_group.size(); ++i) {
             int var1 = invariant_group[i].var;
@@ -108,7 +87,8 @@ void SymMutexes::init(const shared_ptr<AbstractTask> task, bool genMutexBDD, boo
                 BDD mBDD = !(f1 * f2);
                 if (genMutexBDD) {
                     mBDDByVar[min(var1, var2)] *= mBDD;
-                    if (mBDDByVar[min(var1, var2)].nodeCount() > sym_params.max_mutex_size) {
+                    if (mBDDByVar[min(var1, var2)].nodeCount() >
+                        sym_params.max_mutex_size) {
                         notMutexBDDs.push_back(mBDDByVar[min(var1, var2)]);
                         mBDDByVar[min(var1, var2)] = sym_vars->oneBDD();
                     }
@@ -133,7 +113,9 @@ void SymMutexes::init(const shared_ptr<AbstractTask> task, bool genMutexBDD, boo
             }
         }
 
-        merge(sym_vars, notMutexBDDs, merge_and_BDD, sym_params.max_mutex_time, sym_params.max_mutex_size);
+        merge(
+            sym_vars, notMutexBDDs, merge_and_BDD, sym_params.max_mutex_time,
+            sym_params.max_mutex_size);
         reverse(notMutexBDDs.begin(), notMutexBDDs.end());
     }
 }

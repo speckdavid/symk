@@ -1,4 +1,5 @@
 #include "sym_axiom_compilation.h"
+
 #include "../sym_variables.h"
 
 #include "../../utils/logging.h"
@@ -10,9 +11,9 @@ namespace symbolic {
 using namespace std;
 
 SymAxiomCompilation::SymAxiomCompilation(
-    SymVariables *sym_vars,
-    const shared_ptr<AbstractTask> &task)
-    : sym_vars(sym_vars), task_proxy(*task) {}
+    SymVariables *sym_vars, const shared_ptr<AbstractTask> &task)
+    : sym_vars(sym_vars), task_proxy(*task) {
+}
 
 bool SymAxiomCompilation::is_derived_variable(int var) const {
     return task_proxy.get_variables()[var].is_derived();
@@ -30,13 +31,16 @@ bool SymAxiomCompilation::is_in_body(int var, int axiom_id) const {
 
 bool SymAxiomCompilation::is_trivial_axiom(int axiom_id) const {
     int head = task_proxy.get_axioms()[axiom_id]
-        .get_effects()[0]
-        .get_fact()
-        .get_variable()
-        .get_id();
-    int val =
-        task_proxy.get_axioms()[axiom_id].get_effects()[0].get_fact().get_value();
-    int default_val = task_proxy.get_variables()[head].get_default_axiom_value();
+                   .get_effects()[0]
+                   .get_fact()
+                   .get_variable()
+                   .get_id();
+    int val = task_proxy.get_axioms()[axiom_id]
+                  .get_effects()[0]
+                  .get_fact()
+                  .get_value();
+    int default_val =
+        task_proxy.get_variables()[head].get_default_axiom_value();
     return val == default_val;
 }
 
@@ -49,15 +53,16 @@ int SymAxiomCompilation::get_axiom_level(const VariableProxy var) const {
 
 int SymAxiomCompilation::get_axiom_level(int axiom_id) const {
     return get_axiom_level(task_proxy.get_axioms()[axiom_id]
-                           .get_effects()[0]
-                           .get_fact()
-                           .get_variable());
+                               .get_effects()[0]
+                               .get_fact()
+                               .get_variable());
 }
 
 int SymAxiomCompilation::num_axiom_levels() const {
     int num_level = -1;
     for (size_t i = 0; i < task_proxy.get_variables().size(); i++) {
-        num_level = max(num_level, get_axiom_level(task_proxy.get_variables()[i]));
+        num_level =
+            max(num_level, get_axiom_level(task_proxy.get_variables()[i]));
     }
     return num_level + 1;
 }
@@ -66,8 +71,7 @@ void SymAxiomCompilation::init_axioms() {
     utils::Timer timer;
     create_primary_representations();
 
-    utils::g_log << fixed << "Symbolic Axiom initialization: " << timer
-                 << endl;
+    utils::g_log << fixed << "Symbolic Axiom initialization: " << timer << endl;
 }
 
 BDD SymAxiomCompilation::get_compilied_init_state() const {
@@ -105,8 +109,9 @@ BDD SymAxiomCompilation::get_primary_representation(int var, int val) const {
 
     BDD res = primary_representations.at(var);
     // Negation because default derived variable has default value
-    return task_proxy.get_variables()[var].get_default_axiom_value() == val ? !res
-           : res;
+    return task_proxy.get_variables()[var].get_default_axiom_value() == val
+               ? !res
+               : res;
 }
 
 void SymAxiomCompilation::create_primary_representations() {
@@ -156,7 +161,8 @@ void SymAxiomCompilation::create_primary_representations(int layer) {
         open_vars.pop();
         for (size_t i = 0; i < task_proxy.get_axioms().size(); i++) {
             auto axiom = task_proxy.get_axioms()[i];
-            int head = axiom.get_effects()[0].get_fact().get_variable().get_id();
+            int head =
+                axiom.get_effects()[0].get_fact().get_variable().get_id();
             int head_level = get_axiom_level(task_proxy.get_variables()[head]);
             if (is_trivial_axiom(i) || head_level != layer) {
                 continue;
@@ -180,8 +186,10 @@ void SymAxiomCompilation::create_axiom_body_layer() {
     for (size_t i = 0; i < task_proxy.get_axioms().size(); i++) {
         int body_level = -1;
         const EffectProxy eff = task_proxy.get_axioms()[i].get_effects()[0];
-        for (size_t cond_i = 0; cond_i < eff.get_conditions().size(); cond_i++) {
-            int level = get_axiom_level(eff.get_conditions()[cond_i].get_variable());
+        for (size_t cond_i = 0; cond_i < eff.get_conditions().size();
+             cond_i++) {
+            int level =
+                get_axiom_level(eff.get_conditions()[cond_i].get_variable());
             body_level = max(body_level, level);
         }
         axiom_body_layer.push_back(body_level);

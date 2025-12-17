@@ -11,24 +11,26 @@
 
 using namespace std;
 
-// TODO: If we have a relative bound and no absolut, we may get nodes in the open list which are
-// to costly. So, we can stop early when the bound is exceeded. Q: Do we need tie breaking [f,g,h]
-// In particular the h in the end? probably not but valuable to thing about it.
+// TODO: If we have a relative bound and no absolut, we may get nodes in the
+// open list which are to costly. So, we can stop early when the bound is
+// exceeded. Q: Do we need tie breaking [f,g,h] In particular the h in the end?
+// probably not but valuable to thing about it.
 
 namespace astar_count {
-AStarCount::AStarCount(const shared_ptr<Evaluator> &h_eval,
-                       OperatorCost cost_type, int bound, double max_time,
-                       const string &description, utils::Verbosity verbosity) :
-    SearchAlgorithm(cost_type, bound, max_time, description, verbosity),
-    num_goal_paths(0) {
-    auto [open_list_factory, eval] = search_common::create_astar_count_open_list_factory_and_f_eval(h_eval, verbosity);
+AStarCount::AStarCount(
+    const shared_ptr<Evaluator> &h_eval, OperatorCost cost_type, int bound,
+    double max_time, const string &description, utils::Verbosity verbosity)
+    : SearchAlgorithm(cost_type, bound, max_time, description, verbosity),
+      num_goal_paths(0) {
+    auto [open_list_factory, eval] =
+        search_common::create_astar_count_open_list_factory_and_f_eval(
+            h_eval, verbosity);
     open_list = open_list_factory->create_state_open_list();
     f_evaluator = eval;
 }
 
 void AStarCount::initialize() {
-    log << "Conducting astar count search"
-        << ", (real) bound = " << bound
+    log << "Conducting astar count search" << ", (real) bound = " << bound
         << endl;
     assert(open_list);
 
@@ -76,12 +78,20 @@ SearchStatus AStarCount::step() {
     statistics.inc_expanded();
 
     if (task_properties::is_goal_state(task_proxy, s)) {
-        num_goal_paths += state_cost_to_path_count[s.get_id().get_value()][node->get_real_g()];
+        num_goal_paths += state_cost_to_path_count[s.get_id().get_value()]
+                                                  [node->get_real_g()];
 
-        for (const OperatorProxy &op: task_proxy.get_operators()) {
-            utils::g_log << op.get_name() << ": " << state_cost_operator_to_path_count[s.get_id().get_value()][node->get_real_g()][op.get_id()] << endl;
+        for (const OperatorProxy &op : task_proxy.get_operators()) {
+            utils::g_log
+                << op.get_name() << ": "
+                << state_cost_operator_to_path_count[s.get_id().get_value()]
+                                                    [node->get_real_g()]
+                                                    [op.get_id()]
+                << endl;
             num_operator_on_goal_path[op.get_id()] +=
-                state_cost_operator_to_path_count[s.get_id().get_value()][node->get_real_g()][op.get_id()];
+                state_cost_operator_to_path_count[s.get_id().get_value()]
+                                                 [node->get_real_g()]
+                                                 [op.get_id()];
         }
 
         if (!found_solution()) {
@@ -120,7 +130,8 @@ void AStarCount::expand(const SearchNode &node) {
         int succ_g = node.get_g() + get_adjusted_cost(op);
 
         if (succ_node.is_new()) {
-            EvaluationContext succ_eval_context(succ_state, succ_g, false, &statistics);
+            EvaluationContext succ_eval_context(
+                succ_state, succ_g, false, &statistics);
             statistics.inc_evaluated_states();
 
             if (open_list->is_dead_end(succ_eval_context)) {
@@ -128,7 +139,8 @@ void AStarCount::expand(const SearchNode &node) {
                 statistics.inc_dead_ends();
                 continue;
             }
-            if (succ_eval_context.get_evaluator_value_or_infinity(f_evaluator.get()) >= bound)
+            if (succ_eval_context.get_evaluator_value_or_infinity(
+                    f_evaluator.get()) >= bound)
                 continue;
             succ_node.open_new_node(node, op, get_adjusted_cost(op));
 
@@ -139,13 +151,17 @@ void AStarCount::expand(const SearchNode &node) {
             if (succ_node.is_closed()) {
                 // We found a new cheapest path to a closed state.
                 cerr << "Found a new cheapest path to an open closed state! "
-                     << "Only consistent heuristics are supported by now!" << endl;
+                     << "Only consistent heuristics are supported by now!"
+                     << endl;
                 utils::exit_with(utils::ExitCode::SEARCH_CRITICAL_ERROR);
             }
             assert(succ_node.is_open());
             succ_node.update_open_node_parent(node, op, get_adjusted_cost(op));
-            EvaluationContext succ_eval_context(succ_state, succ_node.get_g(), false, &statistics);
-            assert(succ_eval_context.get_evaluator_value_or_infinity(f_evaluator.get()) < bound);
+            EvaluationContext succ_eval_context(
+                succ_state, succ_node.get_g(), false, &statistics);
+            assert(
+                succ_eval_context.get_evaluator_value_or_infinity(
+                    f_evaluator.get()) < bound);
             open_list->insert(succ_eval_context, succ_state.get_id());
         } else {
             /*
@@ -153,8 +169,9 @@ void AStarCount::expand(const SearchNode &node) {
               state.
             */
 
-            // TODO: If we plan to count all the solutions beyond the optimal cost, we need to reexpand states with
-            // higher costs than the lowest reachable ones. Should be possible by "reopening"
+            // TODO: If we plan to count all the solutions beyond the optimal
+            // cost, we need to reexpand states with higher costs than the
+            // lowest reachable ones. Should be possible by "reopening"
         }
 
         update_path_count_for_state(succ_state, s, succ_g, node.get_g(), op_id);
@@ -176,9 +193,9 @@ optional<SearchNode> AStarCount::pop_min_node() {
     return nullopt;
 }
 
-void AStarCount::update_path_count_for_state(const State &state, const State &parent,
-                                             int state_g, int parent_g,
-                                             const OperatorID &operator_id) {
+void AStarCount::update_path_count_for_state(
+    const State &state, const State &parent, int state_g, int parent_g,
+    const OperatorID &operator_id) {
     assert(state_g >= parent_g);
 
     auto state_id = state.get_id().get_value();
@@ -189,8 +206,10 @@ void AStarCount::update_path_count_for_state(const State &state, const State &pa
     state_cost_to_path_count[state_id][state_g] += parent_count;
 
     // Update path counts per operator
-    auto &state_op_counts = state_cost_operator_to_path_count[state_id][state_g];
-    const auto &parent_op_counts = state_cost_operator_to_path_count[parent_id][parent_g];
+    auto &state_op_counts =
+        state_cost_operator_to_path_count[state_id][state_g];
+    const auto &parent_op_counts =
+        state_cost_operator_to_path_count[parent_id][parent_g];
 
     for (const auto &[op_id, count] : parent_op_counts) {
         state_op_counts[op_id] += count;
@@ -203,7 +222,8 @@ void AStarCount::update_path_count_for_state(const State &state, const State &pa
 void AStarCount::print_statistics() const {
     log << "Number of plans: " << num_goal_paths << endl;
     for (const OperatorProxy &op : task_proxy.get_operators()) {
-        utils::g_log << op.get_name() << ": " << num_operator_on_goal_path.at(op.get_id()) << endl;
+        utils::g_log << op.get_name() << ": "
+                     << num_operator_on_goal_path.at(op.get_id()) << endl;
     }
     statistics.print_detailed_statistics();
     search_space.print_statistics();
@@ -215,7 +235,8 @@ void AStarCount::start_f_value_statistics(EvaluationContext &eval_context) {
 }
 
 /* TODO: HACK! This is very inefficient for simply looking up an h value.
-   Also, if h values are not saved it would recompute h for each and every state. */
+   Also, if h values are not saved it would recompute h for each and every
+   state. */
 void AStarCount::update_f_value_statistics(EvaluationContext &eval_context) {
     int f_value = eval_context.get_evaluator_value(f_evaluator.get());
     statistics.report_f_value_progress(f_value);
@@ -234,12 +255,11 @@ public:
         add_search_algorithm_options_to_feature(*this, "astar_count");
     }
 
-    virtual shared_ptr<AStarCount>
-    create_component(const plugins::Options &opts) const override {
+    virtual shared_ptr<AStarCount> create_component(
+        const plugins::Options &opts) const override {
         return plugins::make_shared_from_arg_tuples<astar_count::AStarCount>(
             opts.get<shared_ptr<Evaluator>>("h"),
-            get_search_algorithm_arguments_from_options(opts)
-            );
+            get_search_algorithm_arguments_from_options(opts));
     }
 };
 

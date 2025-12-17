@@ -7,12 +7,15 @@
 using namespace std;
 
 namespace symbolic {
-BidirectionalSearch::BidirectionalSearch(SymbolicSearch *eng,
-                                         const SymParameters &params,
-                                         shared_ptr<UniformCostSearch> _fw,
-                                         shared_ptr<UniformCostSearch> _bw,
-                                         bool alternating)
-    : SymSearch(eng, params), fw(_fw), bw(_bw), cur_dir(nullptr), alternating(alternating) {
+BidirectionalSearch::BidirectionalSearch(
+    SymbolicSearch *eng, const SymParameters &params,
+    shared_ptr<UniformCostSearch> _fw, shared_ptr<UniformCostSearch> _bw,
+    bool alternating)
+    : SymSearch(eng, params),
+      fw(_fw),
+      bw(_bw),
+      cur_dir(nullptr),
+      alternating(alternating) {
     assert(fw->getStateSpace() == bw->getStateSpace());
     mgr = fw->getStateSpaceShared();
 }

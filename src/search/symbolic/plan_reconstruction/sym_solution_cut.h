@@ -1,8 +1,9 @@
 #ifndef SYMBOLIC_PLAN_RECONSTRUCTION_SYM_SOLUTION_H
 #define SYMBOLIC_PLAN_RECONSTRUCTION_SYM_SOLUTION_H
 
-#include "../../task_proxy.h"
 #include "../sym_variables.h"
+
+#include "../../task_proxy.h"
 
 #include <vector>
 
@@ -34,8 +35,8 @@ public:
     bool operator==(const SymSolutionCut &other) const;
     bool operator!=(const SymSolutionCut &other) const;
 
-    friend std::ostream &operator<<(std::ostream &os,
-                                    const SymSolutionCut &sym_cut) {
+    friend std::ostream &operator<<(
+        std::ostream &os, const SymSolutionCut &sym_cut) {
         return os << "symcut{g=" << sym_cut.get_g() << ", h=" << sym_cut.get_h()
                   << ", f=" << sym_cut.get_f()
                   << ", nodes=" << sym_cut.get_cut().nodeCount() << "}";

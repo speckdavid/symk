@@ -1,19 +1,19 @@
 #include "sym_estimate.h"
 
-#include <algorithm>
-#include <iostream>
-
 #include "sym_parameters.h"
 #include "sym_utils.h"
+
 #include "../utils/logging.h"
+
+#include <algorithm>
+#include <iostream>
 
 using namespace std;
 
 namespace symbolic {
-Estimation::Estimation(double time, double nodes, bool failed) :
-    time(time),
-    nodes(nodes),
-    failed(failed) {}
+Estimation::Estimation(double time, double nodes, bool failed)
+    : time(time), nodes(nodes), failed(failed) {
+}
 
 void Estimation::set_data(double time, double nodes, bool failed) {
     this->time = time;
@@ -34,6 +34,7 @@ bool Estimation::operator<(const Estimation &other) const {
 }
 
 ostream &operator<<(ostream &os, const Estimation &est) {
-    return os << "{Time=" << est.time << ",Nodes=" << est.nodes << ",Failed=" << est.failed << "}";
+    return os << "{Time=" << est.time << ",Nodes=" << est.nodes
+              << ",Failed=" << est.failed << "}";
 }
 }

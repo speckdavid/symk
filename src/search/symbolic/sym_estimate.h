@@ -20,9 +20,15 @@ public:
 
     void set_data(double time, double nodes, bool failed);
 
-    double get_time() const {return time;}
-    double get_nodes() const {return nodes;}
-    bool get_failed() const {return failed;}
+    double get_time() const {
+        return time;
+    }
+    double get_nodes() const {
+        return nodes;
+    }
+    bool get_failed() const {
+        return failed;
+    }
 
     bool operator<(const Estimation &other) const;
 

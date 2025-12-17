@@ -11,8 +11,9 @@ class MaxDAG {
     const vector<vector<pair<int, int>>> &weighted_graph;
     bool debug;
 public:
-    MaxDAG(const vector<vector<pair<int, int>>> &graph) : weighted_graph(graph),
-                                                          debug(false) {}
+    MaxDAG(const vector<vector<pair<int, int>>> &graph)
+        : weighted_graph(graph), debug(false) {
+    }
     vector<int> get_result();
 };
 #endif

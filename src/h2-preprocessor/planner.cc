@@ -1,18 +1,18 @@
 /* Main file, keeps all important variables.
- * Calls functions from "helper_functions" to read in input (variables, operators,
- * goals, initial state),
- * then calls functions to simplify the task
+ * Calls functions from "helper_functions" to read in input (variables,
+ * operators, goals, initial state), then calls functions to simplify the task
  * finally prints output to the specified file (detualt="output.sas")
  */
 
-#include "helper_functions.h"
+#include "axiom.h"
 #include "causal_graph.h"
-#include "state.h"
+#include "h2_mutexes.h"
+#include "helper_functions.h"
 #include "mutex_group.h"
 #include "operator.h"
-#include "axiom.h"
-#include "h2_mutexes.h"
+#include "state.h"
 #include "variable.h"
+
 #include <iostream>
 using namespace std;
 
@@ -43,11 +43,15 @@ int main(int argc, const char **argv) {
                 try {
                     h2_mutex_time = atoi(argv[i]);
                 } catch (std::invalid_argument &) {
-                    cerr << "please specify the number of seconds after --h2_time_limit" << endl;
+                    cerr
+                        << "please specify the number of seconds after --h2_time_limit"
+                        << endl;
                     exit(2);
                 }
             } else {
-                cerr << "please specify the number of seconds after --h2_time_limit" << endl;
+                cerr
+                    << "please specify the number of seconds after --h2_time_limit"
+                    << endl;
                 exit(2);
             }
         } else if (arg.compare("--sas-file") == 0) {
@@ -56,7 +60,8 @@ int main(int argc, const char **argv) {
                 try {
                     output_file = argv[i];
                 } catch (std::invalid_argument &) {
-                    cerr << "please specify a file name after --sas-file" << endl;
+                    cerr << "please specify a file name after --sas-file"
+                         << endl;
                     exit(2);
                 }
             } else {
@@ -73,17 +78,21 @@ int main(int argc, const char **argv) {
             expensive_statistics = true;
         } else {
             cerr << "unknown option " << arg << endl << endl;
-            cout << "Usage: ./preprocess [--keep-unimportant-variables] [--sas-file] [--h2_time_limit TIME_IN_SEC] [--no_h2]  [--no_bw_h2] [--augmented_pre] [--stat] < output" << endl;
+            cout
+                << "Usage: ./preprocess [--keep-unimportant-variables] [--sas-file] [--h2_time_limit TIME_IN_SEC] [--no_h2]  [--no_bw_h2] [--augmented_pre] [--stat] < output"
+                << endl;
             exit(2);
         }
     }
 
-    read_preprocessed_problem_description
-        (cin, metric, internal_variables, variables, mutexes, initial_state, goals, operators, axioms);
+    read_preprocessed_problem_description(
+        cin, metric, internal_variables, variables, mutexes, initial_state,
+        goals, operators, axioms);
 
-    bool trivial_solvable = axioms.empty() ? initial_state.is_goal_state(goals) : false;
-    //dump_preprocessed_problem_description
-    //  (variables, initial_state, goals, operators, axioms);
+    bool trivial_solvable =
+        axioms.empty() ? initial_state.is_goal_state(goals) : false;
+    // dump_preprocessed_problem_description
+    //   (variables, initial_state, goals, operators, axioms);
 
     cout << "Building causal graph..." << endl;
     CausalGraph causal_graph(variables, operators, axioms, goals);
@@ -97,7 +106,9 @@ int main(int argc, const char **argv) {
 
     // compute h2 mutexes
     if (axioms.size() > 0) {
-        cout << "Disabling h2 analysis because it does not currently support axioms" << endl;
+        cout
+            << "Disabling h2 analysis because it does not currently support axioms"
+            << endl;
     } else if (h2_mutex_time) {
         bool conditional_effects = false;
         for (const Operator &op : operators) {
@@ -109,23 +120,25 @@ int main(int argc, const char **argv) {
         if (conditional_effects)
             disable_bw_h2 = true;
 
-        if (!compute_h2_mutexes(ordering, operators, axioms,
-                                mutexes, initial_state, goals,
-                                h2_mutex_time, disable_bw_h2)) {
-            // TODO: don't duplicate the code to return an unsolvable task, log and exit here
+        if (!compute_h2_mutexes(
+                ordering, operators, axioms, mutexes, initial_state, goals,
+                h2_mutex_time, disable_bw_h2)) {
+            // TODO: don't duplicate the code to return an unsolvable task, log
+            // and exit here
             cout << "Unsolvable task in preprocessor" << endl;
             generate_dummy_cpp_input(false, output_file);
             cout << "done" << endl;
             return 0;
         }
 
-        //Update the causal graph and remove unneccessary variables
+        // Update the causal graph and remove unneccessary variables
         strip_mutexes(mutexes);
         strip_operators(operators);
         strip_axioms(axioms);
 
-        // 1) Change id of values in operators and axioms to remove unreachable facts from variables
-        for (Operator &op: operators) {
+        // 1) Change id of values in operators and axioms to remove unreachable
+        // facts from variables
+        for (Operator &op : operators) {
             op.remove_unreachable_facts(ordering);
         }
         // TODO: Activate this if axioms get supported by the h2 heuristic
@@ -146,14 +159,16 @@ int main(int argc, const char **argv) {
         new_goals.swap(goals);
         cout << "Change id of initial state" << endl;
         if (initial_state.remove_unreachable_facts()) {
-            // TODO: don't duplicate the code to return an unsolvable task, log and exit here
+            // TODO: don't duplicate the code to return an unsolvable task, log
+            // and exit here
             cout << "Unsolvable task in preprocessor" << endl;
             generate_dummy_cpp_input(false, output_file);
             cout << "done" << endl;
             return 0;
         }
 
-        cout << "Remove unreachable facts from variables: " << ordering.size() << endl;
+        cout << "Remove unreachable facts from variables: " << ordering.size()
+             << endl;
         // 2)Remove unreachable facts from variables
         for (Variable *var : ordering) {
             if (var->is_necessary()) {
@@ -186,7 +201,7 @@ int main(int argc, const char **argv) {
     cout << "Preprocessor mutex groups: " << mutexes.size() << endl;
 
     if (expensive_statistics) {
-        //Count potential preconditions
+        // Count potential preconditions
         int num_total_augmented = 0;
         int num_op_augmented = 0;
         int num_total_potential = 0;
@@ -213,11 +228,15 @@ int main(int argc, const char **argv) {
         }
 
         cout << "Augmented preconditions: " << num_total_augmented << endl;
-        cout << "Ops with augmented preconditions: " << num_op_augmented << endl;
+        cout << "Ops with augmented preconditions: " << num_op_augmented
+             << endl;
         cout << "Potential preconditions: " << num_total_potential << endl;
-        cout << "Ops with potential preconditions: " << num_op_potential << endl;
-        cout << "Potential preconditions contradict effects: " << num_total_potential_noeff << endl;
-        cout << "Ops with potential preconditions contradict effects: " << num_op_potential_noeff << endl;
+        cout << "Ops with potential preconditions: " << num_op_potential
+             << endl;
+        cout << "Potential preconditions contradict effects: "
+             << num_total_potential_noeff << endl;
+        cout << "Ops with potential preconditions contradict effects: "
+             << num_op_potential_noeff << endl;
         set<vector<int>> mutexes_fw, mutexes_bw;
         for (MutexGroup &mutex : mutexes) {
             if (!mutex.is_redundant()) {
@@ -252,17 +271,12 @@ int main(int argc, const char **argv) {
 
     cout << "Writing output..." << endl;
     if (ordering.empty()) {
-        cout << (trivial_solvable ? "Solvable " : "Unsolvable ") << "task in preprocessor" << endl;
+        cout << (trivial_solvable ? "Solvable " : "Unsolvable ")
+             << "task in preprocessor" << endl;
         generate_dummy_cpp_input(trivial_solvable, output_file);
     } else {
         generate_cpp_input(
-            ordering,
-            metric,
-            mutexes,
-            initial_state,
-            goals,
-            operators,
-            axioms,
+            ordering, metric, mutexes, initial_state, goals, operators, axioms,
             output_file);
     }
     cout << "done" << endl;

@@ -1,7 +1,7 @@
 #include "iterative_cost_selector.h"
 
-#include "../../task_utils/task_properties.h"
 #include "../../state_registry.h"
+#include "../../task_utils/task_properties.h"
 
 #include <iostream>
 #include <stdio.h>
@@ -15,9 +15,9 @@ IterativeCostSelector::IterativeCostSelector(const plugins::Options &opts)
     PlanSelector::anytime_completness = false;
 }
 
-void IterativeCostSelector::init(shared_ptr<SymVariables> sym_vars,
-                                 const shared_ptr<AbstractTask> &task,
-                                 PlanManager &plan_manager) {
+void IterativeCostSelector::init(
+    shared_ptr<SymVariables> sym_vars, const shared_ptr<AbstractTask> &task,
+    PlanManager &plan_manager) {
     PlanSelector::init(sym_vars, task, plan_manager);
     utils::g_log << "Plan cost bound: " << most_expensive_plan_cost << endl;
     cout << endl;
@@ -31,7 +31,8 @@ bool IterativeCostSelector::reconstruct_solutions(int cost) const {
 }
 
 void IterativeCostSelector::add_plan(const Plan &plan) {
-    int cur_plan_cost = calculate_plan_cost(plan, state_registry->get_task_proxy());
+    int cur_plan_cost =
+        calculate_plan_cost(plan, state_registry->get_task_proxy());
 
     if (cur_plan_cost > most_expensive_plan_cost) {
         if (!has_accepted_plan(plan)) {
@@ -41,7 +42,8 @@ void IterativeCostSelector::add_plan(const Plan &plan) {
     }
 }
 
-class IterativeCostSelectorFeature : public plugins::TypedFeature<PlanSelector, IterativeCostSelector> {
+class IterativeCostSelectorFeature
+    : public plugins::TypedFeature<PlanSelector, IterativeCostSelector> {
 public:
     IterativeCostSelectorFeature() : TypedFeature("iterative_cost") {
         document_title("Iterative cost plan selector");
@@ -50,8 +52,7 @@ public:
         this->add_option<int>(
             "plan_cost_bound",
             "plan cost bound such that only more expansive plans are reconstructed",
-            "-1",
-            plugins::Bounds("-1", "infinity"));
+            "-1", plugins::Bounds("-1", "infinity"));
     }
 };
 

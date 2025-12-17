@@ -1,9 +1,10 @@
 #include "sym_variables.h"
 
+#include "opt_order.h"
+
 #include "../plugins/plugin.h"
 #include "../task_utils/task_properties.h"
 #include "../utils/logging.h"
-#include "opt_order.h"
 #include "sym_axiom/sym_axiom_compilation.h"
 
 #include <fstream>
@@ -19,13 +20,17 @@ void exceptionError(string /*message*/) {
     throw BDDError();
 }
 
-SymVariables::SymVariables(const plugins::Options &opts, const shared_ptr<AbstractTask> &task)
-    : task_proxy(*task), task(task),
-      cudd_init_nodes(16000000L), cudd_init_cache_size(16000000L),
+SymVariables::SymVariables(
+    const plugins::Options &opts, const shared_ptr<AbstractTask> &task)
+    : task_proxy(*task),
+      task(task),
+      cudd_init_nodes(16000000L),
+      cudd_init_cache_size(16000000L),
       cudd_init_available_memory(0L),
       gamer_ordering(opts.get<bool>("gamer_ordering")),
       dynamic_reordering(opts.get<bool>("dynamic_reordering")),
-      ax_comp(make_shared<SymAxiomCompilation>(this, task)) {}
+      ax_comp(make_shared<SymAxiomCompilation>(this, task)) {
+}
 
 void SymVariables::init() {
     vector<int> var_order;
@@ -59,7 +64,8 @@ void SymVariables::init(const vector<int> &v_order) {
     bdd_index_eff = vector<vector<int>>(v_order.size());
     int _numBDDVars = 0; // numBDDVars;
     for (int var : var_order) {
-        int var_len = static_cast<int>(ceil(log2(task_proxy.get_variables()[var].get_domain_size())));
+        int var_len = static_cast<int>(
+            ceil(log2(task_proxy.get_variables()[var].get_domain_size())));
         numBDDVars += var_len;
         if (!task_proxy.get_variables()[var].is_derived()) {
             numPrimaryBDDVars += var_len;
@@ -70,15 +76,17 @@ void SymVariables::init(const vector<int> &v_order) {
             _numBDDVars += 2;
         }
     }
-    utils::g_log << "Num variables: " << var_order.size() << " => " << numBDDVars << endl;
+    utils::g_log << "Num variables: " << var_order.size() << " => "
+                 << numBDDVars << endl;
 
     // Initialize manager
     utils::g_log << "Initialize Symbolic Manager(" << _numBDDVars << ", "
-                 << cudd_init_nodes / _numBDDVars << ", " << cudd_init_cache_size << ", "
-                 << cudd_init_available_memory << ")" << endl;
-    manager =
-        new Cudd(_numBDDVars, 0, cudd_init_nodes / _numBDDVars,
-                 cudd_init_cache_size, cudd_init_available_memory);
+                 << cudd_init_nodes / _numBDDVars << ", "
+                 << cudd_init_cache_size << ", " << cudd_init_available_memory
+                 << ")" << endl;
+    manager = new Cudd(
+        _numBDDVars, 0, cudd_init_nodes / _numBDDVars, cudd_init_cache_size,
+        cudd_init_available_memory);
 
     manager->setHandler(exceptionError);
     manager->setTimeoutHandler(exceptionError);
@@ -104,23 +112,27 @@ void SymVariables::init(const vector<int> &v_order) {
     validBDD = oneBDD();
     // Generate predicate (precondition (s) and effect (s')) BDDs
     for (int var : var_order) {
-        for (int j = 0; j < task_proxy.get_variables()[var].get_domain_size(); j++) {
+        for (int j = 0; j < task_proxy.get_variables()[var].get_domain_size();
+             j++) {
             preconditionBDDs[var].push_back(createPreconditionBDD(var, j));
             effectBDDs[var].push_back(createEffectBDD(var, j));
         }
         validValues[var] = zeroBDD();
-        for (int j = 0; j < task_proxy.get_variables()[var].get_domain_size(); j++) {
+        for (int j = 0; j < task_proxy.get_variables()[var].get_domain_size();
+             j++) {
             validValues[var] += preconditionBDDs[var][j];
         }
         validBDD *= validValues[var];
-        biimpBDDs[var] = createBiimplicationBDD(bdd_index_pre[var], bdd_index_eff[var]);
+        biimpBDDs[var] =
+            createBiimplicationBDD(bdd_index_pre[var], bdd_index_eff[var]);
     }
 
     utils::g_log << "Symbolic Variables... Done." << endl;
 
     if (task_properties::has_axioms(task_proxy)) {
-        utils::g_log << "Creating Primary Representation for Derived Predicates..."
-                     << endl;
+        utils::g_log
+            << "Creating Primary Representation for Derived Predicates..."
+            << endl;
         ax_comp->init_axioms();
         utils::g_log << "Primary Representation... Done!" << endl;
     }
@@ -143,8 +155,8 @@ void SymVariables::init(const vector<int> &v_order) {
         // http://web.mit.edu/sage/export/tmp/y/usr/share/doc/polybori/cudd/node3.html#SECTION000313000000000000000
         size_t var_id = 0;
         for (int var : var_order) {
-            size_t var_len =
-                static_cast<int>(ceil(log2(tasks::g_root_task->get_variable_domain_size(var))));
+            size_t var_len = static_cast<int>(
+                ceil(log2(tasks::g_root_task->get_variable_domain_size(var))));
             manager->MakeTreeNode(var_id, var_len * 2, MTR_FIXED);
             var_id += var_len * 2;
         }
@@ -167,8 +179,8 @@ State SymVariables::getStateFrom(const BDD &bdd) const {
     vector<int> vals;
     BDD current = bdd;
     for (int var = 0; var < tasks::g_root_task->get_num_variables(); var++) {
-        for (int val = 0; val < tasks::g_root_task->get_variable_domain_size(var);
-             val++) {
+        for (int val = 0;
+             val < tasks::g_root_task->get_variable_domain_size(var); val++) {
             // We ignore derived predicates
             if (task_proxy.get_variables()[var].is_derived())
                 continue;
@@ -190,8 +202,8 @@ BDD SymVariables::getSinglePrimaryStateFrom(const BDD &bdd) const {
         // We ignore derived predicates
         if (task_proxy.get_variables()[var].is_derived())
             continue;
-        for (int val = 0; val < tasks::g_root_task->get_variable_domain_size(var);
-             val++) {
+        for (int val = 0;
+             val < tasks::g_root_task->get_variable_domain_size(var); val++) {
             BDD aux = current * preconditionBDDs[var][val];
             if (!aux.IsZero()) {
                 current = aux;
@@ -217,7 +229,8 @@ BDD SymVariables::getStateBDD(const State &state) const {
         if (task_proxy.get_variables()[var_order[i]].is_derived()) {
             continue;
         }
-        res = res * preconditionBDDs[var_order[i]][state[var_order[i]].get_value()];
+        res = res *
+              preconditionBDDs[var_order[i]][state[var_order[i]].get_value()];
     }
     return res;
 }
@@ -250,9 +263,8 @@ BDD SymVariables::get_aux_variables_in_support(BDD bdd) const {
     return common;
 }
 
-void SymVariables::get_variable_value_bdds(const vector<int> &bdd_vars,
-                                           int value,
-                                           vector<BDD> &value_bdds) const {
+void SymVariables::get_variable_value_bdds(
+    const vector<int> &bdd_vars, int value, vector<BDD> &value_bdds) const {
     assert(value_bdds.empty());
     for (int v : bdd_vars) {
         assert(v < (int)variables.size());
@@ -265,8 +277,7 @@ void SymVariables::get_variable_value_bdds(const vector<int> &bdd_vars,
     }
 }
 
-BDD SymVariables::generateBDDVar(const vector<int> &_bddVars,
-                                 int value) const {
+BDD SymVariables::generateBDDVar(const vector<int> &_bddVars, int value) const {
     BDD res = oneBDD();
     for (int v : _bddVars) {
         if (value % 2) { // Check if the binary variable is asserted or negated
@@ -279,8 +290,8 @@ BDD SymVariables::generateBDDVar(const vector<int> &_bddVars,
     return res;
 }
 
-BDD SymVariables::createBiimplicationBDD(const vector<int> &vars,
-                                         const vector<int> &vars2) const {
+BDD SymVariables::createBiimplicationBDD(
+    const vector<int> &vars, const vector<int> &vars2) const {
     BDD res = oneBDD();
     for (size_t i = 0; i < vars.size(); i++) {
         res *= variables[vars[i]].Xnor(variables[vars2[i]]);
@@ -288,8 +299,8 @@ BDD SymVariables::createBiimplicationBDD(const vector<int> &vars,
     return res;
 }
 
-vector<BDD> SymVariables::getBDDVars(const vector<int> &vars,
-                                     const vector<vector<int>> &v_index) const {
+vector<BDD> SymVariables::getBDDVars(
+    const vector<int> &vars, const vector<vector<int>> &v_index) const {
     vector<BDD> res;
     for (int v : vars) {
         for (int bddv : v_index[v]) {
@@ -307,8 +318,8 @@ BDD SymVariables::getCube(int var, const vector<vector<int>> &v_index) const {
     return res;
 }
 
-BDD SymVariables::getCube(const set<int> &vars,
-                          const vector<vector<int>> &v_index) const {
+BDD SymVariables::getCube(
+    const set<int> &vars, const vector<vector<int>> &v_index) const {
     BDD res = oneBDD();
     for (int v : vars) {
         for (int bddv : v_index[v]) {
@@ -322,18 +333,16 @@ void SymVariables::reoder(int max_time) {
     set_time_limit(max_time);
     try {
         Cudd_ReduceHeap(manager->getManager(), CUDD_REORDER_GROUP_SIFT, 0);
-    }  catch (const BDDError &e) {
+    } catch (const BDDError &e) {
     }
     unset_time_limit();
 }
 
-void SymVariables::to_dot(const BDD &bdd,
-                          const string &file_name) const {
+void SymVariables::to_dot(const BDD &bdd, const string &file_name) const {
     to_dot(bdd.Add(), file_name);
 }
 
-void SymVariables::to_dot(const ADD &add,
-                          const string &file_name) const {
+void SymVariables::to_dot(const ADD &add, const string &file_name) const {
     vector<string> var_names;
     for (int i = 0; i < manager->ReadSize(); ++i) {
         var_names.push_back(manager->getVariableName(i));
@@ -346,22 +355,26 @@ void SymVariables::to_dot(const ADD &add,
     FILE *outfile = fopen(file_name.c_str(), "w");
     DdNode **ddnodearray = (DdNode **)malloc(sizeof(add.getNode()));
     ddnodearray[0] = add.getNode();
-    Cudd_DumpDot(manager->getManager(), 1, ddnodearray, names.data(), NULL, outfile);
+    Cudd_DumpDot(
+        manager->getManager(), 1, ddnodearray, names.data(), NULL, outfile);
     free(ddnodearray);
     fclose(outfile);
 }
-
 
 void SymVariables::print_options() const {
     utils::g_log << "CUDD Init: nodes=" << cudd_init_nodes
                  << " cache=" << cudd_init_cache_size
                  << " max_memory=" << cudd_init_available_memory << endl;
-    utils::g_log << "Variable Ordering: " << (gamer_ordering ? "gamer" : "fd") << endl;
-    utils::g_log << "Dynamic reordering: " << (dynamic_reordering ? "True" : "False") << endl;
+    utils::g_log << "Variable Ordering: " << (gamer_ordering ? "gamer" : "fd")
+                 << endl;
+    utils::g_log << "Dynamic reordering: "
+                 << (dynamic_reordering ? "True" : "False") << endl;
 }
 
 void SymVariables::add_options_to_feature(plugins::Feature &feature) {
-    feature.add_option<bool>("gamer_ordering", "Use Gamer ordering optimization", "true");
-    feature.add_option<bool>("dynamic_reordering", "Enable dynamic group sift reordering.", "false");
+    feature.add_option<bool>(
+        "gamer_ordering", "Use Gamer ordering optimization", "true");
+    feature.add_option<bool>(
+        "dynamic_reordering", "Enable dynamic group sift reordering.", "false");
 }
 }

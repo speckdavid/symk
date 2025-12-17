@@ -7,7 +7,8 @@
 using namespace std;
 
 namespace symbolic {
-Frontier::Frontier() : mgr(nullptr), g_value(0) {}
+Frontier::Frontier() : mgr(nullptr), g_value(0) {
+}
 
 void Frontier::init(SymStateSpaceManager *mgr_, const BDD &bdd) {
     mgr = mgr_;
@@ -25,14 +26,15 @@ bool Frontier::nextStepZero() const {
     return !Szero.empty() || (S.empty() && mgr->has_zero_cost_transition());
 }
 
-Result Frontier::prepare(int maxTime, int maxNodes, bool fw,
-                         bool initialization) {
+Result Frontier::prepare(
+    int maxTime, int maxNodes, bool fw, bool initialization) {
     utils::Timer filterTime;
     if (!Sfilter.empty()) {
-        int numFiltered =
-            mgr->filterMutexBucket(Sfilter, fw, initialization, maxTime, maxNodes);
+        int numFiltered = mgr->filterMutexBucket(
+            Sfilter, fw, initialization, maxTime, maxNodes);
         if (numFiltered > 0) {
-            Smerge.insert(Smerge.end(), Sfilter.begin(), Sfilter.begin() + numFiltered);
+            Smerge.insert(
+                Smerge.end(), Sfilter.begin(), Sfilter.begin() + numFiltered);
         }
         if (numFiltered == (int)(Sfilter.size())) {
             Bucket().swap(Sfilter);
@@ -134,7 +136,8 @@ ResultExpansion Frontier::expand_cost(int maxTime, int maxNodes, bool fw) {
         // Update estimation
         mgr->unset_time_limit();
 
-        return ResultExpansion(false, TruncatedReason::IMAGE_COST, image_time());
+        return ResultExpansion(
+            false, TruncatedReason::IMAGE_COST, image_time());
     }
 
     Bucket().swap(S); // Delete Szero because it has been expanded

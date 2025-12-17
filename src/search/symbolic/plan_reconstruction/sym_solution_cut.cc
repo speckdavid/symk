@@ -5,33 +5,44 @@
 using namespace std;
 
 namespace symbolic {
-SymSolutionCut::SymSolutionCut() :
-    g(-1),
-    h(-1) {}
+SymSolutionCut::SymSolutionCut() : g(-1), h(-1) {
+}
 
-SymSolutionCut::SymSolutionCut(int g, int h, BDD cut) :
-    g(g),
-    h(h),
-    cut(cut) {}
+SymSolutionCut::SymSolutionCut(int g, int h, BDD cut) : g(g), h(h), cut(cut) {
+}
 
-int SymSolutionCut::get_g() const {return g;}
+int SymSolutionCut::get_g() const {
+    return g;
+}
 
-int SymSolutionCut::get_h() const {return h;}
+int SymSolutionCut::get_h() const {
+    return h;
+}
 
-int SymSolutionCut::get_f() const {return g + h;}
+int SymSolutionCut::get_f() const {
+    return g + h;
+}
 
-BDD SymSolutionCut::get_cut() const {return cut;}
+BDD SymSolutionCut::get_cut() const {
+    return cut;
+}
 
 void SymSolutionCut::merge(const SymSolutionCut &other) {
     assert(*this == other);
     cut += other.get_cut();
 }
 
-void SymSolutionCut::set_g(int g) {this->g = g;}
+void SymSolutionCut::set_g(int g) {
+    this->g = g;
+}
 
-void SymSolutionCut::set_h(int h) {this->h = h;}
+void SymSolutionCut::set_h(int h) {
+    this->h = h;
+}
 
-void SymSolutionCut::set_cut(BDD cut) {this->cut = cut;}
+void SymSolutionCut::set_cut(BDD cut) {
+    this->cut = cut;
+}
 
 bool SymSolutionCut::operator<(const SymSolutionCut &other) const {
     bool result = get_f() < other.get_f();

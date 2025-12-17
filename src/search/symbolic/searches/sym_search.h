@@ -5,6 +5,7 @@
 #include "../sym_parameters.h"
 #include "../sym_state_space_manager.h"
 #include "../sym_utils.h"
+
 #include <map>
 #include <memory>
 #include <vector>
@@ -14,17 +15,21 @@ class SymbolicSearch;
 
 class SymSearch {
 protected:
-    std::shared_ptr<SymStateSpaceManager> mgr;   // Symbolic manager to perform bdd operations
+    std::shared_ptr<SymStateSpaceManager>
+        mgr; // Symbolic manager to perform bdd operations
     SymParameters sym_params;
 
-    SymbolicSearch *engine; // Access to the bound and notification of new solutions
+    SymbolicSearch
+        *engine; // Access to the bound and notification of new solutions
 
 public:
     SymSearch(SymbolicSearch *eng, const SymParameters &params);
 
     virtual ~SymSearch() = default;
 
-    SymStateSpaceManager *getStateSpace() {return mgr.get();}
+    SymStateSpaceManager *getStateSpace() {
+        return mgr.get();
+    }
 
     std::shared_ptr<SymStateSpaceManager> getStateSpaceShared() const {
         return mgr;

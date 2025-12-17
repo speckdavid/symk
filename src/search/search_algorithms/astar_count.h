@@ -3,6 +3,7 @@
 
 #include "../open_list.h"
 #include "../search_algorithm.h"
+
 #include "../utils/hash.h"
 
 #include <optional>
@@ -12,9 +13,9 @@ class AStarCount : public SearchAlgorithm {
     size_t num_goal_paths;
     utils::HashMap<int, size_t> num_operator_on_goal_path;
 
-    void update_path_count_for_state(const State &state, const State &parent,
-                                     int state_g, int parent_g,
-                                     const OperatorID &operator_id);
+    void update_path_count_for_state(
+        const State &state, const State &parent, int state_g, int parent_g,
+        const OperatorID &operator_id);
 
     void start_f_value_statistics(EvaluationContext &eval_context);
     void update_f_value_statistics(EvaluationContext &eval_context);
@@ -25,9 +26,10 @@ protected:
     std::shared_ptr<Evaluator> f_evaluator;
 
     utils::HashMap<int, utils::HashMap<int, size_t>> state_cost_to_path_count;
-    utils::HashMap<int, utils::HashMap<int, utils::HashMap<int, int>>> state_cost_operator_to_path_count;
-    // If we also want to store the number of actions in use, we can think of an ADD
-    // or EVMDD for each action which share information over states
+    utils::HashMap<int, utils::HashMap<int, utils::HashMap<int, int>>>
+        state_cost_operator_to_path_count;
+    // If we also want to store the number of actions in use, we can think of an
+    // ADD or EVMDD for each action which share information over states
 
     virtual void initialize() override;
     virtual SearchStatus step() override;
@@ -35,9 +37,10 @@ protected:
     std::optional<SearchNode> pop_min_node();
 
 public:
-    explicit AStarCount(const std::shared_ptr<Evaluator> &h_eval,
-                        OperatorCost cost_type, int bound, double max_time,
-                        const std::string &description, utils::Verbosity verbosity);
+    explicit AStarCount(
+        const std::shared_ptr<Evaluator> &h_eval, OperatorCost cost_type,
+        int bound, double max_time, const std::string &description,
+        utils::Verbosity verbosity);
 
     virtual void print_statistics() const override;
 };

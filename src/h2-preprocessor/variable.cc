@@ -20,7 +20,7 @@ Variable::Variable(istream &in) {
     level = -1;
     necessary = false;
     reachable_values = range;
-    reachable = vector<bool> (range, true);
+    reachable = vector<bool>(range, true);
 }
 
 void Variable::set_level(int theLevel) {
@@ -80,7 +80,7 @@ void Variable::remove_unreachable_facts() {
         }
     }
     new_values.swap(values);
-    vector<bool> (values.size(), true).swap(reachable);
+    vector<bool>(values.size(), true).swap(reachable);
 }
 
 int Variable::get_new_id(int value) const {

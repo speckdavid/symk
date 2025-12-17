@@ -1,10 +1,11 @@
-#include "helper_functions.h"
 #include "axiom.h"
+
+#include "helper_functions.h"
 #include "variable.h"
 
-#include <iostream>
-#include <fstream>
 #include <cassert>
+#include <fstream>
+#include <iostream>
 using namespace std;
 
 Axiom::Axiom(istream &in, const vector<Variable *> &variables) {
@@ -35,7 +36,8 @@ void strip_axioms(vector<Axiom> &axioms) {
         if (!axiom.is_redundant())
             axioms[new_index++] = axiom;
     axioms.erase(axioms.begin() + new_index, axioms.end());
-    cout << axioms.size() << " of " << old_count << " axiom rules necessary." << endl;
+    cout << axioms.size() << " of " << old_count << " axiom rules necessary."
+         << endl;
 }
 
 void Axiom::dump() const {
@@ -61,6 +63,7 @@ void Axiom::generate_cpp_input(ofstream &outfile) const {
         assert(condition.var->get_level() != -1);
         outfile << condition.var->get_level() << " " << condition.cond << endl;
     }
-    outfile << effect_var->get_level() << " " << old_val << " " << effect_val << endl;
+    outfile << effect_var->get_level() << " " << old_val << " " << effect_val
+            << endl;
     outfile << "end_rule" << endl;
 }

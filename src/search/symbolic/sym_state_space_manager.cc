@@ -7,9 +7,8 @@
 #include "../mutex_group.h"
 #include "../task_proxy.h"
 
-#include "../tasks/effect_aggregated_task.h"
-#include "../tasks/sdac_task.h"
 #include "../task_utils/task_properties.h"
+#include "../tasks/effect_aggregated_task.h"
 #include "../utils/logging.h"
 #include "../utils/timer.h"
 
@@ -18,11 +17,12 @@
 #include <numeric>
 #include <queue>
 
-
 using namespace std;
 
 namespace symbolic {
-SymStateSpaceManager::SymStateSpaceManager(SymVariables *sym_vars, const SymParameters &sym_params, const shared_ptr<AbstractTask> &task)
+SymStateSpaceManager::SymStateSpaceManager(
+    SymVariables *sym_vars, const SymParameters &sym_params,
+    const shared_ptr<AbstractTask> &task)
     : sym_vars(sym_vars),
       sym_params(sym_params),
       task(task),
@@ -32,7 +32,8 @@ SymStateSpaceManager::SymStateSpaceManager(SymVariables *sym_vars, const SymPara
       sym_transition_relations(sym_vars, sym_params) {
     // Transform initial state and goal states if axioms are present
     if (task_properties::has_axioms(TaskProxy(*task))) {
-        initial_state = sym_vars->get_axiom_compiliation()->get_compilied_init_state();
+        initial_state =
+            sym_vars->get_axiom_compiliation()->get_compilied_init_state();
         goal = sym_vars->get_axiom_compiliation()->get_compilied_goal_state();
     } else {
         initial_state = sym_vars->getStateBDD(task->get_initial_state_values());
@@ -52,19 +53,24 @@ SymStateSpaceManager::SymStateSpaceManager(SymVariables *sym_vars, const SymPara
     }
 }
 
-void SymStateSpaceManager::zero_preimage(BDD bdd, vector<BDD> &res, int node_limit) const {
-    for (const auto &tr : sym_transition_relations.get_transition_relations().at(0)) {
+void SymStateSpaceManager::zero_preimage(
+    BDD bdd, vector<BDD> &res, int node_limit) const {
+    for (const auto &tr :
+         sym_transition_relations.get_transition_relations().at(0)) {
         res.push_back(tr->preimage(bdd, node_limit));
     }
 }
 
-void SymStateSpaceManager::zero_image(BDD bdd, vector<BDD> &res, int node_limit) const {
-    for (const auto &tr : sym_transition_relations.get_transition_relations().at(0)) {
+void SymStateSpaceManager::zero_image(
+    BDD bdd, vector<BDD> &res, int node_limit) const {
+    for (const auto &tr :
+         sym_transition_relations.get_transition_relations().at(0)) {
         res.push_back(tr->image(bdd, node_limit));
     }
 }
 
-void SymStateSpaceManager::cost_preimage(BDD bdd, map<int, vector<BDD>> &res, int node_limit) const {
+void SymStateSpaceManager::cost_preimage(
+    BDD bdd, map<int, vector<BDD>> &res, int node_limit) const {
     for (auto trs : sym_transition_relations.get_transition_relations()) {
         int cost = trs.first;
         if (cost == 0)
@@ -76,7 +82,8 @@ void SymStateSpaceManager::cost_preimage(BDD bdd, map<int, vector<BDD>> &res, in
     }
 }
 
-void SymStateSpaceManager::cost_image(BDD bdd, map<int, vector<BDD>> &res, int node_limit) const {
+void SymStateSpaceManager::cost_image(
+    BDD bdd, map<int, vector<BDD>> &res, int node_limit) const {
     for (auto trs : sym_transition_relations.get_transition_relations()) {
         int cost = trs.first;
         if (cost == 0)
@@ -88,15 +95,18 @@ void SymStateSpaceManager::cost_image(BDD bdd, map<int, vector<BDD>> &res, int n
     }
 }
 
-BDD SymStateSpaceManager::filter_mutex(BDD bdd, bool fw, int node_limit, bool initialization) {
+BDD SymStateSpaceManager::filter_mutex(
+    BDD bdd, bool fw, int node_limit, bool initialization) {
     BDD res = bdd;
-    const vector<BDD> &notDeadEndBDDs = fw ? sym_mutexes.notDeadEndFw : sym_mutexes.notDeadEndBw;
+    const vector<BDD> &notDeadEndBDDs =
+        fw ? sym_mutexes.notDeadEndFw : sym_mutexes.notDeadEndBw;
     for (const BDD &notDeadEnd : notDeadEndBDDs) {
         assert(!(notDeadEnd.IsZero()));
         res = res.And(notDeadEnd, node_limit);
     }
 
-    const vector<BDD> &notMutexBDDs = (fw ? sym_mutexes.notMutexBDDsFw : sym_mutexes.notMutexBDDsBw);
+    const vector<BDD> &notMutexBDDs =
+        (fw ? sym_mutexes.notMutexBDDsFw : sym_mutexes.notMutexBDDsBw);
 
     switch (sym_params.mutex_type) {
     case MutexType::MUTEX_NOT:
@@ -117,7 +127,9 @@ BDD SymStateSpaceManager::filter_mutex(BDD bdd, bool fw, int node_limit, bool in
     return res;
 }
 
-int SymStateSpaceManager::filterMutexBucket(vector<BDD> &bucket, bool fw, bool initialization, int max_time, int max_nodes) {
+int SymStateSpaceManager::filterMutexBucket(
+    vector<BDD> &bucket, bool fw, bool initialization, int max_time,
+    int max_nodes) {
     int numFiltered = 0;
     set_time_limit(max_time);
     try {
@@ -132,8 +144,11 @@ int SymStateSpaceManager::filterMutexBucket(vector<BDD> &bucket, bool fw, bool i
     return numFiltered;
 }
 
-void SymStateSpaceManager::filter_mutex(Bucket &bucket, bool fw, bool initialization) {
-    filterMutexBucket(bucket, fw, initialization, sym_params.max_aux_time, sym_params.max_aux_nodes);
+void SymStateSpaceManager::filter_mutex(
+    Bucket &bucket, bool fw, bool initialization) {
+    filterMutexBucket(
+        bucket, fw, initialization, sym_params.max_aux_time,
+        sym_params.max_aux_nodes);
 }
 
 void SymStateSpaceManager::merge_bucket(Bucket &bucket) const {
@@ -153,7 +168,8 @@ void SymStateSpaceManager::print_symbolic_task_size() const {
     int tr_num = 0;
 
     vector<int> tr_sizes;
-    for (const auto &pair : sym_transition_relations.get_individual_transition_relations()) {
+    for (const auto &pair :
+         sym_transition_relations.get_individual_transition_relations()) {
         for (const auto &tr : pair.second) {
             int tr_nodes = tr->nodeCount();
             tr_sizes.push_back(tr_nodes);
@@ -169,16 +185,24 @@ void SymStateSpaceManager::print_symbolic_task_size() const {
     utils::g_log << "Transition relation min size: " << tr_sizes[0] << endl;
     utils::g_log << "Transition relation max size: " << tr_sizes.back() << endl;
     utils::g_log << "Transition relation summed size: " << tr_nodes_sum << endl;
-    utils::g_log << "Transition relation avg size: " << (static_cast<double>(tr_nodes_sum) / tr_sizes.size()) << endl;
+    utils::g_log << "Transition relation avg size: "
+                 << (static_cast<double>(tr_nodes_sum) / tr_sizes.size())
+                 << endl;
 
     double median;
     if (tr_sizes.size() % 2 == 0) {
-        median = static_cast<double>(tr_sizes[tr_sizes.size() / 2 - 1] + tr_sizes[tr_sizes.size() / 2]) / 2.0;
+        median = static_cast<double>(
+                     tr_sizes[tr_sizes.size() / 2 - 1] +
+                     tr_sizes[tr_sizes.size() / 2]) /
+                 2.0;
     } else {
         median = static_cast<double>(tr_sizes[tr_sizes.size() / 2]);
     }
     utils::g_log << "Transition relation median size: " << median << endl;
-    utils::g_log << "Symbolic task size: " << (initial_state.nodeCount() + goal.nodeCount() + tr_nodes_sum) << endl;
+    utils::g_log << "Symbolic task size: "
+                 << (initial_state.nodeCount() + goal.nodeCount() +
+                     tr_nodes_sum)
+                 << endl;
     utils::g_log << "Forest size: " << sym_vars->forest_node_count() << endl;
     utils::g_log << endl;
 }

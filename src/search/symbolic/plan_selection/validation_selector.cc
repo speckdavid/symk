@@ -1,13 +1,14 @@
 #include "validation_selector.h"
 
-#include "../../task_utils/task_properties.h"
 #include "../../state_registry.h"
+#include "../../task_utils/task_properties.h"
 
 using namespace std;
 
 namespace symbolic {
 ValidationSelector::ValidationSelector(const plugins::Options &opts)
-    : PlanSelector(opts), original_task_proxy(*tasks::g_root_task),
+    : PlanSelector(opts),
+      original_task_proxy(*tasks::g_root_task),
       original_state_registry(make_shared<StateRegistry>(original_task_proxy)) {
     anytime_completness = true;
 }
@@ -29,11 +30,12 @@ bool ValidationSelector::is_valid_plan(const Plan &plan) {
     for (size_t i = 0; i < plan.size(); i++) {
         auto original_op_id =
             state_registry->get_task_proxy()
-            .get_operators()[plan[i]]
-            .get_ancestor_operator_id(tasks::g_root_task.get());
+                .get_operators()[plan[i]]
+                .get_ancestor_operator_id(tasks::g_root_task.get());
         auto original_op = original_task_proxy.get_operators()[original_op_id];
         if (task_properties::is_applicable(original_op, cur)) {
-            cur = original_state_registry->get_successor_state(cur, original_op);
+            cur =
+                original_state_registry->get_successor_state(cur, original_op);
         } else {
             return false;
         }
@@ -41,7 +43,8 @@ bool ValidationSelector::is_valid_plan(const Plan &plan) {
     return task_properties::is_goal_state(original_task_proxy, cur);
 }
 
-class ValidationSelectorFeature : public plugins::TypedFeature<PlanSelector, ValidationSelector> {
+class ValidationSelectorFeature
+    : public plugins::TypedFeature<PlanSelector, ValidationSelector> {
 public:
     ValidationSelectorFeature() : TypedFeature("validation") {
         document_title("Validation plan selector");

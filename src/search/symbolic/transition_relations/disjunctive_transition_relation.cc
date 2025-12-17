@@ -5,14 +5,15 @@
 #include "../../utils/logging.h"
 #include "../../utils/timer.h"
 
-
 #include <algorithm>
 #include <cassert>
 
 using namespace std;
 
 namespace symbolic {
-DisjunctiveTransitionRelation::DisjunctiveTransitionRelation(SymVariables *sym_vars, OperatorID op_id, const shared_ptr<AbstractTask> &task)
+DisjunctiveTransitionRelation::DisjunctiveTransitionRelation(
+    SymVariables *sym_vars, OperatorID op_id,
+    const shared_ptr<AbstractTask> &task)
     : TransitionRelation(),
       sym_vars(sym_vars),
       task_proxy(*task),
@@ -23,7 +24,8 @@ DisjunctiveTransitionRelation::DisjunctiveTransitionRelation(SymVariables *sym_v
     ops_ids.insert(op_id);
 }
 
-DisjunctiveTransitionRelation::DisjunctiveTransitionRelation(SymVariables *sym_vars, const shared_ptr<AbstractTask> &task)
+DisjunctiveTransitionRelation::DisjunctiveTransitionRelation(
+    SymVariables *sym_vars, const shared_ptr<AbstractTask> &task)
     : TransitionRelation(),
       sym_vars(sym_vars),
       task_proxy(*task),
@@ -58,8 +60,9 @@ void DisjunctiveTransitionRelation::init() {
 
         for (const auto &cPrev : eff.get_conditions()) {
             FactPair cPrev_cond = cPrev.get_pair();
-            condition *= sym_vars->get_axiom_compiliation()->get_primary_representation(
-                cPrev_cond.var, cPrev_cond.value);
+            condition *=
+                sym_vars->get_axiom_compiliation()->get_primary_representation(
+                    cPrev_cond.var, cPrev_cond.value);
         }
         effect_conditions[var] *= !condition;
         effects[var] += (condition * ppBDD);
@@ -87,7 +90,8 @@ void DisjunctiveTransitionRelation::init() {
     }
 }
 
-void DisjunctiveTransitionRelation::init_from_tr(const DisjunctiveTransitionRelation &other) {
+void DisjunctiveTransitionRelation::init_from_tr(
+    const DisjunctiveTransitionRelation &other) {
     tr_bdd = other.get_tr_BDD();
     ops_ids = other.get_operator_ids();
     cost = other.get_cost();
@@ -98,11 +102,13 @@ void DisjunctiveTransitionRelation::init_from_tr(const DisjunctiveTransitionRela
     swap_vars_p = other.get_swap_vars_p();
 }
 
-void DisjunctiveTransitionRelation::add_condition(const ConditionsProxy &conditions) {
+void DisjunctiveTransitionRelation::add_condition(
+    const ConditionsProxy &conditions) {
     for (FactProxy cond : conditions) {
         FactPair fact = cond.get_pair();
-        tr_bdd *= sym_vars->get_axiom_compiliation()->get_primary_representation(
-            fact.var, fact.value);
+        tr_bdd *=
+            sym_vars->get_axiom_compiliation()->get_primary_representation(
+                fact.var, fact.value);
     }
 }
 
@@ -180,14 +186,16 @@ BDD DisjunctiveTransitionRelation::image(const BDD &from, int maxNodes) const {
     return res;
 }
 
-BDD DisjunctiveTransitionRelation::preimage(const BDD &from, int maxNodes) const {
+BDD DisjunctiveTransitionRelation::preimage(
+    const BDD &from, int maxNodes) const {
     BDD tmp = from.SwapVariables(swap_vars, swap_vars_p);
     BDD res = tr_bdd.AndAbstract(tmp, exists_bw_vars, maxNodes);
     assert(!sym_vars->has_aux_variables_in_support(res));
     return res;
 }
 
-BDD DisjunctiveTransitionRelation::preimage(const BDD &from, const BDD &constraint_to, int maxNodes) const {
+BDD DisjunctiveTransitionRelation::preimage(
+    const BDD &from, const BDD &constraint_to, int maxNodes) const {
     BDD tmp = from.SwapVariables(swap_vars, swap_vars_p);
     tmp *= constraint_to;
     BDD res = tr_bdd.AndAbstract(tmp, exists_bw_vars, maxNodes);
@@ -199,7 +207,8 @@ int DisjunctiveTransitionRelation::nodeCount() const {
     return tr_bdd.nodeCount();
 }
 
-void DisjunctiveTransitionRelation::disjunctive_merge(const DisjunctiveTransitionRelation &t2, int maxNodes) {
+void DisjunctiveTransitionRelation::disjunctive_merge(
+    const DisjunctiveTransitionRelation &t2, int maxNodes) {
     assert(cost == t2.cost);
 
     BDD new_t_bdd = tr_bdd;
@@ -236,7 +245,8 @@ void DisjunctiveTransitionRelation::disjunctive_merge(const DisjunctiveTransitio
     exists_bw_vars *= t2.exists_bw_vars;
 
     for (size_t i = 0; i < t2.swap_vars.size(); ++i) {
-        if (find(swap_vars.begin(), swap_vars.end(), t2.swap_vars[i]) == swap_vars.end()) {
+        if (find(swap_vars.begin(), swap_vars.end(), t2.swap_vars[i]) ==
+            swap_vars.end()) {
             swap_vars.push_back(t2.swap_vars[i]);
             swap_vars_p.push_back(t2.swap_vars_p[i]);
         }
@@ -245,7 +255,8 @@ void DisjunctiveTransitionRelation::disjunctive_merge(const DisjunctiveTransitio
     ops_ids.insert(t2.ops_ids.begin(), t2.ops_ids.end());
 }
 
-void DisjunctiveTransitionRelation::conjunctive_merge(const DisjunctiveTransitionRelation &t2, int max_nodes) {
+void DisjunctiveTransitionRelation::conjunctive_merge(
+    const DisjunctiveTransitionRelation &t2, int max_nodes) {
     assert(cost == t2.cost);
     assert(get_unique_operator_id() == t2.get_unique_operator_id());
 
@@ -265,7 +276,8 @@ void DisjunctiveTransitionRelation::conjunctive_merge(const DisjunctiveTransitio
     exists_bw_vars *= t2.exists_bw_vars;
 
     for (size_t i = 0; i < t2.swap_vars.size(); ++i) {
-        if (find(swap_vars.begin(), swap_vars.end(), t2.swap_vars[i]) == swap_vars.end()) {
+        if (find(swap_vars.begin(), swap_vars.end(), t2.swap_vars[i]) ==
+            swap_vars.end()) {
             swap_vars.push_back(t2.swap_vars[i]);
             swap_vars_p.push_back(t2.swap_vars_p[i]);
         }
@@ -322,7 +334,8 @@ void DisjunctiveTransitionRelation::edeletion(
     }
 }
 
-const OperatorID &DisjunctiveTransitionRelation::get_unique_operator_id() const {
+const OperatorID &
+DisjunctiveTransitionRelation::get_unique_operator_id() const {
     assert(ops_ids.size() == 1);
     return *(get_operator_ids().begin());
 }

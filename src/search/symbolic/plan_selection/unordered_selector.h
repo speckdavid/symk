@@ -8,14 +8,18 @@ class UnorderedSelector : public PlanSelector {
 public:
     UnorderedSelector(const plugins::Options &opts);
 
-    ~UnorderedSelector() {}
+    ~UnorderedSelector() {
+    }
 
     void add_plan(const Plan &plan) override;
 
-    std::string tag() const override {return "Unordered";}
+    std::string tag() const override {
+        return "Unordered";
+    }
 
 protected:
-    void save_accepted_plan(const Plan &ordered_plan, const Plan &unordered_plan);
+    void save_accepted_plan(
+        const Plan &ordered_plan, const Plan &unordered_plan);
 };
 }
 

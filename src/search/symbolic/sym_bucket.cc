@@ -7,9 +7,10 @@ using namespace std;
 
 namespace symbolic {
 void remove_zero(Bucket &bucket) {
-    bucket.erase(remove_if(begin(bucket), end(bucket),
-                           [](BDD &bdd) {return bdd.IsZero();}),
-                 end(bucket));
+    bucket.erase(
+        remove_if(
+            begin(bucket), end(bucket), [](BDD &bdd) { return bdd.IsZero(); }),
+        end(bucket));
 }
 
 void copy_bucket(const Bucket &bucket, Bucket &res) {

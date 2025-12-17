@@ -1,4 +1,5 @@
 #include "scc.h"
+
 #include <algorithm>
 #include <vector>
 using namespace std;
@@ -31,7 +32,8 @@ void SCC::dfs(int vertex) {
         if (succ_dfs_number == -1) {
             dfs(succ);
             dfs_minima[vertex] = min(dfs_minima[vertex], dfs_minima[succ]);
-        } else if (succ_dfs_number < vertex_dfs_number && stack_indices[succ] != -1) {
+        } else if (
+            succ_dfs_number < vertex_dfs_number && stack_indices[succ] != -1) {
             dfs_minima[vertex] = min(dfs_minima[vertex], succ_dfs_number);
         }
     }

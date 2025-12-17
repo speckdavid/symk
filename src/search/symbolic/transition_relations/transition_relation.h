@@ -17,12 +17,17 @@ public:
 
     virtual BDD image(const BDD &from, int maxNodes = 0U) const = 0;
     virtual BDD preimage(const BDD &from, int maxNodes = 0U) const = 0;
-    virtual BDD preimage(const BDD &from, const BDD &constraint_to, int max_nodes = 0U) const = 0;
+    virtual BDD preimage(
+        const BDD &from, const BDD &constraint_to,
+        int max_nodes = 0U) const = 0;
 
-    virtual int size() const {return 1;}
+    virtual int size() const {
+        return 1;
+    }
 
-    // It's important to retain the name "nodeCount" as BDDs share the same functionality,
-    // allowing us to utilize it within the templated merge functions.
+    // It's important to retain the name "nodeCount" as BDDs share the same
+    // functionality, allowing us to utilize it within the templated merge
+    // functions.
     virtual int nodeCount() const = 0;
 
     virtual const OperatorID &get_unique_operator_id() const = 0;

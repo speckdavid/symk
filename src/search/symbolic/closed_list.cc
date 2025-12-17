@@ -1,8 +1,9 @@
 #include "closed_list.h"
 
-#include "plan_reconstruction/sym_solution_registry.h"
 #include "sym_state_space_manager.h"
 #include "sym_utils.h"
+
+#include "plan_reconstruction/sym_solution_registry.h"
 
 #include <cassert>
 #include <fstream>
@@ -13,7 +14,8 @@
 using namespace std;
 
 namespace symbolic {
-ClosedList::ClosedList() : mgr(nullptr) {}
+ClosedList::ClosedList() : mgr(nullptr) {
+}
 
 void ClosedList::init(SymStateSpaceManager *manager) {
     mgr = manager;
@@ -56,8 +58,7 @@ BDD ClosedList::getPartialClosed(int upper_bound) const {
     return res;
 }
 
-SymSolutionCut ClosedList::getCheapestCut(BDD states, int g,
-                                          bool fw) const {
+SymSolutionCut ClosedList::getCheapestCut(BDD states, int g, bool fw) const {
     BDD cut_candidate = states * closedTotal;
     if (cut_candidate.IsZero()) {
         return SymSolutionCut();
@@ -80,23 +81,23 @@ SymSolutionCut ClosedList::getCheapestCut(BDD states, int g,
     return SymSolutionCut();
 }
 
-vector<SymSolutionCut> ClosedList::getAllCuts(BDD states, int g,
-                                              bool fw,
-                                              int lower_bound) const {
+vector<SymSolutionCut> ClosedList::getAllCuts(
+    BDD states, int g, bool fw, int lower_bound) const {
     vector<SymSolutionCut> result;
     BDD cut_candidate = states * closedTotal;
     if (!cut_candidate.IsZero()) {
         for (const auto &closedH : closed) {
             int h = closedH.first;
 
-            /* Here we also need to consider higher costs due to the architecture
-             of symBD. Otherwise their occur problems in
+            /* Here we also need to consider higher costs due to the
+             architecture of symBD. Otherwise their occur problems in
              */
             if (g + h < lower_bound) {
                 continue;
             }
 
-            // utils::g_log << "Check cut of g=" << g << " with h=" << h << endl;
+            // utils::g_log << "Check cut of g=" << g << " with h=" << h <<
+            // endl;
             BDD cut = closedH.second * cut_candidate;
             if (!cut.IsZero()) {
                 if (fw) {

@@ -1,9 +1,10 @@
 #ifndef SYMBOLIC_CLOSED_LIST_H
 #define SYMBOLIC_CLOSED_LIST_H
 
-#include "searches/uniform_cost_search.h"
 #include "sym_state_space_manager.h"
 #include "sym_variables.h"
+
+#include "searches/uniform_cost_search.h"
 
 #include <map>
 #include <set>
@@ -36,16 +37,22 @@ public:
 
     BDD getPartialClosed(int upper_bound) const;
 
-    SymSolutionCut getCheapestCut(BDD states, int g,
-                                  bool fw) const;
+    SymSolutionCut getCheapestCut(BDD states, int g, bool fw) const;
 
-    std::vector<SymSolutionCut> getAllCuts(BDD states, int g, bool fw, int lower_bound) const;
+    std::vector<SymSolutionCut> getAllCuts(
+        BDD states, int g, bool fw, int lower_bound) const;
 
-    inline BDD getClosed() const {return closedTotal;}
+    inline BDD getClosed() const {
+        return closedTotal;
+    }
 
-    BDD notClosed() const {return !closedTotal;}
+    BDD notClosed() const {
+        return !closedTotal;
+    }
 
-    inline std::map<int, BDD> getClosedList() const {return closed;}
+    inline std::map<int, BDD> getClosedList() const {
+        return closed;
+    }
 
     BDD get_start_states() const {
         if (get_num_zero_closed_layers(0) == 0) {
