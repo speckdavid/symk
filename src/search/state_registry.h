@@ -213,7 +213,8 @@ public:
       as it includes duplicate checking.
     */
     State get_successor_state(
-        const State &predecessor, const OperatorProxy &op);
+        const State &predecessor, const OperatorProxy &op,
+        bool update_cost_variable = false);
 
     /*
       Returns the number of states registered so far.

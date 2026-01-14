@@ -106,6 +106,9 @@ public:
     virtual vector<MutexGroup> get_mutex_groups() const override;
     virtual void convert_ancestor_state_values(
         vector<int> &values, const AbstractTask *ancestor_task) const override;
+
+    // Add an artifical variable which corresponds to the cost of the state
+    void add_cost_variable(size_t max_value);
 };
 
 class TaskParser {
@@ -838,6 +841,10 @@ int RootTask::get_variable_default_axiom_value(int var) const {
 }
 
 string RootTask::get_fact_name(const FactPair &fact) const {
+    if (get_variable(fact.var).name == "total-cost" &&
+        get_variable(fact.var).fact_names.empty()) {
+        return to_string(fact.value);
+    }
     assert(utils::in_bounds(fact.value, get_variable(fact.var).fact_names));
     return get_variable(fact.var).fact_names[fact.value];
 }
@@ -931,6 +938,23 @@ void RootTask::convert_ancestor_state_values(
     if (this != ancestor_task) {
         ABORT("Invalid state conversion");
     }
+}
+
+void RootTask::add_cost_variable(size_t max_value) {
+    variables.push_back(ExplicitVariable());
+    variables.back().name = "total-cost";
+    variables.back().domain_size = max_value;
+    // No fact names for cost variable.
+}
+
+void add_cost_variable(AbstractTask &task, size_t max_value) {
+    RootTask *rt = dynamic_cast<RootTask *>(&task);
+    if (!rt) {
+        cerr << "Critical error: trying to add cost variable to non-root task."
+             << endl;
+        utils::exit_with(ExitCode::SEARCH_CRITICAL_ERROR);
+    }
+    rt->add_cost_variable(max_value);
 }
 
 void read_root_task(istream &in) {

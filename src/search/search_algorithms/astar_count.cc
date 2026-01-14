@@ -4,10 +4,15 @@
 
 #include "../evaluation_context.h"
 #include "../open_list_factory.h"
+#include "../plan_manager.h"
 
 #include "../plugins/plugin.h"
 #include "../task_utils/successor_generator.h"
 #include "../task_utils/task_properties.h"
+#include "../tasks/root_task.h"
+
+#include <cmath>
+#include <iomanip>
 
 using namespace std;
 
@@ -19,14 +24,30 @@ using namespace std;
 namespace astar_count {
 AStarCount::AStarCount(
     const shared_ptr<Evaluator> &h_eval, OperatorCost cost_type, int bound,
-    double max_time, const string &description, utils::Verbosity verbosity)
+    double max_time, const string &description, utils::Verbosity verbosity,
+    double quality_multiplier, bool prefix_optimal,
+    unordered_set<int> projected_operators)
     : SearchAlgorithm(cost_type, bound, max_time, description, verbosity),
-      num_goal_paths(0) {
+      quality_multiplier(quality_multiplier),
+      prefix_optimal(prefix_optimal),
+      projected_operators(move(projected_operators)),
+      num_goal_paths(0),
+      max_plan_cost(-1) {
     auto [open_list_factory, eval] =
         search_common::create_astar_count_open_list_factory_and_f_eval(
             h_eval, verbosity);
     open_list = open_list_factory->create_state_open_list();
     f_evaluator = eval;
+
+    log << "Prefix optimality: " << (prefix_optimal ? "True" : "False") << endl;
+
+    for (int op_id : this->projected_operators) {
+        assert(
+            op_id >= 0 &&
+            op_id < static_cast<int>(task_proxy.get_operators().size()));
+        log << "Projecting operator with ID " << op_id << ": "
+            << task_proxy.get_operators()[op_id].get_name() << endl;
+    }
 }
 
 void AStarCount::initialize() {
@@ -78,28 +99,16 @@ SearchStatus AStarCount::step() {
     statistics.inc_expanded();
 
     if (task_properties::is_goal_state(task_proxy, s)) {
+        // task_properties::dump_fdr(s);
         num_goal_paths += state_cost_to_path_count[s.get_id().get_value()]
                                                   [node->get_real_g()];
 
-        for (const OperatorProxy &op : task_proxy.get_operators()) {
-            utils::g_log
-                << op.get_name() << ": "
-                << state_cost_operator_to_path_count[s.get_id().get_value()]
-                                                    [node->get_real_g()]
-                                                    [op.get_id()]
-                << endl;
-            num_operator_on_goal_path[op.get_id()] +=
-                state_cost_operator_to_path_count[s.get_id().get_value()]
-                                                 [node->get_real_g()]
-                                                 [op.get_id()];
-        }
-
         if (!found_solution()) {
             check_goal_and_set_plan(s);
+            update_bound(node->get_real_g());
+            log << "Plan cost bound: " << bound << endl;
         }
-        if (bound == numeric_limits<int>::max()) {
-            bound = min(bound, node->get_real_g());
-        }
+        max_plan_cost = max(max_plan_cost, node->get_real_g());
     }
 
     assert(node.has_value());
@@ -118,7 +127,8 @@ void AStarCount::expand(const SearchNode &node) {
         if ((node.get_real_g() + op.get_cost()) >= bound)
             continue;
 
-        State succ_state = state_registry.get_successor_state(s, op);
+        State succ_state =
+            state_registry.get_successor_state(s, op, !prefix_optimal);
         statistics.inc_generated();
 
         SearchNode succ_node = search_space.get_node(succ_state);
@@ -168,13 +178,9 @@ void AStarCount::expand(const SearchNode &node) {
               We found an equally or more expensive path to an open or closed
               state.
             */
-
-            // TODO: If we plan to count all the solutions beyond the optimal
-            // cost, we need to reexpand states with higher costs than the
-            // lowest reachable ones. Should be possible by "reopening"
         }
 
-        update_path_count_for_state(succ_state, s, succ_g, node.get_g(), op_id);
+        update_path_count_for_state(succ_state, s, succ_g, node.get_g(), op);
     }
 }
 
@@ -183,9 +189,8 @@ optional<SearchNode> AStarCount::pop_min_node() {
         StateID id = open_list->remove_min();
         State s = state_registry.lookup_state(id);
         SearchNode node = search_space.get_node(s);
-
         if (node.is_closed()) {
-            cout << s.get_id() << endl;
+            // cout << s.get_id() << endl;
             continue;
         }
         return node;
@@ -195,36 +200,50 @@ optional<SearchNode> AStarCount::pop_min_node() {
 
 void AStarCount::update_path_count_for_state(
     const State &state, const State &parent, int state_g, int parent_g,
-    const OperatorID &operator_id) {
+    const OperatorProxy &op) {
     assert(state_g >= parent_g);
+    if (projected_operators.find(op.get_id()) != projected_operators.end()) {
+        return;
+    }
 
     auto state_id = state.get_id().get_value();
     auto parent_id = parent.get_id().get_value();
 
     // Update total path count
-    int parent_count = state_cost_to_path_count[parent_id][parent_g];
+    Count parent_count = state_cost_to_path_count[parent_id][parent_g];
     state_cost_to_path_count[state_id][state_g] += parent_count;
+}
 
-    // Update path counts per operator
-    auto &state_op_counts =
-        state_cost_operator_to_path_count[state_id][state_g];
-    const auto &parent_op_counts =
-        state_cost_operator_to_path_count[parent_id][parent_g];
+void AStarCount::update_bound(int optimal_plan_cost) {
+    if (quality_multiplier == numeric_limits<double>::infinity())
+        return;
 
-    for (const auto &[op_id, count] : parent_op_counts) {
-        state_op_counts[op_id] += count;
-    }
-
-    // Increment the count for the operator that led to this state
-    state_op_counts[operator_id.get_index()] += parent_count;
+    int rel_bound = int(optimal_plan_cost * quality_multiplier) + 1;
+    bound = min(bound, rel_bound);
 }
 
 void AStarCount::print_statistics() const {
-    log << "Number of plans: " << num_goal_paths << endl;
-    for (const OperatorProxy &op : task_proxy.get_operators()) {
-        utils::g_log << op.get_name() << ": "
-                     << num_operator_on_goal_path.at(op.get_id()) << endl;
+    log << "Number of plans (exact): " << num_goal_paths << endl;
+    log << "Number of plans (approx): " << scientific << setprecision(2)
+        << num_goal_paths.get_d() << endl;
+    if (found_solution()) {
+        log << "Minimum plan cost: "
+            << calculate_plan_cost(get_plan(), task_proxy) << endl;
+        log << "Maximum plan cost: " << max_plan_cost << endl;
+        log << "Cost bound: " << bound << endl;
     }
+#ifndef HAS_GMP
+    if (num_goal_paths.is_infinity()) {
+        log << "Note: the number of plans is too large to be represented "
+               "with the current configuration. "
+               "Consider compiling with GMP support for arbitrary precision integers."
+            << endl;
+    }
+    log << "Bytes for plan counts: " << sizeof(Count) << endl;
+#else
+    log << "Bytes for plan counts: "
+        << (mpz_sizeinbase(num_goal_paths.get_mpz_t(), 2) + 7) / 8 << endl;
+#endif
     statistics.print_detailed_statistics();
     search_space.print_statistics();
 }
@@ -242,6 +261,16 @@ void AStarCount::update_f_value_statistics(EvaluationContext &eval_context) {
     statistics.report_f_value_progress(f_value);
 }
 
+enum class PlanType {
+    All,
+    PrefixOptimal
+};
+
+static plugins::TypedEnumPlugin<PlanType> _plan_type_enum_plugin(
+    {{"all", "all paths are considered plans"},
+     {"prefix_optimal",
+      "only prefixes of cost-optimal paths are considered as plans"}});
+
 class AStarCountFeature
     : public plugins::TypedFeature<SearchAlgorithm, AStarCount> {
 public:
@@ -253,13 +282,50 @@ public:
 
         add_option<shared_ptr<Evaluator>>("h", "heuristic");
         add_search_algorithm_options_to_feature(*this, "astar_count");
+
+        add_option<double>(
+            "quality", "Relative quality multiplier", "",
+            plugins::Bounds("1.0", "infinity"));
+
+        add_list_option<int>(
+            "projected_operators",
+            "Set of operator IDs to be projected (ignored) when counting plans. ",
+            "[]");
+        add_option<PlanType>(
+            "plan_type",
+            "Plan counting mode (optional). If omitted, inferred from `quality` (prefix-optimal when quality == 1.0).",
+            plugins::ArgumentInfo::NO_DEFAULT);
     }
 
     virtual shared_ptr<AStarCount> create_component(
         const plugins::Options &opts) const override {
+        vector<int> projected_operators =
+            opts.get_list<int>("projected_operators");
+        double quality = opts.get<double>("quality");
+
+        // Determine plan counting mode. If the option is not provided we
+        // infer it from `quality` (prefix-optimal when quality == 1.0)
+        PlanType plan_type;
+        if (opts.contains("plan_type")) {
+            plan_type = opts.get<PlanType>("plan_type");
+        } else {
+            plan_type =
+                quality == 1.0 ? PlanType::PrefixOptimal : PlanType::All;
+        }
+        bool prefix_optimal = (plan_type == PlanType::PrefixOptimal);
+
+        auto search_arguments =
+            get_search_algorithm_arguments_from_options(opts);
+        int bound = get<1>(search_arguments);
+        // Add cost variable for all plans
+        if (!prefix_optimal) {
+            tasks::add_cost_variable(*tasks::g_root_task, max(bound, 2));
+        }
         return plugins::make_shared_from_arg_tuples<astar_count::AStarCount>(
-            opts.get<shared_ptr<Evaluator>>("h"),
-            get_search_algorithm_arguments_from_options(opts));
+            opts.get<shared_ptr<Evaluator>>("h"), search_arguments, quality,
+            prefix_optimal,
+            unordered_set<int>(
+                projected_operators.begin(), projected_operators.end()));
     }
 };
 

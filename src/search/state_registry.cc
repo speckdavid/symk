@@ -71,7 +71,8 @@ const State &StateRegistry::get_initial_state() {
 //      out of the StateRegistry. This could for example be done by global
 //      functions operating on state buffers (PackedStateBin *).
 State StateRegistry::get_successor_state(
-    const State &predecessor, const OperatorProxy &op) {
+    const State &predecessor, const OperatorProxy &op,
+    bool update_cost_variable) {
     assert(!op.is_axiom());
     /*
       TODO: ideally, we would not modify state_data_pool here and in
@@ -92,6 +93,11 @@ State StateRegistry::get_successor_state(
                 new_values[effect_pair.var] = effect_pair.value;
             }
         }
+        if (update_cost_variable) {
+            int cost_var_index = new_values.size() - 1;
+            int new_cost = new_values[cost_var_index] + op.get_cost();
+            new_values[cost_var_index] = new_cost;
+        }
         axiom_evaluator.evaluate(new_values);
         for (size_t i = 0; i < new_values.size(); ++i) {
             state_packer.set(buffer, i, new_values[i]);
@@ -108,6 +114,12 @@ State StateRegistry::get_successor_state(
                 FactPair effect_pair = effect.get_fact().get_pair();
                 state_packer.set(buffer, effect_pair.var, effect_pair.value);
             }
+        }
+        if (update_cost_variable) {
+            int cost_var_index = num_variables - 1;
+            int old_cost = predecessor[cost_var_index].get_value();
+            int new_cost = old_cost + op.get_cost();
+            state_packer.set(buffer, cost_var_index, new_cost);
         }
         /*
           NOTE: insert_id_or_pop_state possibly invalidates buffer, hence

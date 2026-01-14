@@ -9,7 +9,7 @@ Stage: build
 %post
     ## Install all necessary dependencies.
     apt-get update
-    DEBIAN_FRONTEND=noninteractive apt-get -y install --no-install-recommends cmake g++ make python3.12 autoconf automake 
+    DEBIAN_FRONTEND=noninteractive apt-get -y install --no-install-recommends cmake g++ make python3.12 autoconf automake libgmp-dev
 
     ## Clear build directory.
     rm -rf /planner/builds
@@ -33,7 +33,7 @@ Stage: run
 
 %post
     apt-get update
-    apt-get -y install --no-install-recommends python3.12
+    apt-get -y install --no-install-recommends python3.12 libgmp-dev
     rm -rf /var/lib/apt/lists/*
 
 %runscript
