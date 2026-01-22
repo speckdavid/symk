@@ -477,10 +477,10 @@ create_fast_downward_library(
 )
 
 create_fast_downward_library(
-    NAME astar_count
-    HELP "Astar count search"
+    NAME asharp
+    HELP "ASharp search"
     SOURCES
-        search_algorithms/astar_count
+        search_algorithms/asharp
         utils/int_inf
     DEPENDS
         eager_search
@@ -1091,13 +1091,13 @@ target_link_libraries(downward PRIVATE Cudd::Cudd)
 find_package(Gmp REQUIRED)
 
 if (Gmp_FOUND)
-    target_compile_definitions(astar_count INTERFACE HAS_GMP)
-    target_link_libraries(astar_count INTERFACE Gmp::Gmpxx)
+    target_compile_definitions(asharp INTERFACE HAS_GMP)
+    target_link_libraries(asharp INTERFACE Gmp::Gmpxx)
     target_link_libraries(downward PRIVATE Gmp::Gmpxx)
 else()
     message(WARNING 
         "GMP library not found. Building without GMP support. "
-        "Plan numbers in 'astar_count' will use saturated 64-bit integers. "
+        "Plan numbers in 'asharp' will use saturated 64-bit integers. "
         "Very large counts may result in 'infinity' due to saturation instead of exact values."
     )
 endif()

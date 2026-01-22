@@ -1,5 +1,5 @@
-#ifndef SEARCH_ALGORITHMS_ASTAR_COUNT_H
-#define SEARCH_ALGORITHMS_ASTAR_COUNT_H
+#ifndef SEARCH_ALGORITHMS_ASHARP_H
+#define SEARCH_ALGORITHMS_ASHARP_H
 
 #include "../open_list.h"
 #include "../search_algorithm.h"
@@ -17,12 +17,12 @@ using Count = mpz_class;
 using Count = utils::IntInf;
 #endif
 
-namespace astar_count {
+namespace asharp {
 
-class AStarCount : public SearchAlgorithm {
+class ASharp : public SearchAlgorithm {
     void update_path_count_for_state(
-        const State &state, const State &parent, int state_g, int parent_g,
-        const OperatorProxy &op);
+        const State &state, const State &parent, const OperatorProxy &op,
+        bool lower_cost);
 
     void start_f_value_statistics(EvaluationContext &eval_context);
     void update_f_value_statistics(EvaluationContext &eval_context);
@@ -35,11 +35,10 @@ protected:
 
     double quality_multiplier;
     bool prefix_optimal;
-    std::unordered_set<int> projected_operators;
     Count num_goal_paths;
     int max_plan_cost;
 
-    utils::HashMap<int, utils::HashMap<int, Count>> state_cost_to_path_count;
+    utils::HashMap<int, Count> state_to_path_count;
 
     virtual void initialize() override;
     virtual SearchStatus step() override;
@@ -48,11 +47,11 @@ protected:
 
 
 public:
-    explicit AStarCount(
+    explicit ASharp(
         const std::shared_ptr<Evaluator> &h_eval, OperatorCost cost_type,
         int bound, double max_time, const std::string &description,
         utils::Verbosity verbosity, double quality_multiplier,
-        bool prefix_optimal, std::unordered_set<int> projected_operators);
+        bool prefix_optimal);
 
     virtual void print_statistics() const override;
 };

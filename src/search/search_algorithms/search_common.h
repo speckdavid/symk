@@ -77,7 +77,7 @@ create_astar_open_list_factory_and_f_eval(
 */
 extern std::pair<
     std::shared_ptr<OpenListFactory>, const std::shared_ptr<Evaluator>>
-create_astar_count_open_list_factory_and_f_eval(
+create_asharp_open_list_factory_and_f_eval(
     const std::shared_ptr<Evaluator> &h_eval, utils::Verbosity verbosity);
 }
 

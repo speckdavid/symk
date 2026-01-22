@@ -1,4 +1,4 @@
-#include "astar_count.h"
+#include "asharp.h"
 
 #include "search_common.h"
 
@@ -16,47 +16,32 @@
 
 using namespace std;
 
-// TODO: If we have a relative bound and no absolut, we may get nodes in the
-// open list which are to costly. So, we can stop early when the bound is
-// exceeded. Q: Do we need tie breaking [f,g,h] In particular the h in the end?
-// probably not but valuable to thing about it.
-
-namespace astar_count {
-AStarCount::AStarCount(
+namespace asharp {
+ASharp::ASharp(
     const shared_ptr<Evaluator> &h_eval, OperatorCost cost_type, int bound,
     double max_time, const string &description, utils::Verbosity verbosity,
-    double quality_multiplier, bool prefix_optimal,
-    unordered_set<int> projected_operators)
+    double quality_multiplier, bool prefix_optimal)
     : SearchAlgorithm(cost_type, bound, max_time, description, verbosity),
       quality_multiplier(quality_multiplier),
       prefix_optimal(prefix_optimal),
-      projected_operators(move(projected_operators)),
       num_goal_paths(0),
       max_plan_cost(-1) {
     auto [open_list_factory, eval] =
-        search_common::create_astar_count_open_list_factory_and_f_eval(
+        search_common::create_asharp_open_list_factory_and_f_eval(
             h_eval, verbosity);
     open_list = open_list_factory->create_state_open_list();
     f_evaluator = eval;
 
     log << "Prefix optimality: " << (prefix_optimal ? "True" : "False") << endl;
-
-    for (int op_id : this->projected_operators) {
-        assert(
-            op_id >= 0 &&
-            op_id < static_cast<int>(task_proxy.get_operators().size()));
-        log << "Projecting operator with ID " << op_id << ": "
-            << task_proxy.get_operators()[op_id].get_name() << endl;
-    }
 }
 
-void AStarCount::initialize() {
+void ASharp::initialize() {
     log << "Conducting astar count search" << ", (real) bound = " << bound
         << endl;
     assert(open_list);
 
     State initial_state = state_registry.get_initial_state();
-    state_cost_to_path_count[initial_state.get_id().get_value()][0] = 1;
+    state_to_path_count[initial_state.get_id().get_value()] = 1;
 
     EvaluationContext eval_context(initial_state, 0, true, &statistics);
 
@@ -77,7 +62,7 @@ void AStarCount::initialize() {
     print_initial_evaluator_values(eval_context);
 }
 
-SearchStatus AStarCount::step() {
+SearchStatus ASharp::step() {
     optional<SearchNode> node = pop_min_node();
 
     if (!node.has_value()) {
@@ -100,8 +85,7 @@ SearchStatus AStarCount::step() {
 
     if (task_properties::is_goal_state(task_proxy, s)) {
         // task_properties::dump_fdr(s);
-        num_goal_paths += state_cost_to_path_count[s.get_id().get_value()]
-                                                  [node->get_real_g()];
+        num_goal_paths += state_to_path_count[s.get_id().get_value()];
 
         if (!found_solution()) {
             check_goal_and_set_plan(s);
@@ -117,7 +101,7 @@ SearchStatus AStarCount::step() {
     return IN_PROGRESS;
 }
 
-void AStarCount::expand(const SearchNode &node) {
+void ASharp::expand(const SearchNode &node) {
     const State &s = node.get_state();
     vector<OperatorID> applicable_ops;
     successor_generator.generate_applicable_ops(s, applicable_ops);
@@ -139,6 +123,12 @@ void AStarCount::expand(const SearchNode &node) {
 
         int succ_g = node.get_g() + get_adjusted_cost(op);
 
+        if (succ_node.is_new() || succ_node.get_g() >= succ_g) {
+            bool is_better_path =
+                succ_node.is_new() || succ_node.get_g() > succ_g;
+            update_path_count_for_state(succ_state, s, op, is_better_path);
+        }
+
         if (succ_node.is_new()) {
             EvaluationContext succ_eval_context(
                 succ_state, succ_g, false, &statistics);
@@ -157,7 +147,7 @@ void AStarCount::expand(const SearchNode &node) {
             open_list->insert(succ_eval_context, succ_state.get_id());
             if (search_progress.check_progress(succ_eval_context))
                 statistics.print_checkpoint_line(succ_node.get_g());
-        } else if (succ_node.get_g() > node.get_g() + get_adjusted_cost(op)) {
+        } else if (succ_node.get_g() > succ_g) {
             if (succ_node.is_closed()) {
                 // We found a new cheapest path to a closed state.
                 cerr << "Found a new cheapest path to an open closed state! "
@@ -179,12 +169,10 @@ void AStarCount::expand(const SearchNode &node) {
               state.
             */
         }
-
-        update_path_count_for_state(succ_state, s, succ_g, node.get_g(), op);
     }
 }
 
-optional<SearchNode> AStarCount::pop_min_node() {
+optional<SearchNode> ASharp::pop_min_node() {
     while (!open_list->empty()) {
         StateID id = open_list->remove_min();
         State s = state_registry.lookup_state(id);
@@ -198,23 +186,22 @@ optional<SearchNode> AStarCount::pop_min_node() {
     return nullopt;
 }
 
-void AStarCount::update_path_count_for_state(
-    const State &state, const State &parent, int state_g, int parent_g,
-    const OperatorProxy &op) {
-    assert(state_g >= parent_g);
-    if (projected_operators.find(op.get_id()) != projected_operators.end()) {
-        return;
-    }
-
+void ASharp::update_path_count_for_state(
+    const State &state, const State &parent, const OperatorProxy &op,
+    bool lower_cost) {
     auto state_id = state.get_id().get_value();
     auto parent_id = parent.get_id().get_value();
 
-    // Update total path count
-    Count parent_count = state_cost_to_path_count[parent_id][parent_g];
-    state_cost_to_path_count[state_id][state_g] += parent_count;
+    Count parent_count = state_to_path_count[parent_id];
+
+    if (lower_cost) {
+        state_to_path_count[state_id] = parent_count;
+    } else {
+        state_to_path_count[state_id] += parent_count;
+    }
 }
 
-void AStarCount::update_bound(int optimal_plan_cost) {
+void ASharp::update_bound(int optimal_plan_cost) {
     if (quality_multiplier == numeric_limits<double>::infinity())
         return;
 
@@ -222,8 +209,8 @@ void AStarCount::update_bound(int optimal_plan_cost) {
     bound = min(bound, rel_bound);
 }
 
-void AStarCount::print_statistics() const {
-    log << "Number of plans (exact): " << num_goal_paths << endl;
+void ASharp::print_statistics() const {
+    log << "Number of plans: " << num_goal_paths << endl;
     log << "Number of plans (approx): " << scientific << setprecision(2)
         << num_goal_paths.get_d() << endl;
     if (found_solution()) {
@@ -248,7 +235,7 @@ void AStarCount::print_statistics() const {
     search_space.print_statistics();
 }
 
-void AStarCount::start_f_value_statistics(EvaluationContext &eval_context) {
+void ASharp::start_f_value_statistics(EvaluationContext &eval_context) {
     int f_value = eval_context.get_evaluator_value(f_evaluator.get());
     statistics.report_f_value_progress(f_value);
 }
@@ -256,7 +243,7 @@ void AStarCount::start_f_value_statistics(EvaluationContext &eval_context) {
 /* TODO: HACK! This is very inefficient for simply looking up an h value.
    Also, if h values are not saved it would recompute h for each and every
    state. */
-void AStarCount::update_f_value_statistics(EvaluationContext &eval_context) {
+void ASharp::update_f_value_statistics(EvaluationContext &eval_context) {
     int f_value = eval_context.get_evaluator_value(f_evaluator.get());
     statistics.report_f_value_progress(f_value);
 }
@@ -271,36 +258,29 @@ static plugins::TypedEnumPlugin<PlanType> _plan_type_enum_plugin(
      {"prefix_optimal",
       "only prefixes of cost-optimal paths are considered as plans"}});
 
-class AStarCountFeature
-    : public plugins::TypedFeature<SearchAlgorithm, AStarCount> {
+class ASharpFeature : public plugins::TypedFeature<SearchAlgorithm, ASharp> {
 public:
-    AStarCountFeature() : TypedFeature("astar_count") {
+    ASharpFeature() : TypedFeature("asharp") {
         document_title("A*-Count search (eager)");
         document_synopsis(
             "A*-Count is a special case of A* search which count the number of solutions. "
             "We break ties using the evaluator.");
 
         add_option<shared_ptr<Evaluator>>("h", "heuristic");
-        add_search_algorithm_options_to_feature(*this, "astar_count");
+        add_search_algorithm_options_to_feature(*this, "asharp");
 
         add_option<double>(
             "quality", "Relative quality multiplier", "",
             plugins::Bounds("1.0", "infinity"));
 
-        add_list_option<int>(
-            "projected_operators",
-            "Set of operator IDs to be projected (ignored) when counting plans. ",
-            "[]");
         add_option<PlanType>(
             "plan_type",
             "Plan counting mode (optional). If omitted, inferred from `quality` (prefix-optimal when quality == 1.0).",
             plugins::ArgumentInfo::NO_DEFAULT);
     }
 
-    virtual shared_ptr<AStarCount> create_component(
+    virtual shared_ptr<ASharp> create_component(
         const plugins::Options &opts) const override {
-        vector<int> projected_operators =
-            opts.get_list<int>("projected_operators");
         double quality = opts.get<double>("quality");
 
         // Determine plan counting mode. If the option is not provided we
@@ -321,13 +301,11 @@ public:
         if (!prefix_optimal) {
             tasks::add_cost_variable(*tasks::g_root_task, max(bound, 2));
         }
-        return plugins::make_shared_from_arg_tuples<astar_count::AStarCount>(
+        return plugins::make_shared_from_arg_tuples<asharp::ASharp>(
             opts.get<shared_ptr<Evaluator>>("h"), search_arguments, quality,
-            prefix_optimal,
-            unordered_set<int>(
-                projected_operators.begin(), projected_operators.end()));
+            prefix_optimal);
     }
 };
 
-static plugins::FeaturePlugin<AStarCountFeature> _plugin;
+static plugins::FeaturePlugin<ASharpFeature> _plugin;
 }
