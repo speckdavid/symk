@@ -21,8 +21,7 @@ namespace asharp {
 
 class ASharp : public SearchAlgorithm {
     void update_path_count_for_state(
-        const State &state, const State &parent, const OperatorProxy &op,
-        bool lower_cost);
+        const State &state, const State &parent, bool lower_cost);
 
     void start_f_value_statistics(EvaluationContext &eval_context);
     void update_f_value_statistics(EvaluationContext &eval_context);

@@ -945,6 +945,7 @@ void RootTask::add_cost_variable(size_t max_value) {
     variables.back().name = "total-cost";
     variables.back().domain_size = max_value;
     // No fact names for cost variable.
+    initial_state_values.push_back(0);
 }
 
 void add_cost_variable(AbstractTask &task, size_t max_value) {

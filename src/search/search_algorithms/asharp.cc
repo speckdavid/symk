@@ -70,13 +70,14 @@ SearchStatus ASharp::step() {
         return found_solution() ? SOLVED : FAILED;
     }
 
-    // More expansive than the dynamic bound
-    if (node->get_real_g() >= bound) {
-        return IN_PROGRESS;
-    }
-
     const State &s = node->get_state();
     EvaluationContext eval_context(s, node->get_g(), false, &statistics);
+
+    // More expansive than the dynamic bound
+    if (eval_context.get_evaluator_value_or_infinity(f_evaluator.get()) >=
+        bound) {
+        return found_solution() ? SOLVED : FAILED;
+    }
 
     node->close();
     assert(!node->is_dead_end());
@@ -126,7 +127,7 @@ void ASharp::expand(const SearchNode &node) {
         if (succ_node.is_new() || succ_node.get_g() >= succ_g) {
             bool is_better_path =
                 succ_node.is_new() || succ_node.get_g() > succ_g;
-            update_path_count_for_state(succ_state, s, op, is_better_path);
+            update_path_count_for_state(succ_state, s, is_better_path);
         }
 
         if (succ_node.is_new()) {
@@ -187,8 +188,7 @@ optional<SearchNode> ASharp::pop_min_node() {
 }
 
 void ASharp::update_path_count_for_state(
-    const State &state, const State &parent, const OperatorProxy &op,
-    bool lower_cost) {
+    const State &state, const State &parent, bool lower_cost) {
     auto state_id = state.get_id().get_value();
     auto parent_id = parent.get_id().get_value();
 
