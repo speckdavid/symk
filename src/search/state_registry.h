@@ -163,6 +163,7 @@ class StateRegistry : public subscriber::SubscriberService<StateRegistry> {
     const int_packer::IntPacker &state_packer;
     AxiomEvaluator &axiom_evaluator;
     const int num_variables;
+    const int cost_variable_id;
 
     segmented_vector::SegmentedArrayVector<PackedStateBin> state_data_pool;
     StateIDSet registered_states;
@@ -213,8 +214,7 @@ public:
       as it includes duplicate checking.
     */
     State get_successor_state(
-        const State &predecessor, const OperatorProxy &op,
-        bool update_cost_variable = false);
+        const State &predecessor, const OperatorProxy &op);
 
     /*
       Returns the number of states registered so far.

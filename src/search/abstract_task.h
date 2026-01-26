@@ -119,6 +119,9 @@ public:
     */
     virtual void convert_ancestor_state_values(
         std::vector<int> &values, const AbstractTask *ancestor_task) const = 0;
+
+    virtual bool has_cost_variable() const = 0;
+    virtual int get_cost_variable_id() const = 0;
 };
 
 #endif

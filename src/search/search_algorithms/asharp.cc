@@ -20,19 +20,20 @@ namespace asharp {
 ASharp::ASharp(
     const shared_ptr<Evaluator> &h_eval, OperatorCost cost_type, int bound,
     double max_time, const string &description, utils::Verbosity verbosity,
-    double quality_multiplier, bool prefix_optimal)
+    double quality_multiplier)
     : SearchAlgorithm(cost_type, bound, max_time, description, verbosity),
       quality_multiplier(quality_multiplier),
-      prefix_optimal(prefix_optimal),
       num_goal_paths(0),
       max_plan_cost(-1) {
+    task_properties::verify_no_zero_cost_operator(task_proxy);
+
     auto [open_list_factory, eval] =
         search_common::create_asharp_open_list_factory_and_f_eval(
             h_eval, verbosity);
     open_list = open_list_factory->create_state_open_list();
     f_evaluator = eval;
 
-    log << "Prefix optimality: " << (prefix_optimal ? "True" : "False") << endl;
+    check_cost_variable_bound();
 }
 
 void ASharp::initialize() {
@@ -112,8 +113,7 @@ void ASharp::expand(const SearchNode &node) {
         if ((node.get_real_g() + op.get_cost()) >= bound)
             continue;
 
-        State succ_state =
-            state_registry.get_successor_state(s, op, !prefix_optimal);
+        State succ_state = state_registry.get_successor_state(s, op);
         statistics.inc_generated();
 
         SearchNode succ_node = search_space.get_node(succ_state);
@@ -205,8 +205,34 @@ void ASharp::update_bound(int optimal_plan_cost) {
     if (quality_multiplier == numeric_limits<double>::infinity())
         return;
 
+    int old_bound = bound;
     int rel_bound = int(optimal_plan_cost * quality_multiplier) + 1;
     bound = min(bound, rel_bound);
+
+    if (bound != old_bound) {
+        check_cost_variable_bound();
+    }
+}
+
+void ASharp::check_cost_variable_bound() const {
+    if (!task_proxy.get_abstract_task().has_cost_variable() ||
+        bound == numeric_limits<int>::max()) {
+        return;
+    }
+
+    int cost_var_id = task_proxy.get_abstract_task().get_cost_variable_id();
+    int cost_var_domain_size =
+        task_proxy.get_variables()[cost_var_id].get_domain_size();
+
+    if (bound > cost_var_domain_size) {
+        cerr << "Error: The bound (" << bound << ") exceeds the maximum value "
+             << "of the cost variable (" << cost_var_domain_size << "). "
+             << "The search cannot reach states with cost >= "
+             << cost_var_domain_size << "." << endl;
+        cerr << "Please increase the domain size of the cost variable "
+             << "when adding it to the task." << endl;
+        utils::exit_with(utils::ExitCode::SEARCH_CRITICAL_ERROR);
+    }
 }
 
 void ASharp::print_statistics() const {
@@ -248,16 +274,6 @@ void ASharp::update_f_value_statistics(EvaluationContext &eval_context) {
     statistics.report_f_value_progress(f_value);
 }
 
-enum class PlanType {
-    All,
-    PrefixOptimal
-};
-
-static plugins::TypedEnumPlugin<PlanType> _plan_type_enum_plugin(
-    {{"all", "all paths are considered plans"},
-     {"prefix_optimal",
-      "only prefixes of cost-optimal paths are considered as plans"}});
-
 class ASharpFeature : public plugins::TypedFeature<SearchAlgorithm, ASharp> {
 public:
     ASharpFeature() : TypedFeature("asharp") {
@@ -272,38 +288,16 @@ public:
         add_option<double>(
             "quality", "Relative quality multiplier", "",
             plugins::Bounds("1.0", "infinity"));
-
-        add_option<PlanType>(
-            "plan_type",
-            "Plan counting mode (optional). If omitted, inferred from `quality` (prefix-optimal when quality == 1.0).",
-            plugins::ArgumentInfo::NO_DEFAULT);
     }
 
     virtual shared_ptr<ASharp> create_component(
         const plugins::Options &opts) const override {
         double quality = opts.get<double>("quality");
 
-        // Determine plan counting mode. If the option is not provided we
-        // infer it from `quality` (prefix-optimal when quality == 1.0)
-        PlanType plan_type;
-        if (opts.contains("plan_type")) {
-            plan_type = opts.get<PlanType>("plan_type");
-        } else {
-            plan_type =
-                quality == 1.0 ? PlanType::PrefixOptimal : PlanType::All;
-        }
-        bool prefix_optimal = (plan_type == PlanType::PrefixOptimal);
-
         auto search_arguments =
             get_search_algorithm_arguments_from_options(opts);
-        int bound = get<1>(search_arguments);
-        // Add cost variable for all plans
-        if (!prefix_optimal) {
-            tasks::add_cost_variable(*tasks::g_root_task, max(bound, 2));
-        }
         return plugins::make_shared_from_arg_tuples<asharp::ASharp>(
-            opts.get<shared_ptr<Evaluator>>("h"), search_arguments, quality,
-            prefix_optimal);
+            opts.get<shared_ptr<Evaluator>>("h"), search_arguments, quality);
     }
 };
 

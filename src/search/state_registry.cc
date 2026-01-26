@@ -13,10 +13,14 @@ StateRegistry::StateRegistry(const TaskProxy &task_proxy)
       state_packer(task_properties::g_state_packers[task_proxy]),
       axiom_evaluator(g_axiom_evaluators[task_proxy]),
       num_variables(task_proxy.get_variables().size()),
+      cost_variable_id(task_proxy.get_abstract_task().get_cost_variable_id()),
       state_data_pool(get_bins_per_state()),
       registered_states(
           StateIDSemanticHash(state_data_pool, get_bins_per_state()),
           StateIDSemanticEqual(state_data_pool, get_bins_per_state())) {
+    if (cost_variable_id != -1) {
+        utils::g_log << "StateRegistry: updating cost variable." << endl;
+    }
 }
 
 StateID StateRegistry::insert_id_or_pop_state() {
@@ -71,8 +75,7 @@ const State &StateRegistry::get_initial_state() {
 //      out of the StateRegistry. This could for example be done by global
 //      functions operating on state buffers (PackedStateBin *).
 State StateRegistry::get_successor_state(
-    const State &predecessor, const OperatorProxy &op,
-    bool update_cost_variable) {
+    const State &predecessor, const OperatorProxy &op) {
     assert(!op.is_axiom());
     /*
       TODO: ideally, we would not modify state_data_pool here and in
@@ -93,10 +96,9 @@ State StateRegistry::get_successor_state(
                 new_values[effect_pair.var] = effect_pair.value;
             }
         }
-        if (update_cost_variable) {
-            int cost_var_index = new_values.size() - 1;
-            int new_cost = new_values[cost_var_index] + op.get_cost();
-            new_values[cost_var_index] = new_cost;
+        if (cost_variable_id != -1) {
+            int new_cost = new_values[cost_variable_id] + op.get_cost();
+            new_values[cost_variable_id] = new_cost;
         }
         axiom_evaluator.evaluate(new_values);
         for (size_t i = 0; i < new_values.size(); ++i) {
@@ -115,11 +117,10 @@ State StateRegistry::get_successor_state(
                 state_packer.set(buffer, effect_pair.var, effect_pair.value);
             }
         }
-        if (update_cost_variable) {
-            int cost_var_index = num_variables - 1;
-            int old_cost = predecessor[cost_var_index].get_value();
+        if (cost_variable_id != -1) {
+            int old_cost = predecessor[cost_variable_id].get_value();
             int new_cost = old_cost + op.get_cost();
-            state_packer.set(buffer, cost_var_index, new_cost);
+            state_packer.set(buffer, cost_variable_id, new_cost);
         }
         /*
           NOTE: insert_id_or_pop_state possibly invalidates buffer, hence

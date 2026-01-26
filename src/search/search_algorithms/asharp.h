@@ -26,6 +26,7 @@ class ASharp : public SearchAlgorithm {
     void start_f_value_statistics(EvaluationContext &eval_context);
     void update_f_value_statistics(EvaluationContext &eval_context);
     void update_bound(int optimal_plan_cost);
+    void check_cost_variable_bound() const;
 
     void expand(const SearchNode &node);
 protected:
@@ -33,7 +34,6 @@ protected:
     std::shared_ptr<Evaluator> f_evaluator;
 
     double quality_multiplier;
-    bool prefix_optimal;
     Count num_goal_paths;
     int max_plan_cost;
 
@@ -49,8 +49,7 @@ public:
     explicit ASharp(
         const std::shared_ptr<Evaluator> &h_eval, OperatorCost cost_type,
         int bound, double max_time, const std::string &description,
-        utils::Verbosity verbosity, double quality_multiplier,
-        bool prefix_optimal);
+        utils::Verbosity verbosity, double quality_multiplier);
 
     virtual void print_statistics() const override;
 };

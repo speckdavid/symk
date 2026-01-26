@@ -119,4 +119,13 @@ void DelegatingTask::convert_ancestor_state_values(
     parent->convert_ancestor_state_values(values, ancestor_task);
     convert_state_values_from_parent(values);
 }
+
+bool DelegatingTask::has_cost_variable() const {
+    return parent->has_cost_variable();
+}
+
+int DelegatingTask::get_cost_variable_id() const {
+    return parent->get_cost_variable_id();
+}
+
 }

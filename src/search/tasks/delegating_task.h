@@ -66,6 +66,9 @@ public:
         const AbstractTask *ancestor_task) const final override;
     virtual void convert_state_values_from_parent(std::vector<int> &) const {
     }
+
+    virtual bool has_cost_variable() const override;
+    virtual int get_cost_variable_id() const override;
 };
 }
 

@@ -50,6 +50,7 @@ class RootTask : public AbstractTask {
     vector<ExplicitOperator> axioms;
     vector<int> initial_state_values;
     vector<FactPair> goals;
+    int cost_variable_id;
 
     const ExplicitVariable &get_variable(int var) const;
     const ExplicitEffect &get_effect(
@@ -109,6 +110,8 @@ public:
 
     // Add an artifical variable which corresponds to the cost of the state
     void add_cost_variable(size_t max_value);
+    virtual bool has_cost_variable() const override;
+    virtual int get_cost_variable_id() const;
 };
 
 class TaskParser {
@@ -794,7 +797,8 @@ RootTask::RootTask(
       operators(move(operators)),
       axioms(move(axioms)),
       initial_state_values(move(initial_state_values)),
-      goals(move(goals)) {
+      goals(move(goals)),
+      cost_variable_id(-1) {
 }
 
 const ExplicitVariable &RootTask::get_variable(int var) const {
@@ -940,7 +944,16 @@ void RootTask::convert_ancestor_state_values(
     }
 }
 
+bool RootTask::has_cost_variable() const {
+    return cost_variable_id != -1;
+}
+
+int RootTask::get_cost_variable_id() const {
+    return cost_variable_id;
+}
+
 void RootTask::add_cost_variable(size_t max_value) {
+    cost_variable_id = variables.size();
     variables.push_back(ExplicitVariable());
     variables.back().name = "total-cost";
     variables.back().domain_size = max_value;

@@ -9,6 +9,7 @@
 #include "plugins/any.h"
 #include "plugins/doc_printer.h"
 #include "plugins/plugin.h"
+#include "tasks/root_task.h"
 #include "utils/logging.h"
 #include "utils/strings.h"
 
@@ -189,6 +190,23 @@ shared_ptr<SearchAlgorithm> parse_cmd_line(
             active = !is_unit_cost;
         } else if (arg == "--always") {
             active = true;
+        } else if (arg == "--add-cost-variable") {
+            int cost_bound;
+            if (i + 1 >= argc) {
+                input_error(
+                    "--add-cost-variable requires a following positive integer.");
+            }
+            try {
+                cost_bound = stoi(argv[i + 1]);
+                if (cost_bound <= 0)
+                    throw domain_error("Not positive");
+            } catch (...) {
+                input_error(
+                    "--add-cost-variable requires a following positive integer (cur: " +
+                    string(argv[i + 1]) + ").");
+            }
+            tasks::add_cost_variable(*tasks::g_root_task, max(cost_bound, 2));
+            ++i;
         } else if (active) {
             args.push_back(arg);
         }

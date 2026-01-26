@@ -727,6 +727,10 @@ public:
         return create_state(std::move(state_values));
     }
 
+    const AbstractTask &get_abstract_task() const {
+        return *task;
+    }
+
     const causal_graph::CausalGraph &get_causal_graph() const;
 };
 
