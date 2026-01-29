@@ -26,7 +26,7 @@ class ASharp : public SearchAlgorithm {
     void start_f_value_statistics(EvaluationContext &eval_context);
     void update_f_value_statistics(EvaluationContext &eval_context);
     void update_bound(int optimal_plan_cost);
-    void check_cost_variable_bound() const;
+    void check_cost_variable_bound(int cost) const;
 
     void expand(const SearchNode &node);
 protected:

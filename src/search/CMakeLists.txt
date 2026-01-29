@@ -482,6 +482,7 @@ create_fast_downward_library(
     SOURCES
         search_algorithms/asharp
         utils/int_inf
+        tasks/cost_variable_abstracted_task
     DEPENDS
         eager_search
 )

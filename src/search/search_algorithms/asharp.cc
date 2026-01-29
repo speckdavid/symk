@@ -33,7 +33,7 @@ ASharp::ASharp(
     open_list = open_list_factory->create_state_open_list();
     f_evaluator = eval;
 
-    check_cost_variable_bound();
+    check_cost_variable_bound(bound);
 }
 
 void ASharp::initialize() {
@@ -110,8 +110,11 @@ void ASharp::expand(const SearchNode &node) {
 
     for (OperatorID op_id : applicable_ops) {
         OperatorProxy op = task_proxy.get_operators()[op_id];
-        if ((node.get_real_g() + op.get_cost()) >= bound)
+        int successor_cost = node.get_real_g() + op.get_cost();
+        if (successor_cost >= bound)
             continue;
+
+        check_cost_variable_bound(successor_cost + 1);
 
         State succ_state = state_registry.get_successor_state(s, op);
         statistics.inc_generated();
@@ -210,13 +213,13 @@ void ASharp::update_bound(int optimal_plan_cost) {
     bound = min(bound, rel_bound);
 
     if (bound != old_bound) {
-        check_cost_variable_bound();
+        check_cost_variable_bound(bound);
     }
 }
 
-void ASharp::check_cost_variable_bound() const {
+void ASharp::check_cost_variable_bound(int cost) const {
     if (!task_proxy.get_abstract_task().has_cost_variable() ||
-        bound == numeric_limits<int>::max()) {
+        cost == numeric_limits<int>::max()) {
         return;
     }
 
@@ -224,8 +227,8 @@ void ASharp::check_cost_variable_bound() const {
     int cost_var_domain_size =
         task_proxy.get_variables()[cost_var_id].get_domain_size();
 
-    if (bound > cost_var_domain_size) {
-        cerr << "Error: The bound (" << bound << ") exceeds the maximum value "
+    if (cost > cost_var_domain_size) {
+        cerr << "Error: The cost (" << cost << ") exceeds the maximum value "
              << "of the cost variable (" << cost_var_domain_size << "). "
              << "The search cannot reach states with cost >= "
              << cost_var_domain_size << "." << endl;
