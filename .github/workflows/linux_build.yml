@@ -8,21 +8,34 @@ on:
   workflow_dispatch: # Optional: allows you to manually trigger the workflow from the GitHub UI
 
 jobs:
-  # Job name
-  build:
-    name: Linux build
-    runs-on: ubuntu-22.04
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
+  # Job 1: Build with GMP
+  build_with_gmp:
+    name: Linux build with gmp
+    runs-on: ubuntu-24.04
     steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Install packages
-      run: sudo apt install cmake g++ make python3 autoconf automake
-    
-    - name: Build release
-      run: ./build.py
-    
-    - name: Build debug
-      run: ./build.py debug
+      - name: Install packages
+      	run: sudo apt install cmake g++ make python3 autoconf automake libgmp-dev
+
+      - name: Build release
+        run: ./build.py
+
+      - name: Build debug
+        run: ./build.py debug
+
+  # Job 2: Build without GMP
+  build_without_gmp:
+    name: Linux build without gmp
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install packages
+        run: sudo apt install cmake g++ make python3 autoconf automake
+
+      - name: Build release
+        run: ./build.py
+
+      - name: Build debug
+        run: ./build.py debug

@@ -34,10 +34,10 @@ We appreciate citations when SymK is used in a scientific context (see [Referenc
 ### Dependencies
 Currently we only support Linux systems. The following should install all necessary dependencies.
 ```console
-sudo apt-get -y install cmake g++ make python3 autoconf automake
+sudo apt-get -y install cmake g++ make python3 autoconf automake libgmp-dev
 ```
 
-SymK should compile on MacOS with the GNU C++ compiler and clang with the same instructions described above.
+SymK should compile on MacOS with the GNU C++ compiler and clang with the same instructions described.
  
 ### Compiling the SymK Planner
 ```console

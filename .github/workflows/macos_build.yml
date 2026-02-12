@@ -8,21 +8,34 @@ on:
   workflow_dispatch: # Optional: allows you to manually trigger the workflow from the GitHub UI
 
 jobs:
-  # Job name
-  build:
-    name: MacOS build
+  # Job 1: Build with GMP
+  build_with_gmp:
+    name: MacOS build with gmp
     runs-on: macos-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Install packages
-      run: brew install cmake make python3 autoconf automake gcc
-    
-    - name: Build release
-      run: ./build.py
-    
-    - name: Build debug
-      run: ./build.py debug
+      - name: Install packages
+      	run: brew install cmake make python3 autoconf automake gcc gmp
+
+      - name: Build release
+        run: ./build.py
+
+      - name: Build debug
+        run: ./build.py debug
+
+  # Job 2: Build without GMP
+  build_with_gmp:
+    name: MacOS build without gmp
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install packages
+        run: brew install cmake make python3 autoconf automake gcc
+
+      - name: Build release
+        run: ./build.py
+
+      - name: Build debug
+        run: ./build.py debug
