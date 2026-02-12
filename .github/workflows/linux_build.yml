@@ -5,7 +5,7 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
-  workflow_dispatch: # Optional: allows you to manually trigger the workflow from the GitHub UI
+  workflow_dispatch: # Optional: allows manual triggering
 
 jobs:
   # Job 1: Build with GMP
@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install packages
-      	run: sudo apt install cmake g++ make python3 autoconf automake libgmp-dev
+        run: sudo apt install -y cmake g++ make python3 autoconf automake libgmp-dev
 
       - name: Build release
         run: ./build.py
@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install packages
-        run: sudo apt install cmake g++ make python3 autoconf automake
+        run: sudo apt install -y cmake g++ make python3 autoconf automake
 
       - name: Build release
         run: ./build.py
