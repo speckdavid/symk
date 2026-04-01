@@ -21,8 +21,7 @@ class InfluenceGraph {
         std::vector<int> &order, int iterations) const;
     double compute_function(const std::vector<int> &order) const;
     void optimize_ordering_gamer(std::vector<int> &ordering) const;
-    void randomize(
-        std::vector<int> &ordering, std::vector<int> &new_order) const;
+    std::vector<int> randomize(const std::vector<int> &ordering) const;
 
 public:
     InfluenceGraph(int num);

@@ -6,6 +6,7 @@ import itertools
 from translate import normalize
 from translate import pddl
 from translate import timers
+from translate.options import get_options
 
 class PrologProgram:
     def __init__(self):
@@ -181,6 +182,6 @@ if __name__ == "__main__":
 
     set_options() # use command line options
     task = pddl_parser.open()
-    normalize.normalize(task)
+    normalize.normalize(task, get_options().normalization_strategy)
     prog = translate(task)
     prog.dump()

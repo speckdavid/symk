@@ -277,6 +277,36 @@ def move_existential_quantifiers(task):
         if proxy.condition.has_existential_part():
             proxy.set(recurse(proxy.condition).simplified())
 
+# [4-axiom] We replace every construct that is not a condition of the form "and of literals" with an axiom,
+# and replace the condition by a literal using that axiom. This is an alternative to the DNF-based approach
+# that can be used if we want to avoid the potential exponential blow-up of DNF.
+def substitute_conditions_with_axioms(task):
+    def recurse(condition, type_map):
+        if isinstance(condition, pddl.Literal) or isinstance(condition, pddl.Truth) or isinstance(condition, pddl.Falsity):
+            return condition
+        elif isinstance(condition, pddl.Conjunction) or isinstance(condition, pddl.ExistentialCondition):
+            # Conjunctions and existential conditions are handled by recursion
+            # on their parts.
+            new_parts = [recurse(part, type_map) for part in condition.parts]
+            condition = condition.change_parts(new_parts)
+            return condition
+        parameters = sorted(condition.free_variables())
+        typed_parameters = tuple(pddl.TypedObject(v, type_map[v]) for v in parameters)
+        axiom = new_axioms_by_condition.get((condition, typed_parameters))
+        if not axiom:
+            new_parts = [recurse(part, type_map) for part in condition.parts]
+            condition = condition.change_parts(new_parts)
+            axiom = task.add_axiom(list(typed_parameters), condition)
+            new_axioms_by_condition[(condition, typed_parameters)] = axiom
+        return pddl.Atom(axiom.name, parameters)
+
+    new_axioms_by_condition = {}
+    for proxy in tuple(all_conditions(task)):
+        # Cannot use generator because we add new axioms on the fly.
+        if not isinstance(proxy.condition, pddl.Literal):
+            type_map = proxy.get_type_map()
+            proxy.set(recurse(proxy.condition, type_map))
+
 
 # [5a] Drop existential quantifiers from axioms, turning them
 #      into parameters.
@@ -337,13 +367,38 @@ def substitute_complicated_goal(task):
     new_axiom = task.add_axiom([], goal)
     task.goal = pddl.Atom(new_axiom.name, new_axiom.parameters)
 
+
+def normalize(task, normalization_strategy):
+    if normalization_strategy == "dnf":
+        normalize_dnf(task)
+    elif normalization_strategy == "axiom_based":
+        normalize_axiom_based(task)
+    else:
+        raise ValueError(f"Unknown normalization strategy: {normalization_strategy}")
+
 # Combine Steps [1], [2], [3], [4], [5] and do some additional verification
 # that the task makes sense.
 
-def normalize(task):
+def normalize_dnf(task):
     remove_universal_quantifiers(task)
     substitute_complicated_goal(task)
     build_DNF(task)
+    split_disjunctions(task)
+    move_existential_quantifiers(task)
+    eliminate_existential_quantifiers_from_axioms(task)
+    eliminate_existential_quantifiers_from_preconditions(task)
+    eliminate_existential_quantifiers_from_conditional_effects(task)
+
+    verify_axiom_predicates(task)
+
+# Combine Steps [1], [2], [3], [4-axiom], [5] and do some additional verification
+# that the task makes sense.
+# Note that this is a different normalization strategy that does not produce
+# naive DNF, but a form where all conditions are just literals using axioms.
+
+def normalize_axiom_based(task):
+    remove_universal_quantifiers(task)
+    substitute_conditions_with_axioms(task)
     split_disjunctions(task)
     move_existential_quantifiers(task)
     eliminate_existential_quantifiers_from_axioms(task)
@@ -427,9 +482,9 @@ def condition_to_rule_body(parameters: Sequence[pddl.TypedObject],
 
 if __name__ == "__main__":
     from translate import pddl_parser
-    from translate.options import set_options
+    from translate.options import set_options, get_options
 
     set_options() # use command line options
     task = pddl_parser.open()
-    normalize(task)
+    normalize(task, get_options().normalization_strategy)
     task.dump()

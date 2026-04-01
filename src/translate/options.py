@@ -83,6 +83,12 @@ def parse_args(args=None):
         help="How to assign layers to derived variables. 'min' attempts to put as "
         "many variables into the same layer as possible, while 'max' puts each variable "
         "into its own layer unless it is part of a cycle.")
+    argparser.add_argument(
+        "--normalization-strategy", default="axiom_based", choices=["dnf", "axiom_based"],
+        help="Strategy for normalizing PDDL conditions. 'dnf' uses disjunctive normal form "
+        "which may cause exponential blow-up for complex conditions. 'axiom_based' uses "
+        "axioms to represent complex conditions, avoiding blow-up but potentially "
+        "increasing the number of axioms.")
     return argparser.parse_args(args)
 
 

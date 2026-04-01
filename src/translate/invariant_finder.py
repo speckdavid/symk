@@ -158,7 +158,7 @@ if __name__ == "__main__":
     print("Parsing...")
     task = pddl_parser.open()
     print("Normalizing...")
-    normalize.normalize(task)
+    normalize.normalize(task, get_options().normalization_strategy)
     print("Finding invariants...")
     print("NOTE: not passing in reachable_action_params.")
     print("This means fewer invariants might be found.")

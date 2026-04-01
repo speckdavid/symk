@@ -36,10 +36,6 @@ void InfluenceGraph::compute_gamer_ordering(
     }
 
     ig_partitions.get_ordering(var_order);
-
-    // utils::g_log << "Var ordering: ";
-    // for(int v : var_order) utils::g_log << v << " ";
-    // utils::g_log  << endl;
 }
 
 void InfluenceGraph::get_ordering(vector<int> &ordering) const {
@@ -49,8 +45,11 @@ void InfluenceGraph::get_ordering(vector<int> &ordering) const {
         optimize_variable_ordering_gamer(ordering, 50000);
 
     for (int counter = 0; counter < 20; counter++) {
-        vector<int> new_order;
-        randomize(ordering, new_order); // Copy the order randomly
+        if (timer() > 30.0) {
+            utils::g_log << "Timeout: exceeded 30 seconds! " << endl;
+            break;
+        }
+        vector<int> new_order = randomize(ordering); // Copy the order randomly
         double new_value = optimize_variable_ordering_gamer(new_order, 50000);
 
         if (new_value < value_optimization_function) {
@@ -61,28 +60,10 @@ void InfluenceGraph::get_ordering(vector<int> &ordering) const {
     utils::g_log << "done!" << " [t=" << timer << "]" << endl;
 }
 
-void InfluenceGraph::randomize(
-    vector<int> &ordering, vector<int> &new_order) const {
-    for (size_t i = 0; i < ordering.size(); i++) {
-        int rnd_pos = rng->random(ordering.size() - i);
-        int pos = -1;
-        do {
-            pos++;
-            bool found;
-            do {
-                found = false;
-                for (size_t j = 0; j < new_order.size(); j++) {
-                    if (new_order[j] == ordering[pos]) {
-                        found = true;
-                        break;
-                    }
-                }
-                if (found)
-                    pos++;
-            } while (found);
-        } while (rnd_pos-- > 0);
-        new_order.push_back(ordering[pos]);
-    }
+vector<int> InfluenceGraph::randomize(const vector<int> &ordering) const {
+    vector<int> new_order = ordering;
+    rng->shuffle(new_order);
+    return new_order;
 }
 
 double InfluenceGraph::optimize_variable_ordering_gamer(
