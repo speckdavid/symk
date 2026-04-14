@@ -277,9 +277,10 @@ def move_existential_quantifiers(task):
         if proxy.condition.has_existential_part():
             proxy.set(recurse(proxy.condition).simplified())
 
-# [4-axiom] We replace every construct that is not a condition of the form "and of literals" with an axiom,
-# and replace the condition by a literal using that axiom. This is an alternative to the DNF-based approach
-# that can be used if we want to avoid the potential exponential blow-up of DNF.
+# [2-axiom] Alternative to [2] (build_DNF):
+# We replace every construct that is not a condition of the form "and of literals" with an axiom,
+# and replace the condition by a literal using that axiom. This can be used if we want to avoid
+# the potential exponential blow-up of DNF.
 def substitute_conditions_with_axioms(task):
     def recurse(condition, type_map):
         if isinstance(condition, pddl.Literal) or isinstance(condition, pddl.Truth) or isinstance(condition, pddl.Falsity):
@@ -391,7 +392,7 @@ def normalize_dnf(task):
 
     verify_axiom_predicates(task)
 
-# Combine Steps [1], [2], [3], [4-axiom], [5] and do some additional verification
+# Combine Steps [1], [2-axiom], [3], [4], [5] and do some additional verification
 # that the task makes sense.
 # Note that this is a different normalization strategy that does not produce
 # naive DNF, but a form where all conditions are just literals using axioms.
