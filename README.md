@@ -33,7 +33,7 @@ We appreciate citations when SymK is used in a scientific context (see [Referenc
 SymK is primarily developed and tested on Linux; macOS is supported but not extensively tested.
 
 ### Python Package
-SymK is integrated as a package in the unified-planning library which can be installed using `pip`
+SymK is integrated as a package in the unified-planning library which can be installed using `pip`.
 
 ```console
 pip install unified-planning
@@ -69,7 +69,7 @@ sudo apt-get -y install cmake g++ make python3 autoconf automake
 
 For macOS one can build SymK using the clang or gcc compiler and some additional packages (e.g., `brew install cmake make python3 autoconf automake gcc`).
 
-Then execute the build step and run the desired configuration (see below for additional configurations)
+Then execute the build step and run the desired configuration (see below for additional configurations).
 ```console
 ./build.py
 
