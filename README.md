@@ -13,7 +13,7 @@ We appreciate citations when SymK is used in a scientific context (see [Referenc
 
 ## Table of Contents  
 - [Getting Started](#getting-started)
-  - [Dependencies](#dependencies)
+  - [Python Package](#python-package)
   - [Compiling the SymK Planner](#compiling-the-symk-planner)
   - [Apptainer Image](#apptainer-image)
 - [Single Optimal Solution](#single-optimal-solution)
@@ -30,19 +30,68 @@ We appreciate citations when SymK is used in a scientific context (see [Referenc
 - [License](#license)
 
 ## Getting Started
+SymK is developed and tested mainly for Linux but should also run under MacOS.
 
-### Dependencies
-Currently we only support Linux systems. The following should install all necessary dependencies.
+### Python Package
+SymK is integrated as a package in the unified-planning library which can be installed using `pip`
+
+```console
+pip install unified-planning
+pip install up-symk
+```
+
+You can then execute it as follows.
+
+```python
+from unified_planning.shortcuts import *
+from unified_planning.io import PDDLReader
+import up_symk
+
+problem = PDDLReader().parse_problem("domain.pddl", "problem.pddl")
+
+# Single plan
+with OneshotPlanner(name='symk-opt') as planner:
+    result = planner.solve(problem)
+
+    if result.status in up.engines.results.POSITIVE_OUTCOMES:
+        print(f"{planner.name} found this plan: {result.plan}")
+    else:
+        print(f"{planner.name} did not find a plan.")
+
+get_environment().credits_stream = None
+
+# Multiple plans
+plans = []
+with AnytimePlanner(name='symk-opt', params={"number_of_plans": 3}) as planner:
+    for i, result in enumerate(planner.get_solutions(problem)):
+        # Intermediate solution
+        if result.status == up.engines.PlanGenerationResultStatus.INTERMEDIATE:
+            plans.append(result.plan)
+            print(f"Plan {len(plans)}: {result.plan}")
+            print()
+        # Final successful termination
+        elif result.status in up.engines.results.POSITIVE_OUTCOMES:
+            print(f"{planner.name} finished after finding {len(plans)} plan(s).")
+```
+
+A more detailed explanation on how to use SymK for finding single plans or multiple plans in this [notebook](https://github.com/speckdavid/up-symk/blob/master/notebooks/symk_usage.ipynb).
+
+
+### Compiling the SymK Planner
+For Linux systems, the following should install all necessary dependencies.
 ```console
 sudo apt-get -y install cmake g++ make python3 autoconf automake
 ```
 
-SymK should compile on MacOS with the GNU C++ compiler and clang with the same instructions described above.
- 
-### Compiling the SymK Planner
+For MacOS one can use the clang or gcc compiler and install the corresponding packages (e.g. `brew install cmake make python3 autoconf automake gcc`)
+
+Then execute the build step and run the desired configuration (see below for additional configurations)
 ```console
-./build.py 
+./build.py
+
+./fast-downward.py domain.pddl problem.pddl --search "sym_bd()"
 ```
+
 
 ### Apptainer Image
 To simplify the installation process, we alternatively provide an executable [Apptainer](https://apptainer.org/) container (formerly known as Singularity). It accepts the same arguments as SymK (`fast-downward.py` script; see below).
