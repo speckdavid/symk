@@ -197,7 +197,7 @@ If you use this software, we kindly ask you to cite the relevant publications li
 
 ### Conditional Effects Support
 
- - David Speck, Malte Helmert: *On Performance Guarantees for Symbolic Search in Classical Planning*. ECAI 2025 [[bib & more]](https://speckdavid.github.io/publications/#speck-helmert-ecai2025)
+ - David Speck, Malte Helmert: *On Performance Guarantees for Symbolic Search in Classical Planning*. ECAI 2025: 4628-4636 [[pdf]](https://speckdavid.github.io/assets/pdf/speck-helmert-ecai2025.pdf) [[bib & more]](https://speckdavid.github.io/publications/#speck-helmert-ecai2025)
 
 ### Axiom and Derived Predicate Support
 
