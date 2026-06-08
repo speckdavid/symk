@@ -13,7 +13,7 @@ We appreciate citations when SymK is used in a scientific context (see [Referenc
 
 ## Table of Contents  
 - [Getting Started](#getting-started)
-  - [Dependencies](#dependencies)
+  - [Python Package](#python-package)
   - [Compiling the SymK Planner](#compiling-the-symk-planner)
   - [Apptainer Image](#apptainer-image)
 - [Single Optimal Solution](#single-optimal-solution)
@@ -25,24 +25,60 @@ We appreciate citations when SymK is used in a scientific context (see [Referenc
 - [Plan Selection Framework](#plan-selection-framework)
   - [Unordered Plan Selector](#unordered-plan-selector)
   - [New Plan Selector](#new-plan-selector)
+- [Plan Counting with A#](#plan-counting-with-a)
+  - [Optimal Plan Counting](#optimal-plan-counting)
+  - [Cost-Bounded Plan Counting](#cost-bounded-plan-counting)
 - [Pitfalls and Troubleshooting](#pitfalls-and-troubleshooting)
 - [References](#references)
 - [License](#license)
 
 ## Getting Started
+SymK is primarily developed and tested on Linux; macOS is supported but not extensively tested.
 
-### Dependencies
-Currently we only support Linux systems. The following should install all necessary dependencies.
+### Python Package
+SymK is integrated as a package in the unified-planning library which can be installed using `pip`.
+
+```console
+pip install unified-planning
+pip install up-symk
+```
+
+You can then execute it as follows.
+
+```python
+from unified_planning.shortcuts import *
+from unified_planning.io import PDDLReader
+import up_symk
+
+problem = PDDLReader().parse_problem("domain.pddl", "problem.pddl")
+
+with OneshotPlanner(name='symk-opt') as planner:
+    result = planner.solve(problem)
+
+    if result.status in up.engines.results.POSITIVE_OUTCOMES:
+        print(f"{planner.name} found this plan: {result.plan}")
+    else:
+        print(f"{planner.name} did not find a plan.")
+```
+
+A more detailed explanation on how to use SymK for finding single or multiple plans can be found in this [notebook](https://github.com/speckdavid/up-symk/blob/master/notebooks/symk_usage.ipynb).
+
+
+### Compiling the SymK Planner
+For Linux systems, the following should install all necessary dependencies.
 ```console
 sudo apt-get -y install cmake g++ make python3 autoconf automake libgmp-dev
 ```
 
-SymK should compile on MacOS with the GNU C++ compiler and clang with the same instructions described.
- 
-### Compiling the SymK Planner
+For macOS one can build SymK using the clang or gcc compiler and some additional packages (e.g., `brew install cmake make python3 autoconf automake gcc gmp`).
+
+Then execute the build step and run the desired configuration (see below for additional configurations).
 ```console
-./build.py 
+./build.py
+
+./fast-downward.py domain.pddl problem.pddl --search "sym_bd()"
 ```
+
 
 ### Apptainer Image
 To simplify the installation process, we alternatively provide an executable [Apptainer](https://apptainer.org/) container (formerly known as Singularity). It accepts the same arguments as SymK (`fast-downward.py` script; see below).
@@ -55,7 +91,7 @@ apptainer pull symk.sif oras://ghcr.io/speckdavid/symk:latest
 apptainer build symk.sif Apptainer
 
 # Run SymK with the desired configuration (see below for additional configurations)
-./symk.sif domain.pddl problem.pddl --search "sym_bd()"
+apptainer run symk.sif domain.pddl problem.pddl --search "sym_bd()"
 ```
 
 ## Single Optimal Solution
@@ -116,7 +152,7 @@ For this purpose it is possible to write your own plan selector. During the sear
 An example of a plan selector is the [unordered_selector](src/search/symbolic/plan_selection/unordered_selector.cc), which considers two plans as equivalent if their action multi-sets are equivalent. In other words, plans with the same multi-set of actions form an equivalence class and only one representative plan is reported for each equivalence class.
 Note that plan selectors can be combined with the different planning configurations.
 
-We recommend to use the following configurations which use bidirectional search.
+We recommend using the following configurations which use bidirectional search.
 
 #### Unordered Top-k:
 ```console
@@ -141,6 +177,28 @@ Finally, if you want to find a plan with your *awesome_selector* selector (the n
 
 Note, that you can also search for the best **k** plans using your selector.
 
+## Plan Counting with A\#
+
+For pure plan counting, we recommend using heuristic state-space search with A\# rather than symbolic search for plan enumeration.
+Currently, A\# supports only planning tasks without zero-cost actions. In addition, the heuristic must be consistent and support all features used in the planning task.
+
+### Optimal Plan Counting
+
+The following command counts all optimal plans using the CEGAR heuristic.
+
+The `quality` parameter specifies a relative multiplier of the optimal plan cost. When set to `1.0`, only optimal plans are counted. Values greater than `1.0` count prefix-optimal plans, i.e., plans whose visited states are always reached at optimal cost.
+
+```console
+./fast-downward.py domain.pddl problem.pddl --search "asharp(cegar(),quality=1.0)"
+```
+
+### Cost-Bounded Plan Counting
+
+The following command counts all plans with cost at most a given bound (here: 10) using the CEGAR heuristic.
+
+```console
+./fast-downward.py domain.pddl problem.pddl --add-cost-variable 10 --search "asharp(cegar(),quality=infinity,bound=10)"
+```
 ## Pitfalls and Troubleshooting
 By default, the planner performs a relevance analysis and removes components such as variables and actions that are irrelevant to achieving the goal. Although such variables and actions can in principle lead to further (simple) plans, they are classified as irrelevant and removed when translating PDDL to SAS+. If you wish to **obtain all plans** (even the non-relevant ones), please use the following options. Note that this can have a negative impact on the performance of the planner.
 
