@@ -197,7 +197,7 @@ The `quality` parameter specifies a relative multiplier of the optimal plan cost
 The following command counts all plans with cost at most a given bound (here: 10) using the CEGAR heuristic.
 
 ```console
-./fast-downward.py domain.pddl problem.pddl --add-cost-variable 10 --search "asharp(cegar(),quality=infinity,bound=10)"
+./fast-downward.py domain.pddl problem.pddl --add-cost-variable 10 --search "asharp(cegar(transform=abstract_cost_variable()),quality=infinity,bound=10)"
 ```
 ## Pitfalls and Troubleshooting
 By default, the planner performs a relevance analysis and removes components such as variables and actions that are irrelevant to achieving the goal. Although such variables and actions can in principle lead to further (simple) plans, they are classified as irrelevant and removed when translating PDDL to SAS+. If you wish to **obtain all plans** (even the non-relevant ones), please use the following options. Note that this can have a negative impact on the performance of the planner.
