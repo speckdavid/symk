@@ -226,6 +226,36 @@ def build_DNF(task):
         if proxy.condition.has_disjunction():
             proxy.set(recurse(proxy.condition).simplified())
 
+# [2 Alternative] Decompose disjunctive formulas using derived predicates.
+# Replace each disjunctive subformula with a derived predicate and add a
+# corresponding axiom defining that predicate. The transformation proceeds
+# bottom-up so nested disjunctions are eliminated first.
+def substitute_conditions_with_axioms(task):
+    def recurse(condition, type_map):
+        if isinstance(condition, (pddl.Literal, pddl.Truth, pddl.Falsity)):
+            return condition
+        elif isinstance(condition, (pddl.Conjunction, pddl.ExistentialCondition)):
+            new_parts = [recurse(part, type_map) for part in condition.parts]
+            condition = condition.change_parts(new_parts)
+            return condition
+        parameters = sorted(condition.free_variables())
+        typed_parameters = tuple(pddl.TypedObject(v, type_map[v]) for v in parameters)
+        key = (condition, typed_parameters)
+        axiom = new_axioms_by_condition.get(key)
+        if not axiom:
+            new_parts = [recurse(part, type_map) for part in condition.parts]
+            condition = condition.change_parts(new_parts)
+            axiom = task.add_axiom(list(typed_parameters), condition)
+            new_axioms_by_condition[key] = axiom
+        return pddl.Atom(axiom.name, parameters)
+
+    new_axioms_by_condition = {}
+
+    for proxy in tuple(all_conditions(task)):
+        # Cannot use generator because we add new axioms on the fly.
+        type_map = proxy.get_type_map()
+        proxy.set(recurse(proxy.condition, type_map))
+
 # [3] Split conditions at the outermost disjunction.
 def split_disjunctions(task):
     for proxy in tuple(all_conditions(task)):
@@ -276,37 +306,6 @@ def move_existential_quantifiers(task):
     for proxy in all_conditions(task):
         if proxy.condition.has_existential_part():
             proxy.set(recurse(proxy.condition).simplified())
-
-# [2-axiom] Alternative to [2] (build_DNF):
-# We replace every construct that is not a condition of the form "and of literals" with an axiom,
-# and replace the condition by a literal using that axiom. This can be used if we want to avoid
-# the potential exponential blow-up of DNF.
-def substitute_conditions_with_axioms(task):
-    def recurse(condition, type_map):
-        if isinstance(condition, pddl.Literal) or isinstance(condition, pddl.Truth) or isinstance(condition, pddl.Falsity):
-            return condition
-        elif isinstance(condition, pddl.Conjunction) or isinstance(condition, pddl.ExistentialCondition):
-            # Conjunctions and existential conditions are handled by recursion
-            # on their parts.
-            new_parts = [recurse(part, type_map) for part in condition.parts]
-            condition = condition.change_parts(new_parts)
-            return condition
-        parameters = sorted(condition.free_variables())
-        typed_parameters = tuple(pddl.TypedObject(v, type_map[v]) for v in parameters)
-        axiom = new_axioms_by_condition.get((condition, typed_parameters))
-        if not axiom:
-            new_parts = [recurse(part, type_map) for part in condition.parts]
-            condition = condition.change_parts(new_parts)
-            axiom = task.add_axiom(list(typed_parameters), condition)
-            new_axioms_by_condition[(condition, typed_parameters)] = axiom
-        return pddl.Atom(axiom.name, parameters)
-
-    new_axioms_by_condition = {}
-    for proxy in tuple(all_conditions(task)):
-        # Cannot use generator because we add new axioms on the fly.
-        if not isinstance(proxy.condition, pddl.Literal):
-            type_map = proxy.get_type_map()
-            proxy.set(recurse(proxy.condition, type_map))
 
 
 # [5a] Drop existential quantifiers from axioms, turning them
