@@ -133,14 +133,17 @@ def get_axiom_predicate(axiom):
 def get_pne_definition_predicate(pne: pddl.PrimitiveNumericExpression):
     return pddl.Atom(f"@def-{pne.symbol}", pne.args)
 
-def all_conditions(task):
-    for action in task.actions:
-        yield PreconditionProxy(action)
-        for effect in action.effects:
-            yield EffectConditionProxy(action, effect)
-    for axiom in task.axioms:
-        yield AxiomConditionProxy(axiom)
-    yield GoalConditionProxy(task)
+def all_conditions(task, actions=True, axioms=True, goal=True):
+    if actions:
+        for action in task.actions:
+            yield PreconditionProxy(action)
+            for effect in action.effects:
+                yield EffectConditionProxy(action, effect)
+    if axioms:
+        for axiom in task.axioms:
+            yield AxiomConditionProxy(axiom)
+    if goal:
+        yield GoalConditionProxy(task)
 
 # [1] Remove universal quantifications from conditions.
 #
@@ -226,24 +229,26 @@ def build_DNF(task):
         if proxy.condition.has_disjunction():
             proxy.set(recurse(proxy.condition).simplified())
 
-# [2 Alternative] Decompose disjunctive formulas using derived predicates.
-# Replace each disjunctive subformula with a derived predicate and add a
-# corresponding axiom defining that predicate. The transformation proceeds
-# bottom-up so nested disjunctions are eliminated first.
+# [2 Alternative]
+# Remove disjunctions and existential conditions from actions and axioms by
+# replacing each such subformula with a derived predicate and adding an
+# axiom that defines it. The transformation proceeds bottom-up so nested
+# disjunctions are eliminated first.
 def substitute_conditions_with_axioms(task):
-    def recurse(condition, type_map):
+    def recurse(condition, type_map, replace_types):
         if isinstance(condition, (pddl.Literal, pddl.Truth, pddl.Falsity)):
             return condition
-        elif isinstance(condition, (pddl.Conjunction, pddl.ExistentialCondition)):
-            new_parts = [recurse(part, type_map) for part in condition.parts]
+        elif not isinstance(condition, replace_types):
+            new_parts = [recurse(part, type_map, replace_types) for part in condition.parts]
             condition = condition.change_parts(new_parts)
             return condition
+        assert isinstance(condition, replace_types)
         parameters = sorted(condition.free_variables())
         typed_parameters = tuple(pddl.TypedObject(v, type_map[v]) for v in parameters)
         key = (condition, typed_parameters)
         axiom = new_axioms_by_condition.get(key)
         if not axiom:
-            new_parts = [recurse(part, type_map) for part in condition.parts]
+            new_parts = [recurse(part, type_map, replace_types) for part in condition.parts]
             condition = condition.change_parts(new_parts)
             axiom = task.add_axiom(list(typed_parameters), condition)
             new_axioms_by_condition[key] = axiom
@@ -251,10 +256,15 @@ def substitute_conditions_with_axioms(task):
 
     new_axioms_by_condition = {}
 
-    for proxy in tuple(all_conditions(task)):
+    for proxy in tuple(all_conditions(task, actions=False, axioms=True, goal=False)):
         # Cannot use generator because we add new axioms on the fly.
         type_map = proxy.get_type_map()
-        proxy.set(recurse(proxy.condition, type_map))
+        proxy.set(recurse(proxy.condition, type_map, (pddl.Disjunction)))
+
+    for proxy in tuple(all_conditions(task, actions=True, axioms=False, goal=True)):
+        # Cannot use generator because we add new axioms on the fly.
+        type_map = proxy.get_type_map()
+        proxy.set(recurse(proxy.condition, type_map, (pddl.Disjunction, pddl.ExistentialCondition)))
 
 # [3] Split conditions at the outermost disjunction.
 def split_disjunctions(task):
