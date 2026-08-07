@@ -172,7 +172,8 @@ void SymTransitionRelations::move_monolithic_conj_transitions() {
 }
 
 template<class T>
-int SymTransitionRelations::get_size(map<int, vector<T>> transitions) const {
+int SymTransitionRelations::get_size(
+    const map<int, vector<T>> &transitions) const {
     return accumulate(
         transitions.begin(), transitions.end(), 0,
         [](int sum, const auto &pair) { return sum + pair.second.size(); });
@@ -187,7 +188,7 @@ bool SymTransitionRelations::has_zero_cost_transition() const {
 }
 
 bool SymTransitionRelations::has_unit_cost() const {
-    return transitions.size();
+    return transitions.size() == 1 && transitions.begin()->first > 0;
 }
 
 const map<int, vector<TransitionRelationPtr>> &

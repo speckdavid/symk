@@ -41,7 +41,7 @@ class SymTransitionRelations {
     void move_monolithic_conj_transitions();
 
     template<class T>
-    int get_size(std::map<int, std::vector<T>> transitions) const;
+    int get_size(const std::map<int, std::vector<T>> &transitions) const;
 
 public:
     SymTransitionRelations(

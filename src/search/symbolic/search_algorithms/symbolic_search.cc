@@ -118,6 +118,10 @@ SearchStatus SymbolicSearch::step() {
                      << flush;
         utils::g_log << endl;
     }
+    if (!silent && step_num > 2000) {
+        utils::g_log << "Active silent mode." << endl;
+        silent = true;
+    }
     lower_bound_increased = false;
 
     if (cur_status == SOLVED) {

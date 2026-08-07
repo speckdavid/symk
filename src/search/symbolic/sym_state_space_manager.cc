@@ -71,7 +71,8 @@ void SymStateSpaceManager::zero_image(
 
 void SymStateSpaceManager::cost_preimage(
     BDD bdd, map<int, vector<BDD>> &res, int node_limit) const {
-    for (auto trs : sym_transition_relations.get_transition_relations()) {
+    for (const auto &trs :
+         sym_transition_relations.get_transition_relations()) {
         int cost = trs.first;
         if (cost == 0)
             continue;
@@ -84,7 +85,8 @@ void SymStateSpaceManager::cost_preimage(
 
 void SymStateSpaceManager::cost_image(
     BDD bdd, map<int, vector<BDD>> &res, int node_limit) const {
-    for (auto trs : sym_transition_relations.get_transition_relations()) {
+    for (const auto &trs :
+         sym_transition_relations.get_transition_relations()) {
         int cost = trs.first;
         if (cost == 0)
             continue;
