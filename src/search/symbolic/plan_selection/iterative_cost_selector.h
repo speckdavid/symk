@@ -16,7 +16,8 @@ public:
 
     virtual void init(
         std::shared_ptr<SymVariables> sym_vars,
-        const std::shared_ptr<AbstractTask> &task, PlanManager &plan_manager);
+        const std::shared_ptr<AbstractTask> &task,
+        PlanManager &plan_manager) override;
 
     virtual bool reconstruct_solutions(int cost) const override;
     virtual void add_plan(const Plan &plan) override;

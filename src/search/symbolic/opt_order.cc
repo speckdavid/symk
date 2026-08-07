@@ -84,12 +84,12 @@ double InfluenceGraph::optimize_variable_ordering_gamer(
             if ((int)i == swapIndex1 || (int)i == swapIndex2)
                 continue;
 
-            if (influence(order[i], order[swapIndex1]))
+            if (influence(order[i], order[swapIndex1]) != 0.0)
                 totalDistance +=
                     (-(i - swapIndex1) * (i - swapIndex1) +
                      (i - swapIndex2) * (i - swapIndex2));
 
-            if (influence(order[i], order[swapIndex2]))
+            if (influence(order[i], order[swapIndex2]) != 0.0)
                 totalDistance +=
                     (-(i - swapIndex2) * (i - swapIndex2) +
                      (i - swapIndex1) * (i - swapIndex1));
@@ -119,7 +119,7 @@ double InfluenceGraph::compute_function(const vector<int> &order) const {
     double totalDistance = 0;
     for (size_t i = 0; i < order.size() - 1; i++) {
         for (size_t j = i + 1; j < order.size(); j++) {
-            if (influence(order[i], order[j])) {
+            if (influence(order[i], order[j]) != 0.0) {
                 totalDistance += (j - i) * (j - i);
             }
         }
@@ -160,12 +160,12 @@ void InfluenceGraph::optimize_variable_ordering_gamer(
             if ((int)i == swapIndex1 || (int)i == swapIndex2)
                 continue;
 
-            if (influence(order[i], order[swapIndex1]))
+            if (influence(order[i], order[swapIndex1]) != 0.0)
                 totalDistance +=
                     (-(i - swapIndex1) * (i - swapIndex1) +
                      (i - swapIndex2) * (i - swapIndex2));
 
-            if (influence(order[i], order[swapIndex2]))
+            if (influence(order[i], order[swapIndex2]) != 0.0)
                 totalDistance +=
                     (-(i - swapIndex2) * (i - swapIndex2) +
                      (i - swapIndex1) * (i - swapIndex1));

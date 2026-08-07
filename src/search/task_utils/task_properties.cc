@@ -218,7 +218,6 @@ void dump_task(
 
     VariablesProxy variables = task_proxy.get_variables();
     utils::g_log << "Variables (" << variables.size() << "):" << endl;
-    int var_id = 0;
     for (VariableProxy var : variables) {
         utils::g_log << "  " << var.get_name() << " (range "
                      << var.get_domain_size() << ")" << endl;
@@ -226,7 +225,6 @@ void dump_task(
             utils::g_log << "    " << val << ": "
                          << var.get_fact(val).get_name() << endl;
         }
-        ++var_id;
     }
     State initial_state = task_proxy.get_initial_state();
     utils::g_log << "Initial state (PDDL):" << endl;
