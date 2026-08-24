@@ -695,7 +695,8 @@ def main():
         task = pddl_parser.open(
             domain_filename=get_options().domain, task_filename=get_options().task)
 
-    with timers.timing(f"Normalizing task with strategy {get_options().normalization_strategy}"):
+    print(f"Normalizing strategy: {get_options().normalization_strategy}")
+    with timers.timing("Normalizing task", True):
         normalize.normalize(task, get_options().normalization_strategy)
 
     if get_options().generate_relaxed_task:

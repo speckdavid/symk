@@ -76,6 +76,11 @@ def parse_args(args=None):
         "--keep-no-ops", action="store_true",
         help="keep operators without effects in the output")
     argparser.add_argument(
+        "--keep-irrelevant-components", dest="keep_irrelevant_components", action="store_true",
+        help="keep variables and actions that are irrelevant to the goal when translating "
+        "to SAS+, so additional non-goal-relevant plans remain available. This can "
+        "significantly hurt planner performance.")
+    argparser.add_argument(
         "--dump-task", action="store_true",
         help="dump human-readable SAS+ representation of the task")
     argparser.add_argument(
@@ -89,7 +94,11 @@ def parse_args(args=None):
         "which may cause exponential blow-up for complex conditions. 'axiom_based' uses "
         "axioms to represent complex conditions, avoiding blow-up but potentially "
         "increasing the number of axioms.")
-    return argparser.parse_args(args)
+    parsed = argparser.parse_args(args)
+    if parsed.keep_irrelevant_components:
+        parsed.filter_unimportant_vars = False
+        parsed.keep_no_ops = True
+    return parsed
 
 
 def get_options():

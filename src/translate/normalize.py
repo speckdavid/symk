@@ -4,6 +4,7 @@ import copy
 from typing import Sequence
 
 from translate import pddl
+from translate.options import get_options
 
 class ConditionProxy:
     def clone_owner(self):
@@ -364,6 +365,13 @@ def eliminate_existential_quantifiers_from_conditional_effects(task):
                 effect.parameters.extend(condition.parameters)
                 effect.condition = condition.parts[0]
 
+def substitute_goal(task):
+    print("Substituting goal with derived predicate.")
+    goal = task.goal
+    new_axiom = task.add_axiom([], goal)
+    task.goal = pddl.Atom(new_axiom.name, new_axiom.parameters)
+
+
 def substitute_complicated_goal(task):
     goal = task.goal
     if isinstance(goal, pddl.Literal):
@@ -374,8 +382,12 @@ def substitute_complicated_goal(task):
                 break
         else:
             return
-    new_axiom = task.add_axiom([], goal)
-    task.goal = pddl.Atom(new_axiom.name, new_axiom.parameters)
+    substitute_goal(task)
+
+
+def substitute_goal_if_enabled(task):
+    if get_options().keep_irrelevant_components:
+        substitute_goal(task)
 
 
 def normalize(task, normalization_strategy):
@@ -391,7 +403,10 @@ def normalize(task, normalization_strategy):
 
 def normalize_dnf(task):
     remove_universal_quantifiers(task)
-    substitute_complicated_goal(task)
+    if get_options().keep_irrelevant_components:
+        substitute_goal(task)
+    else:
+        substitute_complicated_goal(task)
     build_DNF(task)
     split_disjunctions(task)
     move_existential_quantifiers(task)
@@ -408,6 +423,8 @@ def normalize_dnf(task):
 
 def normalize_axiom_based(task):
     remove_universal_quantifiers(task)
+    if get_options().keep_irrelevant_components:
+        substitute_goal(task)
     substitute_conditions_with_axioms(task)
     split_disjunctions(task)
     move_existential_quantifiers(task)
@@ -492,7 +509,7 @@ def condition_to_rule_body(parameters: Sequence[pddl.TypedObject],
 
 if __name__ == "__main__":
     from translate import pddl_parser
-    from translate.options import set_options, get_options
+    from translate.options import set_options
 
     set_options() # use command line options
     task = pddl_parser.open()

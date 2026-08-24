@@ -175,10 +175,10 @@ Finally, if you want to find a plan with your *awesome_selector* selector (the n
 Note, that you can also search for the best **k** plans using your selector.
 
 ## Pitfalls and Troubleshooting
-By default, the planner performs a relevance analysis and removes components such as variables and actions that are irrelevant to achieving the goal. Although such variables and actions can in principle lead to further (simple) plans, they are classified as irrelevant and removed when translating PDDL to SAS+. If you wish to **obtain all plans** (even the non-relevant ones), please use the following options. Note that this can have a negative impact on the performance of the planner.
+By default, the planner performs a relevance analysis and removes components such as variables and actions that are irrelevant to achieving the goal. Although such variables and actions can in principle lead to further (simple) plans, they are classified as irrelevant and removed when translating PDDL to SAS+. If you wish to **obtain all plans** (even the non-relevant ones), please use the following options. These options are intended to preserve plans that would otherwise be removed by the relevance analysis. Note that this can have a negative impact on the performance of the planner.
 
 ```console
-./fast-downward.py --translate --search domain.pddl problem.pddl --translate-options --keep-no-ops --search-options --search "symk_bd(plan_selection=top_k(num_plans=**k**))"
+./fast-downward.py --translate --search domain.pddl problem.pddl --search "symk_bd(plan_selection=top_k(num_plans=**k**))" --translate-options --keep-irrelevant-components
 ```
 
 # References
