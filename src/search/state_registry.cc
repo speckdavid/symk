@@ -118,6 +118,66 @@ State StateRegistry::get_successor_state(
     }
 }
 
+// On purpose a plain copy of the above method, to avoid the if statement in the
+// inner loop. And to avoid merge conflicts with the above method, which is used
+// in the planner.
+State StateRegistry::get_successor_state(
+    const State &predecessor, const OperatorProxy &op, int cost_variable_id) {
+    assert(!op.is_axiom());
+    /*
+      TODO: ideally, we would not modify state_data_pool here and in
+      insert_id_or_pop_state, but only at one place, to avoid errors like
+      buffer becoming a dangling pointer. This used to be a bug before being
+      fixed in https://issues.fast-downward.org/issue1115.
+    */
+    state_data_pool.push_back(predecessor.get_buffer());
+    PackedStateBin *buffer = state_data_pool[state_data_pool.size() - 1];
+    /* Experiments for issue348 showed that for tasks with axioms it's faster
+       to compute successor states using unpacked data. */
+    if (task_properties::has_axioms(task_proxy)) {
+        predecessor.unpack();
+        vector<int> new_values = predecessor.get_unpacked_values();
+        for (EffectProxy effect : op.get_effects()) {
+            if (does_fire(effect, predecessor)) {
+                FactPair effect_pair = effect.get_fact().get_pair();
+                new_values[effect_pair.var] = effect_pair.value;
+            }
+        }
+
+        int new_cost = new_values[cost_variable_id] + op.get_cost();
+        new_values[cost_variable_id] = new_cost;
+
+        axiom_evaluator.evaluate(new_values);
+        for (size_t i = 0; i < new_values.size(); ++i) {
+            state_packer.set(buffer, i, new_values[i]);
+        }
+        /*
+          NOTE: insert_id_or_pop_state possibly invalidates buffer, hence
+          we use lookup_state to retrieve the state using the correct buffer.
+        */
+        StateID id = insert_id_or_pop_state();
+        return lookup_state(id, move(new_values));
+    } else {
+        for (EffectProxy effect : op.get_effects()) {
+            if (does_fire(effect, predecessor)) {
+                FactPair effect_pair = effect.get_fact().get_pair();
+                state_packer.set(buffer, effect_pair.var, effect_pair.value);
+            }
+        }
+
+        int old_cost = predecessor[cost_variable_id].get_value();
+        int new_cost = old_cost + op.get_cost();
+        state_packer.set(buffer, cost_variable_id, new_cost);
+
+        /*
+          NOTE: insert_id_or_pop_state possibly invalidates buffer, hence
+          we use lookup_state to retrieve the state using the correct buffer.
+        */
+        StateID id = insert_id_or_pop_state();
+        return lookup_state(id);
+    }
+}
+
 int StateRegistry::get_bins_per_state() const {
     return state_packer.get_num_bins();
 }

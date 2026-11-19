@@ -5,24 +5,26 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
-  workflow_dispatch: # Optional: allows you to manually trigger the workflow from the GitHub UI
+  workflow_dispatch: # Optional: allows manual triggering
 
 jobs:
-  # Job name
   build:
     name: Linux build
-    runs-on: ubuntu-22.04
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
+    runs-on: ubuntu-24.04
     steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Install packages
-      run: sudo apt install cmake g++ make python3 autoconf automake
-    
-    - name: Build release
-      run: ./build.py
-    
-    - name: Build debug
-      run: ./build.py debug
+      - name: Install packages
+        run: sudo apt install -y cmake g++ make python3 autoconf automake libgmp-dev
+
+      - name: Build release
+        run: ./build.py
+
+      - name: Build debug
+        run: ./build.py debug
+
+      - name: Build release without GMP
+        run: ./build.py release_no_gmp
+
+      - name: Build debug without GMP
+        run: ./build.py debug_no_gmp

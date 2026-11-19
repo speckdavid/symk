@@ -216,6 +216,16 @@ public:
         const State &predecessor, const OperatorProxy &op);
 
     /*
+      Returns the state that results from applying op to predecessor and
+      registers it if this was not done before. The cost variable is updated to
+      the new value. This is an expensive operation as it includes duplicate
+      checking.
+    */
+    State get_successor_state(
+        const State &predecessor, const OperatorProxy &op,
+        int cost_variable_id);
+
+    /*
       Returns the number of states registered so far.
     */
     size_t size() const {

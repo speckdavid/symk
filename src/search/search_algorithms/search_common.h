@@ -72,6 +72,11 @@ extern std::pair<
 create_astar_open_list_factory_and_f_eval(
     const std::shared_ptr<TaskIndependentEvaluator> &h_eval,
     utils::Verbosity verbosity);
+
+extern std::pair<std::shared_ptr<OpenListFactory>, std::shared_ptr<Evaluator>>
+create_asharp_open_list_factory_and_f_eval(
+    const std::shared_ptr<AbstractTask> &task,
+    const std::shared_ptr<Evaluator> &h_eval, utils::Verbosity verbosity);
 }
 
 #endif

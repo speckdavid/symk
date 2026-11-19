@@ -38,6 +38,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include(common_cxx_flags)
 include(macros)
 include(options)
+include(ExternalProject)
 
 report_bitwidth()
 set_up_build_types("Debug;Release")
@@ -485,6 +486,19 @@ create_fast_downward_library(
         ordered_set
         successor_generator
     DEPENDENCY_ONLY
+)
+
+create_fast_downward_library(
+   NAME asharp
+   HELP "ASharp search"
+   SOURCES
+        search_algorithms/asharp
+        tasks/cost_bound_variable_task
+        tasks/cost_bound_variable_abstracted_task
+        utils/int_inf
+   DEPENDS
+       eager_search
+       search_common
 )
 
 create_fast_downward_library(
@@ -1052,36 +1066,62 @@ create_fast_downward_library(
 )
 
 ### Cudd
-include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/ext/cudd-3.0.0/cudd)
-include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/ext/cudd-3.0.0/cplusplus)
-include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/ext/cudd-3.0.0/mtr)
-
-include(ExternalProject)
+# Determine bitwidth flags
 if(${CMAKE_SIZEOF_VOID_P} EQUAL 4)
-    message(STATUS "Building Cudd with 32-bit.")
-    ExternalProject_add(
-        libcudd
-        SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/cudd-3.0.0/
-	CONFIGURE_COMMAND autoreconf ${CMAKE_CURRENT_SOURCE_DIR}/ext/cudd-3.0.0/ && ${CMAKE_CURRENT_SOURCE_DIR}/ext/cudd-3.0.0/configure --enable-obj --enable-silent-rules "CFLAGS=-m32 -g -O3 -w" "CXXFLAGS=-m32 -std=c++0x -g ${CUDD_CXX_FLAGS}" "LDFLAGS=-m32"
-        BUILD_COMMAND make
-        INSTALL_COMMAND ""
-        BUILD_IN_SOURCE 0
-    )
-    target_link_libraries(symbolic INTERFACE ${downward_BINARY_DIR}/libcudd-prefix/src/libcudd-build/cudd/.libs/libcudd.a)
+    set(CUDD_BIT_FLAGS "CFLAGS=-m32 -g -O3 -w" "CXXFLAGS=-m32 -std=c++0x -g ${CUDD_CXX_FLAGS}" "LDFLAGS=-m32")
+    message(STATUS "Configuring Cudd for 32-bit")
 elseif(${CMAKE_SIZEOF_VOID_P} EQUAL 8)
-    message(STATUS "Building Cudd with 64-bit.")
-    ExternalProject_add(
-        libcudd
-        SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ext/cudd-3.0.0/
-        CONFIGURE_COMMAND autoreconf ${CMAKE_CURRENT_SOURCE_DIR}/ext/cudd-3.0.0/ && ${CMAKE_CURRENT_SOURCE_DIR}/ext/cudd-3.0.0/configure --enable-obj --enable-silent-rules "CFLAGS=-m64 -g -O3 -w" "CXXFLAGS=-m64 -std=c++0x -g ${CUDD_CXX_FLAGS}" "LDFLAGS=-m64"
-        BUILD_COMMAND make
-        INSTALL_COMMAND ""
-        BUILD_IN_SOURCE 0
-    )
-    target_link_libraries(symbolic INTERFACE ${downward_BINARY_DIR}/libcudd-prefix/src/libcudd-build/cudd/.libs/libcudd.a)
+    set(CUDD_BIT_FLAGS "CFLAGS=-m64 -g -O3 -w" "CXXFLAGS=-m64 -std=c++0x -g ${CUDD_CXX_FLAGS}" "LDFLAGS=-m64")
+    message(STATUS "Configuring Cudd for 64-bit")
 else()
-    message(FATAL_ERROR, "Could not determine bitwidth for Cudd.")
+    message(FATAL_ERROR "Could not determine bitwidth for Cudd.")
 endif()
 
-add_dependencies(downward libcudd)
-target_link_libraries(downward INTERFACE ${downward_BINARY_DIR}/libcudd-prefix/src/libcudd-build/cudd/.libs/libcudd.a)
+# Build the external project
+if(CMAKE_GENERATOR MATCHES "Makefiles")
+    set(CUDD_BUILD_COMMAND "$(MAKE)")
+else()
+    set(CUDD_BUILD_COMMAND make)
+endif()
+
+ExternalProject_add(
+    libcudd_external
+    SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ext/cudd-3.0.0/"
+    CONFIGURE_COMMAND autoreconf "${CMAKE_CURRENT_SOURCE_DIR}/ext/cudd-3.0.0/" && 
+                      "${CMAKE_CURRENT_SOURCE_DIR}/ext/cudd-3.0.0/configure" 
+                      --enable-obj --enable-silent-rules ${CUDD_BIT_FLAGS}
+    BUILD_COMMAND ${CUDD_BUILD_COMMAND}
+    INSTALL_COMMAND ""
+    BUILD_IN_SOURCE 0
+)
+
+# Create a proper Imported Target
+add_library(Cudd::Cudd STATIC IMPORTED)
+
+# Define the library location and include headers as interface requirements
+set_target_properties(Cudd::Cudd PROPERTIES
+    IMPORTED_LOCATION "${downward_BINARY_DIR}/libcudd_external-prefix/src/libcudd_external-build/cudd/.libs/libcudd.a"
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/ext/cudd-3.0.0/cudd;${CMAKE_CURRENT_SOURCE_DIR}/ext/cudd-3.0.0/cplusplus;${CMAKE_CURRENT_SOURCE_DIR}/ext/cudd-3.0.0/mtr"
+)
+
+
+add_dependencies(Cudd::Cudd libcudd_external)
+target_link_libraries(symbolic INTERFACE Cudd::Cudd)
+target_link_libraries(downward PRIVATE Cudd::Cudd)
+
+
+### GMP
+find_package(Gmp)
+
+if (Gmp_FOUND)
+    target_compile_definitions(asharp INTERFACE HAS_GMP)
+    target_link_libraries(asharp INTERFACE Gmp::Gmpxx)
+    target_link_libraries(downward PRIVATE Gmp::Gmpxx)
+else()
+    message(WARNING 
+        "GMP library not found. Building without GMP support. "
+        "Plan numbers in 'asharp' will use saturated 64-bit integers. "
+        "Very large counts may result in 'infinity' due to saturation instead of exact values."
+    )
+endif()
+

@@ -126,4 +126,20 @@ create_astar_open_list_factory_and_f_eval(
             evals, false, false);
     return make_pair(open, f);
 }
+
+pair<shared_ptr<OpenListFactory>, shared_ptr<Evaluator>>
+create_asharp_open_list_factory_and_f_eval(
+    const shared_ptr<AbstractTask> &task, const shared_ptr<Evaluator> &h_eval,
+    utils::Verbosity verbosity) {
+    shared_ptr<GEval> g = make_shared<GEval>(task, "asharp.g_eval", verbosity);
+    shared_ptr<Evaluator> f = make_shared<SumEval>(
+        task, vector<shared_ptr<Evaluator>>({g, h_eval}), "asharp.f_eval",
+        verbosity);
+    vector<shared_ptr<Evaluator>> evals = {f, g};
+
+    shared_ptr<OpenListFactory> open =
+        make_shared<tiebreaking_open_list::TieBreakingOpenListFactory>(
+            task, evals, false, false);
+    return make_pair(open, f);
+}
 }
