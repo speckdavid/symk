@@ -11,8 +11,9 @@
 using namespace std;
 
 namespace operator_counting {
-StateEquationConstraints::StateEquationConstraints(utils::Verbosity verbosity)
-    : log(utils::get_log_for_verbosity(verbosity)) {
+StateEquationConstraints::StateEquationConstraints(
+    const shared_ptr<AbstractTask> &task, utils::Verbosity verbosity)
+    : ConstraintGenerator(task), log(utils::get_log_for_verbosity(verbosity)) {
 }
 
 static void add_indices_to_constraint(
@@ -58,7 +59,8 @@ void StateEquationConstraints::add_constraints(
     named_vector::NamedVector<lp::LPConstraint> &constraints, double infinity) {
     for (vector<Proposition> &var_propositions : propositions) {
         for (Proposition &prop : var_propositions) {
-            lp::LPConstraint constraint(-infinity, infinity);
+            lp::LPConstraint constraint(
+                lp::LPConstraintSense::GREATER_EQUAL, -infinity);
             add_indices_to_constraint(constraint, prop.always_produced_by, 1.0);
             add_indices_to_constraint(
                 constraint, prop.sometimes_produced_by, 1.0);
@@ -111,7 +113,7 @@ bool StateEquationConstraints::update_constraints(
                 if (goal_state[var] == value) {
                     ++lower_bound;
                 }
-                lp_solver.set_constraint_lower_bound(
+                lp_solver.set_constraint_rhs(
                     prop.constraint_index, lower_bound);
             }
         }
@@ -120,8 +122,7 @@ bool StateEquationConstraints::update_constraints(
 }
 
 class StateEquationConstraintsFeature
-    : public plugins::TypedFeature<
-          ConstraintGenerator, StateEquationConstraints> {
+    : public plugins::TypedFeature<TaskIndependentConstraintGenerator> {
 public:
     StateEquationConstraintsFeature()
         : TypedFeature("state_equation_constraints") {
@@ -135,24 +136,24 @@ public:
             utils::format_conference_reference(
                 {"Menkes van den Briel", "J. Benton", "Subbarao Kambhampati",
                  "Thomas Vossen"},
-                "An LP-based heuristic for optimal planning",
+                "An LP-Based Heuristic for Optimal Planning",
                 "http://link.springer.com/chapter/10.1007/978-3-540-74970-7_46",
                 "Proceedings of the Thirteenth International Conference on"
                 " Principles and Practice of Constraint Programming (CP 2007)",
                 "651-665", "Springer-Verlag", "2007") +
             utils::format_conference_reference(
                 {"Blai Bonet"},
-                "An admissible heuristic for SAS+ planning obtained from the"
-                " state equation",
+                "An Admissible Heuristic for SAS+ Planning Obtained from the"
+                " State Equation",
                 "http://ijcai.org/papers13/Papers/IJCAI13-335.pdf",
                 "Proceedings of the Twenty-Third International Joint"
                 " Conference on Artificial Intelligence (IJCAI 2013)",
                 "2268-2274", "AAAI Press", "2013") +
             utils::format_conference_reference(
-                {"Florian Pommerening", "Gabriele Roeger", "Malte Helmert",
+                {"Florian Pommerening", "Gabriele Röger", "Malte Helmert",
                  "Blai Bonet"},
-                "LP-based Heuristics for Cost-optimal Planning",
-                "http://www.aaai.org/ocs/index.php/ICAPS/ICAPS14/paper/view/7892/8031",
+                "LP-Based Heuristics for Cost-Optimal Planning",
+                "https://doi.org/10.1609/icaps.v24i1.13621",
                 "Proceedings of the Twenty-Fourth International Conference"
                 " on Automated Planning and Scheduling (ICAPS 2014)",
                 "226-234", "AAAI Press", "2014"));
@@ -160,9 +161,10 @@ public:
         utils::add_log_options_to_feature(*this);
     }
 
-    virtual shared_ptr<StateEquationConstraints> create_component(
+    virtual shared_ptr<TaskIndependentConstraintGenerator> create_component(
         const plugins::Options &opts) const override {
-        return plugins::make_shared_from_arg_tuples<StateEquationConstraints>(
+        return components::make_auto_task_independent_component<
+            StateEquationConstraints, ConstraintGenerator>(
             utils::get_log_arguments_from_options(opts));
     }
 };

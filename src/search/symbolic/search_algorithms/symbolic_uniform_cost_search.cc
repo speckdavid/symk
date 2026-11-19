@@ -73,8 +73,9 @@ void SymbolicUniformCostSearch::initialize() {
 }
 
 SymbolicUniformCostSearch::SymbolicUniformCostSearch(
-    const plugins::Options &opts, bool fw, bool bw, bool alternating)
-    : SymbolicSearch(opts), fw(fw), bw(bw), alternating(alternating) {
+    const shared_ptr<AbstractTask> &task, const plugins::Options &opts,
+    bool fw, bool bw, bool alternating)
+    : SymbolicSearch(task, opts), fw(fw), bw(bw), alternating(alternating) {
 }
 
 void SymbolicUniformCostSearch::new_solution(const SymSolutionCut &sol) {
@@ -85,7 +86,7 @@ void SymbolicUniformCostSearch::new_solution(const SymSolutionCut &sol) {
 }
 
 class SymbolicForwardUniformCostSearchFeature
-    : public plugins::TypedFeature<SearchAlgorithm, SymbolicUniformCostSearch> {
+    : public plugins::TypedFeature<TaskIndependentSearchAlgorithm> {
 public:
     SymbolicForwardUniformCostSearchFeature() : TypedFeature("sym_fw") {
         document_title("Symbolic Forward Uniform Cost Search");
@@ -95,11 +96,13 @@ public:
             "plan_selection", "plan selection strategy", "top_k(num_plans=1)");
     }
 
-    virtual shared_ptr<SymbolicUniformCostSearch> create_component(
+    virtual shared_ptr<TaskIndependentSearchAlgorithm> create_component(
         const plugins::Options &options) const override {
         utils::g_log << "Search Algorithm: Symbolic Forward Uniform Cost Search"
                      << endl;
-        return make_shared<SymbolicUniformCostSearch>(options, true, false);
+        return make_shared<
+            TaskIndependentSymbolicSearch<SymbolicUniformCostSearch>>(
+            options, true, false, false);
     }
 };
 
@@ -107,7 +110,7 @@ static plugins::FeaturePlugin<SymbolicForwardUniformCostSearchFeature>
     _fw_plugin;
 
 class SymbolicBackwardUniformCostSearchFeature
-    : public plugins::TypedFeature<SearchAlgorithm, SymbolicUniformCostSearch> {
+    : public plugins::TypedFeature<TaskIndependentSearchAlgorithm> {
 public:
     SymbolicBackwardUniformCostSearchFeature() : TypedFeature("sym_bw") {
         document_title("Symbolic Backward Uniform Cost Search");
@@ -117,12 +120,14 @@ public:
             "plan_selection", "plan selection strategy", "top_k(num_plans=1)");
     }
 
-    virtual shared_ptr<SymbolicUniformCostSearch> create_component(
+    virtual shared_ptr<TaskIndependentSearchAlgorithm> create_component(
         const plugins::Options &options) const override {
         utils::g_log
             << "Search Algorithm: Symbolic Backward Uniform Cost Search"
             << endl;
-        return make_shared<SymbolicUniformCostSearch>(options, false, true);
+        return make_shared<
+            TaskIndependentSymbolicSearch<SymbolicUniformCostSearch>>(
+            options, false, true, false);
     }
 };
 
@@ -130,7 +135,7 @@ static plugins::FeaturePlugin<SymbolicBackwardUniformCostSearchFeature>
     _bw_plugin;
 
 class SymbolicBidirectionalUniformCostSearchFeature
-    : public plugins::TypedFeature<SearchAlgorithm, SymbolicUniformCostSearch> {
+    : public plugins::TypedFeature<TaskIndependentSearchAlgorithm> {
 public:
     SymbolicBidirectionalUniformCostSearchFeature() : TypedFeature("sym_bd") {
         document_title("Symbolic Bidirectional Uniform Cost Search");
@@ -141,12 +146,13 @@ public:
         this->add_option<bool>("alternating", "alternating", "false");
     }
 
-    virtual shared_ptr<SymbolicUniformCostSearch> create_component(
+    virtual shared_ptr<TaskIndependentSearchAlgorithm> create_component(
         const plugins::Options &options) const override {
         utils::g_log
             << "Search Algorithm: Symbolic Bidirectional Uniform Cost Search"
             << endl;
-        return make_shared<SymbolicUniformCostSearch>(
+        return make_shared<
+            TaskIndependentSymbolicSearch<SymbolicUniformCostSearch>>(
             options, true, true, options.get<bool>("alternating"));
     }
 };

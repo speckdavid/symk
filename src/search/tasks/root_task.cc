@@ -3,7 +3,6 @@
 #include "../axioms.h"
 #include "../mutex_group.h"
 
-#include "../plugins/plugin.h"
 #include "../utils/collections.h"
 #include "../utils/task_lexer.h"
 
@@ -96,14 +95,13 @@ public:
         int op_index, int eff_index, bool is_axiom) const override;
     virtual int convert_operator_index(
         int index, const AbstractTask *ancestor_task) const override;
-
+    virtual vector<MutexGroup> get_mutex_groups() const override;
     virtual int get_num_axioms() const override;
 
     virtual int get_num_goals() const override;
     virtual FactPair get_goal_fact(int index) const override;
 
     virtual vector<int> get_initial_state_values() const override;
-    virtual vector<MutexGroup> get_mutex_groups() const override;
     virtual void convert_ancestor_state_values(
         vector<int> &values, const AbstractTask *ancestor_task) const override;
 };
@@ -940,20 +938,4 @@ void read_root_task(istream &in) {
     TaskParser parser(move(lexer));
     g_root_task = parser.parse();
 }
-
-class RootTaskFeature
-    : public plugins::TypedFeature<AbstractTask, AbstractTask> {
-public:
-    RootTaskFeature() : TypedFeature("no_transform") {
-        document_title("Root task");
-        document_synopsis("No transformation of the input task.");
-    }
-
-    virtual shared_ptr<AbstractTask> create_component(
-        const plugins::Options &) const override {
-        return g_root_task;
-    }
-};
-
-static plugins::FeaturePlugin<RootTaskFeature> _plugin;
 }

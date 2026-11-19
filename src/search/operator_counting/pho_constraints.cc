@@ -16,8 +16,9 @@ using namespace std;
 
 namespace operator_counting {
 PhOConstraints::PhOConstraints(
+    const shared_ptr<AbstractTask> &task,
     const shared_ptr<pdbs::PatternCollectionGenerator> &patterns)
-    : pattern_generator(patterns) {
+    : ConstraintGenerator(task), pattern_generator(patterns) {
 }
 
 void PhOConstraints::initialize_constraints(
@@ -38,7 +39,7 @@ void PhOConstraints::initialize_constraints(
         lp.get_constraints();
     constraint_offset = constraints.size();
     for (const shared_ptr<pdbs::PatternDatabase> &pdb : *pdbs) {
-        constraints.emplace_back(0, lp.get_infinity());
+        constraints.emplace_back(lp::LPConstraintSense::GREATER_EQUAL, 0);
         lp::LPConstraint &constraint = constraints.back();
         for (OperatorProxy op : task_proxy.get_operators()) {
             if (pdbs::is_operator_relevant(pdb->get_pattern(), op)) {
@@ -58,13 +59,13 @@ bool PhOConstraints::update_constraints(
         if (h == numeric_limits<int>::max()) {
             return true;
         }
-        lp_solver.set_constraint_lower_bound(constraint_id, h);
+        lp_solver.set_constraint_rhs(constraint_id, h);
     }
     return false;
 }
 
 class PhOConstraintsFeature
-    : public plugins::TypedFeature<ConstraintGenerator, PhOConstraints> {
+    : public plugins::TypedFeature<TaskIndependentConstraintGenerator> {
 public:
     PhOConstraintsFeature() : TypedFeature("pho_constraints") {
         document_title("Posthoc optimization constraints");
@@ -73,21 +74,24 @@ public:
             " constraint h(s) <= sum_{o in relevant(h)} Count_o. For details,"
             " see" +
             utils::format_conference_reference(
-                {"Florian Pommerening", "Gabriele Roeger", "Malte Helmert"},
+                {"Florian Pommerening", "Gabriele Röger", "Malte Helmert"},
                 "Getting the Most Out of Pattern Databases for Classical Planning",
                 "http://ijcai.org/papers13/Papers/IJCAI13-347.pdf",
                 "Proceedings of the Twenty-Third International Joint"
                 " Conference on Artificial Intelligence (IJCAI 2013)",
                 "2357-2364", "AAAI Press", "2013"));
 
-        add_option<shared_ptr<pdbs::PatternCollectionGenerator>>(
+        add_option<shared_ptr<pdbs::TaskIndependentPatternCollectionGenerator>>(
             "patterns", "pattern generation method", "systematic(2)");
     }
 
-    virtual shared_ptr<PhOConstraints> create_component(
+    virtual shared_ptr<TaskIndependentConstraintGenerator> create_component(
         const plugins::Options &opts) const override {
-        return plugins::make_shared_from_arg_tuples<PhOConstraints>(
-            opts.get<shared_ptr<pdbs::PatternCollectionGenerator>>("patterns"));
+        return components::make_auto_task_independent_component<
+            PhOConstraints, ConstraintGenerator>(
+            opts.get<
+                shared_ptr<pdbs::TaskIndependentPatternCollectionGenerator>>(
+                "patterns"));
     }
 };
 

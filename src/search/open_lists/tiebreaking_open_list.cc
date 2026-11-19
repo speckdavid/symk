@@ -4,6 +4,7 @@
 #include "../open_list.h"
 
 #include "../plugins/plugin.h"
+#include "../utils/markup.h"
 
 #include <cassert>
 #include <deque>
@@ -48,6 +49,7 @@ public:
     virtual bool is_dead_end(EvaluationContext &eval_context) const override;
     virtual bool is_reliable_dead_end(
         EvaluationContext &eval_context) const override;
+    virtual bool is_safe() const override;
 };
 
 template<class Entry>
@@ -135,15 +137,41 @@ bool TieBreakingOpenList<Entry>::is_reliable_dead_end(
     EvaluationContext &eval_context) const {
     for (const shared_ptr<Evaluator> &evaluator : evaluators)
         if (eval_context.is_evaluator_value_infinite(evaluator.get()) &&
-            evaluator->dead_ends_are_reliable())
+            evaluator->is_safe())
             return true;
     return false;
 }
 
+template<class Entry>
+bool TieBreakingOpenList<Entry>::is_safe() const {
+    if (this->only_contains_preferred_entries()) {
+        return false;
+    }
+    assert(!evaluators.empty());
+    if (evaluators[0]->is_safe()) {
+        return true;
+    }
+    // At this point we know that the first evaluator is unsafe.
+    if (allow_unsafe_pruning) {
+        return false;
+    }
+    /*
+      Even if the first evaluator is unsafe we can still ensure
+      completeness if (allow_unsafe_pruning is false and) at least
+      one other evaluator is safe.
+    */
+    auto is_safe = [](const auto &evaluator) { return evaluator->is_safe(); };
+    return ranges::any_of(evaluators, is_safe);
+}
+
 TieBreakingOpenListFactory::TieBreakingOpenListFactory(
+    const shared_ptr<AbstractTask> &task,
     const vector<shared_ptr<Evaluator>> &evals, bool unsafe_pruning,
     bool pref_only)
-    : evals(evals), unsafe_pruning(unsafe_pruning), pref_only(pref_only) {
+    : OpenListFactory(task),
+      evals(evals),
+      unsafe_pruning(unsafe_pruning),
+      pref_only(pref_only) {
     utils::verify_list_not_empty(evals, "evals");
 }
 
@@ -158,14 +186,24 @@ unique_ptr<EdgeOpenList> TieBreakingOpenListFactory::create_edge_open_list() {
 }
 
 class TieBreakingOpenListFeature
-    : public plugins::TypedFeature<
-          OpenListFactory, TieBreakingOpenListFactory> {
+    : public plugins::TypedFeature<TaskIndependentOpenListFactory> {
 public:
     TieBreakingOpenListFeature() : TypedFeature("tiebreaking") {
         document_title("Tie-breaking open list");
-        document_synopsis("");
+        document_synopsis(
+            "Lexicographic tie-breaking between heuristics is discussed in "
+            "the following paper:" +
+            utils::format_conference_reference(
+                {"Gabriele Röger", "Malte Helmert"},
+                "The More, the Merrier: Combining Heuristic Estimators "
+                "for Satisficing Planning",
+                "https://doi.org/10.1609/icaps.v20i1.13435",
+                "Proceedings of the 20th International Conference on "
+                "Automated Planning and Scheduling (ICAPS 2010)",
+                "246-249", "AAAI Press", "2010"));
 
-        add_list_option<shared_ptr<Evaluator>>("evals", "evaluators");
+        add_list_option<shared_ptr<TaskIndependentEvaluator>>(
+            "evals", "evaluators");
         add_option<bool>(
             "unsafe_pruning",
             "allow unsafe pruning when the main evaluator regards a state a dead end",
@@ -173,10 +211,11 @@ public:
         add_open_list_options_to_feature(*this);
     }
 
-    virtual shared_ptr<TieBreakingOpenListFactory> create_component(
+    virtual shared_ptr<TaskIndependentOpenListFactory> create_component(
         const plugins::Options &opts) const override {
-        return plugins::make_shared_from_arg_tuples<TieBreakingOpenListFactory>(
-            opts.get_list<shared_ptr<Evaluator>>("evals"),
+        return components::make_auto_task_independent_component<
+            TieBreakingOpenListFactory, OpenListFactory>(
+            opts.get_list<shared_ptr<TaskIndependentEvaluator>>("evals"),
             opts.get<bool>("unsafe_pruning"),
             get_open_list_arguments_from_options(opts));
     }

@@ -7,8 +7,9 @@ using namespace std;
 
 namespace symbolic {
 TopqSymbolicUniformCostSearch::TopqSymbolicUniformCostSearch(
-    const plugins::Options &opts, bool fw, bool bw, bool alternating)
-    : TopkSymbolicUniformCostSearch(opts, fw, bw, alternating),
+    const shared_ptr<AbstractTask> &task, const plugins::Options &opts,
+    bool fw, bool bw, bool alternating)
+    : TopkSymbolicUniformCostSearch(task, opts, fw, bw, alternating),
       quality_multiplier(opts.get<double>("quality")) {
     utils::g_log << "Quality: " << quality_multiplier << endl;
 }
@@ -86,8 +87,7 @@ SearchStatus TopqSymbolicUniformCostSearch::step() {
 }
 
 class TopqSymbolicForwardUniformCostSearchFeature
-    : public plugins::TypedFeature<
-          SearchAlgorithm, TopqSymbolicUniformCostSearch> {
+    : public plugins::TypedFeature<TaskIndependentSearchAlgorithm> {
 public:
     TopqSymbolicForwardUniformCostSearchFeature() : TypedFeature("symq_fw") {
         document_title("Topq Symbolic Forward Uniform Cost Search");
@@ -100,12 +100,14 @@ public:
             plugins::Bounds("1.0", "infinity"));
     }
 
-    virtual shared_ptr<TopqSymbolicUniformCostSearch> create_component(
+    virtual shared_ptr<TaskIndependentSearchAlgorithm> create_component(
         const plugins::Options &options) const override {
         utils::g_log
             << "Search Algorithm: Topq Symbolic Forward Uniform Cost Search"
             << endl;
-        return make_shared<TopqSymbolicUniformCostSearch>(options, true, false);
+        return make_shared<
+            TaskIndependentSymbolicSearch<TopqSymbolicUniformCostSearch>>(
+            options, true, false, false);
     }
 };
 
@@ -113,8 +115,7 @@ static plugins::FeaturePlugin<TopqSymbolicForwardUniformCostSearchFeature>
     _fw_plugin;
 
 class TopqSymbolicBackwardUniformCostSearchFeature
-    : public plugins::TypedFeature<
-          SearchAlgorithm, TopqSymbolicUniformCostSearch> {
+    : public plugins::TypedFeature<TaskIndependentSearchAlgorithm> {
 public:
     TopqSymbolicBackwardUniformCostSearchFeature() : TypedFeature("symq_bw") {
         document_title("Topq Symbolic Backward Uniform Cost Search");
@@ -127,12 +128,14 @@ public:
             plugins::Bounds("1.0", "infinity"));
     }
 
-    virtual shared_ptr<TopqSymbolicUniformCostSearch> create_component(
+    virtual shared_ptr<TaskIndependentSearchAlgorithm> create_component(
         const plugins::Options &options) const override {
         utils::g_log
             << "Search Algorithm: Topq Symbolic Backward Uniform Cost Search"
             << endl;
-        return make_shared<TopqSymbolicUniformCostSearch>(options, false, true);
+        return make_shared<
+            TaskIndependentSymbolicSearch<TopqSymbolicUniformCostSearch>>(
+            options, false, true, false);
     }
 };
 
@@ -140,8 +143,7 @@ static plugins::FeaturePlugin<TopqSymbolicBackwardUniformCostSearchFeature>
     _bw_plugin;
 
 class TopqSymbolicBidirectionalUniformCostSearchFeature
-    : public plugins::TypedFeature<
-          SearchAlgorithm, TopqSymbolicUniformCostSearch> {
+    : public plugins::TypedFeature<TaskIndependentSearchAlgorithm> {
 public:
     TopqSymbolicBidirectionalUniformCostSearchFeature()
         : TypedFeature("symq_bd") {
@@ -156,12 +158,13 @@ public:
         this->add_option<bool>("alternating", "alternating", "false");
     }
 
-    virtual shared_ptr<TopqSymbolicUniformCostSearch> create_component(
+    virtual shared_ptr<TaskIndependentSearchAlgorithm> create_component(
         const plugins::Options &options) const override {
         utils::g_log
             << "Search Algorithm: Topq Symbolic Bidirectional Uniform Cost Search"
             << endl;
-        return make_shared<TopqSymbolicUniformCostSearch>(
+        return make_shared<
+            TaskIndependentSymbolicSearch<TopqSymbolicUniformCostSearch>>(
             options, true, true, options.get<bool>("alternating"));
     }
 };

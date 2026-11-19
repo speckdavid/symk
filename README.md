@@ -225,7 +225,7 @@ However, you can still find versions of SymK that support both features in the f
 
 **SymK** builds upon and extends several existing systems:
 
-- [**Fast Downward (24.06+)**](http://www.fast-downward.org/): see also [`FD_README.md`](FD_README.md) for licensing and usage information.
+- [**Fast Downward (26.06+)**](http://www.fast-downward.org/): see also [`FD_README.md`](FD_README.md) for licensing and usage information.
 - [**Symbolic Fast Downward**](https://people.cs.aau.dk/~alto/software.html) by Álvaro Torralba.
 - Additional third-party components used by SymK can be found in the [`src/search/ext`](src/search/ext) directory.
 

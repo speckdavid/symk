@@ -2,15 +2,16 @@
 
 #include "../plugins/plugin.h"
 #include "../utils/logging.h"
+#include "../utils/markup.h"
 
 #include <iostream>
 using namespace std;
 
 namespace goal_count_heuristic {
 GoalCountHeuristic::GoalCountHeuristic(
-    const shared_ptr<AbstractTask> &transform, bool cache_estimates,
+    const shared_ptr<AbstractTask> &task, bool cache_estimates,
     const string &description, utils::Verbosity verbosity)
-    : Heuristic(transform, cache_estimates, description, verbosity) {
+    : Heuristic(task, cache_estimates, description, verbosity) {
     if (log.is_at_least_normal()) {
         log << "Initializing goal count heuristic..." << endl;
     }
@@ -30,10 +31,20 @@ int GoalCountHeuristic::compute_heuristic(const State &ancestor_state) {
 }
 
 class GoalCountHeuristicFeature
-    : public plugins::TypedFeature<Evaluator, GoalCountHeuristic> {
+    : public plugins::TypedFeature<TaskIndependentEvaluator> {
 public:
     GoalCountHeuristicFeature() : TypedFeature("goalcount") {
         document_title("Goal count heuristic");
+        document_synopsis(
+            "Counts the goal facts that are not true in the current state. "
+            "An early use of the number of remaining goals to guide planning "
+            "search is described in the following article:" +
+            utils::format_journal_reference(
+                {"Richard E. Fikes", "Nils J. Nilsson"},
+                "STRIPS: A New Approach to the Application of Theorem Proving "
+                "to Problem Solving",
+                "https://doi.org/10.1016/0004-3702%2871%2990010-5",
+                "Artificial Intelligence", "2(3-4)", "189-208", "1971"));
 
         add_heuristic_options_to_feature(*this, "goalcount");
 
@@ -47,9 +58,10 @@ public:
         document_property("preferred operators", "no");
     }
 
-    virtual shared_ptr<GoalCountHeuristic> create_component(
+    virtual shared_ptr<TaskIndependentEvaluator> create_component(
         const plugins::Options &opts) const override {
-        return plugins::make_shared_from_arg_tuples<GoalCountHeuristic>(
+        return components::make_auto_task_independent_component<
+            GoalCountHeuristic, Evaluator>(
             get_heuristic_arguments_from_options(opts));
     }
 };

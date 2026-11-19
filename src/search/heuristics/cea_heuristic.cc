@@ -5,6 +5,7 @@
 #include "../plugins/plugin.h"
 #include "../task_utils/task_properties.h"
 #include "../utils/logging.h"
+#include "../utils/markup.h"
 
 #include <cassert>
 #include <limits>
@@ -411,10 +412,11 @@ int ContextEnhancedAdditiveHeuristic::compute_heuristic(
 }
 
 ContextEnhancedAdditiveHeuristic::ContextEnhancedAdditiveHeuristic(
-    tasks::AxiomHandlingType axioms, const shared_ptr<AbstractTask> &transform,
+    const shared_ptr<AbstractTask> &task, tasks::AxiomHandlingType axioms,
     bool cache_estimates, const string &description, utils::Verbosity verbosity)
     : Heuristic(
-          tasks::get_default_value_axioms_task_if_needed(transform, axioms),
+          // issue1208 move this transformation to task-independent level?
+          tasks::get_default_value_axioms_task_if_needed(task, axioms),
           cache_estimates, description, verbosity),
       min_action_cost(task_properties::get_min_operator_cost(task_proxy)) {
     if (log.is_at_least_normal()) {
@@ -445,16 +447,25 @@ ContextEnhancedAdditiveHeuristic::~ContextEnhancedAdditiveHeuristic() {
         delete problem;
 }
 
-bool ContextEnhancedAdditiveHeuristic::dead_ends_are_reliable() const {
+bool ContextEnhancedAdditiveHeuristic::is_safe() const {
     return false;
 }
 
 class ContextEnhancedAdditiveHeuristicFeature
-    : public plugins::TypedFeature<
-          Evaluator, ContextEnhancedAdditiveHeuristic> {
+    : public plugins::TypedFeature<TaskIndependentEvaluator> {
 public:
     ContextEnhancedAdditiveHeuristicFeature() : TypedFeature("cea") {
         document_title("Context-enhanced additive heuristic");
+        document_synopsis(
+            "The context-enhanced additive heuristic is described in the "
+            "following paper:" +
+            utils::format_conference_reference(
+                {"Malte Helmert", "Hector Geffner"},
+                "Unifying the Causal Graph and Additive Heuristics",
+                "https://cdn.aaai.org/ICAPS/2008/ICAPS08-018.pdf",
+                "Proceedings of the 18th International Conference on "
+                "Automated Planning and Scheduling (ICAPS 2008)",
+                "140-147", "AAAI Press", "2008"));
 
         tasks::add_axioms_option_to_feature(*this);
         add_heuristic_options_to_feature(*this, "cea");
@@ -469,10 +480,10 @@ public:
         document_property("preferred operators", "yes");
     }
 
-    virtual shared_ptr<ContextEnhancedAdditiveHeuristic> create_component(
+    virtual shared_ptr<TaskIndependentEvaluator> create_component(
         const plugins::Options &opts) const override {
-        return plugins::make_shared_from_arg_tuples<
-            ContextEnhancedAdditiveHeuristic>(
+        return components::make_auto_task_independent_component<
+            ContextEnhancedAdditiveHeuristic, Evaluator>(
             tasks::get_axioms_arguments_from_options(opts),
             get_heuristic_arguments_from_options(opts));
     }

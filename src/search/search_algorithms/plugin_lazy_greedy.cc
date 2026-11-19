@@ -2,6 +2,7 @@
 #include "search_common.h"
 
 #include "../plugins/plugin.h"
+#include "../utils/markup.h"
 
 using namespace std;
 
@@ -9,13 +10,31 @@ namespace plugin_lazy_greedy {
 static const string DEFAULT_LAZY_BOOST = "1000";
 
 class LazyGreedySearchFeature
-    : public plugins::TypedFeature<SearchAlgorithm, lazy_search::LazySearch> {
+    : public plugins::TypedFeature<TaskIndependentSearchAlgorithm> {
 public:
     LazyGreedySearchFeature() : TypedFeature("lazy_greedy") {
         document_title("Greedy search (lazy)");
-        document_synopsis("");
+        document_synopsis(
+            "Lazy search (deferred evaluation) is described in the following "
+            "article:" +
+            utils::format_journal_reference(
+                {"Malte Helmert"}, "The Fast Downward Planning System",
+                "https://doi.org/10.1613/jair.1705",
+                "Journal of Artificial Intelligence Research", "26", "191-246",
+                "2006") +
+            "Deferred evaluation and preferred operators are discussed in "
+            "more detail in the following paper:" +
+            utils::format_conference_reference(
+                {"Silvia Richter", "Malte Helmert"},
+                "Preferred Operators and Deferred Evaluation in "
+                "Satisficing Planning",
+                "https://doi.org/10.1609/icaps.v19i1.13345",
+                "Proceedings of the 19th International Conference on "
+                "Automated Planning and Scheduling (ICAPS 2009)",
+                "273-280", "AAAI Press", "2009"));
 
-        add_list_option<shared_ptr<Evaluator>>("evals", "evaluators");
+        add_list_option<shared_ptr<TaskIndependentEvaluator>>(
+            "evals", "evaluators");
         add_option<int>(
             "boost",
             "boost value for alternation queues that are restricted "
@@ -23,7 +42,7 @@ public:
             DEFAULT_LAZY_BOOST);
 
         add_option<bool>("reopen_closed", "reopen closed nodes", "false");
-        add_list_option<shared_ptr<Evaluator>>(
+        add_list_option<shared_ptr<TaskIndependentEvaluator>>(
             "preferred", "use preferred operators of these evaluators", "[]");
         add_successors_order_options_to_feature(*this);
         add_search_algorithm_options_to_feature(*this, "lazy_greedy");
@@ -63,15 +82,17 @@ public:
             true);
     }
 
-    virtual shared_ptr<lazy_search::LazySearch> create_component(
+    virtual shared_ptr<TaskIndependentSearchAlgorithm> create_component(
         const plugins::Options &opts) const override {
-        return plugins::make_shared_from_arg_tuples<lazy_search::LazySearch>(
+        return components::make_auto_task_independent_component<
+            lazy_search::LazySearch, SearchAlgorithm>(
             search_common::create_greedy_open_list_factory(
-                opts.get_list<shared_ptr<Evaluator>>("evals"),
-                opts.get_list<shared_ptr<Evaluator>>("preferred"),
+                opts.get_list<shared_ptr<TaskIndependentEvaluator>>("evals"),
+                opts.get_list<shared_ptr<TaskIndependentEvaluator>>(
+                    "preferred"),
                 opts.get<int>("boost")),
             opts.get<bool>("reopen_closed"),
-            opts.get_list<shared_ptr<Evaluator>>("preferred"),
+            opts.get_list<shared_ptr<TaskIndependentEvaluator>>("preferred"),
             get_successors_order_arguments_from_options(opts),
             get_search_algorithm_arguments_from_options(opts));
     }

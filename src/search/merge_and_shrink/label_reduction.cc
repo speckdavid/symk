@@ -27,9 +27,11 @@ using utils::ExitCode;
 
 namespace merge_and_shrink {
 LabelReduction::LabelReduction(
-    bool before_shrinking, bool before_merging, LabelReductionMethod method,
+    const shared_ptr<AbstractTask> &task, bool before_shrinking,
+    bool before_merging, LabelReductionMethod method,
     LabelReductionSystemOrder system_order, int random_seed)
-    : lr_before_shrinking(before_shrinking),
+    : components::TaskSpecificComponent(task),
+      lr_before_shrinking(before_shrinking),
       lr_before_merging(before_merging),
       lr_method(method),
       lr_system_order(system_order),
@@ -294,7 +296,7 @@ void LabelReduction::dump_options(utils::LogProxy &log) const {
 }
 
 class LabelReductionFeature
-    : public plugins::TypedFeature<LabelReduction, LabelReduction> {
+    : public plugins::TypedFeature<TaskIndependentLabelReduction> {
 public:
     LabelReductionFeature() : TypedFeature("exact") {
         document_title("Exact generalized label reduction");
@@ -307,7 +309,16 @@ public:
                 "https://ai.dmi.unibas.ch/papers/sievers-et-al-aaai2014.pdf",
                 "Proceedings of the 28th AAAI Conference on Artificial"
                 " Intelligence (AAAI 2014)",
-                "2358-2366", "AAAI Press", "2014"));
+                "2358-2366", "AAAI Press", "2014") +
+            "For a more general discussion of label reduction, see the "
+            "following article:" +
+            utils::format_journal_reference(
+                {"Silvan Sievers", "Malte Helmert"},
+                "Merge-and-Shrink: A Compositional Theory of Transformations "
+                "of Factored Transition Systems",
+                "https://ai.dmi.unibas.ch/papers/sievers-helmert-jair2021.pdf",
+                "Journal of Artificial Intelligence Research", "71", "781-883",
+                "2021"));
 
         add_option<bool>(
             "before_shrinking", "apply label reduction before shrinking");
@@ -338,9 +349,10 @@ public:
         utils::add_rng_options_to_feature(*this);
     }
 
-    virtual shared_ptr<LabelReduction> create_component(
+    virtual shared_ptr<TaskIndependentLabelReduction> create_component(
         const plugins::Options &opts) const override {
-        return plugins::make_shared_from_arg_tuples<LabelReduction>(
+        return components::make_auto_task_independent_component<
+            LabelReduction, LabelReduction>(
             opts.get<bool>("before_shrinking"),
             opts.get<bool>("before_merging"),
             opts.get<LabelReductionMethod>("method"),
@@ -352,7 +364,7 @@ public:
 static plugins::FeaturePlugin<LabelReductionFeature> _plugin;
 
 static class LabelReductionCategoryPlugin
-    : public plugins::TypedCategoryPlugin<LabelReduction> {
+    : public plugins::TypedCategoryPlugin<TaskIndependentLabelReduction> {
 public:
     LabelReductionCategoryPlugin() : TypedCategoryPlugin("LabelReduction") {
         document_synopsis(

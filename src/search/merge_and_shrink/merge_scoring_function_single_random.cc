@@ -4,6 +4,7 @@
 
 #include "../plugins/plugin.h"
 #include "../utils/logging.h"
+#include "../utils/markup.h"
 #include "../utils/rng.h"
 #include "../utils/rng_options.h"
 
@@ -13,8 +14,10 @@ using namespace std;
 
 namespace merge_and_shrink {
 MergeScoringFunctionSingleRandom::MergeScoringFunctionSingleRandom(
-    int random_seed)
-    : random_seed(random_seed), rng(utils::get_rng(random_seed)) {
+    const shared_ptr<AbstractTask> &task, int random_seed)
+    : MergeScoringFunction(task),
+      random_seed(random_seed),
+      rng(utils::get_rng(random_seed)) {
 }
 
 vector<double> MergeScoringFunctionSingleRandom::compute_scores(
@@ -46,22 +49,29 @@ void MergeScoringFunctionSingleRandom::dump_function_specific_options(
 }
 
 class MergeScoringFunctionSingleRandomFeature
-    : public plugins::TypedFeature<
-          MergeScoringFunction, MergeScoringFunctionSingleRandom> {
+    : public plugins::TypedFeature<TaskIndependentMergeScoringFunction> {
 public:
     MergeScoringFunctionSingleRandomFeature() : TypedFeature("single_random") {
         document_title("Single random");
         document_synopsis(
             "This scoring function assigns exactly one merge candidate a score of "
-            "0, chosen randomly, and infinity to all others.");
+            "0, chosen randomly, and infinity to all others. It is used in the "
+            "following paper:" +
+            utils::format_conference_reference(
+                {"Silvan Sievers", "Martin Wehrle", "Malte Helmert"},
+                "An Analysis of Merge Strategies for Merge-and-Shrink Heuristics",
+                "https://ai.dmi.unibas.ch/papers/sievers-et-al-icaps2016.pdf",
+                "Proceedings of the 26th International Conference on Automated "
+                "Planning and Scheduling (ICAPS 2016)",
+                "294-298", "AAAI Press", "2016"));
 
         utils::add_rng_options_to_feature(*this);
     }
 
-    virtual shared_ptr<MergeScoringFunctionSingleRandom> create_component(
+    virtual shared_ptr<TaskIndependentMergeScoringFunction> create_component(
         const plugins::Options &opts) const override {
-        return plugins::make_shared_from_arg_tuples<
-            MergeScoringFunctionSingleRandom>(
+        return components::make_auto_task_independent_component<
+            MergeScoringFunctionSingleRandom, MergeScoringFunction>(
             utils::get_rng_arguments_from_options(opts));
     }
 };

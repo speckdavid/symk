@@ -32,7 +32,7 @@ protected:
         EvaluationContext &eval_context, const Entry &entry) override;
 
 public:
-    explicit TypeBasedOpenList(
+    TypeBasedOpenList(
         const vector<shared_ptr<Evaluator>> &evaluators, int random_seed);
 
     virtual Entry remove_min() override;
@@ -43,6 +43,7 @@ public:
         EvaluationContext &eval_context) const override;
     virtual void get_path_dependent_evaluators(
         set<Evaluator *> &evals) override;
+    virtual bool is_safe() const override;
 };
 
 template<class Entry>
@@ -119,7 +120,7 @@ template<class Entry>
 bool TypeBasedOpenList<Entry>::is_reliable_dead_end(
     EvaluationContext &eval_context) const {
     for (const shared_ptr<Evaluator> &evaluator : evaluators) {
-        if (evaluator->dead_ends_are_reliable() &&
+        if (evaluator->is_safe() &&
             eval_context.is_evaluator_value_infinite(evaluator.get()))
             return true;
     }
@@ -134,9 +135,18 @@ void TypeBasedOpenList<Entry>::get_path_dependent_evaluators(
     }
 }
 
+template<class Entry>
+bool TypeBasedOpenList<Entry>::is_safe() const {
+    auto is_evaluator_safe = [](const auto &evaluator) {
+        return evaluator->is_safe();
+    };
+    return ranges::any_of(evaluators, is_evaluator_safe);
+}
+
 TypeBasedOpenListFactory::TypeBasedOpenListFactory(
+    const shared_ptr<AbstractTask> &task,
     const vector<shared_ptr<Evaluator>> &evaluators, int random_seed)
-    : evaluators(evaluators), random_seed(random_seed) {
+    : OpenListFactory(task), evaluators(evaluators), random_seed(random_seed) {
     utils::verify_list_not_empty(evaluators, "evaluators");
 }
 
@@ -151,7 +161,7 @@ unique_ptr<EdgeOpenList> TypeBasedOpenListFactory::create_edge_open_list() {
 }
 
 class TypeBasedOpenListFeature
-    : public plugins::TypedFeature<OpenListFactory, TypeBasedOpenListFactory> {
+    : public plugins::TypedFeature<TaskIndependentOpenListFactory> {
 public:
     TypeBasedOpenListFeature() : TypedFeature("type_based") {
         document_title("Type-based open list");
@@ -163,24 +173,25 @@ public:
             "uniformly randomly. "
             "The algorithm is based on" +
             utils::format_conference_reference(
-                {"Fan Xie", "Martin Mueller", "Robert Holte", "Tatsuya Imai"},
+                {"Fan Xie", "Martin Müller", "Robert Holte", "Tatsuya Imai"},
                 "Type-Based Exploration with Multiple Search Queues for"
                 " Satisficing Planning",
-                "http://www.aaai.org/ocs/index.php/AAAI/AAAI14/paper/view/8472/8705",
-                "Proceedings of the Twenty-Eigth AAAI Conference Conference"
+                "https://doi.org/10.1609/aaai.v28i1.9036",
+                "Proceedings of the Twenty-Eighth AAAI Conference"
                 " on Artificial Intelligence (AAAI 2014)",
                 "2395-2401", "AAAI Press", "2014"));
 
-        add_list_option<shared_ptr<Evaluator>>(
+        add_list_option<shared_ptr<TaskIndependentEvaluator>>(
             "evaluators",
             "Evaluators used to determine the bucket for each entry.");
         utils::add_rng_options_to_feature(*this);
     }
 
-    virtual shared_ptr<TypeBasedOpenListFactory> create_component(
+    virtual shared_ptr<TaskIndependentOpenListFactory> create_component(
         const plugins::Options &opts) const override {
-        return plugins::make_shared_from_arg_tuples<TypeBasedOpenListFactory>(
-            opts.get_list<shared_ptr<Evaluator>>("evaluators"),
+        return components::make_auto_task_independent_component<
+            TypeBasedOpenListFactory, OpenListFactory>(
+            opts.get_list<shared_ptr<TaskIndependentEvaluator>>("evaluators"),
             utils::get_rng_arguments_from_options(opts));
     }
 };

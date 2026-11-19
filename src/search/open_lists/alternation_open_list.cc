@@ -4,10 +4,12 @@
 
 #include "../plugins/plugin.h"
 #include "../utils/component_errors.h"
+#include "../utils/markup.h"
 #include "../utils/system.h"
 
 #include <cassert>
 #include <memory>
+#include <ranges>
 #include <vector>
 
 using namespace std;
@@ -37,6 +39,7 @@ public:
     virtual bool is_dead_end(EvaluationContext &eval_context) const override;
     virtual bool is_reliable_dead_end(
         EvaluationContext &eval_context) const override;
+    virtual bool is_safe() const override;
 };
 
 template<class Entry>
@@ -124,9 +127,22 @@ bool AlternationOpenList<Entry>::is_reliable_dead_end(
     return false;
 }
 
+template<class Entry>
+bool AlternationOpenList<Entry>::is_safe() const {
+    auto is_sublist_safe = [](const auto &sublist) {
+        return sublist->is_safe();
+    };
+    /*
+      Since each state inserted into an AlternationOpenList is inserted into
+      each sub-list, one safe sub-list is sufficient.
+    */
+    return ranges::any_of(open_lists, is_sublist_safe);
+}
+
 AlternationOpenListFactory::AlternationOpenListFactory(
+    const shared_ptr<AbstractTask> &task,
     const vector<shared_ptr<OpenListFactory>> &sublists, int boost)
-    : sublists(sublists), boost(boost) {
+    : OpenListFactory(task), sublists(sublists), boost(boost) {
     utils::verify_list_not_empty(sublists, "sublists");
 }
 
@@ -140,13 +156,30 @@ unique_ptr<EdgeOpenList> AlternationOpenListFactory::create_edge_open_list() {
 }
 
 class AlternationOpenListFeature
-    : public plugins::TypedFeature<
-          OpenListFactory, AlternationOpenListFactory> {
+    : public plugins::TypedFeature<TaskIndependentOpenListFactory> {
 public:
     AlternationOpenListFeature() : TypedFeature("alt") {
         document_title("Alternation open list");
+        document_note(
+            "Reference",
+            "The idea of alternating between heuristic queues is described in "
+            "the following article:" +
+                utils::format_journal_reference(
+                    {"Malte Helmert"}, "The Fast Downward Planning System",
+                    "https://doi.org/10.1613/jair.1705",
+                    "Journal of Artificial Intelligence Research", "26",
+                    "191-246", "2006") +
+                "It is discussed in more detail in the following paper:" +
+                utils::format_conference_reference(
+                    {"Gabriele Röger", "Malte Helmert"},
+                    "The More, the Merrier: Combining Heuristic Estimators "
+                    "for Satisficing Planning",
+                    "https://doi.org/10.1609/icaps.v20i1.13435",
+                    "Proceedings of the 20th International Conference on "
+                    "Automated Planning and Scheduling (ICAPS 2010)",
+                    "246-249", "AAAI Press", "2010"));
         document_synopsis("Alternates between several open lists.");
-        add_list_option<shared_ptr<OpenListFactory>>(
+        add_list_option<shared_ptr<TaskIndependentOpenListFactory>>(
             "sublists", "open lists between which this one alternates");
         add_option<int>(
             "boost",
@@ -155,10 +188,12 @@ public:
             "0");
     }
 
-    virtual shared_ptr<AlternationOpenListFactory> create_component(
+    virtual shared_ptr<TaskIndependentOpenListFactory> create_component(
         const plugins::Options &opts) const override {
-        return plugins::make_shared_from_arg_tuples<AlternationOpenListFactory>(
-            opts.get_list<shared_ptr<OpenListFactory>>("sublists"),
+        return components::make_auto_task_independent_component<
+            AlternationOpenListFactory, OpenListFactory>(
+            opts.get_list<shared_ptr<TaskIndependentOpenListFactory>>(
+                "sublists"),
             opts.get<int>("boost"));
     }
 };

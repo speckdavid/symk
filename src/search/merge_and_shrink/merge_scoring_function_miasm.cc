@@ -17,9 +17,11 @@ using namespace std;
 
 namespace merge_and_shrink {
 MergeScoringFunctionMIASM::MergeScoringFunctionMIASM(
+    const shared_ptr<AbstractTask> &task,
     shared_ptr<ShrinkStrategy> shrink_strategy, int max_states,
     int max_states_before_merge, int threshold_before_merge, bool use_caching)
-    : use_caching(use_caching),
+    : MergeScoringFunction(task),
+      use_caching(use_caching),
       shrink_strategy(move(shrink_strategy)),
       max_states(max_states),
       max_states_before_merge(max_states_before_merge),
@@ -103,8 +105,7 @@ string MergeScoringFunctionMIASM::name() const {
 }
 
 class MergeScoringFunctionMIASMFeature
-    : public plugins::TypedFeature<
-          MergeScoringFunction, MergeScoringFunctionMIASM> {
+    : public plugins::TypedFeature<TaskIndependentMergeScoringFunction> {
 public:
     MergeScoringFunctionMIASMFeature() : TypedFeature("sf_miasm") {
         document_title("MIASM");
@@ -116,21 +117,31 @@ public:
             "states. To compute this score, this class thus computes the product "
             "of all pairs of transition systems, potentially copying and shrinking "
             "the transition systems before if otherwise their product would exceed "
-            "the specified size limits. A stateless merge strategy using this "
+            "the specified size limits. The MIASM merge strategy was introduced "
+            "in the following paper:" +
+            utils::format_conference_reference(
+                {"Gaojian Fan", "Martin Müller", "Robert Holte"},
+                "Non-Linear Merging Strategies for Merge-and-Shrink Based on "
+                "Variable Interactions",
+                "https://doi.org/10.1609/socs.v5i1.18330",
+                "Proceedings of the Seventh Annual Symposium on Combinatorial "
+                "Search (SoCS 2014)",
+                "53-61", "AAAI Press", "2014") +
+            "A stateless merge strategy using this "
             "scoring function is called dyn-MIASM (nowadays also called sbMIASM "
             "for score-based MIASM) and is described in the following paper:" +
             utils::format_conference_reference(
                 {"Silvan Sievers", "Martin Wehrle", "Malte Helmert"},
                 "An Analysis of Merge Strategies for Merge-and-Shrink Heuristics",
                 "https://ai.dmi.unibas.ch/papers/sievers-et-al-icaps2016.pdf",
-                "Proceedings of the 26th International Conference on Planning and "
-                "Scheduling (ICAPS 2016)",
-                "2358-2366", "AAAI Press", "2016"));
+                "Proceedings of the 26th International Conference on Automated "
+                "Planning and Scheduling (ICAPS 2016)",
+                "294-298", "AAAI Press", "2016"));
 
         // TODO: use shrink strategy and limit options from
         // MergeAndShrinkHeuristic instead of having the identical options here
         // again.
-        add_option<shared_ptr<ShrinkStrategy>>(
+        add_option<shared_ptr<TaskIndependentShrinkStrategy>>(
             "shrink_strategy",
             "We recommend setting this to match the shrink strategy configuration "
             "given to {{{merge_and_shrink}}}, see note below.");
@@ -177,10 +188,12 @@ public:
             "true");
     }
 
-    virtual shared_ptr<MergeScoringFunctionMIASM> create_component(
+    virtual shared_ptr<TaskIndependentMergeScoringFunction> create_component(
         const plugins::Options &opts) const override {
-        return plugins::make_shared_from_arg_tuples<MergeScoringFunctionMIASM>(
-            opts.get<shared_ptr<ShrinkStrategy>>("shrink_strategy"),
+        return components::make_auto_task_independent_component<
+            MergeScoringFunctionMIASM, MergeScoringFunction>(
+            opts.get<shared_ptr<TaskIndependentShrinkStrategy>>(
+                "shrink_strategy"),
             get_transition_system_size_limit_arguments_from_options(opts),
             opts.get<bool>("use_caching"));
     }

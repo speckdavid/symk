@@ -59,6 +59,11 @@ static vector<int> compute_label_ranks(
     return label_ranks;
 }
 
+MergeScoringFunctionDFP::MergeScoringFunctionDFP(
+    const shared_ptr<AbstractTask> &task)
+    : MergeScoringFunction(task) {
+}
+
 vector<double> MergeScoringFunctionDFP::compute_scores(
     const FactoredTransitionSystem &fts,
     const vector<pair<int, int>> &merge_candidates) {
@@ -102,16 +107,22 @@ string MergeScoringFunctionDFP::name() const {
 }
 
 class MergeScoringFunctionDFPFeature
-    : public plugins::TypedFeature<
-          MergeScoringFunction, MergeScoringFunctionDFP> {
+    : public plugins::TypedFeature<TaskIndependentMergeScoringFunction> {
 public:
     MergeScoringFunctionDFPFeature() : TypedFeature("dfp") {
         document_title("DFP scoring");
         document_synopsis(
             "This scoring function computes the 'DFP' score as described in the "
-            "paper \"Directed model checking with distance-preserving abstractions\" "
-            "by Draeger, Finkbeiner and Podelski (SPIN 2006), adapted to planning in "
-            "the following paper:" +
+            "following article:" +
+            utils::format_journal_reference(
+                {"Klaus Dräger", "Bernd Finkbeiner", "Andreas Podelski"},
+                "Directed model checking with distance-preserving "
+                "abstractions",
+                "https://doi.org/10.1007/s10009-008-0092-z",
+                "International Journal on Software Tools for Technology "
+                "Transfer",
+                "11(1)", "27-37", "2009") +
+            "It was adapted to planning in the following paper:" +
             utils::format_conference_reference(
                 {"Silvan Sievers", "Martin Wehrle", "Malte Helmert"},
                 "Generalized Label Reduction for Merge-and-Shrink Heuristics",
@@ -138,9 +149,10 @@ public:
             "   threshold_before_merge=1)\n}}}");
     }
 
-    virtual shared_ptr<MergeScoringFunctionDFP> create_component(
+    virtual shared_ptr<TaskIndependentMergeScoringFunction> create_component(
         const plugins::Options &) const override {
-        return make_shared<MergeScoringFunctionDFP>();
+        return components::make_auto_task_independent_component<
+            MergeScoringFunctionDFP, MergeScoringFunction>();
     }
 };
 

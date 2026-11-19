@@ -21,8 +21,11 @@ static void add_lp_variables(
 }
 
 DeleteRelaxationIFConstraints::DeleteRelaxationIFConstraints(
-    bool use_time_vars, bool use_integer_vars)
-    : use_time_vars(use_time_vars), use_integer_vars(use_integer_vars) {
+    const shared_ptr<AbstractTask> &task, bool use_time_vars,
+    bool use_integer_vars)
+    : ConstraintGenerator(task),
+      use_time_vars(use_time_vars),
+      use_integer_vars(use_integer_vars) {
 }
 
 int DeleteRelaxationIFConstraints::get_var_op_used(const OperatorProxy &op) {
@@ -102,7 +105,6 @@ void DeleteRelaxationIFConstraints::create_constraints(
     const TaskProxy &task_proxy, lp::LinearProgram &lp) {
     LPVariables &variables = lp.get_variables();
     LPConstraints &constraints = lp.get_constraints();
-    double infinity = lp.get_infinity();
     OperatorsProxy ops = task_proxy.get_operators();
     VariablesProxy vars = task_proxy.get_variables();
 
@@ -126,7 +128,8 @@ void DeleteRelaxationIFConstraints::create_constraints(
         constraint_ids[var_id].resize(var.get_domain_size());
         for (int value = 0; value < var.get_domain_size(); ++value) {
             constraint_ids[var_id][value] = constraints.size();
-            constraints.emplace_back(0, infinity);
+            constraints.emplace_back(lp::LPConstraintSense::GREATER_EQUAL, 0);
+
             /* We add "- R_f" here, collect the achiever below and adapt
                the lower bound in each iteration, i.e., in
                update_constraints. */
@@ -149,7 +152,8 @@ void DeleteRelaxationIFConstraints::create_constraints(
     for (OperatorProxy op : ops) {
         for (EffectProxy eff : op.get_effects()) {
             FactPair f = eff.get_fact().get_pair();
-            lp::LPConstraint constraint(0, infinity);
+            lp::LPConstraint constraint(
+                lp::LPConstraintSense::GREATER_EQUAL, 0);
             constraint.insert(get_var_op_used(op), 1);
             constraint.insert(get_var_first_achiever(op, f), -1);
             constraints.push_back(constraint);
@@ -162,7 +166,8 @@ void DeleteRelaxationIFConstraints::create_constraints(
     */
     for (OperatorProxy op : ops) {
         for (FactProxy f : op.get_preconditions()) {
-            lp::LPConstraint constraint(0, infinity);
+            lp::LPConstraint constraint(
+                lp::LPConstraintSense::GREATER_EQUAL, 0);
             constraint.insert(get_var_fact_reached(f.get_pair()), 1);
             constraint.insert(get_var_op_used(op), -1);
             constraints.push_back(constraint);
@@ -176,7 +181,8 @@ void DeleteRelaxationIFConstraints::create_constraints(
         */
         for (OperatorProxy op : ops) {
             for (FactProxy f : op.get_preconditions()) {
-                lp::LPConstraint constraint(0, infinity);
+                lp::LPConstraint constraint(
+                    lp::LPConstraintSense::GREATER_EQUAL, 0);
                 constraint.insert(get_var_op_time(op), 1);
                 constraint.insert(get_var_fact_time(f.get_pair()), -1);
                 constraints.push_back(constraint);
@@ -195,7 +201,8 @@ void DeleteRelaxationIFConstraints::create_constraints(
         for (OperatorProxy op : ops) {
             for (EffectProxy eff : op.get_effects()) {
                 FactPair f = eff.get_fact().get_pair();
-                lp::LPConstraint constraint(1 - M, infinity);
+                lp::LPConstraint constraint(
+                    lp::LPConstraintSense::GREATER_EQUAL, 1 - M);
                 constraint.insert(get_var_fact_time(f), 1);
                 constraint.insert(get_var_op_time(op), -1);
                 constraint.insert(get_var_first_achiever(op, f), -M);
@@ -209,7 +216,7 @@ void DeleteRelaxationIFConstraints::create_constraints(
           U_o <= C_o for each operator o.
     */
     for (OperatorProxy op : ops) {
-        lp::LPConstraint constraint(0, infinity);
+        lp::LPConstraint constraint(lp::LPConstraintSense::GREATER_EQUAL, 0);
         constraint.insert(op.get_id(), 1);
         constraint.insert(get_var_op_used(op), -1);
         constraints.push_back(constraint);
@@ -227,21 +234,19 @@ bool DeleteRelaxationIFConstraints::update_constraints(
     const State &state, lp::LPSolver &lp_solver) {
     // Unset old bounds.
     for (FactPair f : last_state) {
-        lp_solver.set_constraint_lower_bound(get_constraint_id(f), 0);
+        lp_solver.set_constraint_rhs(get_constraint_id(f), 0);
     }
     last_state.clear();
     // Set new bounds.
     for (FactProxy f : state) {
-        lp_solver.set_constraint_lower_bound(
-            get_constraint_id(f.get_pair()), -1);
+        lp_solver.set_constraint_rhs(get_constraint_id(f.get_pair()), -1);
         last_state.push_back(f.get_pair());
     }
     return false;
 }
 
 class DeleteRelaxationIFConstraintsFeature
-    : public plugins::TypedFeature<
-          ConstraintGenerator, DeleteRelaxationIFConstraints> {
+    : public plugins::TypedFeature<TaskIndependentConstraintGenerator> {
 public:
     DeleteRelaxationIFConstraintsFeature()
         : TypedFeature("delete_relaxation_if_constraints") {
@@ -251,12 +256,12 @@ public:
             "default the constraints encode an easy-to-compute relaxation of h^+^. "
             "With the right settings, these constraints can be used to compute the "
             "optimal delete-relaxation heuristic h^+^ (see example below). "
-            "For details, see" +
+            "For details, see the article" +
             utils::format_journal_reference(
                 {"Tatsuya Imai", "Alex Fukunaga"},
-                "On a practical, integer-linear programming model for delete-free"
-                "tasks and its use as a heuristic for cost-optimal planning",
-                "https://www.jair.org/index.php/jair/article/download/10972/26119/",
+                "On a Practical, Integer-Linear Programming Model for Delete-Free "
+                "Tasks and its Use as a Heuristic for Cost-Optimal Planning",
+                "https://doi.org/10.1613/jair.4936",
                 "Journal of Artificial Intelligence Research", "54", "631-677",
                 "2015"));
 
@@ -292,9 +297,10 @@ public:
             "option {{{delete_relaxation_rr_constraints}}}.\n");
     }
 
-    virtual shared_ptr<DeleteRelaxationIFConstraints> create_component(
+    virtual shared_ptr<TaskIndependentConstraintGenerator> create_component(
         const plugins::Options &opts) const override {
-        return make_shared<DeleteRelaxationIFConstraints>(
+        return components::make_auto_task_independent_component<
+            DeleteRelaxationIFConstraints, ConstraintGenerator>(
             opts.get<bool>("use_time_vars"),
             opts.get<bool>("use_integer_vars"));
     }

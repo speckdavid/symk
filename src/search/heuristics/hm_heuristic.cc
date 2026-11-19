@@ -3,6 +3,7 @@
 #include "../plugins/plugin.h"
 #include "../task_utils/task_properties.h"
 #include "../utils/logging.h"
+#include "../utils/markup.h"
 
 #include <cassert>
 #include <limits>
@@ -12,9 +13,9 @@ using namespace std;
 
 namespace hm_heuristic {
 HMHeuristic::HMHeuristic(
-    int m, const shared_ptr<AbstractTask> &transform, bool cache_estimates,
+    const shared_ptr<AbstractTask> &task, int m, bool cache_estimates,
     const string &description, utils::Verbosity verbosity)
-    : Heuristic(transform, cache_estimates, description, verbosity),
+    : Heuristic(task, cache_estimates, description, verbosity),
       m(m),
       has_cond_effects(task_properties::has_conditional_effects(task_proxy)),
       goals(task_properties::get_fact_pairs(task_proxy.get_goals())) {
@@ -27,7 +28,7 @@ HMHeuristic::HMHeuristic(
     generate_all_tuples();
 }
 
-bool HMHeuristic::dead_ends_are_reliable() const {
+bool HMHeuristic::is_safe() const {
     return !task_properties::has_axioms(task_proxy) && !has_cond_effects;
 }
 
@@ -253,10 +254,23 @@ void HMHeuristic::dump_table() const {
 }
 
 class HMHeuristicFeature
-    : public plugins::TypedFeature<Evaluator, HMHeuristic> {
+    : public plugins::TypedFeature<TaskIndependentEvaluator> {
 public:
     HMHeuristicFeature() : TypedFeature("hm") {
         document_title("h^m heuristic");
+        document_synopsis(
+            "The h^m family of heuristics is described in the following paper:" +
+            utils::format_conference_reference(
+                {"Patrik Haslum", "Hector Geffner"},
+                "Admissible Heuristics for Optimal Planning",
+                "https://www.ida.liu.se/divisions/aiics/publications/"
+                "AIPS-2000-Admissible-Heuristics-Optimal.pdf",
+                "Proceedings of the Fifth International Conference on "
+                "Artificial Intelligence Planning Systems (AIPS 2000)",
+                "140-149", "AAAI Press", "2000") +
+            "Note that the implementation of the h^m heuristic is "
+            "preliminary and very inefficient. Please do not use it for "
+            "comparisons.");
 
         add_option<int>(
             "m", "subset size", "2", plugins::Bounds("1", "infinity"));
@@ -277,9 +291,10 @@ public:
         document_property("preferred operators", "no");
     }
 
-    virtual shared_ptr<HMHeuristic> create_component(
+    virtual shared_ptr<TaskIndependentEvaluator> create_component(
         const plugins::Options &opts) const override {
-        return plugins::make_shared_from_arg_tuples<HMHeuristic>(
+        return components::make_auto_task_independent_component<
+            HMHeuristic, Evaluator>(
             opts.get<int>("m"), get_heuristic_arguments_from_options(opts));
     }
 };

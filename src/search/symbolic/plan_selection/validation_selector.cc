@@ -44,12 +44,17 @@ bool ValidationSelector::is_valid_plan(const Plan &plan) {
 }
 
 class ValidationSelectorFeature
-    : public plugins::TypedFeature<PlanSelector, ValidationSelector> {
+    : public plugins::TypedFeature<PlanSelector> {
 public:
     ValidationSelectorFeature() : TypedFeature("validation") {
         document_title("Validation plan selector");
 
         PlanSelector::add_options_to_feature(*this);
+    }
+
+    virtual shared_ptr<PlanSelector> create_component(
+        const plugins::Options &opts) const override {
+        return make_shared<ValidationSelector>(opts);
     }
 };
 

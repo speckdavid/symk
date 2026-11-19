@@ -57,12 +57,17 @@ void UnorderedSelector::save_accepted_plan(
 }
 
 class UnorderedSelectorFeature
-    : public plugins::TypedFeature<PlanSelector, UnorderedSelector> {
+    : public plugins::TypedFeature<PlanSelector> {
 public:
     UnorderedSelectorFeature() : TypedFeature("unordered") {
         document_title("Unordered plan selector");
 
         PlanSelector::add_options_to_feature(*this);
+    }
+
+    virtual shared_ptr<PlanSelector> create_component(
+        const plugins::Options &opts) const override {
+        return make_shared<UnorderedSelector>(opts);
     }
 };
 

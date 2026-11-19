@@ -51,6 +51,7 @@ protected:
 
 public:
     LazySearch(
+        const std::shared_ptr<AbstractTask> &task,
         const std::shared_ptr<OpenListFactory> &open, bool reopen_closed,
         const std::vector<std::shared_ptr<Evaluator>> &evaluators,
         bool randomize_successors, bool preferred_successors_first,
@@ -58,6 +59,7 @@ public:
         const std::string &description, utils::Verbosity verbosity);
 
     virtual void print_statistics() const override;
+    virtual bool is_complete_within_bound() const override;
 };
 }
 

@@ -24,13 +24,13 @@ class SymVariables;
 
 class SymbolicSearch : public SearchAlgorithm {
 private:
+    SymbolicSearch(
+        const std::shared_ptr<AbstractTask> &task, const plugins::Options &opts,
+        const std::tuple<
+            OperatorCost, int, double, std::string, utils::Verbosity> &args);
+
 protected:
-    // Hold a reference to the task implementation and pass it to objects that
-    // need it.
-    const std::shared_ptr<AbstractTask> task;
     std::shared_ptr<AbstractTask> search_task;
-    // Use task_proxy to access task information.
-    TaskProxy task_proxy;
 
     // Symbolic manager to perform bdd operations
     std::shared_ptr<SymStateSpaceManager> mgr;
@@ -58,7 +58,9 @@ protected:
     virtual SearchStatus step() override;
 
 public:
-    SymbolicSearch(const plugins::Options &opts);
+    SymbolicSearch(
+        const std::shared_ptr<AbstractTask> &task,
+        const plugins::Options &opts);
     virtual ~SymbolicSearch() = default;
 
     virtual void setLowerBound(int lower);
@@ -87,9 +89,36 @@ public:
 
     virtual void print_statistics() const override;
 
+    virtual bool is_complete_within_bound() const override {
+        return true;
+    }
+
     virtual void save_plan_if_necessary() override;
 
     static void add_options_to_feature(plugins::Feature &feature);
+};
+
+/*
+  Task-independent wrapper that keeps the parsed options and constructs
+  the symbolic search once a task is bound.
+*/
+template<typename T>
+class TaskIndependentSymbolicSearch : public TaskIndependentSearchAlgorithm {
+    plugins::Options opts;
+    bool fw;
+    bool bw;
+    bool alternating;
+
+    virtual std::shared_ptr<SearchAlgorithm> create_task_specific_component(
+        const std::shared_ptr<AbstractTask> &task) const override {
+        return std::make_shared<T>(task, opts, fw, bw, alternating);
+    }
+
+public:
+    TaskIndependentSymbolicSearch(
+        const plugins::Options &opts, bool fw, bool bw, bool alternating)
+        : opts(opts), fw(fw), bw(bw), alternating(alternating) {
+    }
 };
 }
 

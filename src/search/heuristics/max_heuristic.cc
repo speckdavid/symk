@@ -2,6 +2,7 @@
 
 #include "../plugins/plugin.h"
 #include "../utils/logging.h"
+#include "../utils/markup.h"
 
 #include <cassert>
 #include <vector>
@@ -23,10 +24,10 @@ namespace max_heuristic {
 
 // construction and destruction
 HSPMaxHeuristic::HSPMaxHeuristic(
-    tasks::AxiomHandlingType axioms, const shared_ptr<AbstractTask> &transform,
+    const shared_ptr<AbstractTask> &task, tasks::AxiomHandlingType axioms,
     bool cache_estimates, const string &description, utils::Verbosity verbosity)
     : RelaxationHeuristic(
-          axioms, transform, cache_estimates, description, verbosity) {
+          task, axioms, cache_estimates, description, verbosity) {
     if (log.is_at_least_normal()) {
         log << "Initializing HSP max heuristic..." << endl;
     }
@@ -102,10 +103,26 @@ int HSPMaxHeuristic::compute_heuristic(const State &ancestor_state) {
 }
 
 class HSPMaxHeuristicFeature
-    : public plugins::TypedFeature<Evaluator, HSPMaxHeuristic> {
+    : public plugins::TypedFeature<TaskIndependentEvaluator> {
 public:
     HSPMaxHeuristicFeature() : TypedFeature("hmax") {
         document_title("Max heuristic");
+        document_synopsis(
+            "The h^max heuristic is described in the following article:" +
+            utils::format_journal_reference(
+                {"Blai Bonet", "Hector Geffner"},
+                "Planning as heuristic search",
+                "https://doi.org/10.1016/S0004-3702%2801%2900108-4",
+                "Artificial Intelligence", "129(1-2)", "5-33", "2001") +
+            "For a discussion of the heuristic in the context of planning "
+            "with action costs, see the following paper:" +
+            utils::format_conference_reference(
+                {"Emil Keyder", "Hector Geffner"},
+                "Heuristics for Planning with Action Costs Revisited",
+                "https://doi.org/10.3233/978-1-58603-891-5-588",
+                "Proceedings of the 18th European Conference on "
+                "Artificial Intelligence (ECAI 2008)",
+                "588-592", "IOS Press", "2008"));
 
         relaxation_heuristic::add_relaxation_heuristic_options_to_feature(
             *this, "hmax");
@@ -120,9 +137,10 @@ public:
         document_property("preferred operators", "no");
     }
 
-    virtual shared_ptr<HSPMaxHeuristic> create_component(
+    virtual shared_ptr<TaskIndependentEvaluator> create_component(
         const plugins::Options &opts) const override {
-        return plugins::make_shared_from_arg_tuples<HSPMaxHeuristic>(
+        return components::make_auto_task_independent_component<
+            HSPMaxHeuristic, Evaluator>(
             relaxation_heuristic::
                 get_relaxation_heuristic_arguments_from_options(opts));
     }

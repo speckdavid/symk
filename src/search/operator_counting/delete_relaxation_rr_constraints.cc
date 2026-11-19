@@ -187,9 +187,11 @@ int DeleteRelaxationRRConstraints::LPVariableIDs::id_of_t(FactPair f) const {
 }
 
 DeleteRelaxationRRConstraints::DeleteRelaxationRRConstraints(
-    const plugins::Options &opts)
-    : acyclicity_type(opts.get<AcyclicityType>("acyclicity_type")),
-      use_integer_vars(opts.get<bool>("use_integer_vars")) {
+    const shared_ptr<AbstractTask> &task, AcyclicityType acyclicity_type,
+    bool use_integer_vars)
+    : ConstraintGenerator(task),
+      acyclicity_type(acyclicity_type),
+      use_integer_vars(use_integer_vars) {
 }
 
 int DeleteRelaxationRRConstraints::get_constraint_id(FactPair f) const {
@@ -286,7 +288,6 @@ void DeleteRelaxationRRConstraints::create_constraints(
     lp::LinearProgram &lp) {
     LPVariables &variables = lp.get_variables();
     LPConstraints &constraints = lp.get_constraints();
-    double infinity = lp.get_infinity();
     OperatorsProxy ops = task_proxy.get_operators();
     VariablesProxy vars = task_proxy.get_variables();
 
@@ -309,7 +310,7 @@ void DeleteRelaxationRRConstraints::create_constraints(
         constraint_offsets.push_back(constraints.size());
         for (int value_p = 0; value_p < var_p.get_domain_size(); ++value_p) {
             FactPair fact_p(var_id_p, value_p);
-            lp::LPConstraint constraint(0, 0);
+            lp::LPConstraint constraint(lp::LPConstraintSense::EQUAL, 0);
             constraint.insert(lp_var_ids.id_of_fp(fact_p), 1);
             constraints.push_back(move(constraint));
         }
@@ -348,7 +349,8 @@ void DeleteRelaxationRRConstraints::create_constraints(
                 pair<FactPair, FactPair> key = make_pair(pre, eff);
                 if (!constraint3_ids.contains(key)) {
                     constraint3_ids[key] = constraints.size();
-                    lp::LPConstraint constraint(0, 1);
+                    lp::LPConstraint constraint(
+                        lp::LPConstraintSense::GREATER_EQUAL, 0);
                     constraint.insert(lp_var_ids.id_of_fp(pre), 1);
                     constraints.push_back(move(constraint));
                 }
@@ -388,7 +390,8 @@ void DeleteRelaxationRRConstraints::create_constraints(
     for (OperatorProxy op : ops) {
         for (EffectProxy eff_proxy : op.get_effects()) {
             FactPair eff = eff_proxy.get_fact().get_pair();
-            lp::LPConstraint constraint(0, infinity);
+            lp::LPConstraint constraint(
+                lp::LPConstraintSense::GREATER_EQUAL, 0);
             constraint.insert(lp_var_ids.id_of_fpa(eff, op), -1);
             constraint.insert(op.get_id(), 1);
             constraints.push_back(move(constraint));
@@ -401,7 +404,6 @@ void DeleteRelaxationRRConstraints::create_constraints_ve(
     const DeleteRelaxationRRConstraints::LPVariableIDs &lp_var_ids,
     lp::LinearProgram &lp) {
     LPConstraints &constraints = lp.get_constraints();
-    double infinity = lp.get_infinity();
     OperatorsProxy ops = task_proxy.get_operators();
 
     /*
@@ -417,7 +419,8 @@ void DeleteRelaxationRRConstraints::create_constraints_ve(
             FactPair pre = pre_proxy.get_pair();
             for (EffectProxy eff_proxy : op.get_effects()) {
                 FactPair eff = eff_proxy.get_fact().get_pair();
-                lp::LPConstraint constraint(0, infinity);
+                lp::LPConstraint constraint(
+                    lp::LPConstraintSense::GREATER_EQUAL, 0);
                 constraint.insert(lp_var_ids.id_of_e(make_pair(pre, eff)), 1);
                 constraint.insert(lp_var_ids.id_of_fpa(eff, op), -1);
                 constraints.push_back(move(constraint));
@@ -439,7 +442,7 @@ void DeleteRelaxationRRConstraints::create_constraints_ve(
         pair<FactPair, FactPair> reverse_edge =
             make_pair(edge.second, edge.first);
         if (lp_var_ids.has_e(reverse_edge)) {
-            lp::LPConstraint constraint(-infinity, 1);
+            lp::LPConstraint constraint(lp::LPConstraintSense::LESS_EQUAL, 1);
             constraint.insert(lp_var_ids.id_of_e(edge), 1);
             constraint.insert(lp_var_ids.id_of_e(reverse_edge), 1);
             constraints.push_back(move(constraint));
@@ -457,7 +460,7 @@ void DeleteRelaxationRRConstraints::create_constraints_ve(
       not have both p_i ordered before p_j, and p_j ordered before p_k.
     */
     for (auto [pi, pj, pk] : ve_graph.get_delta()) {
-        lp::LPConstraint constraint(-infinity, 1);
+        lp::LPConstraint constraint(lp::LPConstraintSense::LESS_EQUAL, 1);
         constraint.insert(lp_var_ids.id_of_e(make_pair(pi, pj)), 1);
         constraint.insert(lp_var_ids.id_of_e(make_pair(pj, pk)), 1);
         constraint.insert(lp_var_ids.id_of_e(make_pair(pi, pk)), -1);
@@ -481,7 +484,6 @@ void DeleteRelaxationRRConstraints::create_constraints_tl(
       preconditions, we have to achieve p_i before p_j.
     */
     LPConstraints &constraints = lp.get_constraints();
-    double infinity = lp.get_infinity();
     int num_facts = 0;
     for (VariableProxy var : task_proxy.get_variables()) {
         num_facts += var.get_domain_size();
@@ -496,7 +498,8 @@ void DeleteRelaxationRRConstraints::create_constraints_tl(
                     // Prevail conditions are compiled away in the paper.
                     continue;
                 }
-                lp::LPConstraint constraint(-infinity, num_facts - 1);
+                lp::LPConstraint constraint(
+                    lp::LPConstraintSense::LESS_EQUAL, num_facts - 1);
                 constraint.insert(lp_var_ids.id_of_t(pre), 1);
                 constraint.insert(lp_var_ids.id_of_t(eff), -1);
                 constraint.insert(lp_var_ids.id_of_fpa(eff, op), num_facts);
@@ -541,23 +544,20 @@ bool DeleteRelaxationRRConstraints::update_constraints(
     int con_id;
     for (FactPair f : last_state) {
         con_id = get_constraint_id(f);
-        lp_solver.set_constraint_lower_bound(con_id, 0);
-        lp_solver.set_constraint_upper_bound(con_id, 0);
+        lp_solver.set_constraint_rhs(con_id, 0);
     }
     last_state.clear();
     // Set new bounds.
     for (FactProxy f : state) {
         con_id = get_constraint_id(f.get_pair());
-        lp_solver.set_constraint_lower_bound(con_id, 1);
-        lp_solver.set_constraint_upper_bound(con_id, 1);
+        lp_solver.set_constraint_rhs(con_id, 1);
         last_state.push_back(f.get_pair());
     }
     return false;
 }
 
 class DeleteRelaxationRRConstraintsFeature
-    : public plugins::TypedFeature<
-          ConstraintGenerator, DeleteRelaxationRRConstraints> {
+    : public plugins::TypedFeature<TaskIndependentConstraintGenerator> {
 public:
     DeleteRelaxationRRConstraintsFeature()
         : TypedFeature("delete_relaxation_rr_constraints") {
@@ -566,20 +566,17 @@ public:
         document_synopsis(
             "Operator-counting constraints based on the delete relaxation. By "
             "default the constraints encode an easy-to-compute relaxation of "
-            "h^+^. "
-            "With the right settings, these constraints can be used to compute "
-            "the "
-            "optimal delete-relaxation heuristic h^+^ (see example below). "
-            "For details, see" +
-            utils::format_journal_reference(
+            "h^+^. With the right settings, these constraints can be used to "
+            "compute the optimal delete-relaxation heuristic h^+^ (see example "
+            "below). For details, see" +
+            utils::format_conference_reference(
                 {"Masood Feyzbakhsh Rankooh", "Jussi Rintanen"},
-                "Efficient Computation and Informative Estimation of"
-                "h+ by Integer and Linear Programming"
-                "",
+                "Efficient Computation and Informative Estimation of "
+                "h+ by Integer and Linear Programming",
                 "https://ojs.aaai.org/index.php/ICAPS/article/view/19787/19546",
                 "Proceedings of the Thirty-Second International Conference on "
-                "Automated Planning and Scheduling (ICAPS2022)",
-                "32", "71-79", "2022"));
+                "Automated Planning and Scheduling (ICAPS 2022)",
+                "71-79", "AAAI Press", "2022"));
 
         add_option<AcyclicityType>(
             "acyclicity_type",
@@ -588,7 +585,7 @@ public:
             "have an achiever, and the preconditions all achievers are either "
             "true in the current state or have achievers themselves. In this "
             "version, cycles in the achiever relation can occur. Such cycles "
-            "can be excluded with additional auxilliary varibles and "
+            "can be excluded with additional auxiliary variables and "
             "constraints.",
             "vertex_elimination");
         add_option<bool>(
@@ -602,7 +599,7 @@ public:
 
         document_note(
             "Example",
-            "To compute the optimal delete-relaxation heuristic h^+^, use"
+            "To compute the optimal delete-relaxation heuristic h^+^, use "
             "integer variables and some way of enforcing acyclicity (other "
             "than \"none\"). For example\n"
             "{{{\noperatorcounting(\n"
@@ -617,6 +614,14 @@ public:
             "recommend using this formulation as it can generally be solved "
             "more efficiently, in particular in case of the h^+^ "
             "configuration, and some relaxations offer tighter bounds.\n");
+    }
+
+    virtual shared_ptr<TaskIndependentConstraintGenerator> create_component(
+        const plugins::Options &opts) const override {
+        return components::make_auto_task_independent_component<
+            DeleteRelaxationRRConstraints, ConstraintGenerator>(
+            opts.get<AcyclicityType>("acyclicity_type"),
+            opts.get<bool>("use_integer_vars"));
     }
 };
 

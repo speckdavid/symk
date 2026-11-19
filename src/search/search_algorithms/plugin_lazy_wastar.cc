@@ -2,6 +2,7 @@
 #include "search_common.h"
 
 #include "../plugins/plugin.h"
+#include "../utils/markup.h"
 
 using namespace std;
 
@@ -9,21 +10,49 @@ namespace plugin_lazy_wastar {
 static const string DEFAULT_LAZY_BOOST = "1000";
 
 class LazyWAstarSearchFeature
-    : public plugins::TypedFeature<SearchAlgorithm, lazy_search::LazySearch> {
+    : public plugins::TypedFeature<TaskIndependentSearchAlgorithm> {
 public:
     LazyWAstarSearchFeature() : TypedFeature("lazy_wastar") {
         document_title("(Weighted) A* search (lazy)");
+        document_note(
+            "Reference",
+            "Lazy search (deferred evaluation) is described in the following "
+            "publications:" +
+                utils::format_journal_reference(
+                    {"Malte Helmert"}, "The Fast Downward Planning System",
+                    "https://doi.org/10.1613/jair.1705",
+                    "Journal of Artificial Intelligence Research", "26",
+                    "191-246", "2006") +
+                utils::format_conference_reference(
+                    {"Silvia Richter", "Malte Helmert"},
+                    "Preferred Operators and Deferred Evaluation in Satisficing "
+                    "Planning",
+                    "https://doi.org/10.1609/icaps.v19i1.13345",
+                    "Proceedings of the 19th International Conference on "
+                    "Automated Planning and Scheduling (ICAPS 2009)",
+                    "273-280", "AAAI Press", "2009") +
+                "Lazy weighted A* is used and described in the following "
+                "article:" +
+                utils::format_journal_reference(
+                    {"Silvia Richter", "Matthias Westphal"},
+                    "The LAMA Planner: Guiding Cost-Based Anytime Planning "
+                    "with Landmarks",
+                    "https://doi.org/10.1613/jair.2972",
+                    "Journal of Artificial Intelligence Research", "39",
+                    "127-177", "2010"));
         document_synopsis(
             "Weighted A* is a special case of lazy best first search.");
 
-        add_list_option<shared_ptr<Evaluator>>("evals", "evaluators");
-        add_list_option<shared_ptr<Evaluator>>(
+        add_list_option<shared_ptr<TaskIndependentEvaluator>>(
+            "evals", "evaluators");
+        add_list_option<shared_ptr<TaskIndependentEvaluator>>(
             "preferred", "use preferred operators of these evaluators", "[]");
         add_option<bool>("reopen_closed", "reopen closed nodes", "true");
         add_option<int>(
             "boost", "boost value for preferred operator open lists",
             DEFAULT_LAZY_BOOST);
-        add_option<int>("w", "evaluator weight", "1");
+        add_option<int>(
+            "w", "evaluator weight", "1", plugins::Bounds("0", "infinity"));
         add_successors_order_options_to_feature(*this);
         add_search_algorithm_options_to_feature(*this, "lazy_wastar");
 
@@ -67,16 +96,18 @@ public:
             true);
     }
 
-    virtual shared_ptr<lazy_search::LazySearch> create_component(
+    virtual shared_ptr<TaskIndependentSearchAlgorithm> create_component(
         const plugins::Options &opts) const override {
-        return plugins::make_shared_from_arg_tuples<lazy_search::LazySearch>(
+        return components::make_auto_task_independent_component<
+            lazy_search::LazySearch, SearchAlgorithm>(
             search_common::create_wastar_open_list_factory(
-                opts.get_list<shared_ptr<Evaluator>>("evals"),
-                opts.get_list<shared_ptr<Evaluator>>("preferred"),
+                opts.get_list<shared_ptr<TaskIndependentEvaluator>>("evals"),
+                opts.get_list<shared_ptr<TaskIndependentEvaluator>>(
+                    "preferred"),
                 opts.get<int>("boost"), opts.get<int>("w"),
                 opts.get<utils::Verbosity>("verbosity")),
             opts.get<bool>("reopen_closed"),
-            opts.get_list<shared_ptr<Evaluator>>("preferred"),
+            opts.get_list<shared_ptr<TaskIndependentEvaluator>>("preferred"),
             get_successors_order_arguments_from_options(opts),
             get_search_algorithm_arguments_from_options(opts));
     }

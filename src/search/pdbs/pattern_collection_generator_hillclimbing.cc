@@ -115,10 +115,10 @@ static vector<vector<int>> compute_relevant_neighbours(
 }
 
 PatternCollectionGeneratorHillclimbing::PatternCollectionGeneratorHillclimbing(
-    int pdb_max_size, int collection_max_size, int num_samples,
-    int min_improvement, double max_time, int random_seed,
-    utils::Verbosity verbosity)
-    : PatternCollectionGenerator(verbosity),
+    const shared_ptr<AbstractTask> &task, int pdb_max_size,
+    int collection_max_size, int num_samples, int min_improvement,
+    double max_time, int random_seed, utils::Verbosity verbosity)
+    : PatternCollectionGenerator(task, verbosity),
       pdb_max_size(pdb_max_size),
       collection_max_size(collection_max_size),
       num_samples(num_samples),
@@ -499,7 +499,7 @@ void add_hillclimbing_options_to_feature(plugins::Feature &feature) {
         "heuristic estimate for the initial state by the average operator "
         "costs of the planning task (calculated only once and not updated "
         "during sampling!) to take non-unit cost problems into account. This "
-        "yields a random walk of an expected lenght of np = 2 * estimated "
+        "yields a random walk of an expected length of np = 2 * estimated "
         "number of solution steps. If the random walk gets stuck, it is being "
         "restarted from the initial state, exactly as described in the "
         "original paper.\n\n"
@@ -578,12 +578,11 @@ static basic_string<char> paper_references() {
                "https://ai.dmi.unibas.ch/papers/sievers-et-al-socs2012.pdf",
                "Proceedings of the Fifth Annual Symposium on Combinatorial"
                " Search (SoCS 2012)",
-               "105-111", "AAAI Press", "2012");
+               "49-56", "AAAI Press", "2012");
 }
 
 class PatternCollectionGeneratorHillclimbingFeature
-    : public plugins::TypedFeature<
-          PatternCollectionGenerator, PatternCollectionGeneratorHillclimbing> {
+    : public plugins::TypedFeature<TaskIndependentPatternCollectionGenerator> {
 public:
     PatternCollectionGeneratorHillclimbingFeature()
         : TypedFeature("hillclimbing") {
@@ -597,10 +596,10 @@ public:
         add_generator_options_to_feature(*this);
     }
 
-    virtual shared_ptr<PatternCollectionGeneratorHillclimbing> create_component(
-        const plugins::Options &opts) const override {
-        return plugins::make_shared_from_arg_tuples<
-            PatternCollectionGeneratorHillclimbing>(
+    virtual shared_ptr<TaskIndependentPatternCollectionGenerator>
+    create_component(const plugins::Options &opts) const override {
+        return components::make_auto_task_independent_component<
+            PatternCollectionGeneratorHillclimbing, PatternCollectionGenerator>(
             get_hillclimbing_arguments_from_options(opts),
             get_generator_arguments_from_options(opts));
     }
@@ -609,8 +608,7 @@ public:
 static plugins::FeaturePlugin<PatternCollectionGeneratorHillclimbingFeature>
     _plugin;
 
-class IPDBFeature
-    : public plugins::TypedFeature<Evaluator, CanonicalPDBsHeuristic> {
+class IPDBFeature : public plugins::TypedFeature<TaskIndependentEvaluator> {
 public:
     IPDBFeature() : TypedFeature("ipdb") {
         document_subcategory("heuristics_pdb");
@@ -649,15 +647,17 @@ public:
         document_property("preferred operators", "no");
     }
 
-    virtual shared_ptr<CanonicalPDBsHeuristic> create_component(
+    virtual shared_ptr<TaskIndependentEvaluator> create_component(
         const plugins::Options &opts) const override {
-        shared_ptr<PatternCollectionGeneratorHillclimbing> pgh =
-            plugins::make_shared_from_arg_tuples<
-                PatternCollectionGeneratorHillclimbing>(
+        shared_ptr<TaskIndependentPatternCollectionGenerator> pgh =
+            components::make_auto_task_independent_component<
+                PatternCollectionGeneratorHillclimbing,
+                PatternCollectionGenerator>(
                 get_hillclimbing_arguments_from_options(opts),
                 get_generator_arguments_from_options(opts));
 
-        return plugins::make_shared_from_arg_tuples<CanonicalPDBsHeuristic>(
+        return components::make_auto_task_independent_component<
+            CanonicalPDBsHeuristic, Evaluator>(
             pgh, opts.get<double>("max_time_dominance_pruning"),
             get_heuristic_arguments_from_options(opts));
     }
