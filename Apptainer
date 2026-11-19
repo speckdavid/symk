@@ -33,7 +33,7 @@ Stage: run
 
 %post
     apt-get update
-    apt-get -y install --no-install-recommends python3 libgmp-dev
+    DEBIAN_FRONTEND=noninteractive apt-get -y install --no-install-recommends python3 libgmp-dev
     rm -rf /var/lib/apt/lists/*
 
 %runscript
