@@ -73,8 +73,8 @@ void SymbolicUniformCostSearch::initialize() {
 }
 
 SymbolicUniformCostSearch::SymbolicUniformCostSearch(
-    const shared_ptr<AbstractTask> &task, const plugins::Options &opts,
-    bool fw, bool bw, bool alternating)
+    const shared_ptr<AbstractTask> &task, const plugins::Options &opts, bool fw,
+    bool bw, bool alternating)
     : SymbolicSearch(task, opts), fw(fw), bw(bw), alternating(alternating) {
 }
 

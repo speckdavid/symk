@@ -4,7 +4,6 @@
 #include "../../task_utils/task_properties.h"
 
 #include <iostream>
-#include <stdio.h>
 
 using namespace std;
 

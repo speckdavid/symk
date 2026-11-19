@@ -15,8 +15,7 @@ void TopKSelector::add_plan(const Plan &plan) {
     }
 }
 
-class TopKSelectorFeature
-    : public plugins::TypedFeature<PlanSelector> {
+class TopKSelectorFeature : public plugins::TypedFeature<PlanSelector> {
 public:
     TopKSelectorFeature() : TypedFeature("top_k") {
         document_title("Top-k plan selector");

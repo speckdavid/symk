@@ -10,17 +10,10 @@
 #include "sym_variables.h"
 
 #include "../tasks/root_task.h"
-#include "../utils/system.h"
 
-#include <cassert>
 #include <map>
 #include <memory>
-#include <set>
 #include <vector>
-
-namespace extra_tasks {
-class SdacTask;
-}
 
 namespace symbolic {
 class SymVariables;

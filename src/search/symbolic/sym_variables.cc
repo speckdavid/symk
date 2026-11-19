@@ -1,11 +1,11 @@
 #include "sym_variables.h"
 
-#include "opt_order.h"
+#include "sym_axiom/sym_axiom_compilation.h"
+#include "variable_orderings/variable_ordering.h"
 
 #include "../plugins/plugin.h"
 #include "../task_utils/task_properties.h"
 #include "../utils/logging.h"
-#include "sym_axiom/sym_axiom_compilation.h"
 
 #include <fstream>
 #include <iostream>
@@ -27,24 +27,17 @@ SymVariables::SymVariables(
       cudd_init_nodes(16000000L),
       cudd_init_cache_size(16000000L),
       cudd_init_available_memory(0L),
-      gamer_ordering(opts.get<bool>("gamer_ordering")),
+      variable_ordering(
+          opts.get<shared_ptr<VariableOrdering>>("variable_ordering")),
       dynamic_reordering(opts.get<bool>("dynamic_reordering")),
       ax_comp(make_shared<SymAxiomCompilation>(this, task)) {
 }
 
 void SymVariables::init() {
     vector<int> var_order;
-    if (gamer_ordering) {
-        InfluenceGraph::compute_gamer_ordering(var_order, task);
-    } else {
-        for (size_t i = 0; i < task_proxy.get_variables().size(); ++i) {
-            var_order.push_back(i);
-        }
-    }
-    utils::g_log << "Sym variable order: ";
-    for (int v : var_order)
-        utils::g_log << v << " ";
-    utils::g_log << endl;
+    variable_ordering->compute_ordering(task_proxy, var_order);
+    assert(var_order.size() == task_proxy.get_variables().size());
+    utils::g_log << "Sym variable order: " << var_order << endl;
 
     init(var_order);
 }
@@ -127,16 +120,6 @@ void SymVariables::init(const vector<int> &v_order) {
             createBiimplicationBDD(bdd_index_pre[var], bdd_index_eff[var]);
     }
 
-    utils::g_log << "Symbolic Variables... Done." << endl;
-
-    if (task_properties::has_axioms(task_proxy)) {
-        utils::g_log
-            << "Creating Primary Representation for Derived Predicates..."
-            << endl;
-        ax_comp->init_axioms();
-        utils::g_log << "Primary Representation... Done!" << endl;
-    }
-
     // Set variable names
     vector<string> var_names(numBDDVars * 2);
     for (int v : var_order) {
@@ -149,6 +132,16 @@ void SymVariables::init(const vector<int> &v_order) {
             manager->pushVariableName(var_name);
             manager->pushVariableName(var_name_primed);
         }
+    }
+
+    utils::g_log << "Symbolic Variables... Done." << endl;
+
+    if (task_properties::has_axioms(task_proxy)) {
+        utils::g_log
+            << "Creating Primary Representation for Derived Predicates..."
+            << endl;
+        ax_comp->init_axioms();
+        utils::g_log << "Primary Representation... Done!" << endl;
     }
 
     if (dynamic_reordering) {
@@ -329,7 +322,7 @@ BDD SymVariables::getCube(
     return res;
 }
 
-void SymVariables::reoder(int max_time) {
+void SymVariables::reorder(int max_time) {
     set_time_limit(max_time);
     try {
         Cudd_ReduceHeap(manager->getManager(), CUDD_REORDER_GROUP_SIFT, 0);
@@ -365,15 +358,14 @@ void SymVariables::print_options() const {
     utils::g_log << "CUDD Init: nodes=" << cudd_init_nodes
                  << " cache=" << cudd_init_cache_size
                  << " max_memory=" << cudd_init_available_memory << endl;
-    utils::g_log << "Variable Ordering: " << (gamer_ordering ? "gamer" : "fd")
-                 << endl;
+    utils::g_log << "Variable Ordering: " << variable_ordering->tag() << endl;
     utils::g_log << "Dynamic reordering: "
                  << (dynamic_reordering ? "True" : "False") << endl;
 }
 
 void SymVariables::add_options_to_feature(plugins::Feature &feature) {
-    feature.add_option<bool>(
-        "gamer_ordering", "Use Gamer ordering optimization", "true");
+    feature.add_option<shared_ptr<VariableOrdering>>(
+        "variable_ordering", "Variable ordering strategy", "gamer_ordering()");
     feature.add_option<bool>(
         "dynamic_reordering", "Enable dynamic group sift reordering.", "false");
 }

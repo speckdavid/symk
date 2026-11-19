@@ -9,12 +9,6 @@
 #include "transition_relations/disjunctive_transition_relation.h"
 #include "transition_relations/transition_relation.h"
 
-#include <algorithm>
-
-namespace extra_tasks {
-class SdacTask;
-}
-
 namespace symbolic {
 class SymTransitionRelations {
     SymVariables *sym_vars;

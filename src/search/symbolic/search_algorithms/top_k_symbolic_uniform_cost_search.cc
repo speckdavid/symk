@@ -55,8 +55,8 @@ void TopkSymbolicUniformCostSearch::initialize() {
 }
 
 TopkSymbolicUniformCostSearch::TopkSymbolicUniformCostSearch(
-    const shared_ptr<AbstractTask> &task, const plugins::Options &opts,
-    bool fw, bool bw, bool alternating)
+    const shared_ptr<AbstractTask> &task, const plugins::Options &opts, bool fw,
+    bool bw, bool alternating)
     : SymbolicUniformCostSearch(task, opts, fw, bw, alternating) {
 }
 

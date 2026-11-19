@@ -7,8 +7,8 @@ using namespace std;
 
 namespace symbolic {
 TopqSymbolicUniformCostSearch::TopqSymbolicUniformCostSearch(
-    const shared_ptr<AbstractTask> &task, const plugins::Options &opts,
-    bool fw, bool bw, bool alternating)
+    const shared_ptr<AbstractTask> &task, const plugins::Options &opts, bool fw,
+    bool bw, bool alternating)
     : TopkSymbolicUniformCostSearch(task, opts, fw, bw, alternating),
       quality_multiplier(opts.get<double>("quality")) {
     utils::g_log << "Quality: " << quality_multiplier << endl;

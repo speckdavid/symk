@@ -1011,7 +1011,6 @@ create_fast_downward_library(
         symbolic/closed_list
         symbolic/frontier
         symbolic/open_list
-        symbolic/opt_order
         symbolic/plan_reconstruction/reconstruction_node
         symbolic/plan_reconstruction/sym_solution_cut
         symbolic/plan_reconstruction/sym_solution_registry
@@ -1043,6 +1042,10 @@ create_fast_downward_library(
         symbolic/sym_variables
         symbolic/transition_relations/conjunctive_transition_relation
         symbolic/transition_relations/transition_relation
+        symbolic/variable_orderings/custom_ordering
+        symbolic/variable_orderings/fd_ordering
+        symbolic/variable_orderings/gamer_ordering
+        symbolic/variable_orderings/variable_ordering
         symbolic/transition_relations/disjunctive_transition_relation
         tasks/effect_aggregated_task
     DEPENDS

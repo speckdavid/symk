@@ -18,9 +18,8 @@ protected:
 
 public:
     SymbolicUniformCostSearch(
-        const std::shared_ptr<AbstractTask> &task,
-        const plugins::Options &opts, bool fw, bool bw,
-        bool alternating = false);
+        const std::shared_ptr<AbstractTask> &task, const plugins::Options &opts,
+        bool fw, bool bw, bool alternating = false);
     virtual ~SymbolicUniformCostSearch() = default;
 
     virtual void new_solution(const SymSolutionCut &sol) override;

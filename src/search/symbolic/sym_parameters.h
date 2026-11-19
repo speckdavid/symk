@@ -5,8 +5,6 @@
 
 #include "../abstract_task.h"
 
-#include <algorithm>
-
 namespace plugins {
 class Options;
 class Feature;

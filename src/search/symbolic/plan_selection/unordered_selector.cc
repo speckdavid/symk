@@ -56,8 +56,7 @@ void UnorderedSelector::save_accepted_plan(
     }
 }
 
-class UnorderedSelectorFeature
-    : public plugins::TypedFeature<PlanSelector> {
+class UnorderedSelectorFeature : public plugins::TypedFeature<PlanSelector> {
 public:
     UnorderedSelectorFeature() : TypedFeature("unordered") {
         document_title("Unordered plan selector");

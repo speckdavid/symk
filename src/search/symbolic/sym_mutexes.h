@@ -6,8 +6,6 @@
 
 #include "../mutex_group.h"
 
-#include <algorithm>
-
 namespace symbolic {
 struct SymMutexes {
     SymVariables *sym_vars;

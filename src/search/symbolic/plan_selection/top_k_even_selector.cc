@@ -18,8 +18,7 @@ void TopKEvenSelector::add_plan(const Plan &plan) {
     }
 }
 
-class TopKEvenSelectorFeature
-    : public plugins::TypedFeature<PlanSelector> {
+class TopKEvenSelectorFeature : public plugins::TypedFeature<PlanSelector> {
 public:
     TopKEvenSelectorFeature() : TypedFeature("top_k_even") {
         document_title("Top-K with even plan length plan selector");

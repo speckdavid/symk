@@ -68,7 +68,7 @@ void PlanSelector::print_options() const {
     utils::g_log << "Plan files: " << plan_mgr.get_plan_filename() << endl;
 }
 
-size_t PlanSelector::different(
+bool PlanSelector::different(
     const vector<Plan> &plans, const Plan &plan) const {
     for (auto &cur : plans) {
         if (cur.size() == plan.size()) {
