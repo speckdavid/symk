@@ -115,7 +115,7 @@ protected:
 
     std::vector<Plan> get_accepted_plans() const;
 
-    size_t different(const std::vector<Plan> &plans, const Plan &plan) const;
+    bool different(const std::vector<Plan> &plans, const Plan &plan) const;
     size_t get_hash_value(const Plan &plan) const;
 };
 }

@@ -55,8 +55,9 @@ void TopkSymbolicUniformCostSearch::initialize() {
 }
 
 TopkSymbolicUniformCostSearch::TopkSymbolicUniformCostSearch(
-    const plugins::Options &opts, bool fw, bool bw, bool alternating)
-    : SymbolicUniformCostSearch(opts, fw, bw, alternating) {
+    const shared_ptr<AbstractTask> &task, const plugins::Options &opts, bool fw,
+    bool bw, bool alternating)
+    : SymbolicUniformCostSearch(task, opts, fw, bw, alternating) {
 }
 
 void TopkSymbolicUniformCostSearch::new_solution(const SymSolutionCut &sol) {
@@ -67,8 +68,7 @@ void TopkSymbolicUniformCostSearch::new_solution(const SymSolutionCut &sol) {
     }
 }
 class TopkSymbolicForwardUniformCostSearchFeature
-    : public plugins::TypedFeature<
-          SearchAlgorithm, TopkSymbolicUniformCostSearch> {
+    : public plugins::TypedFeature<TaskIndependentSearchAlgorithm> {
 public:
     TopkSymbolicForwardUniformCostSearchFeature() : TypedFeature("symk_fw") {
         document_title("Topk Symbolic Forward Uniform Cost Search");
@@ -78,12 +78,14 @@ public:
             "plan_selection", "plan selection strategy");
     }
 
-    virtual shared_ptr<TopkSymbolicUniformCostSearch> create_component(
+    virtual shared_ptr<TaskIndependentSearchAlgorithm> create_component(
         const plugins::Options &options) const override {
         utils::g_log
             << "Search Algorithm: Topk Symbolic Forward Uniform Cost Search"
             << endl;
-        return make_shared<TopkSymbolicUniformCostSearch>(options, true, false);
+        return make_shared<
+            TaskIndependentSymbolicSearch<TopkSymbolicUniformCostSearch>>(
+            options, true, false, false);
     }
 };
 
@@ -91,8 +93,7 @@ static plugins::FeaturePlugin<TopkSymbolicForwardUniformCostSearchFeature>
     _fw_plugin;
 
 class TopkSymbolicBackwardUniformCostSearchFeature
-    : public plugins::TypedFeature<
-          SearchAlgorithm, TopkSymbolicUniformCostSearch> {
+    : public plugins::TypedFeature<TaskIndependentSearchAlgorithm> {
 public:
     TopkSymbolicBackwardUniformCostSearchFeature() : TypedFeature("symk_bw") {
         document_title("Topk Symbolic Backward Uniform Cost Search");
@@ -102,12 +103,14 @@ public:
             "plan_selection", "plan selection strategy");
     }
 
-    virtual shared_ptr<TopkSymbolicUniformCostSearch> create_component(
+    virtual shared_ptr<TaskIndependentSearchAlgorithm> create_component(
         const plugins::Options &options) const override {
         utils::g_log
             << "Search Algorithm: Topk Symbolic Backward Uniform Cost Search"
             << endl;
-        return make_shared<TopkSymbolicUniformCostSearch>(options, false, true);
+        return make_shared<
+            TaskIndependentSymbolicSearch<TopkSymbolicUniformCostSearch>>(
+            options, false, true, false);
     }
 };
 
@@ -115,8 +118,7 @@ static plugins::FeaturePlugin<TopkSymbolicBackwardUniformCostSearchFeature>
     _bw_plugin;
 
 class TopkSymbolicBidirectionalUniformCostSearchFeature
-    : public plugins::TypedFeature<
-          SearchAlgorithm, TopkSymbolicUniformCostSearch> {
+    : public plugins::TypedFeature<TaskIndependentSearchAlgorithm> {
 public:
     TopkSymbolicBidirectionalUniformCostSearchFeature()
         : TypedFeature("symk_bd") {
@@ -128,12 +130,13 @@ public:
         this->add_option<bool>("alternating", "alternating", "false");
     }
 
-    virtual shared_ptr<TopkSymbolicUniformCostSearch> create_component(
+    virtual shared_ptr<TaskIndependentSearchAlgorithm> create_component(
         const plugins::Options &options) const override {
         utils::g_log
             << "Search Algorithm: Topk Symbolic Bidirectional Uniform Cost Search"
             << endl;
-        return make_shared<TopkSymbolicUniformCostSearch>(
+        return make_shared<
+            TaskIndependentSymbolicSearch<TopkSymbolicUniformCostSearch>>(
             options, true, true, options.get<bool>("alternating"));
     }
 };

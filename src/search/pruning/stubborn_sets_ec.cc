@@ -101,8 +101,9 @@ static void get_conflicting_vars(
     }
 }
 
-StubbornSetsEC::StubbornSetsEC(utils::Verbosity verbosity)
-    : StubbornSetsActionCentric(verbosity) {
+StubbornSetsEC::StubbornSetsEC(
+    const shared_ptr<AbstractTask> &task, utils::Verbosity verbosity)
+    : StubbornSetsActionCentric(task, verbosity) {
 }
 
 void StubbornSetsEC::initialize(const shared_ptr<AbstractTask> &task) {
@@ -330,7 +331,7 @@ void StubbornSetsEC::handle_stubborn_operator(const State &state, int op_no) {
 }
 
 class StubbornSetsECFeature
-    : public plugins::TypedFeature<PruningMethod, StubbornSetsEC> {
+    : public plugins::TypedFeature<TaskIndependentPruningMethod> {
 public:
     StubbornSetsECFeature() : TypedFeature("stubborn_sets_ec") {
         document_title("StubbornSetsEC");
@@ -344,18 +345,19 @@ public:
             "Expansion Core pruning method. For details, see" +
             utils::format_conference_reference(
                 {"Martin Wehrle", "Malte Helmert", "Yusra Alkhazraji",
-                 "Robert Mattmueller"},
+                 "Robert Mattmüller"},
                 "The Relative Pruning Power of Strong Stubborn Sets and Expansion Core",
-                "http://www.aaai.org/ocs/index.php/ICAPS/ICAPS13/paper/view/6053/6185",
+                "https://doi.org/10.1609/icaps.v23i1.13565",
                 "Proceedings of the 23rd International Conference on Automated Planning "
                 "and Scheduling (ICAPS 2013)",
                 "251-259", "AAAI Press", "2013"));
         add_pruning_options_to_feature(*this);
     }
 
-    virtual shared_ptr<StubbornSetsEC> create_component(
+    virtual shared_ptr<TaskIndependentPruningMethod> create_component(
         const plugins::Options &opts) const override {
-        return plugins::make_shared_from_arg_tuples<StubbornSetsEC>(
+        return components::make_auto_task_independent_component<
+            StubbornSetsEC, PruningMethod>(
             get_pruning_arguments_from_options(opts));
     }
 };

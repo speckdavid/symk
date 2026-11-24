@@ -3,6 +3,7 @@
 #include "../plugins/plugin.h"
 #include "../task_utils/task_properties.h"
 #include "../utils/logging.h"
+#include "../utils/markup.h"
 
 #include <cassert>
 #include <vector>
@@ -13,10 +14,10 @@ namespace additive_heuristic {
 const int AdditiveHeuristic::MAX_COST_VALUE;
 
 AdditiveHeuristic::AdditiveHeuristic(
-    tasks::AxiomHandlingType axioms, const shared_ptr<AbstractTask> &transform,
+    const shared_ptr<AbstractTask> &task, tasks::AxiomHandlingType axioms,
     bool cache_estimates, const string &description, utils::Verbosity verbosity)
     : RelaxationHeuristic(
-          axioms, transform, cache_estimates, description, verbosity),
+          task, axioms, cache_estimates, description, verbosity),
       did_write_overflow_warning(false) {
     if (log.is_at_least_normal()) {
         log << "Initializing additive heuristic..." << endl;
@@ -146,10 +147,26 @@ void AdditiveHeuristic::compute_heuristic_for_cegar(const State &state) {
 }
 
 class AdditiveHeuristicFeature
-    : public plugins::TypedFeature<Evaluator, AdditiveHeuristic> {
+    : public plugins::TypedFeature<TaskIndependentEvaluator> {
 public:
     AdditiveHeuristicFeature() : TypedFeature("add") {
         document_title("Additive heuristic");
+        document_synopsis(
+            "The additive heuristic is described in the following article:" +
+            utils::format_journal_reference(
+                {"Blai Bonet", "Hector Geffner"},
+                "Planning as heuristic search",
+                "https://doi.org/10.1016/S0004-3702%2801%2900108-4",
+                "Artificial Intelligence", "129(1-2)", "5-33", "2001") +
+            "For a discussion of the heuristic in the context of planning "
+            "with action costs, see the following paper:" +
+            utils::format_conference_reference(
+                {"Emil Keyder", "Hector Geffner"},
+                "Heuristics for Planning with Action Costs Revisited",
+                "https://doi.org/10.3233/978-1-58603-891-5-588",
+                "Proceedings of the 18th European Conference on "
+                "Artificial Intelligence (ECAI 2008)",
+                "588-592", "IOS Press", "2008"));
 
         relaxation_heuristic::add_relaxation_heuristic_options_to_feature(
             *this, "add");
@@ -164,9 +181,10 @@ public:
         document_property("preferred operators", "yes");
     }
 
-    virtual shared_ptr<AdditiveHeuristic> create_component(
+    virtual shared_ptr<TaskIndependentEvaluator> create_component(
         const plugins::Options &opts) const override {
-        return plugins::make_shared_from_arg_tuples<AdditiveHeuristic>(
+        return components::make_auto_task_independent_component<
+            AdditiveHeuristic, Evaluator>(
             relaxation_heuristic::
                 get_relaxation_heuristic_arguments_from_options(opts));
     }

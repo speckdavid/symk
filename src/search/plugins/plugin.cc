@@ -1,5 +1,7 @@
 #include "plugin.h"
 
+#include "raw_registry.h"
+
 #include "../utils/strings.h"
 
 using namespace std;
@@ -10,14 +12,17 @@ Feature::Feature(const Type &type, const string &key)
 }
 
 void Feature::document_subcategory(const string &subcategory) {
+    assert(this->subcategory.empty());
     this->subcategory = subcategory;
 }
 
 void Feature::document_title(const string &title) {
+    assert(this->title.empty());
     this->title = title;
 }
 
 void Feature::document_synopsis(const string &note) {
+    assert(this->synopsis.empty());
     synopsis = note;
 }
 
@@ -106,6 +111,7 @@ bool CategoryPlugin::supports_variable_binding() const {
 }
 
 void CategoryPlugin::document_synopsis(const string &synopsis) {
+    assert(this->synopsis.empty());
     this->synopsis = synopsis;
 }
 
@@ -119,10 +125,12 @@ SubcategoryPlugin::SubcategoryPlugin(const string &subcategory)
 }
 
 void SubcategoryPlugin::document_title(const string &title) {
+    assert(this->title.empty());
     this->title = title;
 }
 
 void SubcategoryPlugin::document_synopsis(const string &synopsis) {
+    assert(this->synopsis.empty());
     this->synopsis = synopsis;
 }
 

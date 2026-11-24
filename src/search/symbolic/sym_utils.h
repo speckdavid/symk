@@ -4,14 +4,14 @@
 #include "sym_bucket.h"
 #include "sym_variables.h"
 
-#include "../utils/timer.h"
 #include "transition_relations/conjunctive_transition_relation.h"
 #include "transition_relations/disjunctive_transition_relation.h"
+
+#include "../utils/timer.h"
 
 #include <fstream>
 #include <iostream>
 #include <map>
-#include <math.h>
 #include <memory>
 #include <sstream>
 #include <string>

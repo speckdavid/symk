@@ -8,6 +8,7 @@
 #include "utils/system.h"
 #include "utils/timer.h"
 
+#include <cassert>
 #include <iostream>
 
 using namespace std;
@@ -30,18 +31,37 @@ int main(int argc, const char **argv) {
             utils::exit_with(ExitCode::SEARCH_INPUT_ERROR);
         }
 
+        shared_ptr<AbstractTask> task;
         bool unit_cost = false;
         if (static_cast<string>(argv[1]) != "--help") {
             utils::g_log << get_revision_info() << endl;
             utils::g_log << "reading input..." << endl;
             tasks::read_root_task(cin);
+            task = tasks::g_root_task;
+            /*
+              TODO once we get rid of g_root_task, the two lines above should
+              be replaced by something like
+                  task = tasks::read_task(cin)
+            */
             utils::g_log << "done reading input!" << endl;
-            TaskProxy task_proxy(*tasks::g_root_task);
+            TaskProxy task_proxy(*task);
             unit_cost = task_properties::is_unit_cost(task_proxy);
         }
 
-        shared_ptr<SearchAlgorithm> search_algorithm =
+        ParsedSearchOptions parsed_search_options =
             parse_cmd_line(argc, argv, unit_cost);
+
+        shared_ptr<SearchAlgorithm> search_algorithm;
+        if (parsed_search_options.search_algorithm) {
+            search_algorithm =
+                parsed_search_options.search_algorithm->bind_task(task);
+            PlanManager &plan_manager = search_algorithm->get_plan_manager();
+            plan_manager.set_plan_filename(parsed_search_options.plan_filename);
+            plan_manager.set_num_previously_generated_plans(
+                parsed_search_options.num_previously_generated_plans);
+            plan_manager.set_is_part_of_anytime_portfolio(
+                parsed_search_options.is_part_of_anytime_portfolio);
+        }
 
         utils::Timer search_timer;
         search_algorithm->search();
@@ -53,9 +73,25 @@ int main(int argc, const char **argv) {
         utils::g_log << "Search time: " << search_timer << endl;
         utils::g_log << "Total time: " << utils::g_timer << endl;
 
-        ExitCode exitcode = search_algorithm->found_solution()
-                                ? ExitCode::SUCCESS
-                                : ExitCode::SEARCH_UNSOLVED_INCOMPLETE;
+        SearchStatus search_status = search_algorithm->get_status();
+        ExitCode exitcode;
+        switch (search_status) {
+        case SearchStatus::SOLVED:
+            exitcode = ExitCode::SUCCESS;
+            break;
+        case SearchStatus::TIMEOUT:
+            exitcode = ExitCode::SEARCH_UNSOLVED_INCOMPLETE;
+            break;
+        case SearchStatus::UNSOLVABLE:
+            exitcode = ExitCode::SEARCH_UNSOLVABLE;
+            break;
+        case SearchStatus::UNSOLVABLE_WITHIN_BOUND:
+            exitcode = ExitCode::SEARCH_UNSOLVABLE_WITHIN_BOUND;
+            break;
+        default:
+            assert(search_status == SearchStatus::FAILED);
+            exitcode = ExitCode::SEARCH_UNSOLVED_INCOMPLETE;
+        }
         exit_with(exitcode);
     } catch (const utils::ExitException &e) {
         /* To ensure that all destructors are called before the program exits,

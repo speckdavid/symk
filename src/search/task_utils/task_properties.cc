@@ -136,7 +136,7 @@ int get_num_total_effects(const TaskProxy &task_proxy) {
 void print_variable_statistics(const TaskProxy &task_proxy) {
     const int_packer::IntPacker &state_packer = g_state_packers[task_proxy];
 
-    int num_facts = 0;
+    size_t num_facts = 0;
     VariablesProxy variables = task_proxy.get_variables();
     for (VariableProxy var : variables)
         num_facts += var.get_domain_size();

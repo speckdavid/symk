@@ -11,14 +11,20 @@
 #include "../searches/uniform_cost_search.h"
 
 using namespace std;
-using namespace options;
-
 namespace symbolic {
-SymbolicSearch::SymbolicSearch(const plugins::Options &opts)
-    : SearchAlgorithm(opts),
-      task(opts.get<shared_ptr<AbstractTask>>("transform")),
+SymbolicSearch::SymbolicSearch(
+    const shared_ptr<AbstractTask> &task, const plugins::Options &opts)
+    : SymbolicSearch(
+          task, opts, get_search_algorithm_arguments_from_options(opts)) {
+}
+
+SymbolicSearch::SymbolicSearch(
+    const shared_ptr<AbstractTask> &task, const plugins::Options &opts,
+    const tuple<OperatorCost, int, double, string, utils::Verbosity> &args)
+    : SearchAlgorithm(
+          task, get<0>(args), get<1>(args), get<2>(args), get<3>(args),
+          get<4>(args)),
       search_task(task),
-      task_proxy(*task),
       vars(make_shared<SymVariables>(opts, task)),
       sym_params(opts, task),
       step_num(-1),
@@ -168,11 +174,6 @@ void SymbolicSearch::print_statistics() const {
 }
 
 void SymbolicSearch::add_options_to_feature(plugins::Feature &feature) {
-    feature.add_option<shared_ptr<AbstractTask>>(
-        "transform",
-        "Optional task transformation for the search."
-        " Currently, adapt_costs() and no_transform() are available.",
-        "no_transform()");
     add_search_algorithm_options_to_feature(feature, "Symbolic Search");
     SymVariables::add_options_to_feature(feature);
     SymParameters::add_options_to_feature(feature);

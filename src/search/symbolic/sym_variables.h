@@ -3,11 +3,11 @@
 
 #include "sym_bucket.h"
 
-#include "../tasks/root_task.h"
-#include "../utils/timer.h"
 #include "sym_axiom/sym_axiom_compilation.h"
 
-#include <cassert>
+#include "../tasks/root_task.h"
+#include "../utils/timer.h"
+
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -26,6 +26,8 @@ class Options;
 }
 
 namespace symbolic {
+class VariableOrdering;
+
 /*
  * BDD-Variables for a symbolic exploration.
  * This information is global for every class using symbolic search.
@@ -46,7 +48,7 @@ class SymVariables {
     const long cudd_init_nodes; // Number of initial nodes
     const long cudd_init_cache_size; // Initial cache size
     const long cudd_init_available_memory; // Maximum available memory (bytes)
-    const bool gamer_ordering;
+    const std::shared_ptr<VariableOrdering> variable_ordering;
     const bool dynamic_reordering;
 
     Cudd *manager; // manager associated with this symbolic search
@@ -222,7 +224,7 @@ public:
         return manager->ReadNodeCount();
     }
 
-    void reoder(int max_time);
+    void reorder(int max_time);
 
     void to_dot(const BDD &bdd, const std::string &file_name) const;
     void to_dot(const ADD &bdd, const std::string &file_name) const;

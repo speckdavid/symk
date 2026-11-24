@@ -1,5 +1,7 @@
 release = ["-DCMAKE_BUILD_TYPE=Release"]
 debug = ["-DCMAKE_BUILD_TYPE=Debug"]
+release_no_gmp = ["-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_DISABLE_FIND_PACKAGE_Gmp=TRUE"]
+debug_no_gmp = ["-DCMAKE_BUILD_TYPE=Debug", "-DCMAKE_DISABLE_FIND_PACKAGE_Gmp=TRUE"]
 release_no_lp = ["-DCMAKE_BUILD_TYPE=Release", "-DUSE_LP=NO"]
 # USE_GLIBCXX_DEBUG is not compatible with USE_LP (see issue983).
 glibcxx_debug = ["-DCMAKE_BUILD_TYPE=Debug", "-DUSE_LP=NO", "-DUSE_GLIBCXX_DEBUG=YES"]

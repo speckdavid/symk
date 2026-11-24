@@ -10,9 +10,9 @@ using namespace std;
 
 namespace stubborn_sets_atom_centric {
 StubbornSetsAtomCentric::StubbornSetsAtomCentric(
-    bool use_sibling_shortcut, AtomSelectionStrategy atom_selection_strategy,
-    utils::Verbosity verbosity)
-    : StubbornSets(verbosity),
+    const shared_ptr<AbstractTask> &task, bool use_sibling_shortcut,
+    AtomSelectionStrategy atom_selection_strategy, utils::Verbosity verbosity)
+    : StubbornSets(task, verbosity),
       use_sibling_shortcut(use_sibling_shortcut),
       atom_selection_strategy(atom_selection_strategy) {
 }
@@ -252,7 +252,7 @@ void StubbornSetsAtomCentric::handle_stubborn_operator(
 }
 
 class StubbornSetsAtomCentricFeature
-    : public plugins::TypedFeature<PruningMethod, StubbornSetsAtomCentric> {
+    : public plugins::TypedFeature<TaskIndependentPruningMethod> {
 public:
     StubbornSetsAtomCentricFeature()
         : TypedFeature("atom_centric_stubborn_sets") {
@@ -265,7 +265,7 @@ public:
             "this implementation focuses on atomic propositions (atoms), which "
             "often speeds up the computation on IPC benchmarks. For details, see" +
             utils::format_conference_reference(
-                {"Gabriele Roeger", "Malte Helmert", "Jendrik Seipp",
+                {"Gabriele Röger", "Malte Helmert", "Jendrik Seipp",
                  "Silvan Sievers"},
                 "An Atom-Centric Perspective on Stubborn Sets",
                 "https://ai.dmi.unibas.ch/papers/roeger-et-al-socs2020.pdf",
@@ -286,9 +286,10 @@ public:
         add_pruning_options_to_feature(*this);
     }
 
-    virtual shared_ptr<StubbornSetsAtomCentric> create_component(
+    virtual shared_ptr<TaskIndependentPruningMethod> create_component(
         const plugins::Options &opts) const override {
-        return plugins::make_shared_from_arg_tuples<StubbornSetsAtomCentric>(
+        return components::make_auto_task_independent_component<
+            StubbornSetsAtomCentric, PruningMethod>(
             opts.get<bool>("use_sibling_shortcut"),
             opts.get<AtomSelectionStrategy>("atom_selection_strategy"),
             get_pruning_arguments_from_options(opts));

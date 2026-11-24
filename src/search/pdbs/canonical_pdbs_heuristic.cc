@@ -5,6 +5,7 @@
 
 #include "../plugins/plugin.h"
 #include "../utils/logging.h"
+#include "../utils/markup.h"
 #include "../utils/timer.h"
 
 #include <iostream>
@@ -57,11 +58,11 @@ static CanonicalPDBs get_canonical_pdbs(
 }
 
 CanonicalPDBsHeuristic::CanonicalPDBsHeuristic(
+    const shared_ptr<AbstractTask> &task,
     const shared_ptr<PatternCollectionGenerator> &patterns,
-    double max_time_dominance_pruning,
-    const shared_ptr<AbstractTask> &transform, bool cache_estimates,
+    double max_time_dominance_pruning, bool cache_estimates,
     const string &description, utils::Verbosity verbosity)
-    : Heuristic(transform, cache_estimates, description, verbosity),
+    : Heuristic(task, cache_estimates, description, verbosity),
       canonical_pdbs(
           get_canonical_pdbs(task, patterns, max_time_dominance_pruning, log)) {
 }
@@ -92,11 +93,43 @@ tuple<double> get_canonical_pdbs_arguments_from_options(
 }
 
 class CanonicalPDBsHeuristicFeature
-    : public plugins::TypedFeature<Evaluator, CanonicalPDBsHeuristic> {
+    : public plugins::TypedFeature<TaskIndependentEvaluator> {
 public:
     CanonicalPDBsHeuristicFeature() : TypedFeature("cpdbs") {
         document_subcategory("heuristics_pdb");
         document_title("Canonical PDB");
+        document_note(
+            "Reference",
+            "The canonical pattern database heuristic was introduced in the "
+            "following paper:" +
+                utils::format_conference_reference(
+                    {"Patrik Haslum", "Adi Botea", "Malte Helmert",
+                     "Blai Bonet", "Sven Koenig"},
+                    "Domain-Independent Construction of Pattern Database "
+                    "Heuristics for Cost-Optimal Planning",
+                    "https://cdn.aaai.org/AAAI/2007/AAAI07-160.pdf",
+                    "Proceedings of the 22nd AAAI Conference on Artificial "
+                    "Intelligence (AAAI 2007)",
+                    "1007-1012", "AAAI Press", "2007") +
+                "It is discussed in the context of other cost partitioning "
+                "methods in the following paper:" +
+                utils::format_conference_reference(
+                    {"Jendrik Seipp", "Thomas Keller", "Malte Helmert"},
+                    "A Comparison of Cost Partitioning Algorithms for Optimal "
+                    "Classical Planning",
+                    "https://ai.dmi.unibas.ch/papers/seipp-et-al-icaps2017.pdf",
+                    "Proceedings of the 27th International Conference on "
+                    "Automated Planning and Scheduling (ICAPS 2017)",
+                    "259-268", "AAAI Press", "2017") +
+                "For implementation notes, see:" +
+                utils::format_conference_reference(
+                    {"Silvan Sievers", "Manuela Ortlieb", "Malte Helmert"},
+                    "Efficient Implementation of Pattern Database Heuristics "
+                    "for Classical Planning",
+                    "https://ai.dmi.unibas.ch/papers/sievers-et-al-socs2012.pdf",
+                    "Proceedings of the Fifth Annual Symposium on "
+                    "Combinatorial Search (SoCS 2012)",
+                    "49-56", "AAAI Press", "2012"));
         document_synopsis(
             "The canonical pattern database heuristic is calculated as follows. "
             "For a given pattern collection C, the value of the "
@@ -105,7 +138,7 @@ public:
             "S in A is the sum of the heuristic values for all patterns in S "
             "for a given state.");
 
-        add_option<shared_ptr<PatternCollectionGenerator>>(
+        add_option<shared_ptr<TaskIndependentPatternCollectionGenerator>>(
             "patterns", "pattern generation method", "systematic(1)");
         add_canonical_pdbs_options_to_feature(*this);
         add_heuristic_options_to_feature(*this, "cpdbs");
@@ -120,10 +153,12 @@ public:
         document_property("preferred operators", "no");
     }
 
-    virtual shared_ptr<CanonicalPDBsHeuristic> create_component(
+    virtual shared_ptr<TaskIndependentEvaluator> create_component(
         const plugins::Options &opts) const override {
-        return plugins::make_shared_from_arg_tuples<CanonicalPDBsHeuristic>(
-            opts.get<shared_ptr<PatternCollectionGenerator>>("patterns"),
+        return components::make_auto_task_independent_component<
+            CanonicalPDBsHeuristic, Evaluator>(
+            opts.get<shared_ptr<TaskIndependentPatternCollectionGenerator>>(
+                "patterns"),
             get_canonical_pdbs_arguments_from_options(opts),
             get_heuristic_arguments_from_options(opts));
     }

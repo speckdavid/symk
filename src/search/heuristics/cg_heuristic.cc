@@ -6,6 +6,7 @@
 #include "../plugins/plugin.h"
 #include "../task_utils/task_properties.h"
 #include "../utils/logging.h"
+#include "../utils/markup.h"
 
 #include <algorithm>
 #include <cassert>
@@ -17,14 +18,13 @@ using namespace domain_transition_graph;
 
 namespace cg_heuristic {
 CGHeuristic::CGHeuristic(
-    int max_cache_size, tasks::AxiomHandlingType axioms,
-    const shared_ptr<AbstractTask> &transform, bool cache_estimates,
+    const shared_ptr<AbstractTask> &task, int max_cache_size,
+    tasks::AxiomHandlingType axioms, bool cache_estimates,
     const string &description, utils::Verbosity verbosity)
     : Heuristic(
-          tasks::get_default_value_axioms_task_if_needed(transform, axioms),
+          // issue1208 move this transformation to task-independent level?
+          tasks::get_default_value_axioms_task_if_needed(task, axioms),
           cache_estimates, description, verbosity),
-      cache_hits(0),
-      cache_misses(0),
       helpful_transition_extraction_counter(0),
       min_action_cost(task_properties::get_min_operator_cost(task_proxy)) {
     if (log.is_at_least_normal()) {
@@ -46,7 +46,7 @@ CGHeuristic::CGHeuristic(
     transition_graphs = factory.build_dtgs();
 }
 
-bool CGHeuristic::dead_ends_are_reliable() const {
+bool CGHeuristic::is_safe() const {
     return false;
 }
 
@@ -94,12 +94,8 @@ int CGHeuristic::get_transition_cost(
     bool use_the_cache = cache && cache->is_cached(var_no);
     if (use_the_cache) {
         int cached_val = cache->lookup(var_no, state, start_val, goal_val);
-        if (cached_val != CGCache::NOT_COMPUTED) {
-            ++cache_hits;
+        if (cached_val != CGCache::NOT_COMPUTED)
             return cached_val;
-        }
-    } else {
-        ++cache_misses;
     }
 
     ValueNode *start = &dtg->nodes[start_val];
@@ -292,10 +288,19 @@ void CGHeuristic::mark_helpful_transitions(
 }
 
 class CGHeuristicFeature
-    : public plugins::TypedFeature<Evaluator, CGHeuristic> {
+    : public plugins::TypedFeature<TaskIndependentEvaluator> {
 public:
     CGHeuristicFeature() : TypedFeature("cg") {
         document_title("Causal graph heuristic");
+        document_synopsis(
+            "The causal graph heuristic is described in the following paper:" +
+            utils::format_conference_reference(
+                {"Malte Helmert"},
+                "A Planning Heuristic Based on Causal Graph Analysis",
+                "https://cdn.aaai.org/ICAPS/2004/ICAPS04-021.pdf",
+                "Proceedings of the 14th International Conference on Automated "
+                "Planning and Scheduling (ICAPS 2004)",
+                "161-170", "AAAI Press", "2004"));
 
         add_option<int>(
             "max_cache_size",
@@ -314,9 +319,10 @@ public:
         document_property("preferred operators", "yes");
     }
 
-    virtual shared_ptr<CGHeuristic> create_component(
+    virtual shared_ptr<TaskIndependentEvaluator> create_component(
         const plugins::Options &opts) const override {
-        return plugins::make_shared_from_arg_tuples<CGHeuristic>(
+        return components::make_auto_task_independent_component<
+            CGHeuristic, Evaluator>(
             opts.get<int>("max_cache_size"),
             tasks::get_axioms_arguments_from_options(opts),
             get_heuristic_arguments_from_options(opts));

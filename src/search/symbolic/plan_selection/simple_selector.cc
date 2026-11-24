@@ -4,7 +4,6 @@
 #include "../../task_utils/task_properties.h"
 
 #include <iostream>
-#include <stdio.h>
 
 using namespace std;
 
@@ -44,13 +43,17 @@ bool SimpleSelector::is_simple(const Plan &plan) {
     return true;
 }
 
-class SimpleSelectorFeature
-    : public plugins::TypedFeature<PlanSelector, SimpleSelector> {
+class SimpleSelectorFeature : public plugins::TypedFeature<PlanSelector> {
 public:
     SimpleSelectorFeature() : TypedFeature("simple") {
         document_title("Simple (loopless) plan selector");
 
         PlanSelector::add_options_to_feature(*this);
+    }
+
+    virtual shared_ptr<PlanSelector> create_component(
+        const plugins::Options &opts) const override {
+        return make_shared<SimpleSelector>(opts);
     }
 };
 

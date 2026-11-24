@@ -4,7 +4,6 @@
 #include "../../task_utils/task_properties.h"
 
 #include <iostream>
-#include <stdio.h>
 
 using namespace std;
 
@@ -43,7 +42,7 @@ void IterativeCostSelector::add_plan(const Plan &plan) {
 }
 
 class IterativeCostSelectorFeature
-    : public plugins::TypedFeature<PlanSelector, IterativeCostSelector> {
+    : public plugins::TypedFeature<PlanSelector> {
 public:
     IterativeCostSelectorFeature() : TypedFeature("iterative_cost") {
         document_title("Iterative cost plan selector");
@@ -53,6 +52,11 @@ public:
             "plan_cost_bound",
             "plan cost bound such that only more expansive plans are reconstructed",
             "-1", plugins::Bounds("-1", "infinity"));
+    }
+
+    virtual shared_ptr<PlanSelector> create_component(
+        const plugins::Options &opts) const override {
+        return make_shared<IterativeCostSelector>(opts);
     }
 };
 

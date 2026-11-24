@@ -18,9 +18,10 @@ using namespace std;
 
 namespace merge_and_shrink {
 MergeTreeFactoryLinear::MergeTreeFactoryLinear(
+    const shared_ptr<AbstractTask> &task,
     variable_order_finder::VariableOrderType variable_order, int random_seed,
     UpdateOption update_option)
-    : MergeTreeFactory(random_seed, update_option),
+    : MergeTreeFactory(task, random_seed, update_option),
       variable_order_type(variable_order) {
 }
 
@@ -117,27 +118,48 @@ void MergeTreeFactoryLinear::add_options_to_feature(plugins::Feature &feature) {
 }
 
 class MergeTreeFactoryLinearFeature
-    : public plugins::TypedFeature<MergeTreeFactory, MergeTreeFactoryLinear> {
+    : public plugins::TypedFeature<TaskIndependentMergeTreeFactory> {
 public:
     MergeTreeFactoryLinearFeature() : TypedFeature("linear") {
         document_title("Linear merge trees");
         document_synopsis(
-            "These merge trees implement several linear merge orders, which "
-            "are described in the paper:" +
+            "These merge trees implement several linear merge orders. The "
+            "orders cg_goal_level and goal_cg_level are described in the "
+            "following paper:" +
             utils::format_conference_reference(
-                {"Malte Helmert", "Patrik Haslum", "Joerg Hoffmann"},
+                {"Malte Helmert", "Patrik Haslum", "Jörg Hoffmann"},
                 "Flexible Abstraction Heuristics for Optimal Sequential Planning",
                 "https://ai.dmi.unibas.ch/papers/helmert-et-al-icaps2007.pdf",
                 "Proceedings of the Seventeenth International Conference on"
                 " Automated Planning and Scheduling (ICAPS 2007)",
-                "176-183", "AAAI Press", "2007"));
+                "176-183", "AAAI Press", "2007") +
+            "The order level is described in the following paper:" +
+            utils::format_conference_reference(
+                {"Silvan Sievers", "Martin Wehrle", "Malte Helmert"},
+                "An Analysis of Merge Strategies for Merge-and-Shrink "
+                "Heuristics",
+                "https://ai.dmi.unibas.ch/papers/sievers-et-al-icaps2016.pdf",
+                "Proceedings of the 26th International Conference on Automated "
+                "Planning and Scheduling (ICAPS 2016)",
+                "294-298", "AAAI Press", "2016") +
+            "The order reverse_level is described in the following paper:" +
+            utils::format_conference_reference(
+                {"Raz Nissim", "Jörg Hoffmann", "Malte Helmert"},
+                "Computing Perfect Heuristics in Polynomial Time: On "
+                "Bisimulation and Merge-and-Shrink Abstraction in Optimal "
+                "Planning",
+                "https://ai.dmi.unibas.ch/papers/nissim-et-al-ijcai2011.pdf",
+                "Proceedings of the Twenty-Second International Joint "
+                "Conference on Artificial Intelligence (IJCAI 2011)",
+                "1983-1990", "AAAI Press", "2011"));
 
         MergeTreeFactoryLinear::add_options_to_feature(*this);
     }
 
-    virtual shared_ptr<MergeTreeFactoryLinear> create_component(
+    virtual shared_ptr<TaskIndependentMergeTreeFactory> create_component(
         const plugins::Options &opts) const override {
-        return plugins::make_shared_from_arg_tuples<MergeTreeFactoryLinear>(
+        return components::make_auto_task_independent_component<
+            MergeTreeFactoryLinear, MergeTreeFactory>(
             opts.get<variable_order_finder::VariableOrderType>(
                 "variable_order"),
             get_merge_tree_arguments_from_options(opts));

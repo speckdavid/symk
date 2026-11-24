@@ -43,13 +43,17 @@ bool ValidationSelector::is_valid_plan(const Plan &plan) {
     return task_properties::is_goal_state(original_task_proxy, cur);
 }
 
-class ValidationSelectorFeature
-    : public plugins::TypedFeature<PlanSelector, ValidationSelector> {
+class ValidationSelectorFeature : public plugins::TypedFeature<PlanSelector> {
 public:
     ValidationSelectorFeature() : TypedFeature("validation") {
         document_title("Validation plan selector");
 
         PlanSelector::add_options_to_feature(*this);
+    }
+
+    virtual shared_ptr<PlanSelector> create_component(
+        const plugins::Options &opts) const override {
+        return make_shared<ValidationSelector>(opts);
     }
 };
 

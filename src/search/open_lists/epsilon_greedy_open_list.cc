@@ -28,7 +28,21 @@ class EpsilonGreedyOpenList : public OpenList<Entry> {
         }
 
         bool operator>(const HeapNode &other) const {
+/*
+  g++-16 (and possibly later versions) use (a <=> b) < 0 to compare pairs.
+  This triggers a spurious zero-as-null-pointer-constant warning, which we
+  ignore here.
+*/
+#ifdef __GNUG__
+#pragma GCC diagnostic push
+#if (__GNUG__ >= 15)
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+#endif
+#endif
             return make_pair(h, id) > make_pair(other.h, other.id);
+#ifdef __GNUG__
+#pragma GCC diagnostic pop
+#endif
         }
     };
 
@@ -52,6 +66,7 @@ public:
     virtual bool is_dead_end(EvaluationContext &eval_context) const override;
     virtual bool is_reliable_dead_end(
         EvaluationContext &eval_context) const override;
+    virtual bool is_safe() const override;
     virtual void get_path_dependent_evaluators(
         set<Evaluator *> &evals) override;
     virtual bool empty() const override;
@@ -116,7 +131,15 @@ bool EpsilonGreedyOpenList<Entry>::is_dead_end(
 template<class Entry>
 bool EpsilonGreedyOpenList<Entry>::is_reliable_dead_end(
     EvaluationContext &eval_context) const {
-    return is_dead_end(eval_context) && evaluator->dead_ends_are_reliable();
+    return is_dead_end(eval_context) && evaluator->is_safe();
+}
+
+template<class Entry>
+bool EpsilonGreedyOpenList<Entry>::is_safe() const {
+    if (this->only_contains_preferred_entries()) {
+        return false;
+    }
+    return evaluator->is_safe();
 }
 
 template<class Entry>
@@ -138,9 +161,10 @@ void EpsilonGreedyOpenList<Entry>::clear() {
 }
 
 EpsilonGreedyOpenListFactory::EpsilonGreedyOpenListFactory(
-    const shared_ptr<Evaluator> &eval, double epsilon, int random_seed,
-    bool pref_only)
-    : eval(eval),
+    const shared_ptr<AbstractTask> &task, const shared_ptr<Evaluator> &eval,
+    double epsilon, int random_seed, bool pref_only)
+    : OpenListFactory(task),
+      eval(eval),
       epsilon(epsilon),
       random_seed(random_seed),
       pref_only(pref_only) {
@@ -158,8 +182,7 @@ unique_ptr<EdgeOpenList> EpsilonGreedyOpenListFactory::create_edge_open_list() {
 }
 
 class EpsilonGreedyOpenListFeature
-    : public plugins::TypedFeature<
-          OpenListFactory, EpsilonGreedyOpenListFactory> {
+    : public plugins::TypedFeature<TaskIndependentOpenListFactory> {
 public:
     EpsilonGreedyOpenListFeature() : TypedFeature("epsilon_greedy") {
         document_title("Epsilon-greedy open list");
@@ -172,12 +195,12 @@ public:
                  "Jonathan Schaeffer", "Fan Xie"},
                 "A Comparison of Knowledge-Based GBFS Enhancements and"
                 " Knowledge-Free Exploration",
-                "http://www.aaai.org/ocs/index.php/ICAPS/ICAPS14/paper/view/7943/8066",
+                "https://doi.org/10.1609/icaps.v24i1.13681",
                 "Proceedings of the Twenty-Fourth International Conference"
                 " on Automated Planning and Scheduling (ICAPS 2014)",
                 "375-379", "AAAI Press", "2014"));
 
-        add_option<shared_ptr<Evaluator>>("eval", "evaluator");
+        add_option<shared_ptr<TaskIndependentEvaluator>>("eval", "evaluator");
         add_option<double>(
             "epsilon", "probability for choosing the next entry randomly",
             "0.2", plugins::Bounds("0.0", "1.0"));
@@ -185,11 +208,11 @@ public:
         add_open_list_options_to_feature(*this);
     }
 
-    virtual shared_ptr<EpsilonGreedyOpenListFactory> create_component(
+    virtual shared_ptr<TaskIndependentOpenListFactory> create_component(
         const plugins::Options &opts) const override {
-        return plugins::make_shared_from_arg_tuples<
-            EpsilonGreedyOpenListFactory>(
-            opts.get<shared_ptr<Evaluator>>("eval"),
+        return components::make_auto_task_independent_component<
+            EpsilonGreedyOpenListFactory, OpenListFactory>(
+            opts.get<shared_ptr<TaskIndependentEvaluator>>("eval"),
             opts.get<double>("epsilon"),
             utils::get_rng_arguments_from_options(opts),
             get_open_list_arguments_from_options(opts));

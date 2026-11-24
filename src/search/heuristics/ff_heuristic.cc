@@ -3,6 +3,7 @@
 #include "../plugins/plugin.h"
 #include "../task_utils/task_properties.h"
 #include "../utils/logging.h"
+#include "../utils/markup.h"
 
 #include <cassert>
 
@@ -11,10 +12,9 @@ using namespace std;
 namespace ff_heuristic {
 // construction and destruction
 FFHeuristic::FFHeuristic(
-    tasks::AxiomHandlingType axioms, const shared_ptr<AbstractTask> &transform,
+    const shared_ptr<AbstractTask> &task, tasks::AxiomHandlingType axioms,
     bool cache_estimates, const string &description, utils::Verbosity verbosity)
-    : AdditiveHeuristic(
-          axioms, transform, cache_estimates, description, verbosity),
+    : AdditiveHeuristic(task, axioms, cache_estimates, description, verbosity),
       relaxed_plan(task_proxy.get_operators().size(), false) {
     if (log.is_at_least_normal()) {
         log << "Initializing FF heuristic..." << endl;
@@ -71,10 +71,29 @@ int FFHeuristic::compute_heuristic(const State &ancestor_state) {
 }
 
 class FFHeuristicFeature
-    : public plugins::TypedFeature<Evaluator, FFHeuristic> {
+    : public plugins::TypedFeature<TaskIndependentEvaluator> {
 public:
     FFHeuristicFeature() : TypedFeature("ff") {
         document_title("FF heuristic");
+        document_synopsis(
+            "The FF heuristic was introduced in the following article:" +
+            utils::format_journal_reference(
+                {"Jörg Hoffmann", "Bernhard Nebel"},
+                "The FF Planning System: Fast Plan Generation Through "
+                "Heuristic Search",
+                "https://doi.org/10.1613/jair.855",
+                "Journal of Artificial Intelligence Research", "14", "253-302",
+                "2001") +
+            "This implementation extracts the relaxed plan from the best "
+            "supporters of the additive heuristic, which takes action costs "
+            "into account. This variant is described in the following paper:" +
+            utils::format_conference_reference(
+                {"Emil Keyder", "Hector Geffner"},
+                "Heuristics for Planning with Action Costs Revisited",
+                "https://doi.org/10.3233/978-1-58603-891-5-588",
+                "Proceedings of the 18th European Conference on "
+                "Artificial Intelligence (ECAI 2008)",
+                "588-592", "IOS Press", "2008"));
 
         relaxation_heuristic::add_relaxation_heuristic_options_to_feature(
             *this, "ff");
@@ -89,9 +108,10 @@ public:
         document_property("preferred operators", "yes");
     }
 
-    virtual shared_ptr<FFHeuristic> create_component(
+    virtual shared_ptr<TaskIndependentEvaluator> create_component(
         const plugins::Options &opts) const override {
-        return plugins::make_shared_from_arg_tuples<FFHeuristic>(
+        return components::make_auto_task_independent_component<
+            FFHeuristic, Evaluator>(
             relaxation_heuristic::
                 get_relaxation_heuristic_arguments_from_options(opts));
     }

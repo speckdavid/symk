@@ -17,14 +17,9 @@ using namespace std;
 
 namespace parser {
 class DecorateContext : public utils::Context {
-    const plugins::Registry registry;
     unordered_map<string, const plugins::Type *> variables;
 
 public:
-    DecorateContext()
-        : registry(plugins::RawRegistry::instance()->construct_registry()) {
-    }
-
     void add_variable(const string &name, const plugins::Type &type) {
         if (has_variable(name))
             error(
@@ -48,7 +43,7 @@ public:
     }
 
     const plugins::Registry &get_registry() const {
-        return registry;
+        return *plugins::Registry::instance();
     }
 };
 
@@ -183,8 +178,7 @@ bool FunctionCallNode::collect_argument(
             move(decorated_arg), move(decorated_min_node),
             move(decorated_max_node));
     }
-    FunctionArgument function_arg(
-        key, move(decorated_arg), arg_info.lazy_construction);
+    FunctionArgument function_arg(key, move(decorated_arg));
     arguments.insert({key, move(function_arg)});
     return true;
 }

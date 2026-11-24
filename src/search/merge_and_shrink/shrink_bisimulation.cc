@@ -90,8 +90,9 @@ struct Signature {
     }
 };
 
-ShrinkBisimulation::ShrinkBisimulation(bool greedy, AtLimit at_limit)
-    : greedy(greedy), at_limit(at_limit) {
+ShrinkBisimulation::ShrinkBisimulation(
+    const shared_ptr<AbstractTask> &task, bool greedy, AtLimit at_limit)
+    : ShrinkStrategy(task), greedy(greedy), at_limit(at_limit) {
 }
 
 int ShrinkBisimulation::initialize_groups(
@@ -371,7 +372,7 @@ void ShrinkBisimulation::dump_strategy_specific_options(
 }
 
 class ShrinkBisimulationFeature
-    : public plugins::TypedFeature<ShrinkStrategy, ShrinkBisimulation> {
+    : public plugins::TypedFeature<TaskIndependentShrinkStrategy> {
 public:
     ShrinkBisimulationFeature() : TypedFeature("shrink_bisimulation") {
         document_title("Bismulation based shrink strategy");
@@ -379,9 +380,9 @@ public:
             "This shrink strategy implements the algorithm described in"
             " the paper:" +
             utils::format_conference_reference(
-                {"Raz Nissim", "Joerg Hoffmann", "Malte Helmert"},
+                {"Raz Nissim", "Jörg Hoffmann", "Malte Helmert"},
                 "Computing Perfect Heuristics in Polynomial Time: On Bisimulation"
-                " and Merge-and-Shrink Abstractions in Optimal Planning.",
+                " and Merge-and-Shrink Abstraction in Optimal Planning",
                 "https://ai.dmi.unibas.ch/papers/nissim-et-al-ijcai2011.pdf",
                 "Proceedings of the Twenty-Second International Joint Conference"
                 " on Artificial Intelligence (IJCAI 2011)",
@@ -414,9 +415,10 @@ public:
             "merging).");
     }
 
-    virtual shared_ptr<ShrinkBisimulation> create_component(
+    virtual shared_ptr<TaskIndependentShrinkStrategy> create_component(
         const plugins::Options &opts) const override {
-        return make_shared<ShrinkBisimulation>(
+        return components::make_auto_task_independent_component<
+            ShrinkBisimulation, ShrinkStrategy>(
             opts.get<bool>("greedy"), opts.get<AtLimit>("at_limit"));
     }
 };

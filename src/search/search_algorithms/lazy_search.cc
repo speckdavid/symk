@@ -18,12 +18,13 @@ using namespace std;
 
 namespace lazy_search {
 LazySearch::LazySearch(
+    const shared_ptr<AbstractTask> &task,
     const shared_ptr<OpenListFactory> &open, bool reopen_closed,
     const vector<shared_ptr<Evaluator>> &preferred, bool randomize_successors,
     bool preferred_successors_first, int random_seed, OperatorCost cost_type,
     int bound, double max_time, const string &description,
     utils::Verbosity verbosity)
-    : SearchAlgorithm(cost_type, bound, max_time, description, verbosity),
+    : SearchAlgorithm(task, cost_type, bound, max_time, description, verbosity),
       open_list(open->create_edge_open_list()),
       reopen_closed_nodes(reopen_closed),
       randomize_successors(randomize_successors),
@@ -121,8 +122,7 @@ void LazySearch::generate_successors() {
 
 SearchStatus LazySearch::fetch_next_state() {
     if (open_list->empty()) {
-        log << "Completely explored state space -- no solution!" << endl;
-        return FAILED;
+        return get_finished_search_status();
     }
 
     EdgeOpenListEntry next = open_list->remove_min();
@@ -233,5 +233,9 @@ void LazySearch::reward_progress() {
 void LazySearch::print_statistics() const {
     statistics.print_detailed_statistics();
     search_space.print_statistics();
+}
+
+bool LazySearch::is_complete_within_bound() const {
+    return open_list->is_safe();
 }
 }
