@@ -7,6 +7,7 @@ The main extensions are described below.
 
 With SymK, it is possible to find a *single optimal plan* or a *set of k different best plans* with the lowest cost for a given planning task. 
 In addition, SymK natively supports a variety of PDDL features that are rarely supported by other planners, such as conditional effects and derived predicates with axioms.
+SymK also supports plan counting with A\# for optimal and cost-bounded plans.
 See this readme file for more information on running SymK and the various configurations. 
 We appreciate citations when SymK is used in a scientific context (see [References](#references) for more details).
 
